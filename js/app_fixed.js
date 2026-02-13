@@ -55,21 +55,10 @@ const app = {
     // SETTINGS & PROFILE TABS
     // ============================================
 
-    openSettingsModal() {
-        const modal = document.getElementById('settingsModal');
-        if (modal) modal.style.display = 'flex';
-    },
-
-    closeSettingsModal() {
-        const modal = document.getElementById('settingsModal');
-        if (modal) modal.style.display = 'none';
-
-        // Also close delete modal if open
-        const deleteModal = document.getElementById('deleteConfirmModal');
-        if (deleteModal) deleteModal.style.display = 'none';
-    },
 
     switchProfileTab(tabName) {
+        console.log('switchProfileTab called with:', tabName);
+
         // Update Buttons
         document.querySelectorAll('.profile-tab').forEach(btn => {
             btn.classList.remove('active');
@@ -84,17 +73,24 @@ const app = {
             activeBtn.style.color = 'var(--text-primary)';
         }
 
-        // Show Content
+        // Show/Hide Content
         const cvContent = document.getElementById('profile-content-cv');
         const activityContent = document.getElementById('profile-content-activity');
 
+        console.log('CV element found:', !!cvContent);
+        console.log('Activity element found:', !!activityContent);
+
         if (tabName === 'cv') {
-            if (cvContent) cvContent.style.display = 'block';
-            if (activityContent) activityContent.style.display = 'none';
+            if (cvContent) { cvContent.style.display = 'block'; cvContent.style.visibility = 'visible'; }
+            if (activityContent) { activityContent.style.display = 'none'; activityContent.style.visibility = 'hidden'; }
         } else {
-            if (cvContent) cvContent.style.display = 'none';
-            if (activityContent) activityContent.style.display = 'block';
+            if (cvContent) { cvContent.style.display = 'none'; cvContent.style.visibility = 'hidden'; }
+            if (activityContent) { activityContent.style.display = 'block'; activityContent.style.visibility = 'visible'; }
+            // Load dynamic stats when switching to activity tab
+            this.renderActivityStats();
         }
+
+        console.log('After switch - CV display:', cvContent?.style.display, 'Activity display:', activityContent?.style.display);
     },
 
     toggleDarkMode() {
@@ -103,14 +99,16 @@ const app = {
         localStorage.setItem('talently_dark_mode', isDark);
 
         // Update toggle UI if exists
-        const toggle = document.getElementById('darkModeToggle');
+        const toggle = document.getElementById('darkModeToggleModal');
         if (toggle) toggle.checked = isDark;
     },
 
 
 
     async init() {
-        console.log('App Initializing...');
+        console.log('🚀 DEBUG: ===== APP INITIALIZING =====');
+        console.log('💾 DEBUG: localStorage user_type:', localStorage.getItem('talently_user_type'));
+        console.log('🔐 DEBUG: localStorage logged_in:', localStorage.getItem('talently_logged_in'));
 
         // Wait for Supabase
         await this.waitForSupabase();
@@ -124,6 +122,41 @@ const app = {
 
         this.checkSession();
         this.setupAuthListener();
+    },
+
+    // Función para limpiar completamente el caché y reiniciar la app
+    clearCache() {
+        console.log('🧹 Limpiando todo el caché de Talently...');
+
+        // Limpiar localStorage
+        const keys = Object.keys(localStorage);
+        keys.forEach(key => {
+            if (key.startsWith('talently_') || key.includes('supabase')) {
+                localStorage.removeItem(key);
+                console.log('Removed:', key);
+            }
+        });
+
+        // Limpiar sessionStorage
+        sessionStorage.clear();
+
+        // Resetear propiedades del app
+        this.isAuthenticated = false;
+        this.currentUser = null;
+        this.profileType = null;
+        this.userType = null;
+        this.companyProfile = null;
+        this.companyLogo = null;
+        this.companyPhotos = [];
+        this.companyBanner = null;
+        this.companyTechStack = [];
+
+        console.log('✅ Caché limpiado. Recargando app...');
+
+        // Recargar la página con hard refresh
+        setTimeout(() => {
+            window.location.href = window.location.pathname + '?v=' + Date.now();
+        }, 500);
     },
 
     async loadReferenceData() {
@@ -162,7 +195,37 @@ const app = {
                 // Otherwise -> Onboarding
                 if (profile && profile.onboarding_completed) {
                     this.currentUser = { ...this.currentUser, ...profile };
-                    this.enterMainApp();
+
+                    // Parsear JSONB arrays
+                    if (typeof this.currentUser.experience === 'string') {
+                        try {
+                            this.currentUser.experience = JSON.parse(this.currentUser.experience);
+                        } catch (e) {
+                            this.currentUser.experience = [];
+                        }
+                    }
+                    if (!Array.isArray(this.currentUser.experience)) {
+                        this.currentUser.experience = [];
+                    }
+
+                    if (typeof this.currentUser.education === 'string') {
+                        try {
+                            this.currentUser.education = JSON.parse(this.currentUser.education);
+                        } catch (e) {
+                            this.currentUser.education = [];
+                        }
+                    }
+                    if (!Array.isArray(this.currentUser.education)) {
+                        this.currentUser.education = [];
+                    }
+
+                    // Cargar avatar desde localStorage si existe
+                    this.loadAvatarFromLocalStorage();
+
+                    // FIX: prevent auto-redirect loop if already authenticated
+                    if (!this.isAuthenticated) {
+                        this.enterMainApp();
+                    }
                 } else {
                     console.log('User has incomplete onboarding. Redirecting...');
                     // Ensure no residual mock data
@@ -179,24 +242,91 @@ const app = {
     },
 
     async checkSession() {
+        console.log('🔍 DEBUG: ===== CHECK SESSION =====');
         if (window.talentlyBackend && window.talentlyBackend.isReady) {
             // Use the exposed client or factory as fallback (though factory fails auth calls)
             // Fix: Use correct client reference
             const client = window.supabaseClient || window.supabase;
             const { data: { session } } = await client.auth.getSession();
 
+            console.log('📝 DEBUG: Session exists:', !!session);
             if (session) {
+                console.log('👤 DEBUG: User ID:', session.user.id);
+                console.log('📧 DEBUG: Email:', session.user.email);
+
                 // Set basic user
                 this.currentUser = session.user;
 
-                // FETCH FULL PROFILE DATA
-                const { data: profile } = await window.talentlyBackend.profiles.getById(session.user.id);
+                // Check localStorage to determine user type
+                const savedUserType = localStorage.getItem('talently_user_type');
+                console.log('💾 DEBUG: Saved user type from localStorage:', savedUserType);
+
+                let profile = null;
+                let userType = null;
+
+                // Try to fetch from COMPANIES table first if user_type is company
+                if (savedUserType === 'company') {
+                    console.log('🏢 DEBUG: Attempting to fetch from COMPANIES table...');
+                    const { data: companyData, error: companyError } = await window.talentlyBackend.companies.getById(session.user.id);
+                    if (companyData && !companyError) {
+                        console.log('✅ DEBUG: Found company profile:', companyData);
+                        profile = { ...companyData, user_type: 'company', onboarding_completed: true };
+                        userType = 'company';
+                        this.profileType = 'company';
+                    } else {
+                        console.log('❌ DEBUG: No company profile found:', companyError);
+                    }
+                }
+
+                // If not found in companies, try PROFILES table
+                if (!profile) {
+                    console.log('👤 DEBUG: Attempting to fetch from PROFILES table...');
+                    const { data: profileData, error: profileError } = await window.talentlyBackend.profiles.getById(session.user.id);
+                    if (profileData && !profileError) {
+                        console.log('✅ DEBUG: Found candidate profile:', profileData);
+                        profile = profileData;
+                        userType = profileData.user_type || 'candidate';
+                        this.profileType = userType;
+                    } else {
+                        console.log('❌ DEBUG: No candidate profile found:', profileError);
+                    }
+                }
+
+                console.log('📋 DEBUG: Final profile result:', profile);
+                console.log('🎯 DEBUG: Determined user type:', userType);
 
                 // CHECK ONBOARDING STATUS
                 // If profile exists AND has completed onboarding -> Main App
                 // Otherwise -> Onboarding
                 if (profile && profile.onboarding_completed) {
                     this.currentUser = { ...this.currentUser, ...profile };
+
+                    // Parsear JSONB arrays
+                    if (typeof this.currentUser.experience === 'string') {
+                        try {
+                            this.currentUser.experience = JSON.parse(this.currentUser.experience);
+                        } catch (e) {
+                            this.currentUser.experience = [];
+                        }
+                    }
+                    if (!Array.isArray(this.currentUser.experience)) {
+                        this.currentUser.experience = [];
+                    }
+
+                    if (typeof this.currentUser.education === 'string') {
+                        try {
+                            this.currentUser.education = JSON.parse(this.currentUser.education);
+                        } catch (e) {
+                            this.currentUser.education = [];
+                        }
+                    }
+                    if (!Array.isArray(this.currentUser.education)) {
+                        this.currentUser.education = [];
+                    }
+
+                    // Cargar avatar desde localStorage si existe
+                    this.loadAvatarFromLocalStorage();
+
                     // FIX: prevent auto-redirect loop if already authenticated
                     if (!this.isAuthenticated) {
                         this.enterMainApp();
@@ -228,13 +358,44 @@ const app = {
                             window.talentlyBackend.profiles.getById(session.user.id).then(({ data: profile }) => {
                                 if (profile) {
                                     this.currentUser = { ...this.currentUser, ...profile };
-                                    // Update UI if already in main app
-                                    if (this.currentView === 'mainApp') this.enterMainApp();
+
+                                    // Parsear JSONB arrays
+                                    if (typeof this.currentUser.experience === 'string') {
+                                        try {
+                                            this.currentUser.experience = JSON.parse(this.currentUser.experience);
+                                        } catch (e) {
+                                            this.currentUser.experience = [];
+                                        }
+                                    }
+                                    if (!Array.isArray(this.currentUser.experience)) {
+                                        this.currentUser.experience = [];
+                                    }
+
+                                    if (typeof this.currentUser.education === 'string') {
+                                        try {
+                                            this.currentUser.education = JSON.parse(this.currentUser.education);
+                                        } catch (e) {
+                                            this.currentUser.education = [];
+                                        }
+                                    }
+                                    if (!Array.isArray(this.currentUser.education)) {
+                                        this.currentUser.education = [];
+                                    }
+
+                                    // Only re-enter mainApp if NOT already authenticated
+                                    // This prevents view reset on tab visibility changes
+                                    if (this.currentView === 'mainApp' && !this.isAuthenticated) {
+                                        this.enterMainApp();
+                                    } else if (this.currentView === 'mainApp') {
+                                        // Just update profile data without resetting navigation
+                                        this.renderProfile();
+                                    }
                                 }
                             });
                         }
                     } else if (event === 'SIGNED_OUT') {
                         this.currentUser = null;
+                        this.isAuthenticated = false;
                         this.showView('welcomeView');
                     }
                 });
@@ -260,6 +421,29 @@ const app = {
             this.checkAndRenderTags(viewId);
         } else {
             console.error('View not found:', viewId);
+        }
+    },
+
+    loadAvatarFromLocalStorage() {
+        const backup = localStorage.getItem('talently_avatar_backup');
+        // console.log('loadAvatarFromLocalStorage - backup exists:', !!backup);
+        // console.log('loadAvatarFromLocalStorage - currentUser.avatar_url:', this.currentUser?.avatar_url);
+
+        if (backup && (!this.currentUser.avatar_url || this.currentUser.avatar_url.startsWith('blob:'))) {
+            // console.log('Cargando avatar desde localStorage backup');
+            this.currentUser.avatar_url = backup;
+            this.currentUser.image = backup;
+        } else if (!backup) {
+            // console.log('No hay backup de avatar en localStorage');
+        } else {
+            // console.log('Ya hay avatar_url válido:', this.currentUser.avatar_url);
+        }
+
+        // SIEMPRE re-renderizar el perfil cuando vuelve la visibilidad
+        // para forzar que la imagen se actualice en el DOM
+        if (this.currentView === 'mainApp') {
+            // console.log('Re-renderizando perfil para actualizar avatar...');
+            this.renderProfile();
         }
     },
 
@@ -305,6 +489,7 @@ const app = {
         }
         if (sectionId === 'settingsSection') {
             this.renderProfile();
+            this.initNotificationToggle();
         }
     },
 
@@ -435,6 +620,9 @@ const app = {
         const email = emailInput ? emailInput.value : '';
         const password = passwordInput ? passwordInput.value : '';
 
+        console.log('🔐 DEBUG: ===== LOGIN ATTEMPT =====');
+        console.log('📧 DEBUG: Email:', email);
+
         if (!email || !password) {
             this.showToast('Por favor completa todos los campos', 'error');
             return;
@@ -442,20 +630,63 @@ const app = {
 
         if (window.talentlyBackend && window.talentlyBackend.isReady) {
             try {
+                console.log('🔑 DEBUG: Calling auth.signIn...');
                 const { data, error } = await window.talentlyBackend.auth.signIn(email, password);
                 if (error) throw error;
-                // Fetch Profile before entering app
-                const { data: profile } = await window.talentlyBackend.profiles.getById(data.user.id);
-                if (profile) {
-                    this.currentUser = { ...data.user, ...profile };
+
+                console.log('✅ DEBUG: Auth successful, user ID:', data.user.id);
+
+                // Try to fetch from both tables
+                let profile = null;
+                let userType = null;
+
+                // First try COMPANIES table
+                console.log('🏢 DEBUG: Trying to fetch from COMPANIES table...');
+                const { data: companyData, error: companyError } = await window.talentlyBackend.companies.getById(data.user.id);
+                if (companyData && !companyError) {
+                    console.log('✅ DEBUG: Found company profile:', companyData);
+                    profile = { ...companyData, user_type: 'company', onboarding_completed: true };
+                    userType = 'company';
+                    this.profileType = 'company';
+                    localStorage.setItem('talently_user_type', 'company');
                 } else {
-                    this.currentUser = data.user;
+                    console.log('❌ DEBUG: Not found in companies table, trying profiles...');
+
+                    // Try PROFILES table
+                    console.log('👤 DEBUG: Trying to fetch from PROFILES table...');
+                    const { data: profileData, error: profileError } = await window.talentlyBackend.profiles.getById(data.user.id);
+                    if (profileData && !profileError) {
+                        console.log('✅ DEBUG: Found candidate profile:', profileData);
+                        profile = profileData;
+                        userType = profileData.user_type || 'candidate';
+                        this.profileType = userType;
+                        localStorage.setItem('talently_user_type', userType);
+                    } else {
+                        console.log('❌ DEBUG: Not found in profiles table either');
+                    }
                 }
 
-                this.showToast('¡Bienvenido de nuevo!');
-                this.enterMainApp();
+                console.log('📋 DEBUG: Final profile:', profile);
+                console.log('🎯 DEBUG: User type:', userType);
+
+                // Verificar si existe perfil Y si completó onboarding
+                if (profile && profile.onboarding_completed) {
+                    this.currentUser = { ...data.user, ...profile };
+                    this.showToast('¡Bienvenido de nuevo!');
+                    this.enterMainApp();
+                } else if (profile) {
+                    // Perfil existe pero no completó onboarding
+                    this.currentUser = { ...data.user, ...profile };
+                    this.showToast('Completa tu perfil para continuar');
+                    this.showView('onboardingStep1');
+                } else {
+                    // No hay perfil, debe completar onboarding
+                    this.currentUser = data.user;
+                    this.showToast('Completa tu perfil para continuar');
+                    this.showView('onboardingStep1');
+                }
             } catch (err) {
-                console.error('Login Error:', err);
+                console.error('❌ DEBUG: Login Error:', err);
                 this.showToast('Error al iniciar sesión: ' + err.message, 'error');
             }
             return;
@@ -596,17 +827,37 @@ const app = {
     },
 
     enterMainApp() {
-        this.updateBadge();
-        this.showView('mainApp');
-        this.showAppSection('swipeSection');
-        this.renderCard();
-        this.setupSwipeGestures();
+        console.log('🚀 DEBUG: ===== ENTERING MAIN APP =====');
+        console.log('👤 DEBUG: User type:', this.profileType);
+        console.log('💾 DEBUG: localStorage user_type:', localStorage.getItem('talently_user_type'));
 
-        this.renderProfile();
+        this.isAuthenticated = true;
+        this.updateBadge();
+
+        // Route to correct app based on user type
+        if (this.profileType === 'company' || localStorage.getItem('talently_user_type') === 'company') {
+            console.log('🏢 DEBUG: Redirecting to COMPANY APP');
+            this.showView('companyApp');
+            this.showCompanySection('companyProfileSection');
+            this.renderCompanyProfile();
+        } else {
+            console.log('👤 DEBUG: Redirecting to CANDIDATE APP');
+            // Only reset view/section if not already in mainApp
+            if (this.currentView !== 'mainApp') {
+                this.showView('mainApp');
+                this.showAppSection('swipeSection');
+            }
+
+            this.renderCard();
+            this.setupSwipeGestures();
+            this.renderProfile();
+        }
     },
 
     renderProfile() {
         if (!this.currentUser) return;
+
+        // console.log('renderProfile() ejecutándose...');
 
         // 1. Update Header Info
         const profileHero = document.querySelector('.profile-hero');
@@ -630,11 +881,28 @@ const app = {
             const locationEl = profileHero.querySelector('.profile-location span');
             if (locationEl) locationEl.textContent = `${this.currentUser.city || ''}, ${countryDisplay}`;
 
-            // Update Avatar
+            // Update Avatar (priorizar avatar_url sobre image para evitar blob: URLs)
             const avatar = document.getElementById('profileAvatar');
-            if (avatar && this.currentUser.image) {
-                avatar.src = this.currentUser.image;
+            const avatarImg = document.getElementById('profileAvatarImg');
+            const imageUrl = this.currentUser.avatar_url || this.currentUser.image;
+
+            // console.log('renderProfile() - Elementos encontrados:', {
+            //     avatar: !!avatar,
+            //     avatarImg: !!avatarImg,
+            //     imageUrl: imageUrl?.substring(0, 80) + '...',
+            //     isBlob: imageUrl?.startsWith('blob:')
+            // });
+
+            if (avatar && imageUrl && !imageUrl.startsWith('blob:')) {
+                avatar.src = imageUrl;
+                // console.log('✓ Avatar actualizado (profileAvatar)');
             }
+            if (avatarImg && imageUrl && !imageUrl.startsWith('blob:')) {
+                avatarImg.src = imageUrl;
+                // console.log('✓ Avatar actualizado (profileAvatarImg)');
+            }
+        } else {
+            // console.warn('renderProfile() - No se encontró .profile-hero');
         }
 
         // 2. Update Personal Information List
@@ -678,6 +946,972 @@ const app = {
         if (aboutMeEl) {
             aboutMeEl.textContent = this.currentUser.bio || 'Sin descripción.';
         }
+
+        // 5. Render Experience & Education
+        this.renderExperience();
+        this.renderEducation();
+    },
+
+    // ============================================
+    // ACTIVITY STATISTICS (Dynamic)
+    // ============================================
+
+    async renderActivityStats() {
+        console.log('renderActivityStats called');
+
+        // Default values if backend not available
+        let stats = {
+            profile_views: 0,
+            matches_count: 0,
+            swipes_given: 0,
+            messages_sent: 0,
+            messages_received: 0,
+            avg_response_time_minutes: 0,
+            daily_activity: []
+        };
+
+        // Try to fetch from backend
+        if (window.talentlyBackend && window.talentlyBackend.isReady && window.talentlyBackend.statistics) {
+            try {
+                const { data, error } = await window.talentlyBackend.statistics.get();
+                if (data && !error) {
+                    stats = { ...stats, ...data };
+                    console.log('Stats loaded:', stats);
+                } else {
+                    console.warn('Stats fetch error:', error);
+                }
+            } catch (e) {
+                console.warn('Stats fetch failed:', e);
+            }
+        }
+
+        // --- 1. Update Summary Values ---
+        const statViews = document.getElementById('stat-views');
+        if (statViews) statViews.textContent = stats.profile_views || 0;
+
+        const statMatches = document.getElementById('stat-matches');
+        if (statMatches) statMatches.textContent = stats.matches_count || 0;
+
+        // Response rate = messages_sent / messages_received * 100
+        const responseRate = stats.messages_received > 0
+            ? Math.round((stats.messages_sent / stats.messages_received) * 100)
+            : 0;
+        const statResponseRate = document.getElementById('stat-response-rate');
+        if (statResponseRate) statResponseRate.textContent = `${responseRate}%`;
+
+        // --- 2. Update Weekly Chart ---
+        const chartContainer = document.getElementById('activity-chart');
+        const labelsContainer = document.getElementById('activity-chart-labels');
+
+        if (chartContainer && labelsContainer) {
+            const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+            const activity = stats.daily_activity || [];
+
+            // Fill last 7 days
+            const days = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dateStr = d.toISOString().split('T')[0];
+                const dayData = activity.find(a => a.date === dateStr) || { views: 0, matches: 0, swipes: 0, messages: 0 };
+                const total = (dayData.views || 0) + (dayData.matches || 0) + (dayData.swipes || 0) + (dayData.messages || 0);
+                days.push({
+                    label: dayNames[d.getDay()],
+                    total: total
+                });
+            }
+
+            // Find max for scaling
+            const maxVal = Math.max(...days.map(d => d.total), 1);
+
+            // Render bars
+            chartContainer.innerHTML = days.map(d => {
+                const heightPct = Math.max((d.total / maxVal) * 100, 5); // min 5% height
+                return `<div class="chart-bar" style="height: ${heightPct}%;" data-value="${d.total}"></div>`;
+            }).join('');
+
+            // Render labels
+            labelsContainer.innerHTML = days.map(d => {
+                return `<span class="chart-label">${d.label}</span>`;
+            }).join('');
+        }
+
+        // --- 3. Update Ranking ---
+        // Match rate
+        const matchRate = stats.swipes_given > 0
+            ? Math.round((stats.matches_count / stats.swipes_given) * 100)
+            : 0;
+        const rankMatchRate = document.getElementById('rank-match-rate');
+        if (rankMatchRate) rankMatchRate.textContent = `${matchRate}%`;
+
+        // Response time
+        const avgTime = stats.avg_response_time_minutes || 0;
+        const rankResponseTime = document.getElementById('rank-response-time');
+        if (rankResponseTime) {
+            if (avgTime === 0) {
+                rankResponseTime.textContent = '-';
+            } else if (avgTime < 60) {
+                rankResponseTime.textContent = `${Math.round(avgTime)}m`;
+            } else {
+                rankResponseTime.textContent = `<${Math.ceil(avgTime / 60)}h`;
+            }
+        }
+
+        // Profile completeness (computed dynamically)
+        const profileComplete = this.calculateProfileCompleteness();
+        const rankProfileComplete = document.getElementById('rank-profile-complete');
+        if (rankProfileComplete) rankProfileComplete.textContent = `${profileComplete}%`;
+
+        // Update ranking subtitles
+        const rankMatchSub = document.getElementById('rank-match-subtitle');
+        if (rankMatchSub) {
+            if (matchRate >= 60) rankMatchSub.textContent = 'Top 5% de candidatos';
+            else if (matchRate >= 40) rankMatchSub.textContent = 'Top 20% de candidatos';
+            else if (matchRate >= 20) rankMatchSub.textContent = 'Top 50% de candidatos';
+            else rankMatchSub.textContent = '¡Sigue mejorando!';
+        }
+
+        const rankProfileSub = document.getElementById('rank-profile-subtitle');
+        if (rankProfileSub) rankProfileSub.textContent = `${profileComplete}% completado`;
+    },
+
+    calculateProfileCompleteness() {
+        if (!this.currentUser) return 0;
+
+        const fields = [
+            'name', 'email', 'birth_date', 'country', 'city',
+            'current_position', 'work_modality', 'availability',
+            'expected_salary', 'bio'
+        ];
+
+        // Image check (support both fields, pero excluir blob: URLs temporales)
+        const imageUrl = this.currentUser.avatar_url || this.currentUser.image;
+        const hasImage = imageUrl && !imageUrl.startsWith('blob:') && imageUrl.trim() !== '';
+
+        const arrayFields = ['skills', 'experience', 'education'];
+
+        let filled = 0;
+        let total = fields.length + 1 + arrayFields.length; // +1 for image
+
+        fields.forEach(f => {
+            if (this.currentUser[f] && this.currentUser[f] !== '') filled++;
+        });
+
+        if (hasImage) filled++;
+
+        arrayFields.forEach(f => {
+            const arr = this.currentUser[f];
+            if (Array.isArray(arr) && arr.length > 0) {
+                filled++;
+            }
+        });
+
+        return Math.round((filled / total) * 100);
+    },
+
+
+    // ============================================
+    // PERSONAL INFO MANAGEMENT
+    // ============================================
+
+    openEditPersonal() {
+        const modal = document.getElementById('editPersonalModal');
+        if (!modal) return;
+
+        // Populate Fields
+        document.getElementById('editName').value = this.currentUser.name || '';
+        document.getElementById('editPosition').value = this.currentUser.current_position || '';
+
+        const linkedinInput = document.getElementById('editLinkedin');
+        if (linkedinInput) linkedinInput.value = this.currentUser.linkedin || '';
+
+        const bioInput = document.getElementById('editBio');
+        if (bioInput) bioInput.value = this.currentUser.bio || '';
+
+        // Handle Salary Formatting
+        const salaryInput = document.getElementById('editSalary');
+        if (salaryInput) {
+            const rawSalary = this.currentUser.expected_salary || '';
+            salaryInput.value = new Intl.NumberFormat('es-CL').format(rawSalary);
+        }
+
+        // Set Currency (normalize to lowercase to match options)
+        const currencySelect = document.getElementById('editCurrency');
+        const userCurrency = (this.currentUser.currency || 'clp').toLowerCase();
+        if (currencySelect) currencySelect.value = userCurrency;
+
+        document.getElementById('editModality').value = this.currentUser.work_modality || 'Remoto';
+
+        // Set Availability (normalize)
+        const availabilitySelect = document.getElementById('editAvailability');
+        const userAvailability = this.currentUser.availability || 'inmediata';
+        // Try exact match, or fallback if using old values
+        if (availabilitySelect) {
+            availabilitySelect.value = userAvailability;
+            // If value didn't stick (because it's not in options), default to immediate
+            if (!availabilitySelect.value) availabilitySelect.value = 'inmediata';
+        }
+
+        // Populate Country & City
+        const countrySelect = document.getElementById('editCountry');
+        const citySelect = document.getElementById('editCity');
+
+        // Clear previous options
+        countrySelect.innerHTML = '<option value="">Selecciona país</option>';
+
+        // Get countries from reference data
+        if (this.referenceData && this.referenceData.countries) {
+            this.referenceData.countries.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                countrySelect.appendChild(opt);
+            });
+        }
+
+        // Set current selection
+        let currentCountry = this.currentUser.country;
+        if (currentCountry) {
+            // Try to find if the stored value matches an ID or Name
+            const countryObj = this.referenceData && this.referenceData.countries.find(c => c.id == currentCountry || c.name === currentCountry);
+
+            if (countryObj) {
+                countrySelect.value = countryObj.id;
+                // Trigger City Update
+                this.updateCities('editCountry', 'editCity', this.currentUser.city);
+            } else {
+                // Fallback: manually add it if not in list
+                const opt = document.createElement('option');
+                opt.value = currentCountry;
+                opt.textContent = currentCountry;
+                countrySelect.appendChild(opt);
+                countrySelect.value = currentCountry;
+
+                // Also enable city and populate if exists
+                if (this.currentUser.city) {
+                    citySelect.innerHTML = `<option value="${this.currentUser.city}">${this.currentUser.city}</option>`;
+                    citySelect.value = this.currentUser.city;
+                    citySelect.disabled = false;
+                }
+            }
+        }
+
+        modal.classList.add('active');
+        modal.style.display = 'flex';
+    },
+
+    closeEditPersonal() {
+        const modal = document.getElementById('editPersonalModal');
+        if (modal) {
+            modal.classList.remove('active');
+            modal.style.display = 'none';
+        }
+    },
+
+    savePersonal() {
+        const name = document.getElementById('editName').value;
+        const position = document.getElementById('editPosition').value;
+        const countrySelect = document.getElementById('editCountry');
+        const country = countrySelect.value;
+        // Store country name or ID? usually ID if available, but renderProfile expects ID or Name. 
+        // Let's stick to what updateCities uses.
+
+
+        const cityId = document.getElementById('editCity').value;
+        const citySelect = document.getElementById('editCity');
+        const cityName = citySelect.selectedIndex >= 0 ? citySelect.options[citySelect.selectedIndex].text : '';
+
+        const salaryStr = document.getElementById('editSalary').value.replace(/\./g, '').replace(/,/g, '');
+        const salary = parseInt(salaryStr) || 0;
+        const currency = document.getElementById('editCurrency').value;
+        const modality = document.getElementById('editModality').value;
+        const availability = document.getElementById('editAvailability') ? document.getElementById('editAvailability').value : 'inmediata';
+
+        const linkedinInput = document.getElementById('editLinkedin');
+        const linkedin = linkedinInput ? linkedinInput.value : '';
+
+        const bioInput = document.getElementById('editBio');
+        const bio = bioInput ? bioInput.value : '';
+
+        if (!name || !position || !country) {
+            this.showToast('Por favor completa los campos obligatorios', 'error');
+            return;
+        }
+
+        this.currentUser = {
+            ...this.currentUser,
+            name,
+            current_position: position,
+            country,          // ID
+            city: cityName,   // Name (for UI display)
+            city_id: cityId,  // ID (for Payload)
+            expected_salary: salary,
+            currency,
+            work_modality: modality,
+            availability,
+            linkedin,
+            bio
+        };
+
+        // Sync with userProfile (mock)
+        this.userProfile = { ...this.userProfile, ...this.currentUser };
+
+        // Save to Supabase
+        if (window.talentlyBackend && window.talentlyBackend.profiles && window.talentlyBackend.profiles.create) {
+
+            // Clean Payload: Send city_id (UUID)
+            const profilePayload = {
+                full_name: name,
+                professional_title: position,
+                country_id: country, // UUID
+                city_id: cityId,     // UUID
+                expected_salary: salary,
+                currency: currency.toLowerCase(), // Ensure lowercase as per onboarding
+                work_modality: modality,
+                availability: availability,
+                linkedin: linkedin,
+                bio: bio
+            };
+
+            // Attempt save
+            window.talentlyBackend.profiles.create(profilePayload).then(({ error }) => {
+                if (error) {
+                    console.error("Supabase Save Error:", error);
+                    this.showToast('Error al guardar en servidor', 'error');
+                }
+            });
+        }
+
+
+
+        this.renderProfile();
+        this.closeEditPersonal();
+        this.showToast('Perfil actualizado');
+    },
+
+    // Wrappers for HTML buttons
+    addExperience() {
+        this.openEditExperience();
+    },
+
+    addEducation() {
+        this.openEditEducation();
+    },
+
+    // ============================================
+    // EXPERIENCE MANAGEMENT
+    // ============================================
+
+    renderExperience() {
+        // Use currentUser.experience if available, fallback to userProfile.experience (mock)
+        // Ensure it's an array
+        const expList = this.currentUser.experience || this.userProfile.experience || [];
+        const container = document.getElementById('experienceList');
+
+        if (!container) return;
+
+        if (expList.length === 0) {
+            container.innerHTML = '<div style="color: var(--text-secondary); font-size: 14px; padding: 10px 0;">No has agregado experiencia laboral.</div>';
+            return;
+        }
+
+        container.innerHTML = expList.map((exp, index) => `
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <h4 class="timeline-title">${exp.role}</h4>
+                            <div class="timeline-subtitle">${exp.company}</div>
+                            <div class="timeline-date">${exp.period}</div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="icon-btn" onclick="app.openEditExperience(${index})">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                            </button>
+                            <button class="icon-btn" onclick="app.removeExperience(${index})" style="color: var(--danger);">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    },
+
+    openEditExperience(index = null) {
+        const modal = document.getElementById('editExperienceModal');
+        if (!modal) return;
+
+        const title = document.getElementById('expModalTitle');
+        const expIndex = document.getElementById('expIndex');
+        const role = document.getElementById('expRole');
+        const company = document.getElementById('expCompany');
+        const start = document.getElementById('expStartDate');
+        const end = document.getElementById('expEndDate');
+        const current = document.getElementById('expCurrent');
+
+        // Reset fields
+        expIndex.value = '';
+        role.value = '';
+        company.value = '';
+        start.value = '';
+        end.value = '';
+        current.checked = false;
+        if (end) end.disabled = false;
+
+        if (index !== null) {
+            // Edit Mode
+            const list = this.currentUser.experience || this.userProfile.experience || [];
+            const item = list[index];
+            if (item) {
+                title.textContent = 'Editar Experiencia';
+                expIndex.value = index;
+                role.value = item.role;
+                company.value = item.company;
+
+                // Parse Period "YYYY - YYYY" or "MM/YYYY - Presente"
+                // This is a simple parser, might need adjustment based on how data is stored
+                // Assuming "Month YYYY - Month YYYY" or just free text. 
+                // For simplicity in this demo, we might not auto-fill dates perfectly if they aren't stored structured.
+                // We will try to rely on user re-entering if structure is complex.
+
+                if (item.period && item.period.includes('Presente')) {
+                    current.checked = true;
+                    end.disabled = true;
+                }
+            }
+        } else {
+            // Add Mode
+            title.textContent = 'Agregar Experiencia';
+        }
+
+        modal.classList.add('active');
+        modal.style.display = 'flex';
+    },
+
+    closeEditExperience() {
+        const modal = document.getElementById('editExperienceModal');
+        if (modal) {
+            modal.classList.remove('active');
+            modal.style.display = 'none';
+        }
+    },
+
+    toggleExpEndDate() {
+        const checkbox = document.getElementById('expCurrent');
+        const endInput = document.getElementById('expEndDate');
+        if (checkbox && endInput) {
+            endInput.disabled = checkbox.checked;
+            if (checkbox.checked) {
+                endInput.value = '';
+                endInput.style.backgroundColor = 'var(--bg-secondary)'; // Visual indication
+                endInput.style.color = 'var(--text-disabled)';
+            } else {
+                endInput.style.backgroundColor = '';
+                endInput.style.color = '';
+            }
+        }
+    },
+
+    saveExperience() {
+        const indexStr = document.getElementById('expIndex').value;
+        const role = document.getElementById('expRole').value;
+        const company = document.getElementById('expCompany').value;
+        const start = document.getElementById('expStartDate').value; // YYYY-MM
+        const end = document.getElementById('expEndDate').value; // YYYY-MM
+        const current = document.getElementById('expCurrent').checked;
+
+        if (!role || !company || !start) {
+            this.showToast('Por favor completa los campos obligatorios', 'error');
+            return;
+        }
+
+        if (!current && !end) {
+            this.showToast('Indica fecha de fin o selecciona "Actualmente"', 'error');
+            return;
+        }
+
+        const formatMonth = (val) => {
+            if (!val) return '';
+            const [y, m] = val.split('-');
+            const date = new Date(y, m - 1);
+            return date.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+        };
+
+        const period = `${formatMonth(start)} - ${current ? 'Presente' : formatMonth(end)}`;
+
+        const newItem = {
+            id: Date.now(),
+            role,
+            company,
+            period,
+            start_date: start,
+            end_date: end,
+            is_current: current,
+            description: ''
+        };
+
+        if (!Array.isArray(this.currentUser.experience)) {
+            this.currentUser.experience = [];
+        }
+
+        // Ensure we work with the main list
+        const targetList = this.currentUser.experience;
+
+        if (indexStr !== '') {
+            // Update
+            const idx = parseInt(indexStr);
+            if (targetList[idx]) {
+                targetList[idx] = { ...targetList[idx], ...newItem, id: targetList[idx].id };
+            }
+        } else {
+            // Add
+            targetList.push(newItem);
+        }
+
+
+        // Update Backend (Mock) - In real app, call Supabase here.
+        // For now, we update local state and re-render.
+        this.renderExperience();
+        this.closeEditExperience();
+        this.showToast('Experiencia guardada');
+
+        // Persist to Supabase
+        this.saveProfile();
+    },
+
+    removeExperience(index) {
+        if (!confirm('¿Seguro que deseas eliminar esta experiencia?')) return;
+
+        const list = this.currentUser.experience || this.userProfile.experience;
+        if (list && list[index]) {
+            list.splice(index, 1);
+            this.renderExperience();
+            this.showToast('Experiencia eliminada');
+            // Persist to Supabase
+            this.saveProfile();
+        }
+    },
+
+
+    // ============================================
+    // EDUCATION MANAGEMENT
+    // ============================================
+
+    renderEducation() {
+        const eduList = (Array.isArray(this.currentUser.education) ? this.currentUser.education : [])
+            || (Array.isArray(this.userProfile.education) ? this.userProfile.education : [])
+            || [];
+        const container = document.getElementById('educationList');
+
+        if (!container) return;
+
+        if (eduList.length === 0) {
+            container.innerHTML = '<div style="color: var(--text-secondary); font-size: 14px; padding: 10px 0;">No has agregado educación.</div>';
+            return;
+        }
+
+        container.innerHTML = eduList.map((edu, index) => `
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <h4 class="timeline-title">${edu.degree}</h4>
+                            <div class="timeline-subtitle">${edu.school}</div>
+                            <div class="timeline-date">${edu.period}</div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="icon-btn" onclick="app.openEditEducation(${index})">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                            </button>
+                            <button class="icon-btn" onclick="app.removeEducation(${index})" style="color: var(--danger);">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    },
+
+    openEditEducation(index = null) {
+        const modal = document.getElementById('editEducationModal');
+        if (!modal) return;
+
+        const title = document.getElementById('eduModalTitle');
+        const eduIndex = document.getElementById('eduIndex');
+        const degree = document.getElementById('eduDegree');
+        const school = document.getElementById('eduSchool');
+        const start = document.getElementById('eduStartDate');
+        const end = document.getElementById('eduEndDate');
+        const current = document.getElementById('eduCurrent');
+
+        // Reset
+        eduIndex.value = '';
+        degree.value = '';
+        school.value = '';
+        start.value = '';
+        end.value = '';
+        current.checked = false;
+        if (end) end.disabled = false;
+
+        if (index !== null) {
+            const list = this.currentUser.education || this.userProfile.education || [];
+            const item = list[index];
+            if (item) {
+                title.textContent = 'Editar Educación';
+                eduIndex.value = index;
+                degree.value = item.degree;
+                school.value = item.school;
+
+                if (item.period && item.period.includes('Presente')) {
+                    current.checked = true;
+                    end.disabled = true;
+                }
+            }
+        } else {
+            title.textContent = 'Agregar Educación';
+        }
+
+        modal.classList.add('active');
+        modal.style.display = 'flex';
+    },
+
+    closeEditEducation() {
+        const modal = document.getElementById('editEducationModal');
+        if (modal) {
+            modal.classList.remove('active');
+            modal.style.display = 'none';
+        }
+    },
+
+    toggleEduEndDate() {
+        const checkbox = document.getElementById('eduCurrent');
+        const endInput = document.getElementById('eduEndDate');
+        if (checkbox && endInput) {
+            endInput.disabled = checkbox.checked;
+            if (checkbox.checked) {
+                endInput.value = '';
+                endInput.style.backgroundColor = 'var(--bg-secondary)';
+                endInput.style.color = 'var(--text-disabled)';
+            } else {
+                endInput.style.backgroundColor = '';
+                endInput.style.color = '';
+            }
+        }
+    },
+
+    saveEducation() {
+        const indexStr = document.getElementById('eduIndex').value;
+        const degree = document.getElementById('eduDegree').value;
+        const school = document.getElementById('eduSchool').value;
+        const start = document.getElementById('eduStartDate').value;
+        const end = document.getElementById('eduEndDate').value;
+        const current = document.getElementById('eduCurrent').checked;
+
+        if (!degree || !school || !start) {
+            this.showToast('Por favor completa los campos obligatorios', 'error');
+            return;
+        }
+
+        if (!current && !end) {
+            this.showToast('Indica fecha de fin o selecciona "Cursando actualmente"', 'error');
+            return;
+        }
+
+        const formatMonth = (val) => {
+            if (!val) return '';
+            const [y, m] = val.split('-');
+            const date = new Date(y, m - 1);
+            return date.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+        };
+
+        const period = `${formatMonth(start)} - ${current ? 'Presente' : formatMonth(end)}`;
+
+        const newItem = {
+            id: Date.now(),
+            degree,
+            school,
+            period,
+            start_date: start,
+            end_date: end,
+            is_current: current
+        };
+
+        if (!Array.isArray(this.currentUser.education)) {
+            this.currentUser.education = [];
+        }
+
+        const targetList = this.currentUser.education;
+
+        if (indexStr !== '') {
+            const idx = parseInt(indexStr);
+            if (targetList[idx]) {
+                targetList[idx] = { ...targetList[idx], ...newItem, id: targetList[idx].id };
+            }
+        } else {
+            targetList.push(newItem);
+        }
+
+        this.renderEducation();
+        this.closeEditEducation();
+        this.showToast('Educación guardada');
+
+        // Persist to Supabase
+        this.saveProfile();
+    },
+
+    removeEducation(index) {
+        if (!confirm('¿Seguro que deseas eliminar esta educación?')) return;
+
+        const list = this.currentUser.education || this.userProfile.education;
+        if (list && list[index]) {
+            list.splice(index, 1);
+            this.renderEducation();
+            this.showToast('Educación eliminada');
+            // Persist to Supabase
+            this.saveProfile();
+        }
+    },
+
+    // ============================================
+    // SKILLS MANAGEMENT
+    // ============================================
+
+    openEditSkills() {
+        const modal = document.getElementById('editSkillsModal');
+        if (!modal) return;
+
+        // Copy current skills to temp array
+        this.skillsSelected = [...(this.currentUser.skills || [])];
+
+        this.renderSelectedSkillsChips();
+        this.renderEditSkillsBubbles();
+
+        // Populate areas dropdown if empty
+        this.populateProfessionalAreas();
+
+        modal.classList.add('active');
+        modal.style.display = 'flex';
+    },
+
+    async populateProfessionalAreas() {
+        const areaSelect = document.getElementById('editSkillsArea');
+        if (!areaSelect || areaSelect.options.length > 1) return; // Already populated or missing
+
+        try {
+            if (window.talentlyBackend && window.talentlyBackend.isReady) {
+                const { data: areas, error } = await window.talentlyBackend.reference.getAreas();
+                if (areas && areas.length > 0) {
+                    // Clear existing options except first
+                    areaSelect.innerHTML = '<option value="">Selecciona un área</option>';
+
+                    areas.forEach(area => {
+                        const option = document.createElement('option');
+                        option.value = area.slug; // Use slug for API calls
+                        option.textContent = area.name;
+                        areaSelect.appendChild(option);
+                    });
+                }
+            } else {
+                // Fallback areas if backend not ready
+                const fallbackAreas = [
+                    { slug: 'desarrollo', name: 'Desarrollo de Software' },
+                    { slug: 'diseno-ux', name: 'Diseño UX/UI' },
+                    { slug: 'producto', name: 'Gestión de Producto' },
+                    { slug: 'marketing', name: 'Marketing Digital' },
+                    { slug: 'data', name: 'Data Science & Analytics' },
+                    { slug: 'ventas', name: 'Ventas' },
+                    { slug: 'rrhh', name: 'Recursos Humanos' },
+                    { slug: 'finanzas', name: 'Finanzas' },
+                ];
+
+                areaSelect.innerHTML = '<option value="">Selecciona un área</option>';
+                fallbackAreas.forEach(area => {
+                    const option = document.createElement('option');
+                    option.value = area.slug;
+                    option.textContent = area.name;
+                    areaSelect.appendChild(option);
+                });
+            }
+        } catch (e) {
+            console.error('Error populating areas:', e);
+        }
+    },
+
+    closeEditSkills() {
+        const modal = document.getElementById('editSkillsModal');
+        if (modal) {
+            modal.classList.remove('active');
+            modal.style.display = 'none';
+        }
+    },
+
+    renderSelectedSkillsChips() {
+        const container = document.getElementById('editSkillsSelected');
+        if (!container) return;
+
+        container.innerHTML = this.skillsSelected.map(skill => `
+            <span class="skill-badge" style="background: var(--primary); color: white; border: none; padding-right: 8px; display: inline-flex; align-items: center;">
+                ${skill}
+                <button onclick="app.toggleSkill('${skill}')" style="background:none; border:none; color:white; margin-left:6px; cursor:pointer; font-weight:bold; font-size: 16px; line-height: 1;">&times;</button>
+            </span>
+        `).join('');
+    },
+
+    async renderEditSkillsBubbles() {
+        const areaSelect = document.getElementById('editSkillsArea');
+        const areaSlug = areaSelect ? areaSelect.value : '';
+        const container = document.getElementById('editSkillsBubbles');
+        if (!container) return;
+
+        if (!areaSlug) {
+            container.innerHTML = '<div style="color: var(--text-secondary); padding: 10px;">Selecciona una área para ver habilidades.</div>';
+            return;
+        }
+
+        container.innerHTML = '<div style="padding: 10px;">Cargando habilidades...</div>';
+
+        let availableSkills = [];
+
+        // Validar si window.talentlyBackend existe y está listo
+        if (window.talentlyBackend && window.talentlyBackend.isReady) {
+            try {
+                const { data, error } = await window.talentlyBackend.reference.getSkills(areaSlug);
+                if (data) {
+                    // Map object list to string array if necessary, or use objects. 
+                    // The current implementation uses strings for selections.
+                    availableSkills = data.map(s => s.name);
+                }
+            } catch (err) {
+                console.error("Error fetching skills:", err);
+            }
+        }
+
+        // Fallback if no backend or empty result
+        if (availableSkills.length === 0) {
+            const fallbackSkills = {
+                'desarrollo': ['JavaScript', 'React', 'Node.js', 'Python', 'Java', 'C++', 'SQL', 'Git', 'AWS', 'Docker'],
+                'diseno-ux': ['Figma', 'Adobe XD', 'Sketch', 'Prototyping', 'User Research', 'Wireframing', 'UI Design'],
+                'producto': ['Agile', 'Scrum', 'Product Management', 'Roadmapping', 'Jira', 'User Stories'],
+                'marketing': ['SEO', 'SEM', 'Social Media', 'Content Marketing', 'Google Analytics', 'Email Marketing'],
+                'data': ['Python', 'R', 'SQL', 'Tableau', 'Power BI', 'Machine Learning', 'Big Data'],
+                'ventas': ['CRM', 'Negociación', 'Prospección', 'Cierre de ventas', 'Salesforce'],
+                'rrhh': ['Reclutamiento', 'Selección', 'Clima Laboral', 'Entrevistas', 'Onboarding'],
+                'finanzas': ['Excel', 'Contabilidad', 'Análisis Financiero', 'Presupuesto', 'Auditoría'],
+                'other': ['Inglés', 'Comunicación', 'Liderazgo', 'Trabajo en equipo', 'Resolución de problemas']
+            };
+            availableSkills = fallbackSkills[areaSlug] || [];
+        }
+
+        if (availableSkills.length === 0) {
+            container.innerHTML = '<div style="color: var(--text-secondary); padding: 10px;">No hay habilidades disponibles para esta área.</div>';
+            return;
+        }
+
+        container.innerHTML = availableSkills.map(skill => {
+            const isSelected = this.skillsSelected.includes(skill);
+            return `
+                <button class="skill-bubble ${isSelected ? 'selected' : ''}" 
+                    style="${isSelected ? 'background: var(--primary); color: white;' : 'background: var(--bg); color: var(--text-primary); border: 1px solid var(--border);'} padding: 8px 16px; border-radius: 20px; cursor: pointer; margin: 4px;"
+                    onclick="app.toggleSkill('${skill}')">
+                    ${skill}
+                </button>
+            `;
+        }).join('');
+    },
+
+    toggleSkill(skill) {
+        if (this.skillsSelected.includes(skill)) {
+            this.skillsSelected = this.skillsSelected.filter(s => s !== skill);
+        } else {
+            if (this.skillsSelected.length >= 10) {
+                this.showToast('Máximo 10 habilidades', 'error');
+                return;
+            }
+            this.skillsSelected.push(skill);
+        }
+        this.renderSelectedSkillsChips();
+        this.renderEditSkillsBubbles();
+    },
+
+    async saveEditSkills() {
+        this.currentUser.skills = [...this.skillsSelected];
+        // Sync with mock
+        this.userProfile.skills = this.currentUser.skills;
+
+        // Attempt backend save
+        if (window.talentlyBackend && window.talentlyBackend.isReady) {
+            try {
+                // NOTE: Profiles create/upsert requires the full object or it mimics a patch if designed so.
+                // Based on supabase-client.js, it creates a payload with ...profileData.
+                // If we send only skills, it might overwrite other fields if not careful, 
+                // OR if supabase Upsert works as "Patch" for existing IDs (it usually replaces).
+                // SAFE APPROACH: Since we don't have a specific PATCH method exposed in the wrapper,
+                // we will update the local 'currentUser' object fully and then send it... 
+                // BUT simpler is to assume we just want to save skills.
+                // If the wrapper does an 'upsert' on just {skills: ...}, the other columns might become null 
+                // if it's a replace-upsert. Standard Supabase upsert updates match columns and replaces others.
+                // WE SHOULD FETCH FIRST or better, assume the wrapper should handle this.
+                // FOR NOW, we just update local and try to send {skills} knowing it might be risky
+                // if the wrapper doesn't handle partials. 
+                // IMPROVEMENT: Let's fetch the full profile first? No, we have this.currentUser.
+                // Let's rely on profiles.create acting as an upsert/update.
+
+                // To be safe against data loss, we'll strip known 'view-only' fields if any, 
+                // but for now let's just send the skills update combined with what we have locally?
+                // Actually, let's keep it simple: just update local state which drives the UI.
+                // And do a "best effort" persist.
+
+                // Construct a CLEAN payload that matches the 'profiles' table schema.
+                // We must map local property names to DB column names.
+                const profilePayload = {
+                    // Map local 'name' -> DB 'name'
+                    name: this.currentUser.name,
+
+                    // Map local 'current_position' -> DB 'current_position'
+                    current_position: this.currentUser.current_position || this.currentUser.professional_title,
+
+                    // Location (DB uses 'country' and 'city')
+                    country: this.currentUser.country,
+                    city: this.currentUser.city_id,
+
+                    // Other fields
+                    expected_salary: this.currentUser.expected_salary || this.currentUser.salary,
+                    currency: this.currentUser.currency,
+                    work_modality: this.currentUser.work_modality,
+                    availability: this.currentUser.availability,
+                    bio: this.currentUser.bio,
+
+                    // Send skills - Schema has 'skills' column
+                    skills: this.currentUser.skills
+                };
+
+                // Remove undefined/null keys to avoid sending bad data
+                Object.keys(profilePayload).forEach(key =>
+                    profilePayload[key] === undefined && delete profilePayload[key]
+                );
+
+                await window.talentlyBackend.profiles.create(profilePayload);
+
+            } catch (e) {
+                console.error('Error saving skills to backend:', e);
+            }
+        }
+
+        this.renderProfile();
+        this.closeEditSkills();
+        this.showToast('Habilidades actualizadas');
     },
 
     async logout() {
@@ -966,6 +2200,8 @@ const app = {
             try {
                 const { data: { user } } = await window.supabaseClient.auth.getUser();
                 await window.talentlyBackend.matches.sendMessage(matchId, user.id, text);
+                // Track statistics
+                window.talentlyBackend.statistics.increment('messages_sent').catch(e => console.warn('Stats error:', e));
             } catch (err) {
                 console.error('Send error:', err);
                 this.appendMessageToUI('Error al enviar', 'error');
@@ -1081,6 +2317,9 @@ const app = {
                 try {
                     await window.talentlyBackend.matches.create(profile.id);
                     this.showToast('¡Match Guardado!');
+                    // Track statistics
+                    window.talentlyBackend.statistics.increment('matches_count').catch(e => console.warn('Stats error:', e));
+                    window.talentlyBackend.statistics.increment('swipes_given').catch(e => console.warn('Stats error:', e));
                 } catch (e) {
                     console.error('Match Error', e);
                     // Continue anyway
@@ -1276,8 +2515,9 @@ const app = {
         // Update Avatar (Target correct classes in HTML)
         // HTML uses .profile-avatar-large in Settings, .preview-image in Preview Modal
         // Also support .profile-image-large just in case
-        if (profileData.image) {
-            document.querySelectorAll('.profile-avatar-large, .profile-image-large, .preview-image').forEach(el => el.src = profileData.image);
+        if (profileData.image || profileData.avatar_url) {
+            const imgSrc = profileData.image || profileData.avatar_url;
+            document.querySelectorAll('.profile-avatar-large, .profile-image-large, .preview-image').forEach(el => el.src = imgSrc);
         } else {
             document.querySelectorAll('.profile-avatar-large, .profile-image-large, .preview-image').forEach(el => el.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.name || 'User')}&background=random`);
         }
@@ -1551,24 +2791,38 @@ const app = {
 
         const roleInput = document.getElementById('expRole');
         const companyInput = document.getElementById('expCompany');
-        const periodInput = document.getElementById('expPeriod');
+        const startInput = document.getElementById('expStartDate');
+        const endInput = document.getElementById('expEndDate');
+        const currentInput = document.getElementById('expCurrent');
         const indexInput = document.getElementById('expIndex');
         const title = document.getElementById('expModalTitle');
+
+        // Reset
+        roleInput.value = '';
+        companyInput.value = '';
+        startInput.value = '';
+        endInput.value = '';
+        currentInput.checked = false;
+        endInput.disabled = false;
+        indexInput.value = '';
 
         if (index !== null && this.currentUser.experience && this.currentUser.experience[index]) {
             // Edit Mode
             const item = this.currentUser.experience[index];
             roleInput.value = item.role || '';
             companyInput.value = item.company || '';
-            periodInput.value = item.period || '';
             indexInput.value = index;
             title.textContent = 'Editar Experiencia';
+
+            if (item.startDate) startInput.value = item.startDate;
+            if (item.endDate) endInput.value = item.endDate;
+            if (item.isCurrent) {
+                currentInput.checked = true;
+                endInput.value = '';
+                endInput.disabled = true;
+            }
         } else {
             // Add Mode
-            roleInput.value = '';
-            companyInput.value = '';
-            periodInput.value = '';
-            indexInput.value = '';
             title.textContent = 'Agregar Experiencia';
         }
 
@@ -1576,30 +2830,70 @@ const app = {
     },
 
     closeEditExperience() {
-        document.getElementById('editExperienceModal').classList.remove('active');
+        const modal = document.getElementById('editExperienceModal');
+        if (modal) modal.classList.remove('active');
+    },
+
+    toggleExpEndDate() {
+        const isCurrent = document.getElementById('expCurrent').checked;
+        const endInput = document.getElementById('expEndDate');
+        endInput.disabled = isCurrent;
+        if (isCurrent) endInput.value = '';
     },
 
     saveExperience() {
         const role = document.getElementById('expRole').value;
         const company = document.getElementById('expCompany').value;
-        const period = document.getElementById('expPeriod').value;
+        const start = document.getElementById('expStartDate').value;
+        const end = document.getElementById('expEndDate').value;
+        const isCurrent = document.getElementById('expCurrent').checked;
         const indexStr = document.getElementById('expIndex').value;
 
         if (!role || !company) {
             this.showToast('Cargo y Empresa son obligatorios');
             return;
         }
+        if (!start) {
+            this.showToast('Fecha de inicio requerida');
+            return;
+        }
+        if (!isCurrent && !end) {
+            this.showToast('Fecha fin requerida');
+            return;
+        }
 
-        const newItem = { role, company, period };
+        // Format
+        const formatMonth = (iso) => {
+            if (!iso) return '';
+            const [y, m] = iso.split('-');
+            const date = new Date(parseInt(y), parseInt(m) - 1);
+            return date.toLocaleString('es-ES', { month: 'short', year: 'numeric' });
+        };
+        // Capitalize
+        const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
-        if (!this.currentUser.experience) this.currentUser.experience = [];
+        const periodStr = `${cap(formatMonth(start))} - ${isCurrent ? 'Presente' : cap(formatMonth(end))}`;
+
+        const newItem = {
+            role,
+            company,
+            period: periodStr,
+            startDate: start,
+            endDate: isCurrent ? null : end,
+            isCurrent
+        };
+
+        if (!Array.isArray(this.currentUser.experience)) {
+            // If it exists but is not an array (e.g. object), we might want to preserve it or just reset?
+            // Safest is to reset to array if it's garbage, or wrap it. 
+            // Given the error, it's likely garbage or {} from bad init.
+            this.currentUser.experience = [];
+        }
 
         if (indexStr !== '') {
-            // Update existing
             const index = parseInt(indexStr);
             this.currentUser.experience[index] = { ...this.currentUser.experience[index], ...newItem };
         } else {
-            // Add new
             this.currentUser.experience.push({ ...newItem, id: Date.now() });
         }
 
@@ -1613,6 +2907,14 @@ const app = {
         this.openEditExperience();
     },
 
+    removeExperience(id) {
+        if (confirm('¿Eliminar experiencia?')) {
+            this.currentUser.experience = (this.currentUser.experience || []).filter(e => e.id !== id);
+            this.saveProfile();
+            this.renderProfile();
+        }
+    },
+
     // ================= EDUCATION MODAL =================
     openEditEducation(index = null) {
         const modal = document.getElementById('editEducationModal');
@@ -1620,24 +2922,36 @@ const app = {
 
         const degreeInput = document.getElementById('eduDegree');
         const schoolInput = document.getElementById('eduSchool');
-        const periodInput = document.getElementById('eduPeriod');
+        const startInput = document.getElementById('eduStartDate');
+        const endInput = document.getElementById('eduEndDate');
+        const currentInput = document.getElementById('eduCurrent');
         const indexInput = document.getElementById('eduIndex');
         const title = document.getElementById('eduModalTitle');
 
+        // Reset
+        degreeInput.value = '';
+        schoolInput.value = '';
+        startInput.value = '';
+        endInput.value = '';
+        currentInput.checked = false;
+        endInput.disabled = false;
+        indexInput.value = '';
+
         if (index !== null && this.currentUser.education && this.currentUser.education[index]) {
-            // Edit Mode
             const item = this.currentUser.education[index];
             degreeInput.value = item.degree || '';
             schoolInput.value = item.school || '';
-            periodInput.value = item.period || '';
             indexInput.value = index;
             title.textContent = 'Editar Educación';
+
+            if (item.startDate) startInput.value = item.startDate;
+            if (item.endDate) endInput.value = item.endDate;
+            if (item.isCurrent) {
+                currentInput.checked = true;
+                endInput.value = '';
+                endInput.disabled = true;
+            }
         } else {
-            // Add Mode
-            degreeInput.value = '';
-            schoolInput.value = '';
-            periodInput.value = '';
-            indexInput.value = '';
             title.textContent = 'Agregar Educación';
         }
 
@@ -1645,30 +2959,63 @@ const app = {
     },
 
     closeEditEducation() {
-        document.getElementById('editEducationModal').classList.remove('active');
+        const modal = document.getElementById('editEducationModal');
+        if (modal) modal.classList.remove('active');
+    },
+
+    toggleEduEndDate() {
+        const isCurrent = document.getElementById('eduCurrent').checked;
+        const endInput = document.getElementById('eduEndDate');
+        endInput.disabled = isCurrent;
+        if (isCurrent) endInput.value = '';
     },
 
     saveEducation() {
         const degree = document.getElementById('eduDegree').value;
         const school = document.getElementById('eduSchool').value;
-        const period = document.getElementById('eduPeriod').value;
+        const start = document.getElementById('eduStartDate').value;
+        const end = document.getElementById('eduEndDate').value;
+        const isCurrent = document.getElementById('eduCurrent').checked;
         const indexStr = document.getElementById('eduIndex').value;
 
         if (!degree || !school) {
             this.showToast('Título e Institución son obligatorios');
             return;
         }
+        if (!start) {
+            this.showToast('Fecha de inicio requerida');
+            return;
+        }
+        if (!isCurrent && !end) {
+            this.showToast('Fecha fin requerida');
+            return;
+        }
 
-        const newItem = { degree, school, period };
+        const formatMonth = (iso) => {
+            if (!iso) return '';
+            const [y, m] = iso.split('-');
+            const date = new Date(parseInt(y), parseInt(m) - 1);
+            return date.toLocaleString('es-ES', { month: 'short', year: 'numeric' });
+        };
+        const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+        const periodStr = `${cap(formatMonth(start))} - ${isCurrent ? 'Presente' : cap(formatMonth(end))}`;
+
+        const newItem = {
+            degree,
+            school,
+            period: periodStr,
+            startDate: start,
+            endDate: isCurrent ? null : end,
+            isCurrent
+        };
 
         if (!this.currentUser.education) this.currentUser.education = [];
 
         if (indexStr !== '') {
-            // Update existing
             const index = parseInt(indexStr);
             this.currentUser.education[index] = { ...this.currentUser.education[index], ...newItem };
         } else {
-            // Add new
             this.currentUser.education.push({ ...newItem, id: Date.now() });
         }
 
@@ -1770,6 +3117,8 @@ const app = {
         // Use Real User Data if available, otherwise fallback to mock
         const profileData = this.currentUser || {};
 
+        // console.log('✓ renderProfile() EJECUTÁNDOSE (línea 2980)');
+
         // 1. Update Header Info
         const profileHero = document.querySelector('.profile-hero');
         if (profileHero) {
@@ -1782,11 +3131,26 @@ const app = {
             if (titleEl) titleEl.textContent = profileData.current_position || 'Sin cargo definido';
         }
 
-        // Update Avatar
-        if (profileData.image) {
-            document.querySelectorAll('.profile-avatar-large, .profile-image-large, .preview-image').forEach(el => el.src = profileData.image);
-        } else {
-            document.querySelectorAll('.profile-avatar-large, .profile-image-large, .preview-image').forEach(el => el.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.name || 'User')}&background=random`);
+        // Update Avatar - PRIORIZAR avatar_url sobre image y EVITAR blob: URLs
+        const imageUrl = profileData.avatar_url || profileData.image;
+        const avatarElements = document.querySelectorAll('.profile-avatar-large, .profile-image-large, .preview-image');
+
+        // console.log('renderProfile() - Avatar info:', {
+        //     imageUrl: imageUrl?.substring(0, 80) + '...',
+        //     isBlob: imageUrl?.startsWith('blob:'),
+        //     elementos: avatarElements.length
+        // });
+
+        if (imageUrl && !imageUrl.startsWith('blob:')) {
+            avatarElements.forEach(el => {
+                el.src = imageUrl;
+                // console.log('✓ Avatar actualizado:', el.className);
+            });
+        } else if (!imageUrl || imageUrl.startsWith('blob:')) {
+            // Fallback a avatar generado
+            const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.name || 'User')}&background=random`;
+            avatarElements.forEach(el => el.src = fallbackUrl);
+            // console.log('⚠ Usando fallback avatar (sin URL válida o blob: temporal)');
         }
 
         // 2. Update Personal Information List
@@ -1925,7 +3289,29 @@ const app = {
 
     async saveProfile() {
         if (window.talentlyBackend && window.talentlyBackend.isReady && this.currentUser) {
-            await window.talentlyBackend.profiles.create(this.currentUser); // Uses UPSERT now
+            // Construct a CLEAN payload that matches the 'profiles' table schema.
+            const payload = {
+                name: this.currentUser.name,
+                current_position: this.currentUser.current_position || this.currentUser.professional_title,
+                country: this.currentUser.country,
+                city: this.currentUser.city || this.currentUser.city_id,
+                expected_salary: this.currentUser.expected_salary || this.currentUser.salary,
+                currency: this.currentUser.currency,
+                work_modality: this.currentUser.work_modality,
+                availability: this.currentUser.availability,
+                bio: this.currentUser.bio,
+                skills: this.currentUser.skills,
+                experience: this.currentUser.experience || [],
+                education: this.currentUser.education || [],
+                avatar_url: this.currentUser.avatar_url || this.currentUser.image
+            };
+
+            // Remove undefined/null keys
+            Object.keys(payload).forEach(key =>
+                payload[key] === undefined && delete payload[key]
+            );
+
+            await window.talentlyBackend.profiles.create(payload); // Uses UPSERT now
             this.showToast('Perfil actualizado');
         } else {
             localStorage.setItem('talently_profile', JSON.stringify(this.currentUser));
@@ -1967,14 +3353,467 @@ const app = {
     },
 
     openFilters() {
-        // Toggle the view directly using the new class
+        console.log('openFilters called');
         const view = document.getElementById('filtersView');
-        if (view) view.classList.add('active');
+        if (!view) {
+            console.error('filtersView not found');
+            return;
+        }
+
+        // Toggle: Si ya está abierto, cerrar
+        if (view.style.transform === 'translateY(0px)' || view.style.transform === 'translateY(0)') {
+            console.log('Filters already open, closing...');
+            this.closeFilters();
+            return;
+        }
+
+        // Cerrar otros toggles
+        console.log('Closing other toggles...');
+        this.closeNotifications();
+        this.closeSettingsModal();
+
+        // Abrir filtros
+        console.log('Opening filters...');
+        view.style.transform = 'translateY(0)';
+        this.loadFilterOptions();
     },
 
     closeFilters() {
         const view = document.getElementById('filtersView');
-        if (view) view.classList.remove('active');
+        if (view) view.style.transform = 'translateY(100%)';
+    },
+
+    async loadFilterOptions() {
+        const supabase = window.supabaseClient;
+        if (!supabase) return;
+
+        // 1. MODALIDAD - Desde BD
+        const modalityContainer = document.getElementById('filterModalityChips');
+        if (modalityContainer) {
+            try {
+                const { data: modalities } = await window.talentlyBackend.reference.getWorkModalities();
+                if (modalities && modalities.length > 0) {
+                    modalityContainer.innerHTML = '';
+                    modalities.forEach(m => {
+                        const btn = document.createElement('button');
+                        btn.className = 'filter-chip';
+                        btn.onclick = () => this.toggleFilterChip(btn, 'work_modality', m.slug);
+                        btn.textContent = m.name;
+                        btn.style.cssText = 'padding: 10px 20px; border: 1.5px solid var(--border); border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; background: var(--bg); color: var(--text-primary); transition: all 0.2s;';
+                        modalityContainer.appendChild(btn);
+                    });
+                }
+            } catch (e) {
+                console.error('Error loading modalities:', e);
+            }
+        }
+
+        // 2. EDUCACIÓN - Desde BD
+        const eduContainer = document.getElementById('filterEducationChips');
+        if (eduContainer) {
+            try {
+                const { data: levels } = await window.talentlyBackend.reference.getEducationLevels();
+                if (levels && levels.length > 0) {
+                    eduContainer.innerHTML = '';
+                    levels.forEach(l => {
+                        const btn = document.createElement('button');
+                        btn.className = 'filter-chip';
+                        btn.onclick = () => this.toggleFilterChip(btn, 'education_level', l.slug);
+                        btn.textContent = l.name;
+                        btn.style.cssText = 'padding: 10px 20px; border: 1.5px solid var(--border); border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; background: var(--bg); color: var(--text-primary); transition: all 0.2s;';
+                        eduContainer.appendChild(btn);
+                    });
+                }
+            } catch (e) {
+                console.error('Error loading education levels:', e);
+            }
+        }
+
+        // 3. EXPERIENCIA - Desde BD
+        const expContainer = document.getElementById('filterExperienceChips');
+        if (expContainer) {
+            try {
+                const { data: ranges } = await window.talentlyBackend.reference.getExperienceRanges();
+                if (ranges && ranges.length > 0) {
+                    expContainer.innerHTML = '';
+                    ranges.forEach(r => {
+                        const btn = document.createElement('button');
+                        btn.className = 'filter-chip';
+                        btn.onclick = () => this.toggleFilterChip(btn, 'experience_range', r.slug);
+                        btn.textContent = r.name;
+                        btn.style.cssText = 'padding: 10px 20px; border: 1.5px solid var(--border); border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; background: var(--bg); color: var(--text-primary); transition: all 0.2s;';
+                        expContainer.appendChild(btn);
+                    });
+                }
+            } catch (e) {
+                console.error('Error loading experience ranges:', e);
+            }
+        }
+
+        // 4. Countries (DB)
+        const countrySelect = document.getElementById('filterCountry');
+        if (countrySelect && countrySelect.options.length <= 1) {
+            try {
+                const { data: countries } = await supabase.from('countries').select('id, name').order('name');
+                if (countries) {
+                    countries.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c.id;
+                        opt.textContent = c.name;
+                        countrySelect.appendChild(opt);
+                    });
+                }
+            } catch (e) {
+                console.warn('Error fetching countries:', e);
+            }
+        }
+
+        // 5. Skills (DB)
+        const skillsContainer = document.getElementById('filterSkillsChips');
+        if (skillsContainer) { // Always refresh skills to avoid "Loading..." stuck
+            try {
+                const { data: skills } = await supabase.from('skills').select('id, name').order('name').limit(30);
+                if (skills && skills.length > 0) {
+                    skillsContainer.innerHTML = '';
+                    skills.forEach(s => {
+                        const btn = document.createElement('button');
+                        btn.className = 'filter-chip';
+                        btn.textContent = s.name;
+                        btn.style.cssText = 'padding: 10px 20px; border: 1.5px solid var(--border); border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; background: var(--bg); color: var(--text-primary); transition: all 0.2s;';
+                        btn.onclick = () => this.toggleFilterChip(btn, 'skills', s.name);
+                        skillsContainer.appendChild(btn);
+                    });
+                } else {
+                    skillsContainer.innerHTML = '<span style="font-size: 13px; color: var(--text-secondary);">Sin habilidades disponibles</span>';
+                }
+            } catch (e) {
+                skillsContainer.innerHTML = '<span style="font-size: 13px; color: var(--text-secondary);">Error al cargar habilidades</span>';
+            }
+        }
+    },
+
+    async loadFilterCities() {
+        const countryId = document.getElementById('filterCountry')?.value;
+        const citySelect = document.getElementById('filterCity');
+        if (!citySelect) return;
+
+        // Reset cities
+        citySelect.innerHTML = '<option value="">Todas</option>';
+
+        if (!countryId || !window.talentlyBackend?.isReady) return;
+
+        try {
+            const supabase = window.supabaseClient;
+            if (!supabase) return;
+
+            const { data: cities } = await supabase.from('cities').select('id, name').eq('country_id', countryId).order('name');
+            if (cities) {
+                cities.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+                    citySelect.appendChild(opt);
+                });
+            }
+        } catch (e) {
+            console.warn('Error loading cities:', e);
+        }
+    },
+
+    clearAllFilters() {
+        // Reset all filter chips
+        document.querySelectorAll('#filtersView .filter-chip.selected').forEach(chip => {
+            chip.classList.remove('selected');
+            chip.style.background = 'var(--bg)';
+            chip.style.color = 'var(--text-primary)';
+            chip.style.borderColor = 'var(--border)';
+        });
+
+        // Reset salary inputs
+        const salaryMin = document.getElementById('filterSalaryMin');
+        const salaryMax = document.getElementById('filterSalaryMax');
+        if (salaryMin) salaryMin.value = '';
+        if (salaryMax) salaryMax.value = '';
+
+        // Reset dropdowns
+        const countrySelect = document.getElementById('filterCountry');
+        const citySelect = document.getElementById('filterCity');
+        if (countrySelect) countrySelect.value = '';
+        if (citySelect) {
+            citySelect.innerHTML = '<option value="">Todas</option>';
+            citySelect.value = '';
+        }
+
+        // Reset filter state
+        this.activeFilters = {};
+        this.showToast('Filtros limpiados');
+    },
+
+    applyFilters() {
+        // Collect all filter state
+        const filters = { ...this.activeFilters };
+
+        const salaryMin = document.getElementById('filterSalaryMin')?.value;
+        const salaryMax = document.getElementById('filterSalaryMax')?.value;
+        if (salaryMin) filters.salaryMin = parseInt(salaryMin);
+        if (salaryMax) filters.salaryMax = parseInt(salaryMax);
+
+        const country = document.getElementById('filterCountry')?.value;
+        const city = document.getElementById('filterCity')?.value;
+        if (country) filters.country = country;
+        if (city) filters.city = city;
+
+        console.log('Applied filters:', filters);
+        this.activeFilters = filters;
+        this.closeFilters();
+        this.showToast('Filtros aplicados');
+    },
+
+    async handleAvatarUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Validate file
+        if (!file.type.startsWith('image/')) {
+            this.showToast('Por favor selecciona una imagen');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            this.showToast('La imagen no debe superar 5MB');
+            return;
+        }
+
+        // Show preview immediately y guardar en localStorage como backup
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const base64Image = e.target.result;
+            const avatarImg = document.getElementById('profileAvatarImg');
+            if (avatarImg) avatarImg.src = base64Image;
+
+            // Guardar inmediatamente en localStorage como backup
+            localStorage.setItem('talently_avatar_backup', base64Image);
+            this.currentUser.image = base64Image;
+            this.currentUser.avatar_url = base64Image;
+        };
+        reader.readAsDataURL(file);
+
+        // Upload to Supabase Storage
+        try {
+            if (window.talentlyBackend && window.talentlyBackend.isReady) {
+                const supabase = window.supabaseClient;
+                if (!supabase) return;
+
+                const userId = this.currentUser?.id || (await supabase.auth.getUser())?.data?.user?.id;
+                if (!userId) return;
+
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${userId}/avatar.${fileExt}`;
+
+                // Upload to storage bucket
+                const { data, error } = await supabase.storage
+                    .from('avatars')
+                    .upload(fileName, file, { upsert: true });
+
+                if (error) {
+                    console.error('Avatar upload error:', error);
+
+                    if (error.message && error.message.includes('Bucket not found')) {
+                        this.showToast('Error: Storage no configurado. Contacta al administrador.');
+                    } else {
+                        this.showToast('Error al subir imagen. Se guardará localmente.');
+                    }
+
+                    // Guardar como base64 en lugar de ObjectURL
+                    const reader2 = new FileReader();
+                    reader2.onload = (e) => {
+                        const base64Image = e.target.result;
+                        this.currentUser.image = base64Image;
+                        this.currentUser.avatar_url = base64Image;
+                        localStorage.setItem('talently_avatar_backup', base64Image);
+                        this.saveProfile();
+                        this.renderProfile();
+                    };
+                    reader2.readAsDataURL(file);
+                    return;
+                }
+
+                // Get the public URL
+                const { data: urlData } = supabase.storage
+                    .from('avatars')
+                    .getPublicUrl(fileName);
+
+                const publicUrl = urlData?.publicUrl;
+                if (publicUrl) {
+                    // Update profile with new image URL (agregar timestamp para evitar cache)
+                    const urlWithTimestamp = `${publicUrl}?t=${Date.now()}`;
+                    this.currentUser.image = urlWithTimestamp;
+                    this.currentUser.avatar_url = urlWithTimestamp;
+
+                    // GUARDAR la URL de Supabase en localStorage como backup permanente
+                    localStorage.setItem('talently_avatar_backup', urlWithTimestamp);
+                    // console.log('Avatar URL guardada en localStorage:', urlWithTimestamp);
+
+                    await this.saveProfile();
+                    this.renderProfile(); // Update UI immediately
+                    this.showToast('Foto actualizada correctamente');
+                }
+            } else {
+                this.currentUser.image = URL.createObjectURL(file);
+                this.renderProfile(); // Update UI immediately
+                this.showToast('Foto actualizada localmente (Backend no listo)');
+            }
+        } catch (e) {
+            console.error('Avatar upload failed:', e);
+            this.showToast('Error crítico al subir foto');
+            // Prevent disappearance
+            this.currentUser.image = URL.createObjectURL(file);
+            this.renderProfile(); // Update UI immediately
+        }
+    },
+
+    // === NOTIFICATION TOGGLE ===
+    async toggleNotificationSetting() {
+        const toggle = document.getElementById('notifToggle');
+        const knob = document.getElementById('notifToggleKnob');
+        const statusText = document.getElementById('notifStatusText');
+        if (!toggle || !knob || !statusText) return;
+
+        const isCurrentlyOn = toggle.dataset.on === 'true';
+
+        if (!isCurrentlyOn) {
+            // Turning ON — request permission
+            if ('Notification' in window) {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    // Enable
+                    toggle.dataset.on = 'true';
+                    toggle.style.background = 'var(--primary)';
+                    knob.style.transform = 'translateX(20px)';
+                    statusText.textContent = 'Activado';
+                    statusText.style.color = 'var(--success)';
+                    localStorage.setItem('talently_notifications', 'true');
+                    this.showToast('Notificaciones activadas');
+
+                    // Show a test notification
+                    new Notification('Talently', {
+                        body: '¡Notificaciones activadas! Recibirás alertas de matches y mensajes.',
+                        icon: 'https://ui-avatars.com/api/?name=T&background=6C5CE7&color=fff'
+                    });
+                } else {
+                    this.showToast('Permiso de notificaciones denegado por el navegador');
+                }
+            } else {
+                this.showToast('Tu navegador no soporta notificaciones');
+            }
+        } else {
+            // Turning OFF
+            toggle.dataset.on = 'false';
+            toggle.style.background = 'var(--border)';
+            knob.style.transform = 'translateX(0)';
+            statusText.textContent = 'Desactivado';
+            statusText.style.color = 'var(--text-secondary)';
+            localStorage.setItem('talently_notifications', 'false');
+            this.showToast('Notificaciones desactivadas');
+        }
+    },
+
+    initNotificationToggle() {
+        const isOn = localStorage.getItem('talently_notifications') === 'true';
+        const toggle = document.getElementById('notifToggle');
+        const knob = document.getElementById('notifToggleKnob');
+        const statusText = document.getElementById('notifStatusText');
+        if (!toggle || !knob || !statusText) return;
+
+        if (isOn && 'Notification' in window && Notification.permission === 'granted') {
+            toggle.dataset.on = 'true';
+            toggle.style.background = 'var(--primary)';
+            knob.style.transform = 'translateX(20px)';
+            statusText.textContent = 'Activado';
+            statusText.style.color = 'var(--success)';
+        } else {
+            toggle.dataset.on = 'false';
+        }
+    },
+
+    // === PROFILE COMPLETENESS DETAIL ===
+    showProfileCompletenessDetail() {
+        if (!this.currentUser) return;
+
+        const fieldLabels = {
+            name: 'Nombre',
+            email: 'Correo electrónico',
+            birth_date: 'Fecha de nacimiento',
+            country: 'País',
+            city: 'Ciudad',
+            current_position: 'Cargo actual',
+            work_modality: 'Modalidad de trabajo',
+            availability: 'Disponibilidad',
+            expected_salary: 'Salario esperado',
+            bio: 'Biografía / Sobre mí',
+            image: 'Foto de perfil'
+        };
+
+        const arrayFieldLabels = {
+            skills: 'Habilidades',
+            experience: 'Experiencia laboral',
+            education: 'Educación'
+        };
+
+        const missing = [];
+
+        Object.entries(fieldLabels).forEach(([key, label]) => {
+            const val = this.currentUser[key];
+            if (!val || val === '') {
+                // Check avatar_url as fallback for image
+                if (key === 'image' && (this.currentUser.avatar_url)) return;
+                missing.push(label);
+            }
+        });
+
+        Object.entries(arrayFieldLabels).forEach(([key, label]) => {
+            const val = this.currentUser[key];
+            if (!val || !Array.isArray(val) || val.length === 0) {
+                missing.push(label);
+            }
+        });
+
+        const pct = this.calculateProfileCompleteness();
+
+        if (missing.length === 0) {
+            this.showToast('🎉 ¡Tu perfil está 100% completo!');
+        } else {
+            // Show modal with missing fields
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;';
+            overlay.onclick = () => overlay.remove();
+
+            const modal = document.createElement('div');
+            modal.style.cssText = 'background: var(--surface); border-radius: 20px; padding: 24px; max-width: 340px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.2);';
+            modal.onclick = (e) => e.stopPropagation();
+
+            modal.innerHTML = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 42px; margin-bottom: 8px;">📋</div>
+                    <h3 style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Perfil ${pct}% completo</h3>
+                    <p style="font-size: 13px; color: var(--text-secondary);">Te falta completar ${missing.length} campo${missing.length > 1 ? 's' : ''}</p>
+                </div>
+                <div style="max-height: 250px; overflow-y: auto;">
+                    ${missing.map(f => `
+                        <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(255,107,157,0.08); margin-bottom: 6px;">
+                            <span style="color: var(--danger); font-size: 16px;">✕</span>
+                            <span style="font-size: 14px; color: var(--text-primary); font-weight: 500;">${f}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <button onclick="this.closest('div[style*=fixed]').remove()"
+                    style="width: 100%; margin-top: 16px; padding: 14px; background: var(--gradient-primary); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer;">
+                    Entendido
+                </button>
+            `;
+
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+        }
     },
 
     updateBadge() {
@@ -2069,7 +3908,18 @@ const app = {
     },
 
     toggleFilterChip(element, category, value) {
-        element.classList.toggle('selected');
+        const isSelected = element.classList.toggle('selected');
+
+        // Visual toggle
+        if (isSelected) {
+            element.style.background = 'rgba(108,92,231,0.15)';
+            element.style.color = 'var(--primary)';
+            element.style.borderColor = 'var(--primary)';
+        } else {
+            element.style.background = 'var(--bg)';
+            element.style.color = 'var(--text-primary)';
+            element.style.borderColor = 'var(--border)';
+        }
 
         // Update filter state
         if (!this.activeFilters[category]) {
@@ -2177,6 +4027,9 @@ const app = {
 
     selectProfileType(type, element) {
         this.profileType = type;
+        console.log('🎯 DEBUG: Profile type selected:', type);
+        localStorage.setItem('talently_user_type', type);
+        console.log('💾 DEBUG: Saved to localStorage:', type);
 
         // Update UI
         document.querySelectorAll('.profile-type-option').forEach(opt => {
@@ -2192,10 +4045,17 @@ const app = {
     },
 
     continueFromStep1() {
+        console.log('🚀 DEBUG: Continuing from Step 1');
+        console.log('📋 DEBUG: Current profileType:', this.profileType);
+        console.log('💾 DEBUG: localStorage user_type:', localStorage.getItem('talently_user_type'));
+
         // Route to appropriate onboarding based on profile type
         if (this.profileType === 'company') {
+            console.log('🏢 DEBUG: Redirecting to company onboarding (companyStep2)');
             this.showView('companyStep2');
         } else {
+            console.log('👤 DEBUG: Redirecting to candidate onboarding');
+
             this.showView('onboardingStep2');
         }
     },
@@ -2273,6 +4133,8 @@ const app = {
         // Step 3: Location
         if (currentStep === 3) {
             const countryValid = validateInput('country', 'Selecciona tu país');
+            // City is dependent on country. If disabled (loading or no country), don't validate strictly?
+            // But user must select it.
             const cityValid = validateInput('city', 'La ciudad es obligatoria');
             if (!countryValid || !cityValid) return;
         }
@@ -2346,8 +4208,12 @@ const app = {
         countrySelect.innerHTML = '<option value="">Selecciona tu país</option>';
 
         // Remove existing listener to prevent duplicates (though onchange overwrite handles it)
-        // We use a generic update handler now
-        countrySelect.onchange = () => this.updateCities(selectId, selectId === 'country' ? 'city' : 'companyCity');
+        // Determine correct city select ID
+        let targetCityId = 'city';
+        if (selectId === 'companyCountry') targetCityId = 'companyCity';
+        else if (selectId === 'editCountry') targetCityId = 'editCity';
+
+        countrySelect.onchange = () => this.updateCities(selectId, targetCityId);
 
         // Use DB data
         if (this.referenceData.countries.length > 0) {
@@ -2363,43 +4229,56 @@ const app = {
         if (currentVal) {
             countrySelect.value = currentVal;
             // Trigger updateCities to load cities if a country was already selected
-            this.updateCities(selectId, selectId === 'country' ? 'city' : 'companyCity');
+            // Trigger updateCities to load cities if a country was already selected
+            this.updateCities(selectId, targetCityId);
         }
     },
 
-    async updateCities(countrySelectId = 'country', citySelectId = 'city') {
+    async updateCities(countrySelectId = 'country', citySelectId = 'city', preselectedCity = null) {
         const countrySelect = document.getElementById(countrySelectId);
         const citySelect = document.getElementById(citySelectId);
-        const countryId = countrySelect.value; // Now this is UUID
 
+        if (!countrySelect || !citySelect) return;
+
+        const countryId = countrySelect.value;
+
+        // Immediate Visual Feedback: Clear and Disable
         citySelect.innerHTML = '<option value="">Cargando...</option>';
         citySelect.disabled = true;
 
-        if (countryId) {
-            try {
-                // Fetch cities from DB
-                const { data: cities } = await window.talentlyBackend.reference.getCities(countryId);
+        if (!countryId) {
+            citySelect.innerHTML = '<option value="">Selecciona un país</option>';
+            return;
+        }
 
-                citySelect.innerHTML = '<option value="">Selecciona tu ciudad</option>';
+        try {
+            // Fetch cities
+            const { data: cities, error } = await window.talentlyBackend.reference.getCities(countryId);
 
-                if (cities && cities.length > 0) {
-                    cities.forEach(city => {
-                        const option = document.createElement('option');
-                        option.value = city.name; // Keep name for text display in profile
-                        option.textContent = city.name;
-                        citySelect.appendChild(option);
-                    });
-                    citySelect.disabled = false;
-                } else {
-                    citySelect.innerHTML = '<option value="">No hay ciudades registradas</option>';
+            if (error) throw error;
+
+            citySelect.innerHTML = '<option value="">Selecciona tu ciudad</option>';
+
+            if (cities && cities.length > 0) {
+                cities.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city.name;
+                    option.textContent = city.name;
+                    citySelect.appendChild(option);
+                });
+
+                // Re-enable
+                citySelect.disabled = false;
+
+                if (preselectedCity) {
+                    citySelect.value = preselectedCity;
                 }
-            } catch (e) {
-                console.error('Error fetching cities:', e);
-                citySelect.innerHTML = '<option value="">Error al cargar</option>';
+            } else {
+                citySelect.innerHTML = '<option value="">No hay ciudades disponibles</option>';
             }
-        } else {
-            citySelect.disabled = true;
-            citySelect.innerHTML = '<option value="">Selecciona un país primero</option>';
+        } catch (e) {
+            console.error('Error fetching cities:', e);
+            citySelect.innerHTML = '<option value="">Error al cargar ciudades (Intenta de nuevo)</option>';
         }
     },
 
@@ -2567,13 +4446,22 @@ const app = {
     selectOption(category, value, element) {
         // Generic function for radio button options with styling
         const groupClass = `${category}-option`;
+
+        // Deselect all options (styling + radio button)
         document.querySelectorAll(`.${groupClass}`).forEach(opt => {
             opt.style.borderColor = 'var(--border)';
-            opt.style.background = 'var(--surface)';
+            opt.style.background = 'transparent';
+            opt.style.removeProperty('background');
+            const radio = opt.querySelector('input[type="radio"]');
+            if (radio) radio.checked = false;
         });
 
+        // Select clicked option (styling + radio button)
         element.style.borderColor = 'var(--primary)';
         element.style.background = 'linear-gradient(135deg, rgba(108, 92, 231, 0.1) 0%, rgba(162, 155, 254, 0.1) 100%)';
+
+        const radioInput = element.querySelector('input[type="radio"]');
+        if (radioInput) radioInput.checked = true;
     },
 
     toggleSoftSkill(element) {
@@ -2783,6 +4671,334 @@ const app = {
     // COMPANY ONBOARDING FUNCTIONS
     // ============================================
 
+    // Función para validar RUT chileno (algoritmo módulo 11)
+    validateRUT(rut) {
+        // Limpiar RUT (eliminar puntos, guiones y espacios)
+        const cleanRUT = rut.replace(/[^0-9kK]/g, '');
+
+        if (cleanRUT.length < 2) return false;
+
+        // Separar número y dígito verificador
+        const rutNumber = cleanRUT.slice(0, -1);
+        const verifier = cleanRUT.slice(-1).toUpperCase();
+
+        // Calcular dígito verificador esperado
+        let sum = 0;
+        let multiplier = 2;
+
+        for (let i = rutNumber.length - 1; i >= 0; i--) {
+            sum += parseInt(rutNumber[i]) * multiplier;
+            multiplier = multiplier === 7 ? 2 : multiplier + 1;
+        }
+
+        const expectedVerifier = 11 - (sum % 11);
+        let calculatedVerifier;
+
+        if (expectedVerifier === 11) calculatedVerifier = '0';
+        else if (expectedVerifier === 10) calculatedVerifier = 'K';
+        else calculatedVerifier = expectedVerifier.toString();
+
+        return verifier === calculatedVerifier;
+    },
+
+    // Función para formatear RUT con puntos y guión
+    formatRUT(rut) {
+        // Limpiar RUT (solo números y K)
+        const cleanRUT = rut.replace(/[^0-9kK]/g, '').toUpperCase();
+
+        if (cleanRUT.length < 2) return cleanRUT;
+
+        // Separar número y dígito verificador
+        const rutNumber = cleanRUT.slice(0, -1);
+        const verifier = cleanRUT.slice(-1);
+
+        // Agregar puntos cada 3 dígitos desde la derecha
+        const formattedNumber = rutNumber.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+        return `${formattedNumber}-${verifier}`;
+    },
+
+    // Event listener para formateo automático de RUT
+    setupRUTFormatting() {
+        const taxIdInput = document.getElementById('companyTaxId');
+        if (taxIdInput) {
+            // Prevenir caracteres inválidos al escribir
+            taxIdInput.addEventListener('keydown', (e) => {
+                const key = e.key;
+                const currentValue = e.target.value;
+
+                // Permitir teclas de control (backspace, delete, arrows, tab, etc.)
+                if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'].includes(key)) {
+                    return;
+                }
+
+                // Permitir Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                if (e.ctrlKey || e.metaKey) {
+                    return;
+                }
+
+                // Solo permitir números del 0-9
+                if (key >= '0' && key <= '9') {
+                    return;
+                }
+
+                // Permitir la letra K (mayúscula o minúscula)
+                if (key.toLowerCase() === 'k') {
+                    return;
+                }
+
+                // Bloquear cualquier otro carácter
+                e.preventDefault();
+            });
+
+            // Formateo automático mientras escribe
+            taxIdInput.addEventListener('input', (e) => {
+                const cursorPosition = e.target.selectionStart;
+                const oldValue = e.target.value;
+                const newValue = this.formatRUT(oldValue);
+
+                // Solo actualizar si el valor cambió
+                if (oldValue !== newValue) {
+                    e.target.value = newValue;
+                    // Ajustar posición del cursor
+                    const diff = newValue.length - oldValue.length;
+                    e.target.setSelectionRange(cursorPosition + diff, cursorPosition + diff);
+                }
+            });
+        }
+    },
+
+    // Cargar company sizes y sectors desde BD
+    async loadCompanySizesAndSectors() {
+        const backend = window.talentlyBackend;
+        if (!backend) return;
+
+        try {
+            // Load sizes
+            const { data: sizes } = await backend.reference.getCompanySizes();
+            const sizeSelect = document.getElementById('companySize');
+            if (sizeSelect && sizes) {
+                sizeSelect.innerHTML = '<option value="">Selecciona una opción</option>';
+                sizes.forEach(size => {
+                    const option = document.createElement('option');
+                    option.value = size.slug;
+                    option.textContent = size.description ? `${size.name} (${size.description})` : size.name;
+                    sizeSelect.appendChild(option);
+                });
+            }
+
+            // Load sectors
+            const { data: sectors } = await backend.reference.getCompanySectors();
+            const sectorSelect = document.getElementById('companySector');
+            if (sectorSelect && sectors) {
+                sectorSelect.innerHTML = '<option value="">Selecciona una opción</option>';
+                sectors.forEach(sector => {
+                    const option = document.createElement('option');
+                    option.value = sector.slug;
+                    option.textContent = sector.name;
+                    sectorSelect.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading company sizes/sectors:', error);
+        }
+    },
+
+    // Cargar culture values desde BD
+    async loadCompanyCultureValues() {
+        const backend = window.talentlyBackend;
+        if (!backend) return;
+
+        try {
+            const { data: values } = await backend.reference.getCompanyCultureValues();
+            const container = document.getElementById('companyCultureContainer');
+            if (!container || !values) return;
+
+            container.innerHTML = '';
+            values.forEach(value => {
+                const label = document.createElement('label');
+                label.className = 'company-culture-option';
+                label.style.cssText = 'padding: 14px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500;';
+                label.onclick = () => this.toggleCompanyCulture(label);
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = value.slug;
+                checkbox.style.cssText = 'width: 16px; height: 16px; accent-color: var(--primary);';
+
+                const span = document.createElement('span');
+                span.textContent = value.name;
+
+                label.appendChild(checkbox);
+                label.appendChild(span);
+                container.appendChild(label);
+            });
+        } catch (error) {
+            console.error('Error loading culture values:', error);
+        }
+    },
+
+    // Cargar company stages desde BD
+    async loadCompanyStages() {
+        const backend = window.talentlyBackend;
+        if (!backend) return;
+
+        try {
+            const { data: stages } = await backend.reference.getCompanyStages();
+            const container = document.querySelector('#companyStep6 .auth-content > div:last-of-type');
+            if (!container || !stages) return;
+
+            // Clear existing options
+            const existingOptions = container.querySelectorAll('.company-stage-option');
+            existingOptions.forEach(opt => opt.remove());
+
+            stages.forEach(stage => {
+                const label = document.createElement('label');
+                label.className = 'company-stage-option';
+                label.style.cssText = 'padding: 18px; border: 2px solid var(--border); border-radius: 14px; cursor: pointer; transition: all 0.3s ease;';
+                label.onclick = () => this.selectOption('companyStage', stage.slug, label);
+
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'companyStage';
+                radio.value = stage.slug;
+                radio.style.cssText = 'width: 18px; height: 18px; accent-color: var(--primary); margin-right: 12px;';
+
+                const span = document.createElement('span');
+                span.style.cssText = 'font-weight: 600; font-size: 14px;';
+                span.textContent = stage.description ? `${stage.name} / ${stage.description}` : stage.name;
+
+                label.appendChild(radio);
+                label.appendChild(span);
+                container.appendChild(label);
+            });
+        } catch (error) {
+            console.error('Error loading company stages:', error);
+        }
+    },
+
+    // Cargar work models desde BD
+    async loadWorkModels() {
+        const backend = window.talentlyBackend;
+        if (!backend) return;
+
+        try {
+            const { data: models } = await backend.reference.getWorkModalities();
+            const container = document.querySelector('#companyStep7 .auth-content > div:last-of-type');
+            if (!container || !models) return;
+
+            // Clear existing options
+            const existingOptions = container.querySelectorAll('.work-model-option');
+            existingOptions.forEach(opt => opt.remove());
+
+            models.forEach(model => {
+                const label = document.createElement('label');
+                label.className = 'work-model-option';
+                label.style.cssText = 'padding: 20px; border: 2px solid var(--border); border-radius: 16px; cursor: pointer; transition: all 0.3s ease;';
+                label.onclick = () => this.selectOption('workModel', model.slug, label);
+
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'workModel';
+                radio.value = model.slug;
+                radio.style.cssText = 'width: 20px; height: 20px; accent-color: var(--primary); margin-right: 12px;';
+
+                const nameSpan = document.createElement('span');
+                nameSpan.style.fontWeight = '600';
+                nameSpan.textContent = model.name;
+
+                const descDiv = document.createElement('div');
+                descDiv.style.cssText = 'font-size: 13px; color: var(--text-secondary); margin-left: 32px; margin-top: 4px;';
+                descDiv.textContent = model.description || '';
+
+                label.appendChild(radio);
+                label.appendChild(nameSpan);
+                if (model.description) label.appendChild(descDiv);
+                container.appendChild(label);
+            });
+        } catch (error) {
+            console.error('Error loading work models:', error);
+        }
+    },
+
+    // Cargar positions desde BD
+    async loadCompanyPositions() {
+        const backend = window.talentlyBackend;
+        if (!backend) return;
+
+        try {
+            const { data: positions } = await backend.reference.getCompanyPositions();
+            const container = document.querySelector('#companyStep8 > div > div:nth-child(2) > div:nth-child(3)');
+            if (!container || !positions) return;
+
+            container.innerHTML = '';
+            positions.forEach(position => {
+                const label = document.createElement('label');
+                label.className = 'position-option';
+                label.style.cssText = 'padding: 14px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500;';
+                label.onclick = () => this.togglePosition(label);
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = position.slug;
+                checkbox.style.cssText = 'width: 16px; height: 16px; accent-color: var(--primary);';
+
+                const span = document.createElement('span');
+                span.textContent = position.name;
+
+                label.appendChild(checkbox);
+                label.appendChild(span);
+                container.appendChild(label);
+            });
+        } catch (error) {
+            console.error('Error loading positions:', error);
+        }
+    },
+
+    // Cargar seniority levels desde BD
+    async loadSeniorityLevels() {
+        const backend = window.talentlyBackend;
+        if (!backend) return;
+
+        try {
+            const { data: levels } = await backend.reference.getSeniorityLevels();
+            const container = document.querySelector('#companyStep9 .auth-content > div:nth-child(3)');
+            if (!container || !levels) return;
+
+            container.innerHTML = '';
+            levels.forEach(level => {
+                const label = document.createElement('label');
+                label.className = 'seniority-option';
+                label.style.cssText = 'padding: 18px; border: 2px solid var(--border); border-radius: 14px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center;';
+                label.onclick = () => this.toggleSeniority(label);
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = level.slug;
+                checkbox.style.cssText = 'width: 18px; height: 18px; accent-color: var(--primary); margin-right: 14px;';
+
+                const div = document.createElement('div');
+
+                const nameDiv = document.createElement('div');
+                nameDiv.style.cssText = 'font-weight: 600; font-size: 15px;';
+                nameDiv.textContent = level.name;
+
+                const descDiv = document.createElement('div');
+                descDiv.style.cssText = 'font-size: 13px; color: var(--text-secondary); margin-top: 2px;';
+                descDiv.textContent = level.description || '';
+
+                div.appendChild(nameDiv);
+                if (level.description) div.appendChild(descDiv);
+
+                label.appendChild(checkbox);
+                label.appendChild(div);
+                container.appendChild(label);
+            });
+        } catch (error) {
+            console.error('Error loading seniority levels:', error);
+        }
+    },
+
     validateCompanyStep(step) {
         const validateInput = (id, message) => {
             const el = document.getElementById(id);
@@ -2802,8 +5018,26 @@ const app = {
         if (step === 2) {
             // Info
             isValid = validateInput('companyName', 'El nombre de la empresa es obligatorio') && isValid;
+
+            // Validar RUT (obligatorio)
+            const taxId = document.getElementById('companyTaxId');
+            if (taxId) {
+                if (!taxId.value || taxId.value.trim() === '') {
+                    taxId.style.borderColor = 'var(--danger)';
+                    this.showToast('El RUT es obligatorio');
+                    isValid = false;
+                } else if (!this.validateRUT(taxId.value)) {
+                    taxId.style.borderColor = 'var(--danger)';
+                    this.showToast('El RUT ingresado no es válido');
+                    isValid = false;
+                } else {
+                    taxId.style.borderColor = 'var(--border)';
+                }
+            }
+
+            // Validar sitio web (opcional, pero si existe debe ser válido)
             const website = document.getElementById('companyWebsite');
-            if (website && website.value) {
+            if (website && website.value && website.value.trim() !== '') {
                 const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
                 if (!urlPattern.test(website.value)) {
                     website.style.borderColor = 'var(--danger)';
@@ -2811,8 +5045,6 @@ const app = {
                     return false;
                 }
                 website.style.borderColor = 'var(--border)';
-            } else {
-                isValid = validateInput('companyWebsite', 'El sitio web es obligatorio') && isValid;
             }
         }
 
@@ -2871,6 +5103,14 @@ const app = {
             }
         }
 
+        if (step === 15) {
+            // Logo - mandatory
+            if (!this.companyLogo) {
+                this.showToast('Debes subir el logo de tu empresa');
+                return false;
+            }
+        }
+
         return isValid;
     },
 
@@ -2896,9 +5136,44 @@ const app = {
         if (this.validateCompanyStep(step - 1)) {
 
             // Trigger specific renders for steps
+            if (step === 2) {
+                // Setup RUT formatting for company
+                setTimeout(() => this.setupRUTFormatting(), 100);
+            }
+
+            if (step === 3) {
+                // Load company sizes and sectors from database
+                this.loadCompanySizesAndSectors();
+            }
+
             if (step === 4) {
                 // Render countries for Company
                 this.renderCountries('companyCountry');
+            }
+
+            if (step === 5) {
+                // Load culture values from database
+                this.loadCompanyCultureValues();
+            }
+
+            if (step === 6) {
+                // Load company stages from database
+                this.loadCompanyStages();
+            }
+
+            if (step === 7) {
+                // Load work models from database
+                this.loadWorkModels();
+            }
+
+            if (step === 8) {
+                // Load positions from database
+                this.loadCompanyPositions();
+            }
+
+            if (step === 9) {
+                // Load seniority levels from database
+                this.loadSeniorityLevels();
             }
 
             if (step === 10) {
@@ -3168,6 +5443,163 @@ const app = {
         this.renderCompanyTags();
     },
 
+    // ============================================
+    // EDIT SKILLS LOGIC (DYNAMIC)
+    // ============================================
+
+    openEditSkills() {
+        const modal = document.getElementById('editSkillsModal');
+        if (!modal) return;
+
+        // 1. Populate Areas
+        const areaSelect = document.getElementById('editSkillsArea');
+        areaSelect.innerHTML = '<option value="">Selecciona un área</option>';
+
+        let areas = this.referenceData?.areas || [];
+        if (areas.length === 0) {
+            // Fallback to local keys if no DB data
+            areas = Object.keys(this.skillsByArea).map(k => ({ id: k, name: k.charAt(0).toUpperCase() + k.slice(1) }));
+        }
+
+        areas.forEach(area => {
+            const opt = document.createElement('option');
+            opt.value = area.id || area.name; // Robust fallback
+            opt.textContent = area.name;
+            areaSelect.appendChild(opt);
+        });
+
+        // 2. Load User's Current Skills
+        this.skillsSelected = [...(this.currentUser.skills || [])];
+        this.renderSelectedSkillsChips();
+
+        // 3. Clear Bubbles initially
+        document.getElementById('editSkillsBubbles').innerHTML = '<div style="color:var(--text-secondary); text-align:center; padding:20px;">Selecciona un área para ver sugerencias</div>';
+
+        modal.classList.add('active');
+        modal.style.display = 'flex';
+    },
+
+    closeEditSkills() {
+        const modal = document.getElementById('editSkillsModal');
+        if (modal) {
+            modal.classList.remove('active');
+            modal.style.display = 'none';
+        }
+    },
+
+    renderSelectedSkillsChips() {
+        const container = document.getElementById('editSkillsSelected');
+        if (!container) return;
+
+        if (this.skillsSelected.length === 0) {
+            container.innerHTML = '<span style="color:var(--text-secondary); font-size:13px;">No tienes habilidades seleccionadas aún.</span>';
+            return;
+        }
+
+        container.innerHTML = this.skillsSelected.map((skill, index) => `
+            <div class="skill-badge" style="display:inline-flex; align-items:center; gap:6px; padding:6px 12px; background:var(--primary); color:white; border-radius:16px; font-size:13px;">
+                ${skill}
+                <span onclick="app.removeSkill(${index})" style="cursor:pointer; font-weight:bold; opacity:0.8; font-size:16px;">&times;</span>
+            </div>
+        `).join('');
+    },
+
+    removeSkill(index) {
+        this.skillsSelected.splice(index, 1);
+        this.renderSelectedSkillsChips();
+        // Also re-render bubbles to uncheck the removed skill if visible
+        this.renderEditSkillsBubbles();
+    },
+
+    renderEditSkillsBubbles() {
+        const areaSelect = document.getElementById('editSkillsArea');
+        const container = document.getElementById('editSkillsBubbles');
+        const selectedArea = areaSelect.value;
+
+        if (!selectedArea) {
+            container.innerHTML = '';
+            return;
+        }
+
+        // Try to find skills for this area
+        // 1. From DB reference if structure supports it (assuming area object might have skills?)
+        // 2. From local map 'skillsByArea' (Most reliable right now based on data.js)
+
+        // Match area ID to local key (handle case-sensitivity or exact match)
+        // Our local keys: 'desarrollo', 'diseno-ux'. 
+        // If DB returns 'UUID' we might need a mapping, but let's assume loose matching for now or 
+        // that DB returns readable IDs.
+
+        let skillsForArea = this.skillsByArea[selectedArea] || [];
+
+        // If empty, maybe the area name in DB matches a key?
+        if (skillsForArea.length === 0 && this.referenceData.areas) {
+            const areaObj = this.referenceData.areas.find(a => a.id == selectedArea);
+            if (areaObj && this.skillsByArea[areaObj.name.toLowerCase()]) {
+                skillsForArea = this.skillsByArea[areaObj.name.toLowerCase()];
+            }
+        }
+
+        // Fallback: Default generic skills if none found
+        if (!skillsForArea || skillsForArea.length === 0) {
+            container.innerHTML = '<div style="padding:10px;">No hay sugerencias para esta área. Escribe abajo para agregar (Próximamente).</div>';
+            return;
+        }
+
+        container.innerHTML = `<div style="display:flex; flex-wrap:wrap; gap:8px; padding:10px;">
+            ${skillsForArea.map(skill => {
+            const isSelected = this.skillsSelected.includes(skill);
+            const bg = isSelected ? 'var(--primary)' : 'var(--bg)';
+            const color = isSelected ? 'white' : 'var(--text-primary)';
+            const border = isSelected ? 'var(--primary)' : 'var(--border)';
+
+            return `
+                <button onclick="app.toggleSkillSelection('${skill}')" 
+                    style="padding:8px 16px; border-radius:20px; border:1px solid ${border}; background:${bg}; color:${color}; cursor:pointer; font-size:13px; transition:all 0.2s;">
+                    ${skill} ${isSelected ? '✓' : '+'}
+                </button>
+                `;
+        }).join('')}
+        </div>`;
+    },
+
+    toggleSkillSelection(skill) {
+        if (this.skillsSelected.includes(skill)) {
+            this.skillsSelected = this.skillsSelected.filter(s => s !== skill);
+        } else {
+            if (this.skillsSelected.length >= 15) {
+                this.showToast('Máximo 15 habilidades');
+                return;
+            }
+            this.skillsSelected.push(skill);
+        }
+        this.renderSelectedSkillsChips();
+        this.renderEditSkillsBubbles(); // Refresh buttons
+    },
+
+    async saveEditSkills() {
+        this.currentUser.skills = [...this.skillsSelected];
+        this.renderProfile(); // Update UI immediately
+        this.closeEditSkills();
+
+        if (window.talentlyBackend && window.talentlyBackend.profiles && window.talentlyBackend.profiles.create) {
+            const { error } = await window.talentlyBackend.profiles.create({
+                id: this.currentUser.id,
+                skills: this.currentUser.skills,
+                email: this.currentUser.email // Required for upsert usually
+            });
+
+            if (error) {
+                console.error('Error saving skills:', error);
+                this.showToast('Error al guardar en servidor', 'error');
+            } else {
+                this.showToast('Habilidades actualizadas');
+            }
+        } else {
+            this.showToast('Habilidades guardadas (Local)');
+        }
+    },
+
     renderCompanyTagSuggestions() {
         if (!this.companyTags) this.companyTags = [];
         const categories = {
@@ -3298,8 +5730,19 @@ const app = {
     },
 
     async completeCompanyOnboarding() {
-        console.log('Starting completeCompanyOnboarding...');
+        console.log('🏢 DEBUG: ===== STARTING COMPANY ONBOARDING COMPLETION =====');
+        console.log('👤 DEBUG: Current user:', this.currentUser);
+        console.log('📋 DEBUG: Profile type:', this.profileType);
+        console.log('💾 DEBUG: localStorage user_type:', localStorage.getItem('talently_user_type'));
 
+        // Validate logo is required before proceeding
+        if (!this.companyLogo) {
+            console.log('❌ DEBUG: Logo validation failed');
+            this.showToast('Debes subir el logo de tu empresa');
+            return;
+        }
+
+        console.log('✅ DEBUG: Logo validation passed');
         try {
             this.showToast('Guardando perfil de empresa...', 'info');
 
@@ -3339,40 +5782,53 @@ const app = {
                 logoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(companyName || 'Company')}&background=random`;
             }
 
-            const profileData = {
-                onboarding_completed: true,
-                user_type: 'company',
-                name: companyName, // Map to profile 'name'
+            // Prepare company data for COMPANIES table
+            const companyData = {
+                name: companyName,
                 website: companyWebsite,
                 company_size: companySize,
                 sector: companySector,
                 country: companyCountry,
                 city: companyCity,
-                culture_values: culture,
-                stage: stage,
+                company_stage: stage,
                 work_model: workModel,
-                target_positions: positions,
-                tech_stack: this.companyTechStack || [],
-                tags: this.companyTags || [],
-                image: logoUrl, // Map logo to 'image' for profile consistency
-
-                // Keep standard fields safe
-                email: this.currentUser?.email
+                logo_url: logoUrl,
+                // Note: culture, positions, tech_stack, tags will be saved to relational tables later
             };
 
-            // Save to Supabase
+            // Save to Supabase COMPANIES table
+            console.log('💾 DEBUG: Attempting to save to COMPANIES table...');
+            console.log('📦 DEBUG: Company data:', companyData);
+
             if (window.talentlyBackend && window.talentlyBackend.isReady) {
-                const { error } = await window.talentlyBackend.profiles.create(profileData);
-                if (error) throw error;
-                console.log('Company Profile Saved!');
+                console.log('✅ DEBUG: Backend ready, calling companies.create...');
+                const { data: savedCompany, error } = await window.talentlyBackend.companies.create(companyData);
+                if (error) {
+                    console.log('❌ DEBUG: Error saving company:', error);
+                    throw error;
+                }
+                console.log('✅ DEBUG: Company saved successfully to COMPANIES table!', savedCompany);
+
+                // Save relational data (culture, positions, tech stack, tags)
+                if (savedCompany && savedCompany.id) {
+                    console.log('💾 DEBUG: Saving relational data for company ID:', savedCompany.id);
+
+                    // TODO: Save to company_culture_selected, company_positions_looking,
+                    // company_tech_stack, company_tags tables
+                    // For now, we skip this to get the basic flow working
+                }
 
                 // Update local state
-                this.currentUser = { ...this.currentUser, ...profileData };
+                this.currentUser = { ...this.currentUser, ...savedCompany, user_type: 'company' };
+                this.companyProfile = savedCompany;
                 this.profileType = 'company';
                 localStorage.setItem('talently_user_type', 'company');
+                localStorage.setItem('talently_logged_in', 'true');
+                console.log('✅ DEBUG: Local state updated');
             } else {
-                console.warn('Backend not ready, saving to localStorage');
-                localStorage.setItem('talently_company_profile', JSON.stringify(profileData));
+                console.warn('⚠️ DEBUG: Backend not ready, saving to localStorage');
+                localStorage.setItem('talently_company_profile', JSON.stringify(companyData));
+                localStorage.setItem('talently_user_type', 'company');
             }
 
             this.showView('successView');
@@ -3784,6 +6240,7 @@ const app = {
         if (sectionId === 'offers') sectionId = 'companyOffersSection';
         if (sectionId === 'search') sectionId = 'companySearchSection';
         if (sectionId === 'messages') sectionId = 'companyMessagesSection';
+        if (sectionId === 'profile') sectionId = 'companyProfileSection';
 
         // Force Close Modals/Overlays
         const offerForm = document.getElementById('companyOfferForm');
@@ -3795,7 +6252,7 @@ const app = {
         document.querySelectorAll('.company-section').forEach(section => {
             if (section.id === sectionId) {
                 section.classList.add('active');
-                // Only Flex for Search/Messages potentially, Block for Offers
+                // Only Flex for Search/Messages potentially, Block for Offers/Profile
                 if (sectionId === 'companySearchSection') {
                     section.style.display = 'flex';
                 } else if (sectionId === 'companyMessagesSection') {
@@ -3817,11 +6274,115 @@ const app = {
             if (sectionId === 'companyOffersSection') navItems[0].classList.add('active');
             if (sectionId === 'companySearchSection') navItems[1].classList.add('active');
             if (sectionId === 'companyMessagesSection') navItems[2].classList.add('active');
+            if (sectionId === 'companyProfileSection') navItems[3].classList.add('active');
         }
 
         if (sectionId === 'companyOffersSection') this.renderCompanyOffers();
         if (sectionId === 'companySearchSection') this.initCandidateSwipe();
         if (sectionId === 'companyMessagesSection') this.renderConversationsList();
+        if (sectionId === 'companyProfileSection') this.renderCompanyProfile();
+    },
+
+    renderCompanyProfile() {
+        // Render company profile data
+        const companyData = this.companyProfile || this.currentUser || {};
+
+        // Set logo
+        const logoEl = document.getElementById('companyProfileLogo');
+        if (logoEl && companyData.logo_url) {
+            logoEl.src = companyData.logo_url;
+        }
+
+        // Set company name
+        const nameEl = document.getElementById('companyProfileName');
+        if (nameEl) nameEl.textContent = companyData.name || 'Nombre de la Empresa';
+
+        // Set sector
+        const sectorEl = document.getElementById('companyProfileSector');
+        if (sectorEl) sectorEl.textContent = companyData.sector || 'Sector';
+
+        // Set size
+        const sizeEl = document.getElementById('companyProfileSize');
+        if (sizeEl) sizeEl.textContent = companyData.company_size || 'Tamaño';
+
+        // Set location
+        const locationEl = document.getElementById('companyProfileLocation');
+        if (locationEl) locationEl.textContent = `${companyData.city || 'Ciudad'}, ${companyData.country || 'País'}`;
+
+        // Set website
+        const websiteEl = document.getElementById('companyProfileWebsite');
+        if (websiteEl) {
+            if (companyData.website) {
+                websiteEl.href = companyData.website;
+                websiteEl.textContent = companyData.website;
+            } else {
+                websiteEl.textContent = '-';
+            }
+        }
+
+        // Set LinkedIn
+        const linkedinEl = document.getElementById('companyProfileLinkedin');
+        if (linkedinEl) {
+            if (companyData.linkedin_url) {
+                linkedinEl.href = companyData.linkedin_url;
+                linkedinEl.textContent = 'Ver perfil';
+            } else {
+                linkedinEl.textContent = '-';
+            }
+        }
+
+        // Set work model
+        const workModelEl = document.getElementById('companyProfileWorkModel');
+        if (workModelEl) workModelEl.textContent = companyData.work_model || '-';
+
+        // Set company stage
+        const stageEl = document.getElementById('companyProfileStage');
+        if (stageEl) stageEl.textContent = companyData.company_stage || '-';
+
+        // Set value proposition
+        const valuePropEl = document.getElementById('companyProfileValueProp');
+        if (valuePropEl) valuePropEl.textContent = companyData.value_proposition || '-';
+
+        // Render culture values
+        const cultureContainer = document.getElementById('companyProfileCulture');
+        if (cultureContainer && companyData.culture_values && Array.isArray(companyData.culture_values)) {
+            cultureContainer.innerHTML = companyData.culture_values.map(value => `
+                <span style="padding: 6px 14px; background: rgba(108, 92, 231, 0.1); color: var(--primary); border-radius: 20px; font-size: 13px; font-weight: 600;">${value}</span>
+            `).join('');
+        }
+
+        // Render tech stack
+        const techContainer = document.getElementById('companyProfileTech');
+        if (techContainer && this.companyTechStack && Array.isArray(this.companyTechStack)) {
+            techContainer.innerHTML = this.companyTechStack.map(tech => `
+                <span style="padding: 6px 14px; background: var(--bg); border: 1px solid var(--border); color: var(--text-primary); border-radius: 20px; font-size: 13px; font-weight: 500;">${tech}</span>
+            `).join('');
+        }
+
+        // Set stats (placeholder values - would come from database)
+        const statsOffers = document.getElementById('companyStatsOffers');
+        if (statsOffers) statsOffers.textContent = '0'; // TODO: Get from DB
+
+        const statsMatches = document.getElementById('companyStatsMatches');
+        if (statsMatches) statsMatches.textContent = '0'; // TODO: Get from DB
+
+        const statsViews = document.getElementById('companyStatsViews');
+        if (statsViews) statsViews.textContent = '0'; // TODO: Get from DB
+    },
+
+    openCompanyEditModal() {
+        // Pre-fill onboarding with current data and allow editing
+        const confirmation = confirm('¿Deseas editar tu perfil de empresa? Esto te llevará al formulario de onboarding con tus datos actuales.');
+
+        if (confirmation) {
+            // Navigate back to first step of company onboarding
+            this.showView('companyStep1');
+
+            // TODO: Pre-fill all form fields with current company data
+            // For now, user can go through the steps again
+
+            this.showToast('Editando perfil de empresa');
+        }
     },
 
     formatCurrency(input) {
@@ -4210,9 +6771,24 @@ const app = {
     },
 
     toggleNotifications() {
+        console.log('toggleNotifications called');
         const view = document.getElementById('notificationsView');
-        if (view) {
-            view.style.transform = 'translateY(0)'; // Slide up
+        if (!view) {
+            console.error('notificationsView not found');
+            return;
+        }
+
+        // Toggle usando style.transform
+        if (view.style.transform === 'translateY(0px)' || view.style.transform === 'translateY(0)') {
+            console.log('Notifications open, closing...');
+            view.style.transform = 'translateY(100%)';
+        } else {
+            console.log('Opening notifications, closing others...');
+            // Cerrar otros toggles
+            this.closeFilters();
+            this.closeSettingsModal();
+
+            view.style.transform = 'translateY(0)';
         }
     },
 
@@ -4241,50 +6817,73 @@ const app = {
     closeNotifications() {
         const view = document.getElementById('notificationsView');
         if (view) {
-            view.style.transform = 'translateY(100%)'; // Slide down
+            view.style.transform = 'translateY(100%)';
         }
     },
 
     openSettingsModal() {
-        // Determine if candidate or company
+        console.log('openSettingsModal called');
+        const candidateView = document.getElementById('settingsView');
+        const companyModal = document.getElementById('settingsModal');
         const type = localStorage.getItem('talently_user_type');
+        console.log('User type:', type, 'Profile type:', this.profileType);
+
         if (type === 'company' || this.profileType === 'company') {
-            const modal = document.getElementById('settingsModal'); // Company modal
-            if (modal) {
-                modal.style.display = 'flex';
-                modal.offsetHeight; // force reflow
-                modal.style.opacity = '1';
-                // Reset transform of inner content if needed
-                const inner = modal.querySelector('.company-modal');
+            console.log('Opening company settings...');
+            // Company modal toggle
+            if (companyModal && companyModal.style.display === 'flex') {
+                console.log('Company modal already open, closing...');
+                this.closeSettingsModal();
+                return;
+            }
+
+            // Cerrar otros toggles
+            this.closeFilters();
+            this.closeNotifications();
+
+            if (companyModal) {
+                companyModal.style.display = 'flex';
+                companyModal.offsetHeight; // force reflow
+                companyModal.style.opacity = '1';
+                const inner = companyModal.querySelector('.company-modal');
                 if (inner) inner.style.transform = 'translateY(0)';
+            } else {
+                console.error('settingsModal not found');
             }
         } else {
-            // Default Candidate behavior
-            const view = document.getElementById('settingsView');
-            if (view) {
-                view.style.transform = 'translateY(0)';
+            console.log('Opening candidate settings...');
+            // Candidate toggle usando style.transform
+            if (!candidateView) {
+                console.error('settingsView not found');
+                return;
             }
+
+            if (candidateView.style.transform === 'translateY(0px)' || candidateView.style.transform === 'translateY(0)') {
+                console.log('Settings already open, closing...');
+                candidateView.style.transform = 'translateY(100%)';
+                return;
+            }
+
+            // Cerrar otros toggles
+            this.closeFilters();
+            this.closeNotifications();
+
+            candidateView.style.transform = 'translateY(0)';
         }
     },
 
     closeSettingsModal() {
-        const view = document.getElementById('settingsView');
-        if (view) {
-            view.style.transform = 'translateY(100%)';
+        // Cerrar candidate view
+        const candidateView = document.getElementById('settingsView');
+        if (candidateView) {
+            candidateView.style.transform = 'translateY(100%)';
         }
-    },
 
-    openFilters() {
-        const view = document.getElementById('filtersView');
-        if (view) {
-            view.style.transform = 'translateY(0)';
-        }
-    },
-
-    closeFilters() {
-        const view = document.getElementById('filtersView');
-        if (view) {
-            view.style.transform = 'translateY(100%)';
+        // Cerrar company modal
+        const companyModal = document.getElementById('settingsModal');
+        if (companyModal) {
+            companyModal.style.display = 'none';
+            companyModal.style.opacity = '0';
         }
     },
 
@@ -4294,167 +6893,167 @@ const app = {
 
 
 
-    // Company Profile Logic
-    companyProfile: {
-        name: 'Talently Business',
+// Company Profile Logic
+companyProfile: {
+    name: 'Talently Business',
         industry: 'Tecnología',
-        logo: '',
-        location: 'Santiago, Chile',
-        description: 'Empresa líder en tecnología e innovación.'
-    },
+            logo: '',
+                location: 'Santiago, Chile',
+                    description: 'Empresa líder en tecnología e innovación.'
+},
 
-    handleLogoUpload(input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const preview = document.getElementById('cpLogoPreview');
-                preview.style.backgroundImage = `url(${e.target.result})`;
-                preview.style.display = 'block';
-                document.getElementById('cpLogo').value = e.target.result; // Save DataURL
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-    },
-
-    openCompanyProfile() {
-        const modal = document.getElementById('companyProfileModal');
-        // Load current data
-        document.getElementById('cpName').value = this.companyProfile.name;
-        document.getElementById('cpIndustry').value = this.companyProfile.industry;
-
-        // Handle logo preview
-        const logoVal = this.companyProfile.logo;
-        document.getElementById('cpLogo').value = logoVal;
-        const preview = document.getElementById('cpLogoPreview');
-        if (logoVal) {
-            preview.style.backgroundImage = `url(${logoVal})`;
+handleLogoUpload(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const preview = document.getElementById('cpLogoPreview');
+            preview.style.backgroundImage = `url(${e.target.result})`;
             preview.style.display = 'block';
-        } else {
-            preview.style.display = 'none';
-        }
-
-        document.getElementById('cpLocation').value = this.companyProfile.location;
-        document.getElementById('cpDescription').value = this.companyProfile.description;
-
-        modal.style.setProperty('display', 'flex', 'important');
-    },
-
-    closeCompanyProfile() {
-        document.getElementById('companyProfileModal').style.display = 'none';
-    },
-
-    saveCompanyProfile() {
-        const name = document.getElementById('cpName').value;
-        if (!name) {
-            this.showToast('El nombre es obligatorio');
-            return;
-        }
-
-        this.companyProfile = {
-            name: name,
-            industry: document.getElementById('cpIndustry').value,
-            logo: document.getElementById('cpLogo').value,
-            location: document.getElementById('cpLocation').value,
-            description: document.getElementById('cpDescription').value
+            document.getElementById('cpLogo').value = e.target.result; // Save DataURL
         };
+        reader.readAsDataURL(input.files[0]);
+    }
+},
 
-        this.updateCompanyHeader();
-        this.closeCompanyProfile();
-        this.showToast('Perfil actualizado');
-    },
+openCompanyProfile() {
+    const modal = document.getElementById('companyProfileModal');
+    // Load current data
+    document.getElementById('cpName').value = this.companyProfile.name;
+    document.getElementById('cpIndustry').value = this.companyProfile.industry;
 
-    updateCompanyHeader() {
-        const nameEl = document.getElementById('headerCompanyName');
-        const logoEl = document.getElementById('headerCompanyLogo');
+    // Handle logo preview
+    const logoVal = this.companyProfile.logo;
+    document.getElementById('cpLogo').value = logoVal;
+    const preview = document.getElementById('cpLogoPreview');
+    if (logoVal) {
+        preview.style.backgroundImage = `url(${logoVal})`;
+        preview.style.display = 'block';
+    } else {
+        preview.style.display = 'none';
+    }
 
-        if (nameEl) nameEl.textContent = this.companyProfile.name;
-        if (logoEl) {
-            const logoUrl = this.companyProfile.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.companyProfile.name)}&background=6c5ce7&color=fff`;
-            logoEl.src = logoUrl;
-        }
-    },
+    document.getElementById('cpLocation').value = this.companyProfile.location;
+    document.getElementById('cpDescription').value = this.companyProfile.description;
 
-    renderCompanyTechStack() {
-        const container = document.getElementById('companyTechStackBubbleContainer');
-        if (!container) return;
+    modal.style.setProperty('display', 'flex', 'important');
+},
 
-        container.innerHTML = '';
-        this.companyTechStack.forEach((tech, index) => {
-            const bubble = document.createElement('div');
-            bubble.style.cssText = 'padding: 6px 12px; background: var(--primary); color: white; border-radius: 16px; font-size: 13px; display: flex; align-items: center; gap: 6px;';
-            bubble.innerHTML = `
+closeCompanyProfile() {
+    document.getElementById('companyProfileModal').style.display = 'none';
+},
+
+saveCompanyProfile() {
+    const name = document.getElementById('cpName').value;
+    if (!name) {
+        this.showToast('El nombre es obligatorio');
+        return;
+    }
+
+    this.companyProfile = {
+        name: name,
+        industry: document.getElementById('cpIndustry').value,
+        logo: document.getElementById('cpLogo').value,
+        location: document.getElementById('cpLocation').value,
+        description: document.getElementById('cpDescription').value
+    };
+
+    this.updateCompanyHeader();
+    this.closeCompanyProfile();
+    this.showToast('Perfil actualizado');
+},
+
+updateCompanyHeader() {
+    const nameEl = document.getElementById('headerCompanyName');
+    const logoEl = document.getElementById('headerCompanyLogo');
+
+    if (nameEl) nameEl.textContent = this.companyProfile.name;
+    if (logoEl) {
+        const logoUrl = this.companyProfile.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.companyProfile.name)}&background=6c5ce7&color=fff`;
+        logoEl.src = logoUrl;
+    }
+},
+
+renderCompanyTechStack() {
+    const container = document.getElementById('companyTechStackBubbleContainer');
+    if (!container) return;
+
+    container.innerHTML = '';
+    this.companyTechStack.forEach((tech, index) => {
+        const bubble = document.createElement('div');
+        bubble.style.cssText = 'padding: 6px 12px; background: var(--primary); color: white; border-radius: 16px; font-size: 13px; display: flex; align-items: center; gap: 6px;';
+        bubble.innerHTML = `
                 ${tech}
                 <span onclick="app.removeCompanyTechStack(${index})" style="cursor: pointer; font-weight: bold;">×</span>
             `;
-            container.appendChild(bubble);
-        });
+        container.appendChild(bubble);
+    });
 
-        // Update Suggestions
-        this.renderCompanyTechStackSuggestions();
-    },
+    // Update Suggestions
+    this.renderCompanyTechStackSuggestions();
+},
 
-    renderCompanyTechStackSuggestions() {
-        const container = document.getElementById('companyTechStackSuggestionsContainer');
-        if (!container) return;
+renderCompanyTechStackSuggestions() {
+    const container = document.getElementById('companyTechStackSuggestionsContainer');
+    if (!container) return;
 
-        container.innerHTML = '';
-        const suggestions = ['JavaScript', 'Python', 'React', 'Node.js', 'Java', 'AWS', 'Docker', 'SQL', 'TypeScript', 'Go', 'Figma', 'Vue.js', 'Angular', 'Kubernetes', 'C#', 'Flutter'];
+    container.innerHTML = '';
+    const suggestions = ['JavaScript', 'Python', 'React', 'Node.js', 'Java', 'AWS', 'Docker', 'SQL', 'TypeScript', 'Go', 'Figma', 'Vue.js', 'Angular', 'Kubernetes', 'C#', 'Flutter'];
 
-        suggestions.filter(tech => !this.companyTechStack.includes(tech)).forEach(tech => {
-            const btn = document.createElement('button');
-            btn.textContent = tech;
-            btn.className = 'btn-chip'; // Reuse existing class if available or style directly
-            btn.style.cssText = 'padding: 8px 16px; background: var(--surface); color: var(--text-secondary); border: 1px solid var(--border); border-radius: 24px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.03); display: inline-flex; align-items: center; justify-content: center;';
+    suggestions.filter(tech => !this.companyTechStack.includes(tech)).forEach(tech => {
+        const btn = document.createElement('button');
+        btn.textContent = tech;
+        btn.className = 'btn-chip'; // Reuse existing class if available or style directly
+        btn.style.cssText = 'padding: 8px 16px; background: var(--surface); color: var(--text-secondary); border: 1px solid var(--border); border-radius: 24px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.03); display: inline-flex; align-items: center; justify-content: center;';
 
-            btn.onmouseover = () => { btn.style.background = 'var(--primary)'; btn.style.color = 'white'; };
-            btn.onmouseout = () => { btn.style.background = 'var(--surface)'; btn.style.color = 'var(--text-secondary)'; };
+        btn.onmouseover = () => { btn.style.background = 'var(--primary)'; btn.style.color = 'white'; };
+        btn.onmouseout = () => { btn.style.background = 'var(--surface)'; btn.style.color = 'var(--text-secondary)'; };
 
-            btn.onclick = () => this.addCompanyTechStackFromSuggestion(tech);
-            container.appendChild(btn);
-        });
-    },
+        btn.onclick = () => this.addCompanyTechStackFromSuggestion(tech);
+        container.appendChild(btn);
+    });
+},
 
-    addCompanyTechStackFromSuggestion(tech) {
-        if (this.companyTechStack.length >= 20) {
-            this.showToast('Máximo 20 tecnologías');
-            return;
-        }
-        if (!this.companyTechStack.includes(tech)) {
-            this.companyTechStack.push(tech);
-            this.renderCompanyTechStack();
-        }
-    },
-
-    removeCompanyTechStack(index) {
-        this.companyTechStack.splice(index, 1);
+addCompanyTechStackFromSuggestion(tech) {
+    if (this.companyTechStack.length >= 20) {
+        this.showToast('Máximo 20 tecnologías');
+        return;
+    }
+    if (!this.companyTechStack.includes(tech)) {
+        this.companyTechStack.push(tech);
         this.renderCompanyTechStack();
-    },
+    }
+},
 
-    searchCandidates() {
-        const input = document.getElementById('candidateSearchInput');
-        const query = input ? input.value.toLowerCase() : '';
+removeCompanyTechStack(index) {
+    this.companyTechStack.splice(index, 1);
+    this.renderCompanyTechStack();
+},
 
-        const mockCandidates = [
-            { name: 'Ana Silva', role: 'Senior UX Designer', skills: ['Figma', 'UX Research'] },
-            { name: 'Carlos Ruiz', role: 'Full Stack Dev', skills: ['React', 'Node.js'] },
-            { name: 'Laura M.', role: 'Frontend Developer', skills: ['Vue.js', 'CSS'] },
-            { name: 'Pedro J.', role: 'Product Manager', skills: ['Agile', 'Scrum'] }
-        ];
+searchCandidates() {
+    const input = document.getElementById('candidateSearchInput');
+    const query = input ? input.value.toLowerCase() : '';
 
-        const results = mockCandidates.filter(c =>
-            c.role.toLowerCase().includes(query) ||
-            c.skills.some(s => s.toLowerCase().includes(query))
-        );
+    const mockCandidates = [
+        { name: 'Ana Silva', role: 'Senior UX Designer', skills: ['Figma', 'UX Research'] },
+        { name: 'Carlos Ruiz', role: 'Full Stack Dev', skills: ['React', 'Node.js'] },
+        { name: 'Laura M.', role: 'Frontend Developer', skills: ['Vue.js', 'CSS'] },
+        { name: 'Pedro J.', role: 'Product Manager', skills: ['Agile', 'Scrum'] }
+    ];
 
-        const container = document.getElementById('candidateResults');
-        if (!container) return;
+    const results = mockCandidates.filter(c =>
+        c.role.toLowerCase().includes(query) ||
+        c.skills.some(s => s.toLowerCase().includes(query))
+    );
 
-        if (results.length === 0) {
-            container.innerHTML = '<div style="text-align: center; opacity: 0.6;">No se encontraron candidatos.</div>';
-            return;
-        }
+    const container = document.getElementById('candidateResults');
+    if (!container) return;
 
-        container.innerHTML = results.map(c => `
+    if (results.length === 0) {
+        container.innerHTML = '<div style="text-align: center; opacity: 0.6;">No se encontraron candidatos.</div>';
+        return;
+    }
+
+    container.innerHTML = results.map(c => `
              <div class="candidate-card" style="padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; gap: 12px;">
                  <div style="width: 40px; height: 40px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
                     ${c.name.charAt(0)}
@@ -4469,7 +7068,7 @@ const app = {
                  <button style="padding: 6px 12px; background: var(--primary); color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">Chat</button>
              </div>
         `).join('');
-    }
+}
 };
 
 // Initialize app on page load
@@ -4480,6 +7079,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Make app globally accessible for debugging
     window.app = app;
     console.log('App initialized and available as window.app');
+
+    // Listener para recargar avatar cuando la página vuelve a ser visible
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && app.currentUser) {
+            console.log('Página visible de nuevo, recargando avatar...');
+            app.loadAvatarFromLocalStorage();
+        }
+    });
 });
 
 // ===== CANDIDATE SEARCH LOGIC APPENDED =====
@@ -4974,7 +7581,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Make app globally available
+// Expose app globally for inline HTML handlers
 window.app = app;
 
 // Initialize when DOM is ready

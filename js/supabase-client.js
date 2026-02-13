@@ -190,6 +190,54 @@ const db = {
         }
     },
 
+    // Company Helpers
+    companies: {
+        create: async (companyData) => {
+            if (!db.isReady) return { error: { message: 'Backend not configured' } };
+
+            // Get current user to ensure ownership
+            const user = (await supabaseInstance.auth.getUser()).data.user;
+            if (!user) return { error: { message: 'No authenticated user found.' } };
+
+            // Merge companyData with user_id
+            const payload = { ...companyData, user_id: user.id };
+
+            console.log('💾 DEBUG: Creating company record with payload:', payload);
+
+            const { data, error } = await supabaseInstance
+                .from('companies')
+                .upsert([payload])
+                .select()
+                .single();
+
+            console.log('📊 DEBUG: Company create result:', { data, error });
+            return { data, error };
+        },
+
+        getById: async (userId) => {
+            if (!db.isReady) return { error: 'Backend not configured' };
+            console.log('🔍 DEBUG: Fetching company by user_id:', userId);
+            const { data, error } = await supabaseInstance
+                .from('companies')
+                .select('*')
+                .eq('user_id', userId)
+                .single();
+            console.log('📊 DEBUG: Company fetch result:', { data, error });
+            return { data, error };
+        },
+
+        update: async (userId, companyData) => {
+            if (!db.isReady) return { error: 'Backend not configured' };
+            const { data, error } = await supabaseInstance
+                .from('companies')
+                .update(companyData)
+                .eq('user_id', userId)
+                .select()
+                .single();
+            return { data, error };
+        }
+    },
+
     // Reference Data Helpers (Countries, Cities, Skills, etc.)
     reference: {
         getCountries: async () => {
@@ -219,6 +267,167 @@ const db = {
                 query = query.eq('category', category);
             }
             return await query;
+        },
+        getWorkModalities: async () => {
+            if (!db.isReady) return { data: [] };
+            return await supabaseInstance.from('work_modalities').select('*').order('display_order');
+        },
+        getEducationLevels: async () => {
+            if (!db.isReady) return { data: [] };
+            return await supabaseInstance.from('education_levels').select('*').order('display_order');
+        },
+        getExperienceRanges: async () => {
+            if (!db.isReady) return { data: [] };
+            return await supabaseInstance.from('experience_ranges').select('*').order('display_order');
+        },
+
+        // Company reference data
+        getCompanySizes: async () => {
+            if (!db.isReady) return { data: [] };
+            return await supabaseInstance.from('company_sizes').select('*').order('display_order');
+        },
+        getCompanySectors: async () => {
+            if (!db.isReady) return { data: [] };
+            return await supabaseInstance.from('company_sectors').select('*').order('display_order');
+        },
+        getCompanyStages: async () => {
+            if (!db.isReady) return { data: [] };
+            return await supabaseInstance.from('company_stages').select('*').order('display_order');
+        },
+        getCompanyCultureValues: async () => {
+            if (!db.isReady) return { data: [] };
+            return await supabaseInstance.from('company_culture_values').select('*').order('display_order');
+        },
+        getCompanyPositions: async () => {
+            if (!db.isReady) return { data: [] };
+            return await supabaseInstance.from('company_positions').select('*').order('display_order');
+        },
+        getSeniorityLevels: async () => {
+            if (!db.isReady) return { data: [] };
+            return await supabaseInstance.from('seniority_levels').select('*').order('display_order');
+        },
+        getCompanyBenefits: async () => {
+            if (!db.isReady) return { data: [] };
+            return await supabaseInstance.from('company_benefits').select('*').order('display_order');
+        },
+        getSelectionDurations: async () => {
+            if (!db.isReady) return { data: [] };
+            return await supabaseInstance.from('selection_durations').select('*').order('display_order');
+        }
+    },
+
+    // User Statistics Helpers
+    statistics: {
+        // Get statistics for the current user
+        get: async () => {
+            if (!db.isReady) return { data: null, error: 'Backend not configured' };
+            const userId = (await supabaseInstance.auth.getUser()).data.user?.id;
+            if (!userId) return { data: null, error: 'No user' };
+
+            const { data, error } = await supabaseInstance
+                .from('user_statistics')
+                .select('*')
+                .eq('user_id', userId)
+                .maybeSingle();
+
+            // If no row exists, initialize one
+            if (!data && !error) {
+                await db.statistics.initialize(userId);
+                const retry = await supabaseInstance
+                    .from('user_statistics')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .maybeSingle();
+                return { data: retry.data || null, error: retry.error };
+            }
+
+            return { data, error };
+        },
+
+        // Increment a specific counter field
+        increment: async (field) => {
+            if (!db.isReady) return { error: 'Backend not configured' };
+            const userId = (await supabaseInstance.auth.getUser()).data.user?.id;
+            if (!userId) return { error: 'No user' };
+
+            // Try calling the RPC function first (atomic increment)
+            const { error: rpcError } = await supabaseInstance
+                .rpc('increment_stat', { p_user_id: userId, p_field: field });
+
+            if (rpcError) {
+                console.warn('RPC increment failed, using fallback:', rpcError);
+                // Fallback: read-modify-write
+                const { data: current } = await db.statistics.get();
+                if (current) {
+                    const newValue = (current[field] || 0) + 1;
+                    await supabaseInstance
+                        .from('user_statistics')
+                        .update({ [field]: newValue, updated_at: new Date().toISOString(), last_activity_at: new Date().toISOString() })
+                        .eq('user_id', userId);
+                }
+            }
+
+            // Also log daily activity
+            await db.statistics.logDailyActivity(field);
+
+            return { error: null };
+        },
+
+        // Log daily activity for the weekly chart
+        logDailyActivity: async (type) => {
+            if (!db.isReady) return;
+            const userId = (await supabaseInstance.auth.getUser()).data.user?.id;
+            if (!userId) return;
+
+            const today = new Date().toISOString().split('T')[0]; // "2026-02-12"
+
+            // Get current daily_activity
+            const { data } = await supabaseInstance
+                .from('user_statistics')
+                .select('daily_activity')
+                .eq('user_id', userId)
+                .single();
+
+            if (!data) return;
+
+            let activity = data.daily_activity || [];
+
+            // Find or create today's entry
+            let todayEntry = activity.find(d => d.date === today);
+            if (!todayEntry) {
+                todayEntry = { date: today, views: 0, matches: 0, swipes: 0, messages: 0 };
+                activity.push(todayEntry);
+            }
+
+            // Map field to daily key
+            const fieldMap = {
+                'profile_views': 'views',
+                'matches_count': 'matches',
+                'swipes_given': 'swipes',
+                'messages_sent': 'messages'
+            };
+            const key = fieldMap[type];
+            if (key) todayEntry[key] = (todayEntry[key] || 0) + 1;
+
+            // Keep only last 7 days
+            activity.sort((a, b) => a.date.localeCompare(b.date));
+            if (activity.length > 7) activity = activity.slice(-7);
+
+            await supabaseInstance
+                .from('user_statistics')
+                .update({ daily_activity: activity })
+                .eq('user_id', userId);
+        },
+
+        // Initialize statistics for a new user
+        initialize: async (userId) => {
+            if (!db.isReady) return { error: 'Backend not configured' };
+            const { data, error } = await supabaseInstance
+                .from('user_statistics')
+                .upsert([{ user_id: userId }], { onConflict: 'user_id' })
+                .select()
+                .single();
+            return { data, error };
         }
     }
 };

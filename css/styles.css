@@ -2244,7 +2244,7 @@
         /* ===== SETTINGS STYLES ===== */
         .settings-view {
             background: var(--bg);
-            min-height: 100vh;
+            min-height: auto;
         }
 
         .settings-list {
@@ -2553,15 +2553,234 @@
     color: #2D3436 !important;
 }
 
-#profile-content-cv, 
-#profile-content-activity {
-    display: block !important;
-}
+/* Tab content visibility is controlled by JS switchProfileTab() */
 
 /* Ensure app container is centered */
 .app-container {
     margin: 0 auto !important;
     max-width: 480px !important;
     display: block !important;
+}
+
+/* ===== TOGGLE VIEWS - COMPORTAMIENTO CONSISTENTE ===== */
+#filtersView,
+#notificationsView,
+#settingsView {
+    transition: transform 0.3s ease;
+}
+
+#filtersView:not(.active),
+#notificationsView:not(.active),
+#settingsView:not(.active) {
+    transform: translateY(100%);
+}
+
+#filtersView.active,
+#notificationsView.active,
+#settingsView.active {
+    transform: translateY(0);
+}
+
+/* ===== DARK MODE OVERRIDES ===== */
+/* Sobrescribir colores hardcodeados para que funcione el modo oscuro */
+
+.dark-mode .profile-info-row {
+    border-bottom: 1px solid var(--border) !important;
+}
+
+.dark-mode .profile-section-title {
+    color: var(--text-primary) !important;
+}
+
+.dark-mode .profile-info-label {
+    color: var(--text-secondary) !important;
+}
+
+.dark-mode .profile-info-value {
+    color: var(--text-primary) !important;
+}
+
+.dark-mode .view-details-btn {
+    background: var(--surface) !important;
+    color: var(--text-primary) !important;
+}
+
+.dark-mode .view-details-btn:hover {
+    background: var(--primary) !important;
+    color: white !important;
+}
+
+.dark-mode .btn-welcome-primary {
+    background: var(--surface) !important;
+    color: var(--text-primary) !important;
+}
+
+.dark-mode .profile-section {
+    background: var(--bg);
+}
+
+.dark-mode .about-text {
+    color: var(--text-primary) !important;
+}
+
+.dark-mode .experience-item,
+.dark-mode .education-item {
+    background: var(--surface) !important;
+    border-color: var(--border) !important;
+}
+
+.dark-mode .experience-title,
+.dark-mode .education-degree {
+    color: var(--text-primary) !important;
+}
+
+.dark-mode .experience-company,
+.dark-mode .education-institution {
+    color: var(--text-secondary) !important;
+}
+
+.dark-mode .experience-description {
+    color: var(--text-secondary) !important;
+}
+
+.dark-mode input,
+.dark-mode textarea,
+.dark-mode select {
+    background: var(--surface) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border) !important;
+}
+
+.dark-mode input::placeholder,
+.dark-mode textarea::placeholder {
+    color: var(--text-secondary) !important;
+}
+
+.dark-mode .edit-modal,
+.dark-mode .company-modal,
+.dark-mode .modal-content {
+    background: var(--bg) !important;
+    color: var(--text-primary) !important;
+}
+
+.dark-mode .modal-header h2,
+.dark-mode .modal-title {
+    color: var(--text-primary) !important;
+}
+
+.dark-mode .form-group label {
+    color: var(--text-primary) !important;
+}
+
+.dark-mode .filter-chip {
+    background: var(--surface) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border) !important;
+}
+
+.dark-mode .filter-chip.active {
+    background: var(--primary) !important;
+    color: white !important;
+}
+
+.dark-mode .tag {
+    background: var(--surface) !important;
+    color: var(--text-primary) !important;
+}
+
+.dark-mode .skill-badge {
+    background: var(--surface) !important;
+    color: var(--text-primary) !important;
+}
+
+.dark-mode .conversation-item {
+    background: var(--surface) !important;
+    border-color: var(--border) !important;
+}
+
+.dark-mode .conversation-name {
+    color: var(--text-primary) !important;
+}
+
+.dark-mode .conversation-message {
+    color: var(--text-secondary) !important;
+}
+
+.dark-mode .notification-item {
+    background: var(--surface) !important;
+    border-color: var(--border) !important;
+}
+
+.dark-mode .notification-title {
+    color: var(--text-primary) !important;
+}
+
+.dark-mode .notification-text {
+    color: var(--text-secondary) !important;
+}
+
+/* Fix: Barra superior y inferior en modo oscuro */
+.dark-mode .main-app .header {
+    background: rgba(26, 27, 30, 0.95) !important;
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border) !important;
+}
+
+.dark-mode .main-app .bottom-nav {
+    background: var(--surface) !important;
+    border-top: 1px solid var(--border) !important;
+}
+
+.dark-mode .main-app .logo {
+    color: var(--text-primary) !important;
+}
+
+.dark-mode .main-app .icon-btn {
+    background: var(--surface) !important;
+}
+
+.dark-mode .main-app .icon-btn svg {
+    stroke: var(--text-secondary) !important;
+}
+
+.dark-mode .main-app .icon-btn:hover {
+    background: var(--primary) !important;
+}
+
+.dark-mode .main-app .icon-btn:hover svg {
+    stroke: white !important;
+}
+
+.dark-mode .main-app .nav-item {
+    color: var(--text-muted) !important;
+}
+
+.dark-mode .main-app .nav-item.active {
+    color: var(--primary) !important;
+}
+
+.dark-mode .main-app .nav-item svg {
+    stroke: currentColor !important;
+}
+
+/* Fix: Texto del cargo en profile hero debe ser blanco */
+.dark-mode .profile-hero {
+    color: white !important;
+}
+
+.dark-mode .profile-hero .profile-title-large,
+.dark-mode .profile-hero .profile-name-large,
+.dark-mode .profile-hero h2,
+.dark-mode .profile-hero p {
+    color: white !important;
+}
+
+.dark-mode .profile-hero .profile-location span {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.dark-mode .profile-stat-value,
+.dark-mode .profile-stat-label {
+    color: white !important;
 }
 
