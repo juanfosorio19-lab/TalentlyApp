@@ -273,6 +273,7 @@ const app = {
                         profile = { ...companyData, user_type: 'company', onboarding_completed: true };
                         userType = 'company';
                         this.profileType = 'company';
+                        this.companyProfile = companyData;
                     } else {
                         console.log('❌ DEBUG: No company profile found:', companyError);
                     }
@@ -648,6 +649,7 @@ const app = {
                     profile = { ...companyData, user_type: 'company', onboarding_completed: true };
                     userType = 'company';
                     this.profileType = 'company';
+                    this.companyProfile = companyData;
                     localStorage.setItem('talently_user_type', 'company');
                 } else {
                     console.log('❌ DEBUG: Not found in companies table, trying profiles...');
@@ -838,8 +840,9 @@ const app = {
         if (this.profileType === 'company' || localStorage.getItem('talently_user_type') === 'company') {
             console.log('🏢 DEBUG: Redirecting to COMPANY APP');
             this.showView('companyApp');
-            this.showCompanySection('companyProfileSection');
+            this.showCompanySection('companyOffersSection');
             this.renderCompanyProfile();
+            this.updateCompanyHeader();
         } else {
             console.log('👤 DEBUG: Redirecting to CANDIDATE APP');
             // Only reset view/section if not already in mainApp
@@ -3354,9 +3357,12 @@ const app = {
 
     openFilters() {
         console.log('openFilters called');
-        const view = document.getElementById('filtersView');
+        const type = localStorage.getItem('talently_user_type');
+        const isCompany = (type === 'company' || this.profileType === 'company');
+        const viewId = isCompany ? 'companyFiltersView' : 'filtersView';
+        const view = document.getElementById(viewId);
         if (!view) {
-            console.error('filtersView not found');
+            console.error(viewId + ' not found');
             return;
         }
 
@@ -3381,6 +3387,8 @@ const app = {
     closeFilters() {
         const view = document.getElementById('filtersView');
         if (view) view.style.transform = 'translateY(100%)';
+        const companyView = document.getElementById('companyFiltersView');
+        if (companyView) companyView.style.transform = 'translateY(100%)';
     },
 
     async loadFilterOptions() {
@@ -4053,6 +4061,8 @@ const app = {
         if (this.profileType === 'company') {
             console.log('🏢 DEBUG: Redirecting to company onboarding (companyStep2)');
             this.showView('companyStep2');
+            // Setup RUT formatting after the view is shown
+            setTimeout(() => this.setupRUTFormatting(), 100);
         } else {
             console.log('👤 DEBUG: Redirecting to candidate onboarding');
 
@@ -4445,7 +4455,12 @@ const app = {
 
     selectOption(category, value, element) {
         // Generic function for radio button options with styling
-        const groupClass = `${category}-option`;
+        // Map category names to actual CSS class names used in HTML
+        const classMap = {
+            'companyStage': 'company-stage-option',
+            'workModel': 'work-model-option'
+        };
+        const groupClass = classMap[category] || `${category}-option`;
 
         // Deselect all options (styling + radio button)
         document.querySelectorAll(`.${groupClass}`).forEach(opt => {
@@ -4722,10 +4737,10 @@ const app = {
     setupRUTFormatting() {
         const taxIdInput = document.getElementById('companyTaxId');
         if (taxIdInput) {
-            // Prevenir caracteres inválidos al escribir
+            // Prevenir caracteres inválidos al escribir (keydown)
             taxIdInput.addEventListener('keydown', (e) => {
                 const key = e.key;
-                const currentValue = e.target.value;
+                if (!key) return;
 
                 // Permitir teclas de control (backspace, delete, arrows, tab, etc.)
                 if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'].includes(key)) {
@@ -4751,18 +4766,55 @@ const app = {
                 e.preventDefault();
             });
 
-            // Formateo automático mientras escribe
+            // Bloquear caracteres inválidos a nivel de beforeinput (más robusto, cubre mobile/IME)
+            taxIdInput.addEventListener('beforeinput', (e) => {
+                // Solo filtrar inserciones de texto (no borrado, selección, etc.)
+                if (e.data && e.inputType && (e.inputType === 'insertText' || e.inputType === 'insertCompositionText')) {
+                    // Si el carácter insertado no es número ni K, bloquear
+                    if (!/^[0-9kK]$/.test(e.data)) {
+                        e.preventDefault();
+                    }
+                }
+            });
+
+            // Formateo automático y sanitización al escribir
             taxIdInput.addEventListener('input', (e) => {
                 const cursorPosition = e.target.selectionStart;
                 const oldValue = e.target.value;
-                const newValue = this.formatRUT(oldValue);
+
+                // Primero sanitizar: eliminar CUALQUIER carácter que no sea número o K
+                // (cubre paste, autocomplete, drag-drop, mobile keyboards, etc.)
+                const sanitized = oldValue.replace(/[^0-9kK.\-]/g, '');
+
+                // Luego formatear con puntos y guión
+                const newValue = this.formatRUT(sanitized);
 
                 // Solo actualizar si el valor cambió
                 if (oldValue !== newValue) {
                     e.target.value = newValue;
                     // Ajustar posición del cursor
                     const diff = newValue.length - oldValue.length;
-                    e.target.setSelectionRange(cursorPosition + diff, cursorPosition + diff);
+                    const newCursor = Math.max(0, cursorPosition + diff);
+                    e.target.setSelectionRange(newCursor, newCursor);
+                }
+            });
+
+            // También sanitizar al pegar (paste)
+            taxIdInput.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                // Limpiar el texto pegado: solo números y K
+                const cleanPasted = pastedText.replace(/[^0-9kK]/g, '');
+                if (cleanPasted) {
+                    // Insertar el texto limpio en la posición del cursor
+                    const start = e.target.selectionStart;
+                    const end = e.target.selectionEnd;
+                    const currentVal = e.target.value.replace(/[^0-9kK]/g, '');
+                    const newVal = currentVal.slice(0, start) + cleanPasted + currentVal.slice(end);
+                    e.target.value = this.formatRUT(newVal);
+                    // Set cursor after pasted content
+                    const formatted = e.target.value;
+                    e.target.setSelectionRange(formatted.length, formatted.length);
                 }
             });
         }
@@ -4845,12 +4897,12 @@ const app = {
 
         try {
             const { data: stages } = await backend.reference.getCompanyStages();
-            const container = document.querySelector('#companyStep6 .auth-content > div:last-of-type');
-            if (!container || !stages) return;
+            // Target the OPTIONS container (first div after subtitle), NOT the buttons div
+            const optionsContainer = document.querySelector('#companyStep6 .auth-content > div[style*="flex-direction: column"]');
+            if (!optionsContainer || !stages) return;
 
-            // Clear existing options
-            const existingOptions = container.querySelectorAll('.company-stage-option');
-            existingOptions.forEach(opt => opt.remove());
+            // Clear ALL existing hardcoded options
+            optionsContainer.innerHTML = '';
 
             stages.forEach(stage => {
                 const label = document.createElement('label');
@@ -4870,7 +4922,7 @@ const app = {
 
                 label.appendChild(radio);
                 label.appendChild(span);
-                container.appendChild(label);
+                optionsContainer.appendChild(label);
             });
         } catch (error) {
             console.error('Error loading company stages:', error);
@@ -4884,12 +4936,12 @@ const app = {
 
         try {
             const { data: models } = await backend.reference.getWorkModalities();
-            const container = document.querySelector('#companyStep7 .auth-content > div:last-of-type');
+            // Target the OPTIONS container (first div after subtitle), NOT the buttons div
+            const container = document.querySelector('#companyStep7 .auth-content > div[style*="flex-direction: column"]');
             if (!container || !models) return;
 
-            // Clear existing options
-            const existingOptions = container.querySelectorAll('.work-model-option');
-            existingOptions.forEach(opt => opt.remove());
+            // Clear ALL existing hardcoded options
+            container.innerHTML = '';
 
             models.forEach(model => {
                 const label = document.createElement('label');
@@ -5655,21 +5707,37 @@ const app = {
     handleCompanyLogoUpload(event) {
         const file = event.target.files[0];
         if (file) {
-            // Check file size (2MB max)
-            if (file.size > 2 * 1024 * 1024) {
-                this.showToast('El logo debe ser menor a 2MB');
+            // Check file size (5MB max - matches Supabase config)
+            if (file.size > 5 * 1024 * 1024) {
+                this.showToast('El logo debe ser menor a 5MB');
                 return;
             }
 
-            // Check file type
-            const validTypes = ['image/png', 'image/jpeg', 'image/svg+xml'];
+            // Check file type (must match Supabase bucket: png, jpeg, jpg, webp)
+            const validTypes = ['image/png', 'image/jpeg', 'image/webp'];
             if (!validTypes.includes(file.type)) {
-                this.showToast('El logo debe ser PNG, JPG o SVG');
+                this.showToast('El logo debe ser PNG, JPG o WEBP');
                 return;
             }
 
             this.companyLogo = file;
-            document.getElementById('logoPreview').style.display = 'block';
+            const previewDiv = document.getElementById('logoPreview');
+            if (previewDiv) {
+                // Show image preview
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewDiv.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <img src="${e.target.result}" alt="Logo preview" style="width: 48px; height: 48px; border-radius: 12px; object-fit: cover; border: 2px solid white;">
+                            <div>
+                                <div style="font-weight: 700;">✅ Logo cargado correctamente</div>
+                                <div style="font-size: 12px; opacity: 0.9;">${file.name}</div>
+                            </div>
+                        </div>`;
+                    previewDiv.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
             console.log('Logo uploaded:', file.name);
         }
     },
@@ -5765,21 +5833,28 @@ const app = {
 
             // Tech Stack is in this.companyTechStack
 
-            // Handle Logo Upload (if pending)
-            let logoUrl = this.companyProfile?.logo;
-            if (this.pendingUploads && this.pendingUploads.logo) { // Assuming logo upload logic sets this
+            // Handle Logo Upload to Supabase Storage
+            let logoUrl = null;
+            if (this.companyLogo && this.companyLogo instanceof File) {
+                console.log('📸 DEBUG: Uploading company logo to Supabase...', this.companyLogo.name);
                 if (window.talentlyBackend && window.talentlyBackend.storage) {
                     try {
-                        const uploadedUrl = await window.talentlyBackend.storage.uploadImage(this.pendingUploads.logo, 'logos');
-                        if (uploadedUrl) logoUrl = uploadedUrl;
+                        const uploadedUrl = await window.talentlyBackend.storage.uploadImage(this.companyLogo, 'images');
+                        if (uploadedUrl) {
+                            logoUrl = uploadedUrl;
+                            console.log('✅ DEBUG: Logo uploaded successfully:', logoUrl);
+                        } else {
+                            console.error('❌ DEBUG: Logo upload returned null');
+                        }
                     } catch (e) {
-                        console.error('Logo upload failed', e);
+                        console.error('❌ DEBUG: Logo upload failed:', e);
                     }
                 }
             }
-            // Fallback logo
+            // Fallback logo only if upload failed (should not happen since we validate)
             if (!logoUrl) {
                 logoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(companyName || 'Company')}&background=random`;
+                console.warn('⚠️ DEBUG: Using placeholder logo URL');
             }
 
             // Prepare company data for COMPANIES table
@@ -5831,7 +5906,12 @@ const app = {
                 localStorage.setItem('talently_user_type', 'company');
             }
 
-            this.showView('successView');
+            // Navigate to company dashboard
+            this.isAuthenticated = true;
+            this.userType = 'company';
+            this.showView('companyApp');
+            this.showCompanySection('companyOffersSection');
+            this.showToast('¡Perfil de empresa creado exitosamente!', 'success');
             window.scrollTo(0, 0);
 
         } catch (error) {
@@ -6226,14 +6306,7 @@ const app = {
     companyOffers: [],
     editingOfferId: null,
 
-    completeCompanyOnboarding() {
-        this.isAuthenticated = true;
-        this.userType = 'company';
-        localStorage.setItem('talently_logged_in', 'true');
-        localStorage.setItem('talently_user_type', 'company');
-        this.showView('companyApp');
-        this.showCompanySection('companyOffersSection');
-    },
+    // completeCompanyOnboarding is defined earlier (around line 5791) with full validation + Supabase upload
 
     showCompanySection(sectionId) {
         // Handle shorthand aliases
@@ -6371,18 +6444,8 @@ const app = {
     },
 
     openCompanyEditModal() {
-        // Pre-fill onboarding with current data and allow editing
-        const confirmation = confirm('¿Deseas editar tu perfil de empresa? Esto te llevará al formulario de onboarding con tus datos actuales.');
-
-        if (confirmation) {
-            // Navigate back to first step of company onboarding
-            this.showView('companyStep1');
-
-            // TODO: Pre-fill all form fields with current company data
-            // For now, user can go through the steps again
-
-            this.showToast('Editando perfil de empresa');
-        }
+        // Open the company edit modal with current data
+        this.openCompanyProfile();
     },
 
     formatCurrency(input) {
@@ -6772,9 +6835,12 @@ const app = {
 
     toggleNotifications() {
         console.log('toggleNotifications called');
-        const view = document.getElementById('notificationsView');
+        const type = localStorage.getItem('talently_user_type');
+        const isCompany = (type === 'company' || this.profileType === 'company');
+        const viewId = isCompany ? 'companyNotificationsView' : 'notificationsView';
+        const view = document.getElementById(viewId);
         if (!view) {
-            console.error('notificationsView not found');
+            console.error(viewId + ' not found');
             return;
         }
 
@@ -6799,16 +6865,17 @@ const app = {
         document.querySelectorAll('.conversation-message.unread').forEach(el => el.classList.remove('unread'));
 
         // Visual feedback for Notifications View (Change background of items)
-        const notifView = document.getElementById('notificationsView');
-        if (notifView) {
-            // Find div children that have the light purple background
-            const items = notifView.querySelectorAll('div[style*="background"]');
-            items.forEach(item => {
-                if (item.style.background.includes('rgba(108,92,231,0.05)')) {
-                    item.style.background = 'transparent';
-                }
-            });
-        }
+        ['notificationsView', 'companyNotificationsView'].forEach(id => {
+            const notifView = document.getElementById(id);
+            if (notifView) {
+                const items = notifView.querySelectorAll('div[style*="background"]');
+                items.forEach(item => {
+                    if (item.style.background.includes('rgba(108,92,231,0.05)')) {
+                        item.style.background = 'transparent';
+                    }
+                });
+            }
+        });
 
         // Visual feedback
         this.showToast('Notificaciones marcadas como leídas');
@@ -6819,21 +6886,29 @@ const app = {
         if (view) {
             view.style.transform = 'translateY(100%)';
         }
+        const companyView = document.getElementById('companyNotificationsView');
+        if (companyView) {
+            companyView.style.transform = 'translateY(100%)';
+        }
     },
 
     openSettingsModal() {
         console.log('openSettingsModal called');
-        const candidateView = document.getElementById('settingsView');
-        const companyModal = document.getElementById('settingsModal');
         const type = localStorage.getItem('talently_user_type');
         console.log('User type:', type, 'Profile type:', this.profileType);
 
         if (type === 'company' || this.profileType === 'company') {
             console.log('Opening company settings...');
-            // Company modal toggle
-            if (companyModal && companyModal.style.display === 'flex') {
-                console.log('Company modal already open, closing...');
-                this.closeSettingsModal();
+            const companySettingsView = document.getElementById('companySettingsView');
+            if (!companySettingsView) {
+                console.error('companySettingsView not found');
+                return;
+            }
+
+            // Toggle: si ya está abierto, cerrar
+            if (companySettingsView.style.transform === 'translateY(0px)' || companySettingsView.style.transform === 'translateY(0)') {
+                console.log('Company settings already open, closing...');
+                companySettingsView.style.transform = 'translateY(100%)';
                 return;
             }
 
@@ -6841,18 +6916,14 @@ const app = {
             this.closeFilters();
             this.closeNotifications();
 
-            if (companyModal) {
-                companyModal.style.display = 'flex';
-                companyModal.offsetHeight; // force reflow
-                companyModal.style.opacity = '1';
-                const inner = companyModal.querySelector('.company-modal');
-                if (inner) inner.style.transform = 'translateY(0)';
-            } else {
-                console.error('settingsModal not found');
-            }
+            // Sync dark mode toggle
+            const toggle = document.getElementById('companyDarkModeToggle');
+            if (toggle) toggle.checked = document.body.classList.contains('dark-mode');
+
+            companySettingsView.style.transform = 'translateY(0)';
         } else {
             console.log('Opening candidate settings...');
-            // Candidate toggle usando style.transform
+            const candidateView = document.getElementById('settingsView');
             if (!candidateView) {
                 console.error('settingsView not found');
                 return;
@@ -6879,7 +6950,13 @@ const app = {
             candidateView.style.transform = 'translateY(100%)';
         }
 
-        // Cerrar company modal
+        // Cerrar company settings view
+        const companySettingsView = document.getElementById('companySettingsView');
+        if (companySettingsView) {
+            companySettingsView.style.transform = 'translateY(100%)';
+        }
+
+        // Cerrar old company modal (legacy)
         const companyModal = document.getElementById('settingsModal');
         if (companyModal) {
             companyModal.style.display = 'none';
@@ -6893,167 +6970,206 @@ const app = {
 
 
 
-// Company Profile Logic
-companyProfile: {
-    name: 'Talently Business',
+    // Company Profile Logic
+    companyProfile: {
+        name: 'Talently Business',
         industry: 'Tecnología',
-            logo: '',
-                location: 'Santiago, Chile',
-                    description: 'Empresa líder en tecnología e innovación.'
-},
+        logo: '',
+        location: 'Santiago, Chile',
+        description: 'Empresa líder en tecnología e innovación.'
+    },
 
-handleLogoUpload(input) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const preview = document.getElementById('cpLogoPreview');
-            preview.style.backgroundImage = `url(${e.target.result})`;
-            preview.style.display = 'block';
-            document.getElementById('cpLogo').value = e.target.result; // Save DataURL
+    handleLogoUpload(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const preview = document.getElementById('cpLogoPreview');
+                preview.style.backgroundImage = `url(${e.target.result})`;
+                preview.style.display = 'block';
+                document.getElementById('cpLogo').value = e.target.result; // Save DataURL
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    },
+
+    openCompanyProfile() {
+        const modal = document.getElementById('companyProfileModal');
+        const data = this.companyProfile || this.currentUser || {};
+
+        // Load current data (map DB field names to modal fields)
+        const nameEl = document.getElementById('cpName');
+        if (nameEl) nameEl.value = data.name || '';
+
+        const industryEl = document.getElementById('cpIndustry');
+        if (industryEl) industryEl.value = data.sector || data.industry || 'Tecnología';
+
+        // Handle logo preview
+        const logoVal = data.logo_url || data.logo || '';
+        const logoHidden = document.getElementById('cpLogo');
+        if (logoHidden) logoHidden.value = logoVal;
+        const preview = document.getElementById('cpLogoPreview');
+        if (preview) {
+            if (logoVal) {
+                preview.style.backgroundImage = `url(${logoVal})`;
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        const locationEl = document.getElementById('cpLocation');
+        if (locationEl) locationEl.value = data.location || (data.city ? `${data.city}, ${data.country || ''}` : '');
+
+        const descEl = document.getElementById('cpDescription');
+        if (descEl) descEl.value = data.value_proposition || data.description || '';
+
+        if (modal) {
+            modal.style.removeProperty('display');
+            modal.classList.add('active');
+        }
+    },
+
+    closeCompanyProfile() {
+        const modal = document.getElementById('companyProfileModal');
+        if (modal) {
+            modal.classList.remove('active');
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
+        }
+    },
+
+    saveCompanyProfile() {
+        const name = document.getElementById('cpName').value;
+        if (!name) {
+            this.showToast('El nombre es obligatorio');
+            return;
+        }
+
+        // Merge new values into existing companyProfile
+        const prevData = this.companyProfile || {};
+        this.companyProfile = {
+            ...prevData,
+            name: name,
+            sector: document.getElementById('cpIndustry').value,
+            logo_url: document.getElementById('cpLogo').value || prevData.logo_url,
+            location: document.getElementById('cpLocation').value,
+            value_proposition: document.getElementById('cpDescription').value
         };
-        reader.readAsDataURL(input.files[0]);
-    }
-},
 
-openCompanyProfile() {
-    const modal = document.getElementById('companyProfileModal');
-    // Load current data
-    document.getElementById('cpName').value = this.companyProfile.name;
-    document.getElementById('cpIndustry').value = this.companyProfile.industry;
+        // Save to Supabase if backend is ready
+        if (window.talentlyBackend && window.talentlyBackend.isReady && this.currentUser && this.currentUser.id) {
+            const updateData = {
+                name: this.companyProfile.name,
+                sector: this.companyProfile.sector,
+                logo_url: this.companyProfile.logo_url,
+                value_proposition: this.companyProfile.value_proposition
+            };
+            window.talentlyBackend.companies.update(this.currentUser.id, updateData)
+                .then(result => {
+                    if (result.error) console.error('Error saving company profile:', result.error);
+                    else console.log('✅ Company profile saved to DB');
+                })
+                .catch(err => console.error('Error saving company profile:', err));
+        }
 
-    // Handle logo preview
-    const logoVal = this.companyProfile.logo;
-    document.getElementById('cpLogo').value = logoVal;
-    const preview = document.getElementById('cpLogoPreview');
-    if (logoVal) {
-        preview.style.backgroundImage = `url(${logoVal})`;
-        preview.style.display = 'block';
-    } else {
-        preview.style.display = 'none';
-    }
+        this.updateCompanyHeader();
+        this.renderCompanyProfile();
+        this.closeCompanyProfile();
+        this.showToast('Perfil actualizado');
+    },
 
-    document.getElementById('cpLocation').value = this.companyProfile.location;
-    document.getElementById('cpDescription').value = this.companyProfile.description;
+    updateCompanyHeader() {
+        const data = this.companyProfile || this.currentUser || {};
+        const nameEl = document.getElementById('headerCompanyName');
+        const logoEl = document.getElementById('headerCompanyLogo');
 
-    modal.style.setProperty('display', 'flex', 'important');
-},
+        if (nameEl) nameEl.textContent = data.name || 'Talently Business';
+        if (logoEl) {
+            const logoUrl = data.logo_url || data.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || 'Company')}&background=6c5ce7&color=fff`;
+            logoEl.src = logoUrl;
+        }
+    },
 
-closeCompanyProfile() {
-    document.getElementById('companyProfileModal').style.display = 'none';
-},
+    renderCompanyTechStack() {
+        const container = document.getElementById('companyTechStackBubbleContainer');
+        if (!container) return;
 
-saveCompanyProfile() {
-    const name = document.getElementById('cpName').value;
-    if (!name) {
-        this.showToast('El nombre es obligatorio');
-        return;
-    }
-
-    this.companyProfile = {
-        name: name,
-        industry: document.getElementById('cpIndustry').value,
-        logo: document.getElementById('cpLogo').value,
-        location: document.getElementById('cpLocation').value,
-        description: document.getElementById('cpDescription').value
-    };
-
-    this.updateCompanyHeader();
-    this.closeCompanyProfile();
-    this.showToast('Perfil actualizado');
-},
-
-updateCompanyHeader() {
-    const nameEl = document.getElementById('headerCompanyName');
-    const logoEl = document.getElementById('headerCompanyLogo');
-
-    if (nameEl) nameEl.textContent = this.companyProfile.name;
-    if (logoEl) {
-        const logoUrl = this.companyProfile.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.companyProfile.name)}&background=6c5ce7&color=fff`;
-        logoEl.src = logoUrl;
-    }
-},
-
-renderCompanyTechStack() {
-    const container = document.getElementById('companyTechStackBubbleContainer');
-    if (!container) return;
-
-    container.innerHTML = '';
-    this.companyTechStack.forEach((tech, index) => {
-        const bubble = document.createElement('div');
-        bubble.style.cssText = 'padding: 6px 12px; background: var(--primary); color: white; border-radius: 16px; font-size: 13px; display: flex; align-items: center; gap: 6px;';
-        bubble.innerHTML = `
+        container.innerHTML = '';
+        this.companyTechStack.forEach((tech, index) => {
+            const bubble = document.createElement('div');
+            bubble.style.cssText = 'padding: 6px 12px; background: var(--primary); color: white; border-radius: 16px; font-size: 13px; display: flex; align-items: center; gap: 6px;';
+            bubble.innerHTML = `
                 ${tech}
                 <span onclick="app.removeCompanyTechStack(${index})" style="cursor: pointer; font-weight: bold;">×</span>
             `;
-        container.appendChild(bubble);
-    });
+            container.appendChild(bubble);
+        });
 
-    // Update Suggestions
-    this.renderCompanyTechStackSuggestions();
-},
+        // Update Suggestions
+        this.renderCompanyTechStackSuggestions();
+    },
 
-renderCompanyTechStackSuggestions() {
-    const container = document.getElementById('companyTechStackSuggestionsContainer');
-    if (!container) return;
+    renderCompanyTechStackSuggestions() {
+        const container = document.getElementById('companyTechStackSuggestionsContainer');
+        if (!container) return;
 
-    container.innerHTML = '';
-    const suggestions = ['JavaScript', 'Python', 'React', 'Node.js', 'Java', 'AWS', 'Docker', 'SQL', 'TypeScript', 'Go', 'Figma', 'Vue.js', 'Angular', 'Kubernetes', 'C#', 'Flutter'];
+        container.innerHTML = '';
+        const suggestions = ['JavaScript', 'Python', 'React', 'Node.js', 'Java', 'AWS', 'Docker', 'SQL', 'TypeScript', 'Go', 'Figma', 'Vue.js', 'Angular', 'Kubernetes', 'C#', 'Flutter'];
 
-    suggestions.filter(tech => !this.companyTechStack.includes(tech)).forEach(tech => {
-        const btn = document.createElement('button');
-        btn.textContent = tech;
-        btn.className = 'btn-chip'; // Reuse existing class if available or style directly
-        btn.style.cssText = 'padding: 8px 16px; background: var(--surface); color: var(--text-secondary); border: 1px solid var(--border); border-radius: 24px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.03); display: inline-flex; align-items: center; justify-content: center;';
+        suggestions.filter(tech => !this.companyTechStack.includes(tech)).forEach(tech => {
+            const btn = document.createElement('button');
+            btn.textContent = tech;
+            btn.className = 'btn-chip'; // Reuse existing class if available or style directly
+            btn.style.cssText = 'padding: 8px 16px; background: var(--surface); color: var(--text-secondary); border: 1px solid var(--border); border-radius: 24px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.03); display: inline-flex; align-items: center; justify-content: center;';
 
-        btn.onmouseover = () => { btn.style.background = 'var(--primary)'; btn.style.color = 'white'; };
-        btn.onmouseout = () => { btn.style.background = 'var(--surface)'; btn.style.color = 'var(--text-secondary)'; };
+            btn.onmouseover = () => { btn.style.background = 'var(--primary)'; btn.style.color = 'white'; };
+            btn.onmouseout = () => { btn.style.background = 'var(--surface)'; btn.style.color = 'var(--text-secondary)'; };
 
-        btn.onclick = () => this.addCompanyTechStackFromSuggestion(tech);
-        container.appendChild(btn);
-    });
-},
+            btn.onclick = () => this.addCompanyTechStackFromSuggestion(tech);
+            container.appendChild(btn);
+        });
+    },
 
-addCompanyTechStackFromSuggestion(tech) {
-    if (this.companyTechStack.length >= 20) {
-        this.showToast('Máximo 20 tecnologías');
-        return;
-    }
-    if (!this.companyTechStack.includes(tech)) {
-        this.companyTechStack.push(tech);
+    addCompanyTechStackFromSuggestion(tech) {
+        if (this.companyTechStack.length >= 20) {
+            this.showToast('Máximo 20 tecnologías');
+            return;
+        }
+        if (!this.companyTechStack.includes(tech)) {
+            this.companyTechStack.push(tech);
+            this.renderCompanyTechStack();
+        }
+    },
+
+    removeCompanyTechStack(index) {
+        this.companyTechStack.splice(index, 1);
         this.renderCompanyTechStack();
-    }
-},
+    },
 
-removeCompanyTechStack(index) {
-    this.companyTechStack.splice(index, 1);
-    this.renderCompanyTechStack();
-},
+    searchCandidates() {
+        const input = document.getElementById('candidateSearchInput');
+        const query = input ? input.value.toLowerCase() : '';
 
-searchCandidates() {
-    const input = document.getElementById('candidateSearchInput');
-    const query = input ? input.value.toLowerCase() : '';
+        const mockCandidates = [
+            { name: 'Ana Silva', role: 'Senior UX Designer', skills: ['Figma', 'UX Research'] },
+            { name: 'Carlos Ruiz', role: 'Full Stack Dev', skills: ['React', 'Node.js'] },
+            { name: 'Laura M.', role: 'Frontend Developer', skills: ['Vue.js', 'CSS'] },
+            { name: 'Pedro J.', role: 'Product Manager', skills: ['Agile', 'Scrum'] }
+        ];
 
-    const mockCandidates = [
-        { name: 'Ana Silva', role: 'Senior UX Designer', skills: ['Figma', 'UX Research'] },
-        { name: 'Carlos Ruiz', role: 'Full Stack Dev', skills: ['React', 'Node.js'] },
-        { name: 'Laura M.', role: 'Frontend Developer', skills: ['Vue.js', 'CSS'] },
-        { name: 'Pedro J.', role: 'Product Manager', skills: ['Agile', 'Scrum'] }
-    ];
+        const results = mockCandidates.filter(c =>
+            c.role.toLowerCase().includes(query) ||
+            c.skills.some(s => s.toLowerCase().includes(query))
+        );
 
-    const results = mockCandidates.filter(c =>
-        c.role.toLowerCase().includes(query) ||
-        c.skills.some(s => s.toLowerCase().includes(query))
-    );
+        const container = document.getElementById('candidateResults');
+        if (!container) return;
 
-    const container = document.getElementById('candidateResults');
-    if (!container) return;
+        if (results.length === 0) {
+            container.innerHTML = '<div style="text-align: center; opacity: 0.6;">No se encontraron candidatos.</div>';
+            return;
+        }
 
-    if (results.length === 0) {
-        container.innerHTML = '<div style="text-align: center; opacity: 0.6;">No se encontraron candidatos.</div>';
-        return;
-    }
-
-    container.innerHTML = results.map(c => `
+        container.innerHTML = results.map(c => `
              <div class="candidate-card" style="padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; gap: 12px;">
                  <div style="width: 40px; height: 40px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
                     ${c.name.charAt(0)}
@@ -7068,7 +7184,7 @@ searchCandidates() {
                  <button style="padding: 6px 12px; background: var(--primary); color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">Chat</button>
              </div>
         `).join('');
-}
+    }
 };
 
 // Initialize app on page load
