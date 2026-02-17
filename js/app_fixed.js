@@ -1,4 +1,4 @@
-console.log('TALENTLY APP V56 LOADED');
+﻿console.log('TALENTLY APP V56 LOADED');
 // Version Check
 if (!window.location.search.includes('v=56')) {
     // Force clear stale matches which are causing ID conflits
@@ -10,7 +10,7 @@ const app = {
     currentView: 'welcomeView',
     currentSection: 'swipeSection', // This is default. If it goes to Matches, check why.
     currentIndex: 0,
-    profiles: [...mockProfiles],
+    profiles: [],
     isAuthenticated: false,
     userData: {},
     profileType: null,
@@ -36,7 +36,7 @@ const app = {
     companyBanner: null,
     techSuggestionsRendered: false,
     companyTagSuggestionsRendered: false,
-    referenceData: { countries: [], areas: [] }, // Initialize referenceData
+    referenceData: { countries: [], areas: [], culture_values: [], positions: [], seniority_levels: [], benefits: [], selection_durations: [] }, // Initialize referenceData
     matches: [],
     userProfile: {
         experience: [
@@ -57,7 +57,6 @@ const app = {
 
 
     switchProfileTab(tabName) {
-        console.log('switchProfileTab called with:', tabName);
 
         // Update Buttons
         document.querySelectorAll('.profile-tab').forEach(btn => {
@@ -77,8 +76,6 @@ const app = {
         const cvContent = document.getElementById('profile-content-cv');
         const activityContent = document.getElementById('profile-content-activity');
 
-        console.log('CV element found:', !!cvContent);
-        console.log('Activity element found:', !!activityContent);
 
         if (tabName === 'cv') {
             if (cvContent) { cvContent.style.display = 'block'; cvContent.style.visibility = 'visible'; }
@@ -90,7 +87,6 @@ const app = {
             this.renderActivityStats();
         }
 
-        console.log('After switch - CV display:', cvContent?.style.display, 'Activity display:', activityContent?.style.display);
     },
 
     toggleDarkMode() {
@@ -106,9 +102,6 @@ const app = {
 
 
     async init() {
-        console.log('🚀 DEBUG: ===== APP INITIALIZING =====');
-        console.log('💾 DEBUG: localStorage user_type:', localStorage.getItem('talently_user_type'));
-        console.log('🔐 DEBUG: localStorage logged_in:', localStorage.getItem('talently_logged_in'));
 
         // Wait for Supabase
         await this.waitForSupabase();
@@ -126,14 +119,11 @@ const app = {
 
     // Función para limpiar completamente el caché y reiniciar la app
     clearCache() {
-        console.log('🧹 Limpiando todo el caché de Talently...');
-
         // Limpiar localStorage
         const keys = Object.keys(localStorage);
         keys.forEach(key => {
             if (key.startsWith('talently_') || key.includes('supabase')) {
                 localStorage.removeItem(key);
-                console.log('Removed:', key);
             }
         });
 
@@ -163,14 +153,45 @@ const app = {
         if (!window.talentlyBackend) return;
 
         try {
-            console.log('Loading reference data from DB...');
-            const { data: countries } = await window.talentlyBackend.reference.getCountries();
-            const { data: areas } = await window.talentlyBackend.reference.getAreas();
+            // Load all reference data in parallel
+            const [
+                { data: countries },
+                { data: areas },
+                { data: sectors },
+                { data: sizes },
+                { data: stages },
+                { data: workModalities },
+                { data: cultureValues },
+                { data: positions },
+                { data: seniorityLevels },
+                { data: benefits },
+                { data: selectionDurations }
+            ] = await Promise.all([
+                window.talentlyBackend.reference.getCountries(),
+                window.talentlyBackend.reference.getAreas(),
+                window.talentlyBackend.reference.getCompanySectors(),
+                window.talentlyBackend.reference.getCompanySizes(),
+                window.talentlyBackend.reference.getCompanyStages(),
+                window.talentlyBackend.reference.getWorkModalities(),
+                window.talentlyBackend.reference.getCompanyCultureValues(),
+                window.talentlyBackend.reference.getCompanyPositions(),
+                window.talentlyBackend.reference.getSeniorityLevels(),
+                window.talentlyBackend.reference.getCompanyBenefits(),
+                window.talentlyBackend.reference.getSelectionDurations()
+            ]);
 
             if (countries) this.referenceData.countries = countries;
             if (areas) this.referenceData.areas = areas;
+            if (sectors) this.referenceData.sectors = sectors;
+            if (sizes) this.referenceData.sizes = sizes;
+            if (stages) this.referenceData.stages = stages;
+            if (workModalities) this.referenceData.work_modalities = workModalities;
+            if (cultureValues) this.referenceData.culture_values = cultureValues;
+            if (positions) this.referenceData.positions = positions;
+            if (seniorityLevels) this.referenceData.seniority_levels = seniorityLevels;
+            if (benefits) this.referenceData.benefits = benefits;
+            if (selectionDurations) this.referenceData.selection_durations = selectionDurations;
 
-            console.log('Reference data loaded:', this.referenceData);
         } catch (e) {
             console.error('Error loading reference data:', e);
         }
@@ -187,15 +208,32 @@ const app = {
                 // Set basic user
                 this.currentUser = session.user;
 
-                // FETCH FULL PROFILE DATA
-                const { data: profile } = await window.talentlyBackend.profiles.getById(session.user.id);
+                // Check user type from storage or default
+                const savedUserType = localStorage.getItem('talently_user_type');
+                let profile = null;
+
+                if (savedUserType === 'company') {
+                    const { data: companyData } = await window.talentlyBackend.companies.getById(session.user.id);
+                    if (companyData) {
+                        profile = { ...companyData, user_type: 'company' };
+                    }
+                }
+
+                // If not company or not found, try profile
+                if (!profile) {
+                    const { data: userProfile } = await window.talentlyBackend.profiles.getById(session.user.id);
+                    if (userProfile) {
+                        profile = userProfile;
+                    }
+                }
 
                 // CHECK ONBOARDING STATUS
                 // If profile exists AND has completed onboarding -> Main App
                 // Otherwise -> Onboarding
                 if (profile && profile.onboarding_completed) {
                     this.currentUser = { ...this.currentUser, ...profile };
-
+                    // Sync userProfile with DB data (needed for chat alignment)
+                    this.userProfile = { ...this.userProfile, ...profile };
                     // Parsear JSONB arrays
                     if (typeof this.currentUser.experience === 'string') {
                         try {
@@ -227,10 +265,13 @@ const app = {
                         this.enterMainApp();
                     }
                 } else {
-                    console.log('User has incomplete onboarding. Redirecting...');
                     // Ensure no residual mock data
                     this.userProfile = {};
-                    this.showView('onboardingStep1');
+                    if (savedUserType === 'company') {
+                        this.showView('companyOnboardingStep1');
+                    } else {
+                        this.showView('onboardingStep1');
+                    }
                 }
             } else {
                 this.showView('welcomeView');
@@ -242,59 +283,49 @@ const app = {
     },
 
     async checkSession() {
-        console.log('🔍 DEBUG: ===== CHECK SESSION =====');
         if (window.talentlyBackend && window.talentlyBackend.isReady) {
             // Use the exposed client or factory as fallback (though factory fails auth calls)
             // Fix: Use correct client reference
             const client = window.supabaseClient || window.supabase;
             const { data: { session } } = await client.auth.getSession();
 
-            console.log('📝 DEBUG: Session exists:', !!session);
             if (session) {
-                console.log('👤 DEBUG: User ID:', session.user.id);
-                console.log('📧 DEBUG: Email:', session.user.email);
 
                 // Set basic user
                 this.currentUser = session.user;
 
                 // Check localStorage to determine user type
                 const savedUserType = localStorage.getItem('talently_user_type');
-                console.log('💾 DEBUG: Saved user type from localStorage:', savedUserType);
 
                 let profile = null;
                 let userType = null;
 
                 // Try to fetch from COMPANIES table first if user_type is company
                 if (savedUserType === 'company') {
-                    console.log('🏢 DEBUG: Attempting to fetch from COMPANIES table...');
                     const { data: companyData, error: companyError } = await window.talentlyBackend.companies.getById(session.user.id);
                     if (companyData && !companyError) {
-                        console.log('✅ DEBUG: Found company profile:', companyData);
                         profile = { ...companyData, user_type: 'company', onboarding_completed: true };
                         userType = 'company';
                         this.profileType = 'company';
                         this.companyProfile = companyData;
+                        // SYNC STATE:
+                        this.companyTechStack = companyData.tech_stack || [];
+                        this.companyTags = companyData.tags || [];
                     } else {
-                        console.log('❌ DEBUG: No company profile found:', companyError);
                     }
                 }
 
                 // If not found in companies, try PROFILES table
                 if (!profile) {
-                    console.log('👤 DEBUG: Attempting to fetch from PROFILES table...');
                     const { data: profileData, error: profileError } = await window.talentlyBackend.profiles.getById(session.user.id);
                     if (profileData && !profileError) {
-                        console.log('✅ DEBUG: Found candidate profile:', profileData);
                         profile = profileData;
                         userType = profileData.user_type || 'candidate';
                         this.profileType = userType;
                     } else {
-                        console.log('❌ DEBUG: No candidate profile found:', profileError);
                     }
                 }
 
-                console.log('📋 DEBUG: Final profile result:', profile);
-                console.log('🎯 DEBUG: Determined user type:', userType);
 
                 // CHECK ONBOARDING STATUS
                 // If profile exists AND has completed onboarding -> Main App
@@ -333,7 +364,6 @@ const app = {
                         this.enterMainApp();
                     }
                 } else {
-                    console.log('User has incomplete onboarding. Redirecting...');
                     // Ensure no residual mock data
                     this.userProfile = {};
                     this.showView('onboardingStep1');
@@ -354,8 +384,21 @@ const app = {
                 client.auth.onAuthStateChange((event, session) => {
                     if (event === 'SIGNED_IN' && session) {
                         this.currentUser = session.user;
-                        // Fetch user profile to ensure name/image availability
-                        if (window.talentlyBackend && window.talentlyBackend.profiles) {
+
+                        const savedUserType = localStorage.getItem('talently_user_type');
+
+                        // Fetch user profile based on type
+                        if (savedUserType === 'company' && window.talentlyBackend?.companies) {
+                            window.talentlyBackend.companies.getById(session.user.id).then(({ data: comp }) => {
+                                if (comp) {
+                                    this.currentUser = { ...this.currentUser, ...comp, user_type: 'company' };
+                                    // No need to parse experience for company
+                                    if (this.currentView === 'companyApp') {
+                                        // Update profile data logic if needed
+                                    }
+                                }
+                            });
+                        } else if (window.talentlyBackend && window.talentlyBackend.profiles) {
                             window.talentlyBackend.profiles.getById(session.user.id).then(({ data: profile }) => {
                                 if (profile) {
                                     this.currentUser = { ...this.currentUser, ...profile };
@@ -405,18 +448,19 @@ const app = {
     },
 
     showView(viewId) {
-        console.log('showView called with:', viewId);
 
         // Hide all views
         document.querySelectorAll('.view').forEach(view => {
             view.classList.remove('active');
         });
 
+        // Handle aliases
+        if (viewId === 'companyOnboardingStep1') viewId = 'onboardingStep1';
+
         // Show selected view
         const targetView = document.getElementById(viewId);
         if (targetView) {
             targetView.classList.add('active');
-            console.log('Added active to:', viewId);
             this.currentView = viewId;
             window.scrollTo(0, 0);
             this.checkAndRenderTags(viewId);
@@ -621,8 +665,6 @@ const app = {
         const email = emailInput ? emailInput.value : '';
         const password = passwordInput ? passwordInput.value : '';
 
-        console.log('🔐 DEBUG: ===== LOGIN ATTEMPT =====');
-        console.log('📧 DEBUG: Email:', email);
 
         if (!email || !password) {
             this.showToast('Por favor completa todos los campos', 'error');
@@ -631,45 +673,37 @@ const app = {
 
         if (window.talentlyBackend && window.talentlyBackend.isReady) {
             try {
-                console.log('🔑 DEBUG: Calling auth.signIn...');
                 const { data, error } = await window.talentlyBackend.auth.signIn(email, password);
                 if (error) throw error;
 
-                console.log('✅ DEBUG: Auth successful, user ID:', data.user.id);
 
                 // Try to fetch from both tables
                 let profile = null;
                 let userType = null;
 
                 // First try COMPANIES table
-                console.log('🏢 DEBUG: Trying to fetch from COMPANIES table...');
                 const { data: companyData, error: companyError } = await window.talentlyBackend.companies.getById(data.user.id);
                 if (companyData && !companyError) {
-                    console.log('✅ DEBUG: Found company profile:', companyData);
                     profile = { ...companyData, user_type: 'company', onboarding_completed: true };
                     userType = 'company';
                     this.profileType = 'company';
                     this.companyProfile = companyData;
+                    this.companyTechStack = companyData.tech_stack || [];
+                    this.companyTags = companyData.tags || [];
                     localStorage.setItem('talently_user_type', 'company');
                 } else {
-                    console.log('❌ DEBUG: Not found in companies table, trying profiles...');
 
                     // Try PROFILES table
-                    console.log('👤 DEBUG: Trying to fetch from PROFILES table...');
                     const { data: profileData, error: profileError } = await window.talentlyBackend.profiles.getById(data.user.id);
                     if (profileData && !profileError) {
-                        console.log('✅ DEBUG: Found candidate profile:', profileData);
                         profile = profileData;
                         userType = profileData.user_type || 'candidate';
                         this.profileType = userType;
                         localStorage.setItem('talently_user_type', userType);
                     } else {
-                        console.log('❌ DEBUG: Not found in profiles table either');
                     }
                 }
 
-                console.log('📋 DEBUG: Final profile:', profile);
-                console.log('🎯 DEBUG: User type:', userType);
 
                 // Verificar si existe perfil Y si completó onboarding
                 if (profile && profile.onboarding_completed) {
@@ -829,38 +863,49 @@ const app = {
     },
 
     enterMainApp() {
-        console.log('🚀 DEBUG: ===== ENTERING MAIN APP =====');
-        console.log('👤 DEBUG: User type:', this.profileType);
-        console.log('💾 DEBUG: localStorage user_type:', localStorage.getItem('talently_user_type'));
 
         this.isAuthenticated = true;
         this.updateBadge();
 
+        const userType = this.profileType || localStorage.getItem('talently_user_type');
+        console.log('[DEBUG] enterMainApp: profileType =', this.profileType, 'localStorage =', localStorage.getItem('talently_user_type'), '→ resolved:', userType);
+
         // Route to correct app based on user type
-        if (this.profileType === 'company' || localStorage.getItem('talently_user_type') === 'company') {
-            console.log('🏢 DEBUG: Redirecting to COMPANY APP');
+        if (userType === 'company') {
+            console.log('[DEBUG] enterMainApp: entering COMPANY flow');
             this.showView('companyApp');
             this.showCompanySection('companyOffersSection');
             this.renderCompanyProfile();
             this.updateCompanyHeader();
+
+            // Subscribe to real-time messages for company notifications (regardless of which tab is open)
+            this._subscribeToAllCompanyMatches();
+            // Also preload matches to have conversations ready for badge updates
+            this._loadCompanyMatches();
         } else {
-            console.log('👤 DEBUG: Redirecting to CANDIDATE APP');
+            console.log('[DEBUG] enterMainApp: entering CANDIDATE flow');
             // Only reset view/section if not already in mainApp
             if (this.currentView !== 'mainApp') {
                 this.showView('mainApp');
                 this.showAppSection('swipeSection');
             }
 
-            this.renderCard();
+            this.loadOffers().then(() => {
+                this.renderCard();
+            });
             this.setupSwipeGestures();
             this.renderProfile();
+
+            // Preload matches from DB so notifications have data to work with
+            this.renderMatches();
+
+            // Subscribe to real-time messages for candidate notifications
+            this._subscribeToCandidateMessages();
         }
     },
 
     renderProfile() {
         if (!this.currentUser) return;
-
-        // console.log('renderProfile() ejecutándose...');
 
         // 1. Update Header Info
         const profileHero = document.querySelector('.profile-hero');
@@ -960,7 +1005,6 @@ const app = {
     // ============================================
 
     async renderActivityStats() {
-        console.log('renderActivityStats called');
 
         // Default values if backend not available
         let stats = {
@@ -979,7 +1023,6 @@ const app = {
                 const { data, error } = await window.talentlyBackend.statistics.get();
                 if (data && !error) {
                     stats = { ...stats, ...data };
-                    console.log('Stats loaded:', stats);
                 } else {
                     console.warn('Stats fetch error:', error);
                 }
@@ -2033,7 +2076,6 @@ const app = {
     },
 
     async openChat(matchId, matchName) {
-        console.log('Opening chat for:', matchId);
         this.currentMatchId = String(matchId); // FORCE STRING ID for consistency
 
         // FIX: Add chat-mode class to body to hide bottom nav
@@ -2067,8 +2109,28 @@ const app = {
         }
         // --------------------------------
 
-        const name = match ? (match.name || match.company_name) : (matchName || 'Usuario');
-        console.log('Chat Name to Set:', name);
+        let name = match ? (match.name || match.company_name) : (matchName || 'Usuario');
+        let avatarSrc = (match && (match.logo || match.image || match.avatar))
+            ? (match.logo || match.image || match.avatar)
+            : null;
+
+        // If name is still 'Usuario' and this is a real match, try fetching from backend
+        const isRealId = typeof matchId === 'string' && String(matchId).includes('-');
+        if (name === 'Usuario' && isRealId && window.talentlyBackend && window.talentlyBackend.isReady) {
+            // Find the other user ID from the match record
+            const otherUserId = match ? match.otherUserId : null;
+            if (otherUserId) {
+                try {
+                    const { data: companyData } = await window.talentlyBackend.companies.getById(otherUserId);
+                    if (companyData) {
+                        name = companyData.name || 'Empresa';
+                        avatarSrc = companyData.logo_url || avatarSrc;
+                    }
+                } catch (e) { /* ignore */ }
+            }
+        }
+
+        if (!avatarSrc) avatarSrc = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
 
         // 2. Update Header UI
         const candidateHeader = document.querySelector('.chat-company-name');
@@ -2077,15 +2139,22 @@ const app = {
         const companyHeader = document.querySelector('#companyChatName');
         if (companyHeader) companyHeader.textContent = name;
 
-        // Update Roles
+        // Update Roles — hide if no role
         const roleText = (match && match.title) ? match.title : '';
         const candidateRole = document.querySelector('.chat-company-role');
-        if (candidateRole) candidateRole.textContent = roleText;
+        if (candidateRole) {
+            candidateRole.textContent = roleText;
+            candidateRole.style.display = roleText ? '' : 'none';
+        }
 
-        // Update Avatars
-        const avatarSrc = (match && (match.logo || match.image || match.avatar))
-            ? (match.logo || match.image || match.avatar)
-            : `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
+        // Online status — hide by default (no real presence tracking)
+        const chatOnline = document.getElementById('chatOnlineStatus');
+        if (chatOnline) chatOnline.style.display = 'none';
+        const companyChatOnline = document.getElementById('companyChatOnlineStatus');
+        if (companyChatOnline) {
+            companyChatOnline.textContent = '● Desconectado';
+            companyChatOnline.style.color = 'var(--text-secondary)';
+        }
 
         const candidateAvatar = document.querySelector('.chat-avatar');
         if (candidateAvatar) candidateAvatar.src = avatarSrc;
@@ -2113,21 +2182,39 @@ const app = {
                 this.chatSubscription = null;
             }
             try {
-                // Fetch previous messages... 
+                // Fetch previous messages...
                 const { data: msgs } = await window.talentlyBackend.matches.getMessages(matchId);
+                let isChatBlocked = false;
                 if (msgs) {
-                    msgs.forEach(m => this.appendMessageToUI(m.content, m.sender_id === this.userProfile.id ? 'sent' : 'received'));
-                }
-                // Subscribe...
-                this.chatSubscription = window.talentlyBackend.matches.subscribe(matchId, async (newMsg) => {
-                    const { data: { user } } = await window.supabaseClient.auth.getUser();
-                    if (user) {
-                        const isMe = newMsg.sender_id === user.id;
-                        if (!isMe) {
-                            this.appendMessageToUI(newMsg.content, 'received');
+                    msgs.forEach(m => {
+                        this.appendMessageToUI(m.content, m.sender_id === this.userProfile.id ? 'sent' : 'received');
+                        // Detect system closure message
+                        if (m.content && m.content.startsWith('[Sistema]') && m.content.includes('cerrada')) {
+                            isChatBlocked = true;
                         }
-                    }
-                });
+                    });
+                }
+
+                // Block chat if offer was closed
+                if (isChatBlocked) {
+                    this._blockChatInput('Esta conversación fue cerrada porque la oferta ya no está activa.');
+                } else {
+                    this._unblockChatInput();
+                    // Subscribe only if chat is not blocked
+                    this.chatSubscription = window.talentlyBackend.matches.subscribe(matchId, async (newMsg) => {
+                        const { data: { user } } = await window.supabaseClient.auth.getUser();
+                        if (user) {
+                            const isMe = newMsg.sender_id === user.id;
+                            if (!isMe) {
+                                this.appendMessageToUI(newMsg.content, 'received');
+                                // Check if the new message is a closure message
+                                if (newMsg.content && newMsg.content.startsWith('[Sistema]') && newMsg.content.includes('cerrada')) {
+                                    this._blockChatInput('Esta conversación fue cerrada porque la oferta ya no está activa.');
+                                }
+                            }
+                        }
+                    });
+                }
             } catch (err) {
                 console.error('Chat load error:', err);
                 if (messagesContainer) messagesContainer.innerHTML = '<div style="text-align:center; padding:20px; color: var(--danger);">Error al cargar mensajes.</div>';
@@ -2144,7 +2231,6 @@ const app = {
 
             // FIX: Ensure consistency using String ID
             const safeId = String(matchId);
-            console.log('LOADING LOCAL MSGS for:', safeId);
             const localMsgs = this.localMessages[safeId] || [];
 
             if (localMsgs.length > 0) {
@@ -2171,7 +2257,6 @@ const app = {
     },
 
     saveLocalMessage(matchId, content, type) {
-        console.log('SAVING MSG:', matchId, content);
         if (!this.localMessages) this.localMessages = {};
         if (!this.localMessages[matchId]) this.localMessages[matchId] = [];
 
@@ -2182,10 +2267,10 @@ const app = {
         });
 
         localStorage.setItem('talently_local_messages', JSON.stringify(this.localMessages));
-        console.log('SAVED TO STORAGE:', this.localMessages);
     },
 
     async sendMessageWithReceipts() {
+        if (this._chatBlocked) return;
         const input = document.getElementById('chatInput');
         if (!input || !input.value.trim()) return;
 
@@ -2201,8 +2286,7 @@ const app = {
 
         if (isRealMatch && window.talentlyBackend && window.talentlyBackend.isReady) {
             try {
-                const { data: { user } } = await window.supabaseClient.auth.getUser();
-                await window.talentlyBackend.matches.sendMessage(matchId, user.id, text);
+                await window.talentlyBackend.matches.sendMessage(matchId, text);
                 // Track statistics
                 window.talentlyBackend.statistics.increment('messages_sent').catch(e => console.warn('Stats error:', e));
             } catch (err) {
@@ -2236,6 +2320,28 @@ const app = {
         let isDragging = false;
         const threshold = 100;
 
+        const updateStamps = (diff) => {
+            const likeStamp = card.querySelector('.stamp-like');
+            const nopeStamp = card.querySelector('.stamp-nope');
+            const opacity = Math.min(Math.abs(diff) / threshold, 1);
+            const scale = Math.min(Math.abs(diff) / threshold, 1);
+            if (likeStamp) {
+                likeStamp.style.opacity = diff > 20 ? opacity : '0';
+                likeStamp.style.transform = `translateY(-50%) rotate(-20deg) scale(${diff > 20 ? scale : 0})`;
+            }
+            if (nopeStamp) {
+                nopeStamp.style.opacity = diff < -20 ? opacity : '0';
+                nopeStamp.style.transform = `translateY(-50%) rotate(20deg) scale(${diff < -20 ? scale : 0})`;
+            }
+        };
+
+        const resetStamps = () => {
+            const likeStamp = card.querySelector('.stamp-like');
+            const nopeStamp = card.querySelector('.stamp-nope');
+            if (likeStamp) { likeStamp.style.opacity = '0'; likeStamp.style.transform = 'translateY(-50%) rotate(-20deg) scale(0)'; }
+            if (nopeStamp) { nopeStamp.style.opacity = '0'; nopeStamp.style.transform = 'translateY(-50%) rotate(20deg) scale(0)'; }
+        };
+
         // Touch Events
         card.addEventListener('touchstart', (e) => {
             startX = e.touches[0].clientX;
@@ -2248,6 +2354,7 @@ const app = {
             currentX = e.touches[0].clientX;
             const diff = currentX - startX;
             card.style.transform = `translateX(${diff}px) rotate(${diff * 0.1}deg)`;
+            updateStamps(diff);
         });
 
         card.addEventListener('touchend', () => {
@@ -2262,6 +2369,7 @@ const app = {
                 this.swipeLeft();
             } else {
                 card.style.transform = 'translateX(0) rotate(0)';
+                resetStamps();
             }
         });
 
@@ -2273,15 +2381,22 @@ const app = {
             card.style.cursor = 'grabbing';
         });
 
-        document.addEventListener('mousemove', (e) => {
+        // Remove previous document listeners to avoid duplicates
+        if (this._onMouseMove) document.removeEventListener('mousemove', this._onMouseMove);
+        if (this._onMouseUp) document.removeEventListener('mouseup', this._onMouseUp);
+
+        this._onMouseMove = (e) => {
             if (!isDragging) return;
             currentX = e.clientX;
             const diff = currentX - startX;
             const cardEl = document.getElementById('currentCard');
-            if (cardEl) cardEl.style.transform = `translateX(${diff}px) rotate(${diff * 0.1}deg)`;
-        });
+            if (cardEl) {
+                cardEl.style.transform = `translateX(${diff}px) rotate(${diff * 0.1}deg)`;
+                updateStamps(diff);
+            }
+        };
 
-        document.addEventListener('mouseup', (e) => {
+        this._onMouseUp = (e) => {
             if (!isDragging) return;
             isDragging = false;
             const cardEl = document.getElementById('currentCard');
@@ -2296,42 +2411,102 @@ const app = {
                     this.swipeLeft();
                 } else {
                     cardEl.style.transform = 'translateX(0) rotate(0)';
+                    resetStamps();
                 }
             }
-        });
+        };
+
+        document.addEventListener('mousemove', this._onMouseMove);
+        document.addEventListener('mouseup', this._onMouseUp);
     },
 
     // ... setupSwipeGestures (unchanged) ...
 
     swipeLeft() {
+        const profile = this.currentProfileData || this.profiles[this.currentIndex];
+        if (profile && profile.id) {
+            this._recordSwipe(profile.id);
+            // Also record left swipe in DB (for analytics, won't trigger match)
+            const targetId = profile.userId || profile.id;
+            if (typeof targetId === 'string' && targetId.includes('-') && window.talentlyBackend && window.talentlyBackend.isReady) {
+                window.talentlyBackend.swipes.create(targetId, 'left', profile.id).catch(e => console.warn('Swipe record error:', e));
+            }
+        }
         this.animateSwipe('left');
     },
 
     async swipeRight() {
-        // Use the profile stored during render
-        // FIX: Use currentProfileData which has the actual object, NOT the DOM element
         const profile = this.currentProfileData || this.profiles[this.currentIndex];
 
         if (profile) {
-            // Check if REAL profile (UUID)
-            const isReal = typeof profile.id === 'string' && profile.id.includes('-');
+            // Record swipe locally so this offer never reappears in this session
+            if (profile.id) {
+                this._recordSwipe(profile.id);
+            }
+
+            // Use userId (Company's auth user ID) for swipe target
+            const targetId = profile.userId || profile.id;
+            const isReal = typeof targetId === 'string' && targetId.includes('-');
 
             if (isReal && window.talentlyBackend && window.talentlyBackend.isReady) {
                 try {
-                    await window.talentlyBackend.matches.create(profile.id);
-                    this.showToast('¡Match Guardado!');
-                    // Track statistics
-                    window.talentlyBackend.statistics.increment('matches_count').catch(e => console.warn('Stats error:', e));
+                    // Create SWIPE (not match) - mutual matching system
+                    const result = await window.talentlyBackend.swipes.create(targetId, 'right', profile.id);
+
+                    if (result.error) {
+                        console.error('Swipe Error:', result.error);
+                        this.showToast('¡Te interesa esta oferta!');
+                    } else if (result.isMutualMatch) {
+                        // Both sides swiped right! Create the real match
+                        const matchResult = await window.talentlyBackend.matches.create(targetId);
+                        if (matchResult.error && !matchResult.alreadyExists) {
+                            console.error('Match creation error:', matchResult.error);
+                        }
+
+                        this.showToast('¡Es un Match! Ambos tienen interés mutuo.');
+
+                        // Add to local matches for notification + chat
+                        const matchId = matchResult.data ? matchResult.data.id : `temp-${Date.now()}`;
+                        const matchEntry = {
+                            id: matchId,
+                            name: profile.company || profile.name || 'Empresa',
+                            image: profile.logo || profile.image || null,
+                            company_name: profile.company || '',
+                            otherUserId: targetId,
+                            matchDate: new Date().toISOString(),
+                            hasUnread: true,
+                            lastMessage: '¡Nuevo Match! Saluda ahora.',
+                            isReal: true
+                        };
+                        if (!this.matches) this.matches = [];
+                        this.matches.unshift(matchEntry);
+                        localStorage.setItem('talently_matches', JSON.stringify(this.matches));
+                        this.updateBadge();
+
+                        window.talentlyBackend.statistics.increment('matches_count').catch(e => console.warn('Stats error:', e));
+                    } else {
+                        // Only one-sided interest registered
+                        this.showToast('¡Interés registrado! Si la empresa también te elige, harán Match.');
+                    }
+
                     window.talentlyBackend.statistics.increment('swipes_given').catch(e => console.warn('Stats error:', e));
                 } catch (e) {
-                    console.error('Match Error', e);
-                    // Continue anyway
+                    console.error('Swipe Error', e);
+                    this.showToast('¡Te interesa esta oferta!');
                 }
             } else {
-                this.addMatch(profile); // Local Fallback
+                this.addMatch(profile);
             }
         }
         this.animateSwipe('right');
+    },
+
+    _recordSwipe(offerId) {
+        const swipedIds = JSON.parse(localStorage.getItem('talently_swiped_offers') || '[]');
+        if (!swipedIds.includes(offerId)) {
+            swipedIds.push(offerId);
+            localStorage.setItem('talently_swiped_offers', JSON.stringify(swipedIds));
+        }
     },
 
     addMatch(profile) {
@@ -2379,18 +2554,29 @@ const app = {
                 const realMatches = await Promise.all(data.map(async (m) => {
                     const otherUserId = m.user_id_1 === myId ? m.user_id_2 : m.user_id_1;
 
-                    // Fetch Profile of the other user
+                    // Fetch Profile of the other user (try profiles table first, then companies)
                     let otherProfile = null;
+                    let name = 'Usuario';
+                    let image = null;
                     try {
                         const { data: profileData } = await window.talentlyBackend.profiles.getById(otherUserId);
-                        otherProfile = profileData;
-                    } catch (e) {
-                        // ignore error
-                    }
+                        if (profileData) {
+                            otherProfile = profileData;
+                            name = profileData.name || profileData.company_name || 'Usuario';
+                            image = profileData.image || profileData.avatar || null;
+                        }
+                    } catch (e) { /* ignore */ }
 
-                    // Default Name/Image if profile missing (e.g. deleted user)
-                    const name = otherProfile ? (otherProfile.name || otherProfile.company_name) : 'Usuario';
-                    const image = otherProfile ? (otherProfile.image || otherProfile.avatar) : null;
+                    // If not found in profiles, check companies table
+                    if (!otherProfile) {
+                        try {
+                            const { data: companyData } = await window.talentlyBackend.companies.getById(otherUserId);
+                            if (companyData) {
+                                name = companyData.name || 'Empresa';
+                                image = companyData.logo_url || null;
+                            }
+                        } catch (e) { /* ignore */ }
+                    }
 
                     // Fetch Last Message
                     let lastMsg = '';
@@ -2435,6 +2621,9 @@ const app = {
             return !duplicate;
         });
 
+        // Sync back to this.matches so subscriptions can find matches by ID
+        this.matches = finalMatches;
+
         const escapeHtml = (unsafe) => {
             if (typeof unsafe !== 'string') return '';
             return unsafe
@@ -2468,7 +2657,6 @@ const app = {
                 `}).join('');
             }
         }
-
         // Render Conversation List (Messages View)
         if (conversastionList) {
             if (finalMatches.length === 0) {
@@ -2499,6 +2687,138 @@ const app = {
         }
     },
 
+    async loadOffers() {
+        if (!window.talentlyBackend || !window.talentlyBackend.isReady) {
+            console.warn('Backend not ready, using empty profiles');
+            this.profiles = [];
+            return;
+        }
+
+        try {
+            const { data, error } = await window.talentlyBackend.offers.getAllActive();
+            if (error) throw error;
+
+            // Filter out already-swiped offers (localStorage for instant filtering)
+            const swipedIds = JSON.parse(localStorage.getItem('talently_swiped_offers') || '[]');
+
+            this.profiles = data
+                .filter(offer => !swipedIds.includes(offer.id))
+                .map(offer => ({
+                    id: offer.id,
+                    userId: offer.user_id, // Company owner's auth user ID (for swipe/match)
+                    name: offer.title,
+                    company: offer.company?.name || 'Empresa',
+                    logo: offer.company?.logo_url,
+                    role: offer.professional_title || offer.title,
+                    salary: (typeof offer.salary_min === 'number') ?
+                        `$${new Intl.NumberFormat('es-CL').format(offer.salary_min)} - $${new Intl.NumberFormat('es-CL').format(offer.salary_max)}` :
+                        offer.salary,
+                    modality: offer.modality,
+                    description: offer.description,
+                    skills: offer.skills || [],
+                    match: Math.floor(Math.random() * 20) + 80,
+                    location: offer.modality || 'Remoto'
+                }));
+
+            this.currentIndex = 0;
+            console.log('✅ Loaded offers:', this.profiles.length, `(${swipedIds.length} already swiped)`);
+        } catch (e) {
+            console.error('Error loading offers:', e);
+            this.showToast('Error cargando ofertas');
+            this.profiles = [];
+        }
+    },
+
+    renderCard() {
+        const cardStack = document.querySelector('.card-stack');
+        if (!cardStack) return;
+
+        cardStack.innerHTML = '';
+
+        if (!this.profiles || this.profiles.length === 0 || this.currentIndex >= this.profiles.length) {
+            cardStack.innerHTML = `
+                <div class="no-profiles" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                    <div style="font-size: 48px; margin-bottom: 20px;">🎉</div>
+                    <h3>¡Estás al día!</h3>
+                    <p>Vuelve más tarde para nuevas oportunidades.</p>
+                </div>`;
+            const bu = document.querySelector('.action-buttons');
+            if (bu) bu.style.display = 'none';
+            return;
+        }
+
+        const bu = document.querySelector('.action-buttons');
+        if (bu) bu.style.display = 'flex';
+
+        const profile = this.profiles[this.currentIndex];
+        this.currentProfileData = profile;
+
+        const isJobOffer = !!profile.company;
+
+        let cardContent = '';
+        if (isJobOffer) {
+            // TINDER-STYLE JOB OFFER CARD — full-width background image
+            const imageUrl = profile.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.company)}&background=6c5ce7&color=fff&size=600`;
+
+            cardContent = `
+                <div class="profile-card" id="currentCard">
+                    <div class="card-bg-image" style="background-image: url('${imageUrl}');"></div>
+                    <div class="card-gradient-overlay"></div>
+                    <div class="swipe-stamp stamp-like">LIKE</div>
+                    <div class="swipe-stamp stamp-nope">NOPE</div>
+                    <div class="card-info-overlay" onclick="app.openCardDetail('offer')">
+                        <h2 class="card-offer-title">${profile.name}</h2>
+                        <p class="card-company-name">${profile.company}</p>
+                        <div class="card-details-row">
+                            <span class="card-detail-item"><i class="fas fa-briefcase"></i> ${profile.modality || 'Remoto'}</span>
+                            <span class="card-detail-item"><i class="fas fa-money-bill-wave"></i> ${profile.salary || 'Competitivo'}</span>
+                        </div>
+                        <p class="card-desc">${profile.description ? profile.description.substring(0, 100) + '...' : ''}</p>
+                        <div class="card-skills-row">
+                            ${(profile.skills || []).slice(0, 4).map(skill => `<span class="card-skill-chip">${skill}</span>`).join('')}
+                        </div>
+                    </div>
+                    <span class="match-badge-float">${profile.match}%</span>
+                </div>
+            `;
+        } else {
+            // CANDIDATE CARD (Company View)
+            const imageUrl = profile.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=random&size=600`;
+            cardContent = `
+                <div class="profile-card" id="currentCard">
+                    <img src="${imageUrl}" class="card-image" alt="${profile.name}">
+                    <div class="swipe-stamp stamp-like">LIKE</div>
+                    <div class="swipe-stamp stamp-nope">NOPE</div>
+                    <div class="card-content">
+                        <div class="card-header">
+                            <div>
+                                <h2>${profile.name}</h2>
+                                <p>${profile.role}</p>
+                            </div>
+                            <span class="match-badge">${profile.match}% Match</span>
+                        </div>
+                        <div class="card-details">
+                            <div class="detail-item">
+                                <i class="fas fa-briefcase"></i>
+                                <span>${profile.experience || '3 años'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>${profile.location || 'Santiago'}</span>
+                            </div>
+                        </div>
+                        <div class="skills-container">
+                            ${(profile.skills || []).slice(0, 5).map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        cardStack.innerHTML = cardContent;
+        this.currentProfileCard = document.getElementById('currentCard');
+        this.setupSwipeGestures();
+    },
     renderProfile() {
         // Use Real User Data if available, otherwise fallback to mock
         const profileData = this.currentUser || {};
@@ -2652,11 +2972,24 @@ const app = {
     },
 
     animateSwipe(direction) {
-        const card = this.currentProfileCard;
-        if (!card) return;
+        const card = this.currentProfileCard || document.getElementById('currentCard');
+        if (!card) {
+            this.currentIndex++;
+            this.renderCard();
+            return;
+        }
 
-        // Visual animation
-        card.style.transition = 'transform 0.5s ease, opacity 0.5s ease';
+        // Show LIKE/NOPE stamp
+        const stamp = card.querySelector(direction === 'right' ? '.stamp-like' : '.stamp-nope');
+        if (stamp) {
+            stamp.style.opacity = '1';
+            stamp.style.transform = direction === 'right'
+                ? 'translateY(-50%) rotate(-20deg) scale(1)'
+                : 'translateY(-50%) rotate(20deg) scale(1)';
+        }
+
+        // Fly card away with Tinder-like spring animation
+        card.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease';
         if (direction === 'left') {
             card.style.transform = 'translateX(-150%) rotate(-30deg)';
         } else {
@@ -2664,13 +2997,12 @@ const app = {
         }
         card.style.opacity = '0';
 
-        // Wait for animation then remove
         setTimeout(() => {
             if (card.parentNode) card.parentNode.removeChild(card);
             this.currentProfileCard = null;
             this.currentIndex++;
-            this.renderCard(); // Show next
-        }, 300);
+            this.renderCard();
+        }, 400);
     },
 
     // Skills Edit State
@@ -3334,12 +3666,70 @@ const app = {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     },
 
+    _blockChatInput(reason) {
+        // Block both candidate and company chat inputs
+        const inputs = [document.getElementById('chatInput'), document.getElementById('companyChatInput')];
+        inputs.forEach(input => {
+            if (input) {
+                input.disabled = true;
+                input.placeholder = reason || 'Chat bloqueado';
+                input.style.opacity = '0.5';
+            }
+        });
+        // Disable send buttons
+        const sendBtns = document.querySelectorAll('.chat-send-btn, #companySendBtn');
+        sendBtns.forEach(btn => {
+            if (btn) {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.style.pointerEvents = 'none';
+            }
+        });
+        // Show blocked banner
+        const containers = [document.getElementById('chatMessages'), document.getElementById('companyChatMessages')];
+        containers.forEach(container => {
+            if (container) {
+                const existingBanner = container.querySelector('.chat-blocked-banner');
+                if (!existingBanner) {
+                    container.insertAdjacentHTML('beforeend', `
+                        <div class="chat-blocked-banner" style="text-align: center; padding: 12px 16px; margin: 8px 0; background: #FFF3E0; border: 1px solid #FFE0B2; border-radius: 12px; color: #E65100; font-size: 13px; font-weight: 500;">
+                            🔒 ${reason || 'Chat bloqueado'}
+                        </div>
+                    `);
+                    container.scrollTop = container.scrollHeight;
+                }
+            }
+        });
+        this._chatBlocked = true;
+    },
+
+    _unblockChatInput() {
+        const inputs = [document.getElementById('chatInput'), document.getElementById('companyChatInput')];
+        inputs.forEach(input => {
+            if (input) {
+                input.disabled = false;
+                input.placeholder = 'Escribe un mensaje...';
+                input.style.opacity = '1';
+            }
+        });
+        const sendBtns = document.querySelectorAll('.chat-send-btn, #companySendBtn');
+        sendBtns.forEach(btn => {
+            if (btn) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+            }
+        });
+        this._chatBlocked = false;
+    },
+
     async sendMessage() {
         const input = document.getElementById('chatInput');
         const message = input.value.trim();
 
         if (!message) return;
         if (!this.currentMatchId) return;
+        if (this._chatBlocked) return;
 
         // Optimistic UI
         this.appendMessageToUI(message, 'sent');
@@ -3356,7 +3746,6 @@ const app = {
     },
 
     openFilters() {
-        console.log('openFilters called');
         const type = localStorage.getItem('talently_user_type');
         const isCompany = (type === 'company' || this.profileType === 'company');
         const viewId = isCompany ? 'companyFiltersView' : 'filtersView';
@@ -3368,18 +3757,15 @@ const app = {
 
         // Toggle: Si ya está abierto, cerrar
         if (view.style.transform === 'translateY(0px)' || view.style.transform === 'translateY(0)') {
-            console.log('Filters already open, closing...');
             this.closeFilters();
             return;
         }
 
         // Cerrar otros toggles
-        console.log('Closing other toggles...');
         this.closeNotifications();
         this.closeSettingsModal();
 
         // Abrir filtros
-        console.log('Opening filters...');
         view.style.transform = 'translateY(0)';
         this.loadFilterOptions();
     },
@@ -3571,7 +3957,6 @@ const app = {
         if (country) filters.country = country;
         if (city) filters.city = city;
 
-        console.log('Applied filters:', filters);
         this.activeFilters = filters;
         this.closeFilters();
         this.showToast('Filtros aplicados');
@@ -3829,6 +4214,7 @@ const app = {
 
         // Count unread matches
         const count = this.matches ? this.matches.filter(m => m.hasUnread).length : 0;
+        console.log('[DEBUG] updateBadge: unread count =', count, 'total matches =', (this.matches || []).length);
 
         if (badge) {
             if (count > 0) {
@@ -3836,6 +4222,17 @@ const app = {
                 badge.style.display = 'flex';
             } else {
                 badge.style.display = 'none';
+            }
+        }
+
+        // Update candidate Matches tab badge
+        const matchesBadge = document.getElementById('candidateMatchesBadge');
+        if (matchesBadge) {
+            if (count > 0) {
+                matchesBadge.textContent = count > 9 ? '9+' : count;
+                matchesBadge.style.display = 'flex';
+            } else {
+                matchesBadge.style.display = 'none';
             }
         }
 
@@ -3847,12 +4244,13 @@ const app = {
         const list = document.getElementById('notificationList');
         if (!list) return;
 
-        const unreadMatches = (this.matches || []).filter(m => m.hasUnread);
+        // Show ALL matches as notifications (not just unread)
+        const allMatches = (this.matches || []).filter(m => m.matchDate || m.isReal);
 
-        if (unreadMatches.length === 0) {
+        if (allMatches.length === 0) {
             list.innerHTML = `
                 <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
-                    <p>No tienes nuevas notificaciones</p>
+                    <p>No tienes notificaciones</p>
                 </div>
             `;
             return;
@@ -3868,23 +4266,26 @@ const app = {
                 .replace(/'/g, "&#039;");
         };
 
-        list.innerHTML = unreadMatches.map(match => {
+        list.innerHTML = allMatches.map(match => {
             const safeName = escapeHtml(match.name || 'Usuario');
             const safeId = escapeHtml(String(match.id));
             const imgUrl = match.image || match.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(safeName)}&background=random`;
             const time = match.matchDate ? new Date(match.matchDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Ahora';
+            const isUnread = match.hasUnread;
+            const bgColor = isUnread ? 'rgba(108,92,231,0.08)' : 'transparent';
+            const fontWeight = isUnread ? '700' : '600';
 
             return `
-            <div style="padding: 16px; border-bottom: 1px solid var(--border); background: rgba(108,92,231,0.05); cursor: pointer;" 
-                 onclick="app.openChat('${safeId}', '${safeName}'); app.closeNotifications();">
+            <div style="padding: 16px; border-bottom: 1px solid var(--border); background: ${bgColor}; cursor: pointer; transition: background 0.2s;"
+                 onclick="app.markSingleNotificationRead('${safeId}'); app.openChat('${safeId}', '${safeName}'); app.closeNotifications();">
                 <div style="display: flex; gap: 12px;">
-                    <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #6C5CE7 0%, #a29bfe 100%); display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0;">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #6C5CE7 0%, #a29bfe 100%); display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; opacity: ${isUnread ? '1' : '0.6'};">
                         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                         </svg>
                     </div>
-                    <div>
-                        <div style="font-weight: 600; font-size: 14px; color: var(--text-primary);">
+                    <div style="flex: 1;">
+                        <div style="font-weight: ${fontWeight}; font-size: 14px; color: var(--text-primary);">
                             ¡Hiciste Match con ${safeName}!
                         </div>
                         <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
@@ -3894,10 +4295,98 @@ const app = {
                             ${time}
                         </div>
                     </div>
+                    ${isUnread ? '<div style="width: 10px; height: 10px; background: var(--primary); border-radius: 50%; flex-shrink: 0; align-self: center;"></div>' : ''}
                 </div>
             </div>
             `;
         }).join('');
+    },
+
+    openCardDetail(type) {
+        const modal = document.getElementById('cardDetailModal');
+        const content = document.getElementById('cardDetailContent');
+        if (!modal || !content) return;
+
+        let data;
+        if (type === 'offer') {
+            data = this.currentProfileData || this.profiles[this.currentIndex];
+            if (!data) return;
+            const imageUrl = data.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.company || data.name)}&background=6c5ce7&color=fff&size=600`;
+            content.innerHTML = `
+                <div style="width: 100%; height: 300px; background-image: url('${imageUrl}'); background-size: cover; background-position: center;"></div>
+                <div style="padding: 24px;">
+                    <h2 style="font-size: 24px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">${data.name}</h2>
+                    <p style="font-size: 16px; color: var(--primary); font-weight: 600; margin-bottom: 12px;">${data.company || ''}</p>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
+                        <span style="background: var(--bg); padding: 6px 14px; border-radius: 20px; font-size: 13px; color: var(--text-secondary);">${data.modality || 'Remoto'}</span>
+                        <span style="background: var(--bg); padding: 6px 14px; border-radius: 20px; font-size: 13px; color: var(--text-secondary);">${data.salary || 'Competitivo'}</span>
+                        <span style="background: var(--bg); padding: 6px 14px; border-radius: 20px; font-size: 13px; color: var(--text-secondary);">${data.location || ''}</span>
+                    </div>
+                    ${data.description ? `<div style="margin-bottom: 20px;"><h4 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Descripción</h4><p style="color: var(--text-secondary); line-height: 1.6; font-size: 15px;">${data.description}</p></div>` : ''}
+                    ${(data.skills || []).length > 0 ? `<div style="margin-bottom: 20px;"><h4 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Skills requeridos</h4><div style="display: flex; flex-wrap: wrap; gap: 8px;">${data.skills.map(s => `<span style="background: #EEF2FF; color: #4F46E5; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;">${s}</span>`).join('')}</div></div>` : ''}
+                </div>`;
+        } else {
+            data = this.candidatesDeck[this.currentCandidateIndex];
+            if (!data) return;
+            const imageUrl = data.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=6c5ce7&color=fff&size=600`;
+            content.innerHTML = `
+                <div style="width: 100%; height: 300px; background-image: url('${imageUrl}'); background-size: cover; background-position: center;"></div>
+                <div style="padding: 24px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                        <h2 style="font-size: 24px; font-weight: 700; color: var(--text-primary); margin: 0;">${data.name}</h2>
+                        <span style="background: rgba(0,184,148,0.1); color: var(--success); padding: 4px 10px; border-radius: 12px; font-size: 13px; font-weight: 700;">${data.fit}% Match</span>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 16px; font-weight: 500; margin-bottom: 16px;">${data.role || 'Profesional'}</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                        <div style="background: var(--bg); padding: 10px; border-radius: 10px; border: 1px solid var(--border);"><div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Experiencia</div><div style="font-weight: 600; font-size: 14px; color: var(--text-primary);">${data.seniority || ''} ${data.exp ? '(' + data.exp + ')' : ''}</div></div>
+                        <div style="background: var(--bg); padding: 10px; border-radius: 10px; border: 1px solid var(--border);"><div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Expectativa Salarial</div><div style="font-weight: 600; font-size: 14px; color: var(--text-primary);">${data.salary || 'A convenir'}</div></div>
+                        <div style="background: var(--bg); padding: 10px; border-radius: 10px; border: 1px solid var(--border);"><div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Modalidad</div><div style="font-weight: 600; font-size: 14px; color: var(--text-primary);">${data.modality || 'Remoto'}</div></div>
+                        <div style="background: var(--bg); padding: 10px; border-radius: 10px; border: 1px solid var(--border);"><div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Idiomas</div><div style="font-weight: 600; font-size: 14px; color: var(--text-primary);">${(data.languages || []).join(', ') || '-'}</div></div>
+                    </div>
+                    ${(data.skills || []).length > 0 ? `<div style="margin-bottom: 20px;"><h4 style="font-size: 13px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; margin-bottom: 10px;">Tech Stack</h4><div style="display: flex; flex-wrap: wrap; gap: 8px;">${data.skills.map(s => `<span style="background: #EEF2FF; color: #4F46E5; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;">${s}</span>`).join('')}</div></div>` : ''}
+                    ${(data.softSkills || []).length > 0 ? `<div style="margin-bottom: 20px;"><h4 style="font-size: 13px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; margin-bottom: 10px;">Soft Skills</h4><div style="display: flex; flex-wrap: wrap; gap: 8px;">${data.softSkills.map(s => `<span style="background: #F0FDF4; color: #16A34A; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;">${s}</span>`).join('')}</div></div>` : ''}
+                    ${data.bio ? `<div style="border-top: 1px solid var(--border); padding-top: 20px;"><h4 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">Sobre mí</h4><p style="color: var(--text-secondary); line-height: 1.6; font-size: 15px;">${data.bio}</p></div>` : ''}
+                </div>`;
+        }
+
+        modal.style.display = 'flex';
+
+        // Track profile view
+        if (window.talentlyBackend && window.talentlyBackend.isReady) {
+            // Increment profile_views for the OWNER of the card being viewed
+            const targetUserId = type === 'offer' ? data.userId : (data.profileId || data.id);
+            console.log('[DEBUG] openCardDetail - type:', type, 'targetUserId:', targetUserId, 'data keys:', Object.keys(data));
+            if (targetUserId && typeof targetUserId === 'string' && targetUserId.includes('-')) {
+                console.log('[DEBUG] Incrementing profile_views for target user:', targetUserId);
+                window.talentlyBackend.statistics.incrementForUser(targetUserId, 'profile_views')
+                    .then(result => {
+                        if (result.error) {
+                            console.error('[DEBUG] incrementForUser failed:', result.error);
+                        } else {
+                            console.log('[DEBUG] profile_views incremented successfully for:', targetUserId);
+                        }
+                    })
+                    .catch(err => {
+                        console.error('[DEBUG] incrementForUser exception:', err);
+                    });
+            } else {
+                console.log('[DEBUG] No valid targetUserId, skipping profile view tracking. targetUserId:', targetUserId);
+            }
+        }
+    },
+
+    closeCardDetail() {
+        const modal = document.getElementById('cardDetailModal');
+        if (modal) modal.style.display = 'none';
+    },
+
+    markSingleNotificationRead(matchId) {
+        const idx = (this.matches || []).findIndex(m => String(m.id) === String(matchId));
+        if (idx !== -1 && this.matches[idx].hasUnread) {
+            this.matches[idx].hasUnread = false;
+            localStorage.setItem('talently_matches', JSON.stringify(this.matches));
+            this.updateBadge();
+        }
     },
 
     // Filter state
@@ -3981,6 +4470,11 @@ const app = {
 
     clearFilters() {
         this.activeFilters = {};
+        if (this._unfilteredProfiles && this._unfilteredProfiles.length > 0) {
+            this.profiles = [...this._unfilteredProfiles];
+            this.currentIndex = 0;
+        }
+        this._unfilteredProfiles = null;
         document.querySelectorAll('.filter-chip').forEach(chip => {
             chip.classList.remove('selected');
         });
@@ -3989,11 +4483,24 @@ const app = {
 
     applyFilters() {
         const active = this.activeFilters;
-        let filtered = [...mockProfiles];
+        // Use the original unfiltered profiles as base (saved on first filter or from loadOffers)
+        if (!this._unfilteredProfiles || this._unfilteredProfiles.length === 0) {
+            this._unfilteredProfiles = [...this.profiles];
+        }
+        let filtered = [...this._unfilteredProfiles];
 
-        // Filter by Sector
-        if (active.sector && active.sector.length > 0) {
-            filtered = filtered.filter(p => active.sector.some(s => p.sector && p.sector.includes(s)));
+        // Filter by Salary range
+        if (active.salaryMin) {
+            filtered = filtered.filter(p => {
+                const min = p.salary_min || (p.salary ? parseInt(String(p.salary).replace(/[^0-9]/g, '')) : 0);
+                return min >= active.salaryMin;
+            });
+        }
+        if (active.salaryMax) {
+            filtered = filtered.filter(p => {
+                const max = p.salary_max || (p.salary ? parseInt(String(p.salary).split('-').pop().replace(/[^0-9]/g, '')) : Infinity);
+                return max <= active.salaryMax;
+            });
         }
 
         // Filter by Modalidad
@@ -4001,14 +4508,17 @@ const app = {
             filtered = filtered.filter(p => active.modalidad.some(m => p.modality && p.modality.includes(m)));
         }
 
-        // Filter by Tech Stack
-        if (active.techStack && active.techStack.length > 0) {
-            filtered = filtered.filter(p => p.techStack && active.techStack.some(t => p.techStack.includes(t)));
+        // Filter by Sector
+        if (active.sector && active.sector.length > 0) {
+            filtered = filtered.filter(p => active.sector.some(s => p.sector && p.sector.includes(s)));
         }
 
-        // Filter by Size (Tamaño)
-        if (active['tamaño'] && active['tamaño'].length > 0) {
-            filtered = filtered.filter(p => active['tamaño'].some(s => p.size && p.size.includes(s)));
+        // Filter by Tech Stack / Skills
+        if (active.techStack && active.techStack.length > 0) {
+            filtered = filtered.filter(p => {
+                const skills = p.skills || p.techStack || [];
+                return active.techStack.some(t => skills.includes(t));
+            });
         }
 
         this.profiles = filtered;
@@ -4035,9 +4545,7 @@ const app = {
 
     selectProfileType(type, element) {
         this.profileType = type;
-        console.log('🎯 DEBUG: Profile type selected:', type);
         localStorage.setItem('talently_user_type', type);
-        console.log('💾 DEBUG: Saved to localStorage:', type);
 
         // Update UI
         document.querySelectorAll('.profile-type-option').forEach(opt => {
@@ -4053,18 +4561,13 @@ const app = {
     },
 
     continueFromStep1() {
-        console.log('🚀 DEBUG: Continuing from Step 1');
-        console.log('📋 DEBUG: Current profileType:', this.profileType);
-        console.log('💾 DEBUG: localStorage user_type:', localStorage.getItem('talently_user_type'));
 
         // Route to appropriate onboarding based on profile type
         if (this.profileType === 'company') {
-            console.log('🏢 DEBUG: Redirecting to company onboarding (companyStep2)');
             this.showView('companyStep2');
             // Setup RUT formatting after the view is shown
             setTimeout(() => this.setupRUTFormatting(), 100);
         } else {
-            console.log('👤 DEBUG: Redirecting to candidate onboarding');
 
             this.showView('onboardingStep2');
         }
@@ -4653,7 +5156,6 @@ const app = {
 
             // Show success message
             document.getElementById('photoPreview').style.display = 'block';
-            console.log('Photo selected for upload:', file.name);
         }
     },
 
@@ -4678,7 +5180,6 @@ const app = {
 
             // Show success message
             document.getElementById('cvPreview').style.display = 'block';
-            console.log('CV selected for upload:', file.name);
         }
     },
 
@@ -5233,7 +5734,6 @@ const app = {
                 setTimeout(() => this.renderCompanyTechStack(), 100);
             }
             if (step === 14) { // Renumbered Step 15 (Tags) -> 14
-                console.log('Force rendering tags for Step 14');
                 try {
                     this.renderCompanyTags();
                 } catch (e) { console.error('Error rendering tags:', e); }
@@ -5669,7 +6169,6 @@ const app = {
                 console.error('CRITICAL: Container not found:', containerId);
                 return;
             }
-            console.log('Found container:', containerId, 'Current children:', container.children.length);
             // Clear container before re-rendering
             container.innerHTML = '';
 
@@ -5738,7 +6237,6 @@ const app = {
                 };
                 reader.readAsDataURL(file);
             }
-            console.log('Logo uploaded:', file.name);
         }
     },
 
@@ -5772,7 +6270,6 @@ const app = {
             this.companyPhotos = validFiles;
             document.getElementById('photosPreview').style.display = 'block';
             document.getElementById('photosCount').textContent = validFiles.length;
-            console.log(`${validFiles.length} fotos cargadas`);
         }
     },
 
@@ -5793,24 +6290,17 @@ const app = {
 
             this.companyBanner = file;
             document.getElementById('bannerPreview').style.display = 'block';
-            console.log('Banner uploaded:', file.name);
         }
     },
 
     async completeCompanyOnboarding() {
-        console.log('🏢 DEBUG: ===== STARTING COMPANY ONBOARDING COMPLETION =====');
-        console.log('👤 DEBUG: Current user:', this.currentUser);
-        console.log('📋 DEBUG: Profile type:', this.profileType);
-        console.log('💾 DEBUG: localStorage user_type:', localStorage.getItem('talently_user_type'));
 
         // Validate logo is required before proceeding
         if (!this.companyLogo) {
-            console.log('❌ DEBUG: Logo validation failed');
             this.showToast('Debes subir el logo de tu empresa');
             return;
         }
 
-        console.log('✅ DEBUG: Logo validation passed');
         try {
             this.showToast('Guardando perfil de empresa...', 'info');
 
@@ -5821,6 +6311,8 @@ const app = {
             const companySector = document.getElementById('companySector')?.value;
             const companyCountry = document.getElementById('companyCountry')?.value;
             const companyCity = document.getElementById('companyCity')?.value;
+            const companyTaxId = document.getElementById('companyTaxId')?.value;
+            const companyValueProp = document.getElementById('companyValueProp')?.value;
 
             // Culture
             const culture = Array.from(document.querySelectorAll('.company-culture-option input:checked')).map(el => el.value);
@@ -5831,18 +6323,28 @@ const app = {
             // Positions
             const positions = Array.from(document.querySelectorAll('.position-option input:checked')).map(el => el.value);
 
+            // Seniority
+            const seniority = Array.from(document.querySelectorAll('.seniority-option input:checked')).map(el => el.value);
+
+            // Benefits
+            const benefitsSelected = Array.from(document.querySelectorAll('.benefit-option input:checked')).map(el => el.value);
+
+            // Selection Process
+            const selectionStages = document.querySelector('input[name="selectionStages"]:checked')?.value;
+            const selectionTime = document.querySelector('input[name="selectionTime"]:checked')?.value;
+            const technicalTest = document.querySelector('input[name="technicalTest"]:checked')?.value;
+            const paidTest = document.querySelector('input[name="paidTest"]:checked')?.value;
+
             // Tech Stack is in this.companyTechStack
 
             // Handle Logo Upload to Supabase Storage
             let logoUrl = null;
             if (this.companyLogo && this.companyLogo instanceof File) {
-                console.log('📸 DEBUG: Uploading company logo to Supabase...', this.companyLogo.name);
                 if (window.talentlyBackend && window.talentlyBackend.storage) {
                     try {
                         const uploadedUrl = await window.talentlyBackend.storage.uploadImage(this.companyLogo, 'images');
                         if (uploadedUrl) {
                             logoUrl = uploadedUrl;
-                            console.log('✅ DEBUG: Logo uploaded successfully:', logoUrl);
                         } else {
                             console.error('❌ DEBUG: Logo upload returned null');
                         }
@@ -5868,38 +6370,37 @@ const app = {
                 company_stage: stage,
                 work_model: workModel,
                 logo_url: logoUrl,
-                // Note: culture, positions, tech_stack, tags will be saved to relational tables later
+                culture_values: culture,
+                positions_looking: positions,
+                seniority_levels: seniority,
+                tech_stack: this.companyTechStack,
+                benefits: benefitsSelected,
+                tags: this.companyTags,
+                selection_stages: selectionStages,
+                selection_duration: selectionTime,
+                technical_test: technicalTest,
+                paid_test: paidTest,
+                value_proposition: companyValueProp,
+                tax_id: companyTaxId,
             };
 
             // Save to Supabase COMPANIES table
-            console.log('💾 DEBUG: Attempting to save to COMPANIES table...');
-            console.log('📦 DEBUG: Company data:', companyData);
 
             if (window.talentlyBackend && window.talentlyBackend.isReady) {
-                console.log('✅ DEBUG: Backend ready, calling companies.create...');
                 const { data: savedCompany, error } = await window.talentlyBackend.companies.create(companyData);
                 if (error) {
-                    console.log('❌ DEBUG: Error saving company:', error);
                     throw error;
-                }
-                console.log('✅ DEBUG: Company saved successfully to COMPANIES table!', savedCompany);
-
-                // Save relational data (culture, positions, tech stack, tags)
-                if (savedCompany && savedCompany.id) {
-                    console.log('💾 DEBUG: Saving relational data for company ID:', savedCompany.id);
-
-                    // TODO: Save to company_culture_selected, company_positions_looking,
-                    // company_tech_stack, company_tags tables
-                    // For now, we skip this to get the basic flow working
                 }
 
                 // Update local state
                 this.currentUser = { ...this.currentUser, ...savedCompany, user_type: 'company' };
                 this.companyProfile = savedCompany;
+                // SYNC STATE:
+                this.companyTechStack = savedCompany.tech_stack || [];
+                this.companyTags = savedCompany.tags || [];
                 this.profileType = 'company';
                 localStorage.setItem('talently_user_type', 'company');
                 localStorage.setItem('talently_logged_in', 'true');
-                console.log('✅ DEBUG: Local state updated');
             } else {
                 console.warn('⚠️ DEBUG: Backend not ready, saving to localStorage');
                 localStorage.setItem('talently_company_profile', JSON.stringify(companyData));
@@ -5921,13 +6422,10 @@ const app = {
     },
 
     async completeOnboarding() {
-        console.log('Starting completeOnboarding...');
         try {
             this.showToast('Guardando perfil...', 'info'); // UI feedback
 
             // DEBUG: Log collected data
-            console.log('Skills selected:', this.skillsSelected);
-            console.log('Interests:', this.interests);
 
             // 1. Collect Data form DOM
             const experienceLevel = document.querySelector('input[name="experienceLevel"]:checked')?.value || 'junior';
@@ -5953,7 +6451,6 @@ const app = {
                         const uploadedUrl = await window.talentlyBackend.storage.uploadImage(this.pendingUploads.photo);
                         if (uploadedUrl) {
                             imageUrl = uploadedUrl;
-                            console.log('Image uploaded successfully:', imageUrl);
                         } else {
                             console.warn('Image upload returned null, using default.');
                         }
@@ -6003,14 +6500,12 @@ const app = {
                 bio: document.getElementById('bioInput')?.value || ''
             };
 
-            console.log('Profile Data prepared:', profileData);
 
             if (window.talentlyBackend && window.talentlyBackend.isReady) {
                 // EXPLICIT CHECK: Only try to save to DB if we have a real authenticated user
                 const { data: { session } } = await window.supabaseClient.auth.getSession();
 
                 if (session && session.user) {
-                    console.log('Backend ready & Session Active, sending profile to DB...');
                     const { data, error } = await window.talentlyBackend.profiles.create(profileData);
 
                     if (error) {
@@ -6019,7 +6514,6 @@ const app = {
                         throw new Error(error.message || error.details || 'Unknown DB Error');
                     }
 
-                    console.log('Profile saved successfully to DB:', data);
                     this.showToast('¡Perfil creado exitosamente!');
 
                     // Merge returned usage (which might have DB fields)
@@ -6296,7 +6790,6 @@ const app = {
 
     renderStats() {
         // This would be called when entering stats view
-        console.log('Stats rendered');
     },
 
     // ============================================
@@ -6360,92 +6853,379 @@ const app = {
         // Render company profile data
         const companyData = this.companyProfile || this.currentUser || {};
 
+
         // Set logo
         const logoEl = document.getElementById('companyProfileLogo');
-        if (logoEl && companyData.logo_url) {
-            logoEl.src = companyData.logo_url;
+        if (logoEl) {
+            // Check for logo_url (DB), image (Local), logo (Legacy), or avatar_url (User table fallback)
+            let logoSrc = companyData.logo_url || companyData.image || companyData.logo || companyData.avatar_url;
+
+
+            // Clean up relative URLs if needed (though Supabase usually gives absolute)
+            if (logoSrc && !logoSrc.startsWith('http') && !logoSrc.startsWith('blob:') && !logoSrc.startsWith('data:')) {
+                // If it looks like a path, try to prepend storage url? 
+                // Better to leave it for now or log warning.
+            }
+
+            if (logoSrc) {
+                logoEl.src = logoSrc;
+                // Add error handler fallback just in case
+                logoEl.onerror = (e) => {
+                    console.warn('❌ Logo failed to load:', logoSrc, e);
+                    logoEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(companyData.name || 'C')}&background=6c5ce7&color=fff`;
+                };
+            } else {
+                // Fallback to initials if no logo
+                logoEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(companyData.name || 'Company')}&background=6c5ce7&color=fff`;
+            }
         }
 
         // Set company name
         const nameEl = document.getElementById('companyProfileName');
-        if (nameEl) nameEl.textContent = companyData.name || 'Nombre de la Empresa';
+        if (nameEl) {
+            // Prefer company name, then user name (from profile), then default
+            nameEl.textContent = companyData.name || this.currentUser?.name || this.currentUser?.user_metadata?.name || 'Nombre de la Empresa';
+        }
 
-        // Set sector
+        // Set sector (Display: "Sector • City")
         const sectorEl = document.getElementById('companyProfileSector');
-        if (sectorEl) sectorEl.textContent = companyData.sector || 'Sector';
+        if (sectorEl) {
+            const parts = [];
+            if (companyData.sector) parts.push(companyData.sector);
+            // Use city if available, ignore country if it's a UUID (long string with numbers)
+            if (companyData.city) parts.push(companyData.city);
+            else if (companyData.country && companyData.country.length < 10) parts.push(companyData.country);
 
-        // Set size
+            sectorEl.textContent = parts.join(' • ') || 'Sector no definido';
+        }
+
+        // Set size & location badges (Now reusing for Stage/Size)
         const sizeEl = document.getElementById('companyProfileSize');
-        if (sizeEl) sizeEl.textContent = companyData.company_size || 'Tamaño';
+        if (sizeEl) {
+            // Map size to readable text
+            let sizeText = companyData.company_size || companyData.size;
+            if (sizeText === 'pequena') sizeText = 'Pequeña (1-50)';
+            else if (sizeText === 'mediana') sizeText = 'Mediana (51-200)';
+            else if (sizeText === 'grande') sizeText = 'Grande (201-1000)';
+            else if (sizeText === 'corporativa') sizeText = '+1000';
 
-        // Set location
+            if (sizeText) {
+                sizeEl.textContent = sizeText;
+                sizeEl.style.display = 'inline-block';
+            } else {
+                sizeEl.style.display = 'none';
+            }
+        }
+
+        // Use the second badge for STAGE instead of Location (since location is in subheader)
         const locationEl = document.getElementById('companyProfileLocation');
-        if (locationEl) locationEl.textContent = `${companyData.city || 'Ciudad'}, ${companyData.country || 'País'}`;
+        if (locationEl) {
+            let stageText = companyData.company_stage || companyData.stage;
+
+            // Translate Stage
+            const stageMap = {
+                'early': 'Early Stage (Inicios)',
+                'growth': 'Growth (Crecimiento)',
+                'expansion': 'Expansión',
+                'consolidation': 'Consolidación'
+            };
+
+            if (stageText && stageMap[stageText.toLowerCase()]) {
+                stageText = stageMap[stageText.toLowerCase()];
+            } else if (stageText === 'early') {
+                stageText = 'Early Stage';
+            }
+
+            if (stageText) {
+                locationEl.textContent = stageText;
+                locationEl.style.display = 'inline-block';
+                // Ensure it uses purple badge style
+                locationEl.className = 'badge badge-purple';
+            } else {
+                locationEl.style.display = 'none';
+            }
+        }
 
         // Set website
         const websiteEl = document.getElementById('companyProfileWebsite');
+        const websiteLink = document.getElementById('companyProfileWebsiteLink');
+
+        // Handle website display
         if (websiteEl) {
             if (companyData.website) {
-                websiteEl.href = companyData.website;
-                websiteEl.textContent = companyData.website;
+                websiteEl.style.display = 'block';
+                // If we have a dedicated link element, use it
+                if (websiteLink) {
+                    websiteLink.href = companyData.website.startsWith('http') ? companyData.website : `https://${companyData.website}`;
+                    websiteLink.textContent = companyData.website.replace(/^https?:\/\//, '').replace(/\/$/, '');
+                    websiteLink.target = "_blank";
+                } else {
+                    // Fallback if no link element found, try to set href on container if it is an anchor, or find anchor inside
+                    if (websiteEl.tagName === 'A') {
+                        websiteEl.href = companyData.website.startsWith('http') ? companyData.website : `https://${companyData.website}`;
+                        websiteEl.target = "_blank";
+                        websiteEl.textContent = companyData.website;
+                    }
+                }
             } else {
-                websiteEl.textContent = '-';
+                websiteEl.style.display = 'none';
             }
         }
 
-        // Set LinkedIn
-        const linkedinEl = document.getElementById('companyProfileLinkedin');
-        if (linkedinEl) {
-            if (companyData.linkedin_url) {
-                linkedinEl.href = companyData.linkedin_url;
-                linkedinEl.textContent = 'Ver perfil';
+        // Set description / About Us / Value Proposition (using Value Proposition as Description if bio missing)
+        const aboutEl = document.getElementById('companyProfileDescription');
+        if (aboutEl) {
+            const desc = companyData.value_proposition || companyData.description || companyData.bio;
+            if (desc) {
+                aboutEl.textContent = desc;
+                aboutEl.parentElement.style.display = 'block'; // Ensure container is visible
             } else {
-                linkedinEl.textContent = '-';
+                aboutEl.parentElement.style.display = 'none';
             }
         }
-
-        // Set work model
-        const workModelEl = document.getElementById('companyProfileWorkModel');
-        if (workModelEl) workModelEl.textContent = companyData.work_model || '-';
 
         // Set company stage
         const stageEl = document.getElementById('companyProfileStage');
-        if (stageEl) stageEl.textContent = companyData.company_stage || '-';
+        if (stageEl) stageEl.textContent = this.getRefLabel('stages', companyData.company_stage) || companyData.stage || '-';
 
         // Set value proposition
         const valuePropEl = document.getElementById('companyProfileValueProp');
-        if (valuePropEl) valuePropEl.textContent = companyData.value_proposition || '-';
+        if (valuePropEl) valuePropEl.textContent = companyData.value_proposition || companyData.description || '-';
 
-        // Render culture values
-        const cultureContainer = document.getElementById('companyProfileCulture');
-        if (cultureContainer && companyData.culture_values && Array.isArray(companyData.culture_values)) {
-            cultureContainer.innerHTML = companyData.culture_values.map(value => `
-                <span style="padding: 6px 14px; background: rgba(108, 92, 231, 0.1); color: var(--primary); border-radius: 20px; font-size: 13px; font-weight: 600;">${value}</span>
-            `).join('');
+        // Set work model
+        const workModelEl = document.getElementById('companyProfileWorkModel');
+        if (workModelEl) workModelEl.textContent = this.getRefLabel('work_modalities', companyData.work_model) || '-';
+
+        // Render array sections using static HTML containers
+        this._renderProfileSection('companyProfileCulture', 'Valores de Cultura', companyData.culture_values, 'culture_values', 'rgba(108,92,231,0.1)', 'var(--primary)');
+        this._renderProfileSection('companyProfileTech', 'Tech Stack', companyData.tech_stack || this.companyTechStack, null, 'var(--bg)', 'var(--text-primary)', true);
+        this._renderProfileSection('companyProfilePositions', 'Posiciones que Buscamos', companyData.positions_looking, 'positions', 'rgba(0,184,148,0.1)', '#00b894');
+        this._renderProfileSection('companyProfileSeniority', 'Niveles de Seniority', companyData.seniority_levels, 'seniority_levels', 'rgba(253,203,110,0.2)', '#e17055');
+        this._renderProfileSection('companyProfileBenefits', 'Beneficios', companyData.benefits, 'benefits', 'rgba(116,185,255,0.15)', '#0984e3');
+        this._renderProfileTags('companyProfileTags', 'Tags', companyData.tags || this.companyTags);
+        this._renderProfileSelection('companyProfileSelection', companyData);
+
+        // Compute stats dynamically from backend
+        this._loadCompanyStats(companyData);
+    },
+
+    async _loadCompanyStats(companyData) {
+        if (!companyData || !window.talentlyBackend || !window.talentlyBackend.isReady) return;
+        const companyUserId = companyData.user_id || this.currentUser?.user_id || this.currentUser?.id;
+        console.log('[DEBUG] _loadCompanyStats: companyUserId =', companyUserId);
+        try {
+            // Count active offers (exclude closed)
+            const { data: offers } = await window.talentlyBackend.offers.getByCompany(companyUserId);
+            const offersCount = offers ? offers.filter(o => o.status !== 'closed').length : 0;
+
+            // Count matches
+            const { data: matches } = await window.talentlyBackend.matches.get();
+            const matchesCount = matches ? matches.length : 0;
+
+            // Profile views - use statistics table if available
+            let viewsCount = 0;
+            try {
+                const { data: stats } = await window.talentlyBackend.statistics.get();
+                console.log('[DEBUG] _loadCompanyStats: stats =', stats);
+                viewsCount = stats?.profile_views || 0;
+            } catch (e) { console.warn('[DEBUG] Stats error:', e); }
+
+            const statsOffers = document.getElementById('companyStatsOffers');
+            if (statsOffers) statsOffers.textContent = offersCount;
+
+            const statsMatches = document.getElementById('companyStatsMatches');
+            if (statsMatches) statsMatches.textContent = matchesCount;
+
+            const statsViews = document.getElementById('companyStatsViews');
+            if (statsViews) statsViews.textContent = viewsCount;
+        } catch (e) {
+            console.warn('Error loading company stats:', e);
         }
-
-        // Render tech stack
-        const techContainer = document.getElementById('companyProfileTech');
-        if (techContainer && this.companyTechStack && Array.isArray(this.companyTechStack)) {
-            techContainer.innerHTML = this.companyTechStack.map(tech => `
-                <span style="padding: 6px 14px; background: var(--bg); border: 1px solid var(--border); color: var(--text-primary); border-radius: 20px; font-size: 13px; font-weight: 500;">${tech}</span>
-            `).join('');
-        }
-
-        // Set stats (placeholder values - would come from database)
-        const statsOffers = document.getElementById('companyStatsOffers');
-        if (statsOffers) statsOffers.textContent = '0'; // TODO: Get from DB
-
-        const statsMatches = document.getElementById('companyStatsMatches');
-        if (statsMatches) statsMatches.textContent = '0'; // TODO: Get from DB
-
-        const statsViews = document.getElementById('companyStatsViews');
-        if (statsViews) statsViews.textContent = '0'; // TODO: Get from DB
     },
 
     openCompanyEditModal() {
         // Open the company edit modal with current data
         this.openCompanyProfile();
+    },
+
+    getRefLabel(category, id) {
+        if (!id) return '';
+        if (!this.referenceData || !this.referenceData[category]) return id;
+        const item = this.referenceData[category].find(i => i.slug === id || i.id === id);
+        return item ? item.name : id;
+    },
+
+    resolveRefNames(category, slugArray) {
+        if (!Array.isArray(slugArray) || slugArray.length === 0) return [];
+        return slugArray.map(slug => this.getRefLabel(category, slug));
+    },
+
+    async loadCitiesForEdit(countryId, selectedCityId = null) {
+        const citySelect = document.getElementById('cpCity');
+        if (!citySelect) return;
+
+        citySelect.innerHTML = '<option value="">Cargando...</option>';
+
+        if (!countryId) {
+            citySelect.innerHTML = '<option value="">Selecciona un país primero</option>';
+            return;
+        }
+
+        try {
+            const { data: cities } = await window.talentlyBackend.reference.getCities(countryId);
+            citySelect.innerHTML = '<option value="">Selecciona una ciudad</option>';
+
+            if (cities && cities.length > 0) {
+                cities.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city.id;
+                    option.textContent = city.name;
+                    if (city.id === selectedCityId) option.selected = true;
+                    citySelect.appendChild(option);
+                });
+            }
+        } catch (e) {
+            console.error('Error loading cities:', e);
+            citySelect.innerHTML = '<option value="">Error al cargar</option>';
+        }
+    },
+
+    populateCompanyFormOptions() {
+        // Helper to populate select options from referenceData
+        const populate = (elementId, category, placeholder) => {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            el.innerHTML = `<option value="">${placeholder}</option>`;
+            if (this.referenceData && this.referenceData[category]) {
+                this.referenceData[category].forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.slug || item.id;
+                    option.textContent = item.name;
+                    el.appendChild(option);
+                });
+            }
+        };
+
+        populate('cpIndustry', 'sectors', 'Selecciona Industria');
+        populate('cpSize', 'sizes', 'Selecciona Tamaño');
+        populate('cpStage', 'stages', 'Selecciona Etapa');
+        populate('cpWorkModel', 'work_modalities', 'Selecciona Modalidad');
+        populate('cpCountry', 'countries', 'Selecciona País');
+        populate('cpSelectionDuration', 'selection_durations', 'Seleccionar');
+
+        // Populate multi-checkbox containers
+        this.populateMultiCheckbox('cpCultureContainer', 'culture_values');
+        this.populateMultiCheckbox('cpPositionsContainer', 'positions');
+        this.populateMultiCheckbox('cpSeniorityContainer', 'seniority_levels');
+        this.populateMultiCheckbox('cpBenefitsContainer', 'benefits');
+    },
+
+    populateMultiCheckbox(containerId, refCategory) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const items = this.referenceData[refCategory] || [];
+        container.innerHTML = '';
+        items.forEach(item => {
+            const label = document.createElement('label');
+            label.className = 'cp-multi-option';
+            label.style.cssText = 'padding: 10px 12px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; transition: all 0.2s;';
+            label.onclick = (e) => {
+                e.preventDefault();
+                const cb = label.querySelector('input');
+                cb.checked = !cb.checked;
+                label.style.borderColor = cb.checked ? 'var(--primary)' : 'var(--border)';
+                label.style.background = cb.checked ? 'rgba(108,92,231,0.1)' : 'var(--surface)';
+            };
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.value = item.slug || item.id;
+            cb.style.cssText = 'width: 16px; height: 16px; accent-color: var(--primary); pointer-events: none;';
+            const span = document.createElement('span');
+            span.textContent = item.name;
+            label.appendChild(cb);
+            label.appendChild(span);
+            container.appendChild(label);
+        });
+    },
+
+    setMultiCheckboxValues(containerId, values) {
+        const container = document.getElementById(containerId);
+        if (!container || !Array.isArray(values)) return;
+        container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            const isSelected = values.includes(cb.value);
+            cb.checked = isSelected;
+            const label = cb.closest('.cp-multi-option') || cb.parentElement;
+            if (label) {
+                label.style.borderColor = isSelected ? 'var(--primary)' : 'var(--border)';
+                label.style.background = isSelected ? 'rgba(108,92,231,0.1)' : 'var(--surface)';
+            }
+        });
+    },
+
+    getMultiCheckboxValues(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return [];
+        return Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+    },
+
+    // --- Edit modal tag helpers ---
+    cpEditTechStack: [],
+    cpEditTags: [],
+
+    addEditTech(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            const input = event.target;
+            const tech = input.value.trim();
+            if (!tech) return;
+            if (this.cpEditTechStack.length >= 20) { this.showToast('Máximo 20 tecnologías'); return; }
+            if (!this.cpEditTechStack.includes(tech)) {
+                this.cpEditTechStack.push(tech);
+                this.renderEditTechStack();
+            }
+            input.value = '';
+        }
+    },
+
+    removeEditTech(index) {
+        this.cpEditTechStack.splice(index, 1);
+        this.renderEditTechStack();
+    },
+
+    renderEditTechStack() {
+        const container = document.getElementById('cpTechStackTags');
+        if (!container) return;
+        container.innerHTML = this.cpEditTechStack.map((tech, i) =>
+            `<span style="display:inline-flex;align-items:center;gap:4px;padding:6px 12px;background:rgba(108,92,231,0.1);color:var(--primary);border-radius:20px;font-size:13px;font-weight:500;">${tech}<span onclick="app.removeEditTech(${i})" style="cursor:pointer;font-size:16px;line-height:1;">&times;</span></span>`
+        ).join('');
+    },
+
+    addEditTag(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            const input = event.target;
+            const tag = input.value.trim();
+            if (!tag) return;
+            if (this.cpEditTags.length >= 20) { this.showToast('Máximo 20 tags'); return; }
+            if (!this.cpEditTags.includes(tag)) {
+                this.cpEditTags.push(tag);
+                this.renderEditTags();
+            }
+            input.value = '';
+        }
+    },
+
+    removeEditTag(index) {
+        this.cpEditTags.splice(index, 1);
+        this.renderEditTags();
+    },
+
+    renderEditTags() {
+        const container = document.getElementById('cpTagsTags');
+        if (!container) return;
+        container.innerHTML = this.cpEditTags.map((tag, i) =>
+            `<span style="display:inline-flex;align-items:center;gap:4px;padding:6px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text-primary);border-radius:20px;font-size:13px;font-weight:500;">${tag}<span onclick="app.removeEditTag(${i})" style="cursor:pointer;font-size:16px;line-height:1;">&times;</span></span>`
+        ).join('');
     },
 
     formatCurrency(input) {
@@ -6502,13 +7282,10 @@ const app = {
     },
 
     cancelCreateOffer() {
-        console.log('DEBUG: cancelCreateOffer called');
         try {
             const view = document.getElementById('createOfferView');
-            console.log('DEBUG: view element:', view);
             if (view) {
                 view.style.setProperty('display', 'none', 'important');
-                console.log('DEBUG: view display set to none');
             }
             const skillsModal = document.getElementById('skillsModal');
             if (skillsModal) skillsModal.style.display = 'none';
@@ -6573,7 +7350,7 @@ const app = {
         document.getElementById('skillsModal').style.display = 'none';
     },
 
-    saveOffer() {
+    async saveOffer() {
         this.clearFormErrors();
         let hasError = false;
 
@@ -6657,60 +7434,211 @@ const app = {
             title: title || 'Sin título',
             professionalTitle: professionalTitle || '',
             salary: `${currency}${min.toLocaleString('es-CL')} - ${max.toLocaleString('es-CL')}`,
+            // Store raw values for editing later if needed, but for now we focus on display
+            salary_min: min,
+            salary_max: max,
+            currency: currency,
             description: description || '',
             modality: modality || 'Remoto',
             experience: experience ? `${experience} años` : 'Sin experiencia',
+            experience_years: parseInt(experience) || 0,
             skills: skillsVal.split(','),
             softSkills,
             status: 'active',
-            candidates: this.editingOfferId ? (this.companyOffers.find(o => o.id === this.editingOfferId)?.candidates || 0) : 0,
+            candidates_count: this.editingOfferId ? (this.companyOffers.find(o => o.id === this.editingOfferId)?.candidates_count || 0) : 0,
             date: new Date().toLocaleDateString()
         };
 
+        // DB Payload (Snake Case)
+        const dbPayload = {
+            user_id: this.currentUser.id, // Ensure ownership
+            title: newOffer.title,
+            professional_title: newOffer.professionalTitle,
+            salary_min: min,
+            salary_max: max,
+            currency: currency,
+            modality: newOffer.modality,
+            experience_years: newOffer.experience_years,
+            description: newOffer.description,
+            skills: newOffer.skills,
+            soft_skills: newOffer.softSkills,
+            status: 'active'
+        };
+
         if (this.editingOfferId) {
-            const index = this.companyOffers.findIndex(o => o.id === this.editingOfferId);
-            if (index !== -1) {
-                this.companyOffers[index] = newOffer;
+            // Update existing offer
+            if (window.talentlyBackend && window.talentlyBackend.isReady) {
+                const { error } = await window.talentlyBackend.offers.update(this.editingOfferId, dbPayload);
+                if (error) {
+                    console.error('Error updating offer:', error);
+                    this.showToast('Error al actualizar oferta');
+                    return;
+                }
                 this.showToast('Oferta actualizada exitosamente');
+                // Update local state with newOffer (UI format)
+                const index = this.companyOffers.findIndex(o => o.id === this.editingOfferId);
+                if (index !== -1) this.companyOffers[index] = { ...this.companyOffers[index], ...newOffer };
+            } else {
+                // Fallback
+                const index = this.companyOffers.findIndex(o => o.id === this.editingOfferId);
+                if (index !== -1) this.companyOffers[index] = newOffer;
             }
         } else {
-            this.companyOffers.unshift(newOffer);
-            this.showToast('Oferta publicada exitosamente');
+            // Create new offer
+            if (window.talentlyBackend && window.talentlyBackend.isReady) {
+                const { data, error } = await window.talentlyBackend.offers.create(dbPayload);
+                if (error) {
+                    console.error('Error creating offer:', error);
+                    this.showToast('Error al crear oferta: ' + error.message);
+                    return;
+                }
+                // Update ID with real DB ID
+                newOffer.id = data.id;
+                this.showToast('Oferta publicada exitosamente');
+                this.companyOffers.unshift(newOffer);
+            } else {
+                // Fallback
+                this.companyOffers.unshift(newOffer);
+            }
         }
 
         this.renderCompanyOffers();
         this.cancelCreateOffer();
+        // Refresh stats counter
+        this._loadCompanyStats(this.companyProfile || this.currentUser);
     },
 
-    renderCompanyOffers() {
+    async renderCompanyOffers() {
         const list = document.getElementById('companyOffersList');
         if (!list) return;
 
-        if (this.companyOffers.length === 0) {
+        // Fetch from backend
+        if (window.talentlyBackend && window.talentlyBackend.isReady && this.currentUser) {
+            const companyUserId = this.currentUser.user_id || this.currentUser.id;
+            const { data, error } = await window.talentlyBackend.offers.getByCompany(companyUserId);
+            if (data) {
+                this.companyOffers = data.map(o => ({
+                    ...o,
+                    title: o.title,
+                    professionalTitle: o.professional_title,
+                    candidates_count: o.candidates_count,
+                    salary: (o.salary_min && o.salary_max) ? `${o.currency || '$'}${o.salary_min.toLocaleString('es-CL')} - ${o.salary_max.toLocaleString('es-CL')}` : o.salary,
+                    modality: o.modality,
+                    description: o.description,
+                    skills: typeof o.skills === 'string' ? o.skills : (o.skills || []).join(','),
+                    softSkills: o.soft_skills || []
+                }));
+            }
+            if (error) console.error('Error fetching company offers:', error);
+        }
+
+        const activeOffers = this.companyOffers.filter(o => o.status !== 'closed');
+        const closedOffers = this.companyOffers.filter(o => o.status === 'closed');
+
+        if (activeOffers.length === 0 && closedOffers.length === 0) {
             list.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 40px;">No tienes ofertas activas.</div>';
             return;
         }
 
-        list.innerHTML = this.companyOffers.map(offer => `
-            <div class="job-offer-card" style="padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div>
-                        <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">${offer.title}</h3>
-                        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 4px;">${offer.professionalTitle || 'Sin título especificado'}</div>
-                        <div style="font-size: 13px; color: var(--success); font-weight: 500;">Activa • ${offer.candidates} candidatos</div>
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">${offer.modality} • ${offer.salary}</div>
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button onclick="app.editOffer(${offer.id})" style="padding: 6px 12px; font-size: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; color: var(--primary);">Editar</button>
-                        <button onclick="app.deleteOffer(${offer.id})" style="padding: 6px 12px; font-size: 12px; background: #fff0f0; border: 1px solid #ffcccc; border-radius: 6px; cursor: pointer; color: var(--danger);">Eliminar</button>
+        let html = '';
+
+        // Active offers
+        if (activeOffers.length === 0) {
+            html += '<div style="text-align: center; color: var(--text-secondary); padding: 20px 0;">No tienes ofertas activas.</div>';
+        } else {
+            html += activeOffers.map(offer => `
+                <div class="job-offer-card" style="padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div style="flex: 1; min-width: 0;">
+                            <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">${offer.title}</h3>
+                            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 4px;">${offer.professionalTitle || 'Sin título especificado'}</div>
+                            <div style="font-size: 13px; color: var(--success); font-weight: 500;">Activa • ${offer.candidates_count || 0} candidatos</div>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">${offer.modality} • ${offer.salary || 'A convenir'}</div>
+                        </div>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0;">
+                            <button onclick="app.editOffer('${offer.id}')" style="padding: 6px 12px; font-size: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; color: var(--primary);">Editar</button>
+                            <button onclick="app.closeOffer('${offer.id}')" style="padding: 6px 12px; font-size: 12px; background: #FFF8E1; border: 1px solid #FFD54F; border-radius: 6px; cursor: pointer; color: #F57F17;">Cerrar</button>
+                            <button onclick="app.deleteOffer('${offer.id}')" style="padding: 6px 12px; font-size: 12px; background: #fff0f0; border: 1px solid #ffcccc; border-radius: 6px; cursor: pointer; color: var(--danger);">Eliminar</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `).join('');
+            `).join('');
+        }
+
+        // Closed offers (collapsible history)
+        if (closedOffers.length > 0) {
+            html += `
+                <div style="border-top: 1px solid var(--border); padding-top: 12px;">
+                    <button onclick="var content = this.nextElementSibling; content.style.display = content.style.display === 'none' ? 'block' : 'none'; this.querySelector('.hist-arrow').textContent = content.style.display === 'none' ? '▶' : '▼';"
+                        style="display: flex; align-items: center; gap: 8px; background: none; border: none; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text-secondary); padding: 8px 0;">
+                        <span class="hist-arrow">▶</span> Historial de Ofertas (${closedOffers.length})
+                    </button>
+                    <div style="display: none; margin-top: 8px;">
+                        ${closedOffers.map((offer, i) => `
+                            <div class="job-offer-card" style="padding: 16px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; opacity: 0.7;${i < closedOffers.length - 1 ? ' margin-bottom: 12px;' : ''}">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div style="flex: 1; min-width: 0;">
+                                        <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">${offer.title}</h3>
+                                        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 4px;">${offer.professionalTitle || ''}</div>
+                                        <div style="font-size: 13px; color: var(--text-secondary); font-weight: 500;">Cerrada</div>
+                                        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">${offer.modality} • ${offer.salary || 'A convenir'}</div>
+                                    </div>
+                                    <button onclick="app.deleteOffer('${offer.id}')" style="padding: 6px 12px; font-size: 12px; background: #fff0f0; border: 1px solid #ffcccc; border-radius: 6px; cursor: pointer; color: var(--danger); flex-shrink: 0;">Eliminar</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        list.innerHTML = html;
     },
 
     // Delete Confirmation Logic
     offerToDeleteId: null,
+
+    async loadOffers() {
+        if (!window.talentlyBackend || !window.talentlyBackend.isReady) {
+            console.warn('Backend not ready, using empty profiles');
+            this.profiles = [];
+            return;
+        }
+
+        try {
+            const { data, error } = await window.talentlyBackend.offers.getAllActive();
+            if (error) throw error;
+
+            // Filter out already-swiped offers
+            const swipedIds = JSON.parse(localStorage.getItem('talently_swiped_offers') || '[]');
+
+            this.profiles = data
+                .filter(offer => !swipedIds.includes(offer.id))
+                .map(offer => ({
+                    id: offer.id,
+                    userId: offer.user_id, // Company owner's auth user ID (for match creation)
+                    name: offer.title,
+                    company: offer.company?.name || 'Empresa',
+                    logo: offer.company?.logo_url,
+                    role: offer.professional_title || offer.title,
+                    salary: (typeof offer.salary_min === 'number') ?
+                        `$${new Intl.NumberFormat('es-CL').format(offer.salary_min)} - $${new Intl.NumberFormat('es-CL').format(offer.salary_max)}` :
+                        offer.salary,
+                    modality: offer.modality,
+                    description: offer.description,
+                    skills: offer.skills || [],
+                    match: Math.floor(Math.random() * 20) + 80,
+                    location: offer.modality || 'Remoto'
+                }));
+
+            this.currentIndex = 0;
+            console.log('✅ Loaded offers:', this.profiles.length, `(${swipedIds.length} already swiped)`);
+        } catch (e) {
+            console.error('Error loading offers:', e);
+            this.showToast('Error cargando ofertas');
+            this.profiles = [];
+        }
+    },
 
     testConnection: async function () {
         this.showToast('Verificando conexión...');
@@ -6761,7 +7689,6 @@ const app = {
             if (dbError) throw new Error('DB Error: ' + dbError.message);
 
             this.showToast(`✅ Conexión Exitosa. Registros: ${count || 0}`);
-            console.log('Connection Test Success:', { session, count });
 
         } catch (e) {
             console.error('Connection Test Failed:', e);
@@ -6786,13 +7713,74 @@ const app = {
         if (modal) modal.style.display = 'none';
     },
 
-    confirmDeleteOffer() {
-        if (this.offerToDeleteId) {
+    async confirmDeleteOffer() {
+        if (!this.offerToDeleteId) return;
+
+        if (window.talentlyBackend && window.talentlyBackend.isReady) {
+            const { error } = await window.talentlyBackend.offers.delete(this.offerToDeleteId);
+            if (error) {
+                console.error('Error deleting offer:', error);
+                this.showToast('Error al eliminar oferta');
+                this.closeDeleteModal();
+                return;
+            }
+            this.showToast('Oferta eliminada');
+            this.renderCompanyOffers();
+            this._loadCompanyStats(this.companyProfile || this.currentUser);
+        } else {
             this.companyOffers = this.companyOffers.filter(o => o.id !== this.offerToDeleteId);
             this.renderCompanyOffers();
             this.showToast('Oferta eliminada');
         }
+
         this.closeDeleteModal();
+    },
+
+    async closeOffer(id) {
+        if (!window.talentlyBackend || !window.talentlyBackend.isReady) return;
+
+        const { error } = await window.talentlyBackend.offers.update(id, { status: 'closed' });
+        if (error) {
+            console.error('Error closing offer:', error);
+            this.showToast('Error al cerrar oferta');
+            return;
+        }
+
+        // Send system message to matched candidates for this offer
+        try {
+            const userId = (await window.supabaseClient.auth.getUser()).data.user?.id;
+            if (userId) {
+                // Find swipes where candidates swiped right on this offer
+                const { data: swipes } = await window.supabaseClient
+                    .from('swipes')
+                    .select('swiper_id')
+                    .eq('offer_id', id)
+                    .eq('direction', 'right');
+
+                if (swipes && swipes.length > 0) {
+                    // Find matches with these candidates
+                    const { data: matches } = await window.talentlyBackend.matches.get();
+                    if (matches) {
+                        const offer = this.companyOffers.find(o => o.id === id);
+                        const offerTitle = offer ? offer.title : 'La oferta';
+                        const candidateIds = swipes.map(s => s.swiper_id);
+
+                        for (const match of matches) {
+                            const otherUserId = match.user_id_1 === userId ? match.user_id_2 : match.user_id_1;
+                            if (candidateIds.includes(otherUserId)) {
+                                await window.talentlyBackend.matches.sendMessage(match.id, `[Sistema] La oferta "${offerTitle}" ha sido cerrada por la empresa.`);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Could not notify candidates:', e);
+        }
+
+        this.showToast('Oferta cerrada');
+        this.renderCompanyOffers();
+        this._loadCompanyStats(this.companyProfile || this.currentUser);
     },
 
     editOffer(id) {
@@ -6834,7 +7822,6 @@ const app = {
     },
 
     toggleNotifications() {
-        console.log('toggleNotifications called');
         const type = localStorage.getItem('talently_user_type');
         const isCompany = (type === 'company' || this.profileType === 'company');
         const viewId = isCompany ? 'companyNotificationsView' : 'notificationsView';
@@ -6846,10 +7833,8 @@ const app = {
 
         // Toggle usando style.transform
         if (view.style.transform === 'translateY(0px)' || view.style.transform === 'translateY(0)') {
-            console.log('Notifications open, closing...');
             view.style.transform = 'translateY(100%)';
         } else {
-            console.log('Opening notifications, closing others...');
             // Cerrar otros toggles
             this.closeFilters();
             this.closeSettingsModal();
@@ -6859,25 +7844,17 @@ const app = {
     },
 
     markNotificationsAsRead() {
-        // Clear badges
-        document.querySelectorAll('.badge').forEach(el => el.style.display = 'none');
-        document.querySelectorAll('.unread-badge').forEach(el => el.style.display = 'none');
-        document.querySelectorAll('.conversation-message.unread').forEach(el => el.classList.remove('unread'));
+        // Mark all candidate notifications as read
+        (this.matches || []).forEach(m => { m.hasUnread = false; });
+        localStorage.setItem('talently_matches', JSON.stringify(this.matches));
+        this.updateBadge();
+        this.renderNotifications();
 
-        // Visual feedback for Notifications View (Change background of items)
-        ['notificationsView', 'companyNotificationsView'].forEach(id => {
-            const notifView = document.getElementById(id);
-            if (notifView) {
-                const items = notifView.querySelectorAll('div[style*="background"]');
-                items.forEach(item => {
-                    if (item.style.background.includes('rgba(108,92,231,0.05)')) {
-                        item.style.background = 'transparent';
-                    }
-                });
-            }
-        });
+        // Mark all company notifications as read
+        (this.companyNotifications || []).forEach(n => { n.hasUnread = false; });
+        this.updateCompanyNotifBadge();
+        this.renderCompanyNotifications();
 
-        // Visual feedback
         this.showToast('Notificaciones marcadas como leídas');
     },
 
@@ -6893,12 +7870,9 @@ const app = {
     },
 
     openSettingsModal() {
-        console.log('openSettingsModal called');
         const type = localStorage.getItem('talently_user_type');
-        console.log('User type:', type, 'Profile type:', this.profileType);
 
         if (type === 'company' || this.profileType === 'company') {
-            console.log('Opening company settings...');
             const companySettingsView = document.getElementById('companySettingsView');
             if (!companySettingsView) {
                 console.error('companySettingsView not found');
@@ -6907,7 +7881,6 @@ const app = {
 
             // Toggle: si ya está abierto, cerrar
             if (companySettingsView.style.transform === 'translateY(0px)' || companySettingsView.style.transform === 'translateY(0)') {
-                console.log('Company settings already open, closing...');
                 companySettingsView.style.transform = 'translateY(100%)';
                 return;
             }
@@ -6922,7 +7895,6 @@ const app = {
 
             companySettingsView.style.transform = 'translateY(0)';
         } else {
-            console.log('Opening candidate settings...');
             const candidateView = document.getElementById('settingsView');
             if (!candidateView) {
                 console.error('settingsView not found');
@@ -6930,7 +7902,6 @@ const app = {
             }
 
             if (candidateView.style.transform === 'translateY(0px)' || candidateView.style.transform === 'translateY(0)') {
-                console.log('Settings already open, closing...');
                 candidateView.style.transform = 'translateY(100%)';
                 return;
             }
@@ -6992,16 +7963,259 @@ const app = {
         }
     },
 
+    renderCompanyProfile() {
+        // Render profile card functionality
+        // Smart Merge: Start with currentUser (onboarding data)
+        const data = { ...this.currentUser };
+
+        // Overlay companyProfile data ONLY if it has values
+        if (this.companyProfile) {
+            Object.keys(this.companyProfile).forEach(key => {
+                const val = this.companyProfile[key];
+                // overwrite if value exists and is not empty string/null
+                if (val !== null && val !== undefined && val !== '') {
+                    data[key] = val;
+                }
+            });
+        }
+
+        // Resolve names from IDs
+        // helper locally or from app scope
+        const getLabel = (cat, id) => this.getRefLabel ? this.getRefLabel(cat, id) : id;
+
+        const countryName = getLabel('countries', data.country);
+        const sectorName = getLabel('sectors', data.sector);
+        const stageName = getLabel('stages', data.company_stage);
+
+        // Location string
+        let locationStr = 'Ubicación no definida';
+        if (data.city_name) {
+            locationStr = `${data.city_name}, ${countryName}`;
+        } else if (countryName && countryName !== data.country) { // If resolved
+            locationStr = countryName;
+        } else if (data.location) {
+            locationStr = data.location;
+        }
+
+        const container = document.getElementById('companyProfileSection');
+        if (container) {
+            // Fix horizontal scroll: ensure max-width and box-sizing
+            container.style.maxWidth = '100%';
+            container.style.boxSizing = 'border-box';
+
+            container.innerHTML = `
+                <div style="padding: 24px; max-width: 100%; box-sizing: border-box; overflow-x: hidden;">
+                    <h2 class="section-title">Perfil de la Empresa</h2>
+                    
+                    <!-- Stats in a Box/Frame -->
+                    <div class="stats-container" style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                        <div class="stat-item" style="text-align: center;">
+                            <div class="stat-value" style="font-size: 24px; font-weight: 700; color: var(--primary);">0</div>
+                            <div class="stat-label" style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Ofertas Activas</div>
+                        </div>
+                        <div class="stat-item" style="text-align: center; border-left: 1px solid var(--border); border-right: 1px solid var(--border);">
+                            <div class="stat-value" style="font-size: 24px; font-weight: 700; color: var(--primary);">0</div>
+                            <div class="stat-label" style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Matches Totales</div>
+                        </div>
+                        <div class="stat-item" style="text-align: center;">
+                            <div class="stat-value" style="font-size: 24px; font-weight: 700; color: var(--primary);">0</div>
+                            <div class="stat-label" style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Vistas de Perfil</div>
+                        </div>
+                    </div>
+
+                    <div style="background: var(--surface); border-radius: 16px; padding: 24px; border: 1px solid var(--border);">
+                        <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 24px;">
+                             <img src="${data.logo_url || data.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || 'Company')}&background=random`}" 
+                                  style="width: 64px; height: 64px; border-radius: 12px; object-fit: cover;">
+                             <div style="flex: 1;">
+                                 <h3 style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">${data.name || 'Nombre Empresa'}</h3>
+                                 <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 4px;">${sectorName || data.industry || 'Sector'}</p>
+                                 
+                                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                     ${locationStr ? `<span class="badge badge-purple">${locationStr}</span>` : ''}
+                                     ${stageName ? `<span class="badge badge-purple">${stageName}</span>` : ''}
+                                 </div>
+                             </div>
+                             <button class="btn-secondary" onclick="app.openCompanyProfile()" style="padding: 8px 16px; gap: 6px;">
+                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                 </svg>
+                                 Editar
+                             </button>
+                        </div>
+
+                        ${data.value_proposition || data.description ? `
+                        <div style="margin-bottom: 24px;">
+                            <h4 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Sobre Nosotros</h4>
+                            <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6;">
+                                ${data.value_proposition || data.description}
+                            </p>
+                        </div>
+                        ` : ''}
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            ${data.website ? `
+                            <div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Website</div>
+                                <a href="${data.website}" target="_blank" style="color: var(--primary); font-size: 14px; text-decoration: none;">${data.website}</a>
+                            </div>
+                            ` : ''}
+                            ${data.linkedin_url || data.linkedin ? `
+                            <div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 3px;">LinkedIn</div>
+                                <a href="${data.linkedin_url || data.linkedin}" target="_blank" style="color: var(--primary); font-size: 14px; text-decoration: none;">Ver Perfil</a>
+                            </div>
+                            ` : ''}
+                            ${data.work_model ? `
+                            <div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Modelo de Trabajo</div>
+                                <div style="font-size: 14px; color: var(--text-primary); font-weight: 500;">${getLabel('work_modalities', data.work_model)}</div>
+                            </div>
+                            ` : ''}
+                            ${getLabel('sizes', data.company_size) ? `
+                            <div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Tamaño</div>
+                                <div style="font-size: 14px; color: var(--text-primary); font-weight: 500;">${getLabel('sizes', data.company_size)}</div>
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        <!-- Culture Values -->
+                        <div id="companyProfileCulture2" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);"></div>
+
+                        <!-- Tech Stack -->
+                        <div id="companyProfileTech2" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);"></div>
+
+                        <!-- Positions -->
+                        <div id="companyProfilePositions2" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);"></div>
+
+                        <!-- Seniority -->
+                        <div id="companyProfileSeniority2" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);"></div>
+
+                        <!-- Benefits -->
+                        <div id="companyProfileBenefits2" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);"></div>
+
+                        <!-- Selection Process -->
+                        <div id="companyProfileSelection2" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);"></div>
+
+                        <!-- Tags -->
+                        <div id="companyProfileTags2" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);"></div>
+                    </div>
+                </div>
+            `;
+
+            // Render array sections after innerHTML is set
+            this._renderProfileSection('companyProfileCulture2', 'Valores de Cultura', data.culture_values, 'culture_values', 'rgba(108,92,231,0.1)', 'var(--primary)');
+            this._renderProfileSection('companyProfileTech2', 'Tech Stack', data.tech_stack || this.companyTechStack, null, 'var(--bg)', 'var(--text-primary)', true);
+            this._renderProfileSection('companyProfilePositions2', 'Posiciones que Buscamos', data.positions_looking, 'positions', 'rgba(0,184,148,0.1)', '#00b894');
+            this._renderProfileSection('companyProfileSeniority2', 'Niveles de Seniority', data.seniority_levels, 'seniority_levels', 'rgba(253,203,110,0.2)', '#e17055');
+            this._renderProfileSection('companyProfileBenefits2', 'Beneficios', data.benefits, 'benefits', 'rgba(116,185,255,0.15)', '#0984e3');
+            this._renderProfileTags('companyProfileTags2', 'Tags', data.tags || this.companyTags);
+            this._renderProfileSelection('companyProfileSelection2', data);
+        }
+    },
+
+    _renderProfileSection(containerId, title, values, refCategory, bgColor, textColor, isRaw) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        if (!Array.isArray(values) || values.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+        const names = isRaw ? values : this.resolveRefNames(refCategory, values);
+        container.innerHTML = `
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">${title}</div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                ${names.map(name => `<span style="padding: 6px 14px; background: ${bgColor}; color: ${textColor}; border-radius: 20px; font-size: 13px; font-weight: 600;">${name}</span>`).join('')}
+            </div>
+        `;
+    },
+
+    _renderProfileTags(containerId, title, tags) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        if (!Array.isArray(tags) || tags.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+        container.innerHTML = `
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">${title}</div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                ${tags.map(tag => `<span style="padding: 6px 14px; background: var(--bg); border: 1px solid var(--border); color: var(--text-primary); border-radius: 20px; font-size: 13px; font-weight: 500;">${tag}</span>`).join('')}
+            </div>
+        `;
+    },
+
+    _renderProfileSelection(containerId, data) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const hasData = data.technical_test || data.paid_test || data.selection_stages || data.selection_duration;
+        if (!hasData) {
+            container.style.display = 'none';
+            return;
+        }
+        const testMap = { 'si': 'Si', 'no': 'No', 'depende': 'Depende', 'a-veces': 'A veces' };
+        const badges = [];
+        if (data.technical_test) badges.push(`Prueba Tecnica: ${testMap[data.technical_test] || data.technical_test}`);
+        if (data.paid_test) badges.push(`Prueba Pagada: ${testMap[data.paid_test] || data.paid_test}`);
+        if (data.selection_stages) badges.push(`${data.selection_stages} Etapas`);
+        if (data.selection_duration) badges.push(`Duracion: ${this.getRefLabel('selection_durations', data.selection_duration)}`);
+        container.innerHTML = `
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Proceso de Seleccion</div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                ${badges.map(b => `<span style="padding: 6px 14px; background: var(--bg); border: 1px solid var(--border); color: var(--text-secondary); border-radius: 20px; font-size: 13px; font-weight: 500;">${b}</span>`).join('')}
+            </div>
+        `;
+    },
+
     openCompanyProfile() {
         const modal = document.getElementById('companyProfileModal');
         const data = this.companyProfile || this.currentUser || {};
 
-        // Load current data (map DB field names to modal fields)
-        const nameEl = document.getElementById('cpName');
-        if (nameEl) nameEl.value = data.name || '';
+        // Populate dropdowns first
+        this.populateCompanyFormOptions();
 
-        const industryEl = document.getElementById('cpIndustry');
-        if (industryEl) industryEl.value = data.sector || data.industry || 'Tecnología';
+        // Map DB fields to Inputs
+        const setVal = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.value = val || '';
+        };
+
+        setVal('cpName', data.name);
+        setVal('cpWebsite', data.website);
+        setVal('cpIndustry', data.sector); // sector ID
+        setVal('cpSize', data.company_size);
+        setVal('cpStage', data.company_stage);
+        setVal('cpWorkModel', data.work_model);
+        setVal('cpCountry', data.country);
+        setVal('cpDescription', data.value_proposition || data.description);
+
+        // Populate New Fields
+        setVal('cpLinkedin', data.linkedin_url);
+        setVal('cpTechTest', data.technical_test);
+        setVal('cpPaidTest', data.paid_test);
+        setVal('cpStages', data.selection_stages);
+        setVal('cpSelectionDuration', data.selection_duration);
+
+        // Populate multi-checkbox values
+        this.setMultiCheckboxValues('cpCultureContainer', data.culture_values || []);
+        this.setMultiCheckboxValues('cpPositionsContainer', data.positions_looking || []);
+        this.setMultiCheckboxValues('cpSeniorityContainer', data.seniority_levels || []);
+        this.setMultiCheckboxValues('cpBenefitsContainer', data.benefits || []);
+
+        // Initialize edit tag arrays and render
+        this.cpEditTechStack = [...(data.tech_stack || this.companyTechStack || [])];
+        this.cpEditTags = [...(data.tags || this.companyTags || [])];
+        this.renderEditTechStack();
+        this.renderEditTags();
+
+        // Handle City: dependent load
+        if (data.country) {
+            this.loadCitiesForEdit(data.country, data.city);
+        } else {
+            const citySelect = document.getElementById('cpCity');
+            if (citySelect) citySelect.innerHTML = '<option value="">Selecciona un país primero</option>';
+        }
 
         // Handle logo preview
         const logoVal = data.logo_url || data.logo || '';
@@ -7017,12 +8231,6 @@ const app = {
             }
         }
 
-        const locationEl = document.getElementById('cpLocation');
-        if (locationEl) locationEl.value = data.location || (data.city ? `${data.city}, ${data.country || ''}` : '');
-
-        const descEl = document.getElementById('cpDescription');
-        if (descEl) descEl.value = data.value_proposition || data.description || '';
-
         if (modal) {
             modal.style.removeProperty('display');
             modal.classList.add('active');
@@ -7037,55 +8245,171 @@ const app = {
         }
     },
 
-    saveCompanyProfile() {
-        const name = document.getElementById('cpName').value;
+    async saveCompanyProfile() {
+        const name = document.getElementById('cpName')?.value;
         if (!name) {
             this.showToast('El nombre es obligatorio');
             return;
         }
 
+        this.showToast('Guardando perfil...', 'info');
+
         // Merge new values into existing companyProfile
         const prevData = this.companyProfile || {};
+        let logoUrl = document.getElementById('cpLogo')?.value || prevData.logo_url;
+
+        // --- HANDLE LOGO UPLOAD IF CHANGED ---
+        // If logoUrl is a DataURL (starts with "data:"), we must upload it first
+        if (logoUrl && logoUrl.startsWith('data:')) {
+            try {
+                // Convert DataURL to File object
+                const res = await fetch(logoUrl);
+                const blob = await res.blob();
+                const file = new File([blob], "company_logo.png", { type: "image/png" });
+
+                if (window.talentlyBackend && window.talentlyBackend.storage) {
+                    const uploadedUrl = await window.talentlyBackend.storage.uploadImage(file, 'images');
+                    if (uploadedUrl) {
+                        logoUrl = uploadedUrl;
+                        console.log('✅ Logo uploaded:', logoUrl);
+                    } else {
+                        console.warn('⚠️ Upload failed, keeping previous logo URL');
+                        // Don't save DataURL to DB - it's too large and will fail
+                        // Fall back to the previous logo URL instead
+                        logoUrl = prevData.logo_url || null;
+                        this.showToast('Error al subir imagen. Verifica los permisos de Storage en Supabase.', 'error');
+                    }
+                }
+            } catch (e) {
+                console.error('Error uploading logo:', e);
+                logoUrl = prevData.logo_url || null;
+                this.showToast('Error al subir imagen', 'error');
+            }
+        }
+
         this.companyProfile = {
             ...prevData,
             name: name,
-            sector: document.getElementById('cpIndustry').value,
-            logo_url: document.getElementById('cpLogo').value || prevData.logo_url,
-            location: document.getElementById('cpLocation').value,
-            value_proposition: document.getElementById('cpDescription').value
+            website: document.getElementById('cpWebsite')?.value,
+            sector: document.getElementById('cpIndustry')?.value,
+            company_size: document.getElementById('cpSize')?.value,
+            company_stage: document.getElementById('cpStage')?.value,
+            work_model: document.getElementById('cpWorkModel')?.value,
+            country: document.getElementById('cpCountry')?.value,
+            city: document.getElementById('cpCity')?.value,
+            value_proposition: document.getElementById('cpDescription')?.value,
+            linkedin_url: document.getElementById('cpLinkedin')?.value,
+            technical_test: document.getElementById('cpTechTest')?.value,
+            paid_test: document.getElementById('cpPaidTest')?.value,
+            selection_stages: document.getElementById('cpStages')?.value,
+            selection_duration: document.getElementById('cpSelectionDuration')?.value,
+            culture_values: this.getMultiCheckboxValues('cpCultureContainer'),
+            positions_looking: this.getMultiCheckboxValues('cpPositionsContainer'),
+            seniority_levels: this.getMultiCheckboxValues('cpSeniorityContainer'),
+            benefits: this.getMultiCheckboxValues('cpBenefitsContainer'),
+            tech_stack: [...this.cpEditTechStack],
+            tags: [...this.cpEditTags],
+            logo_url: logoUrl
         };
 
-        // Save to Supabase if backend is ready
-        if (window.talentlyBackend && window.talentlyBackend.isReady && this.currentUser && this.currentUser.id) {
+        // Sync app state arrays
+        this.companyTechStack = this.companyProfile.tech_stack;
+        this.companyTags = this.companyProfile.tags;
+
+        // Save to Supabase
+        if (window.talentlyBackend && window.talentlyBackend.isReady && this.currentUser) {
             const updateData = {
                 name: this.companyProfile.name,
+                website: this.companyProfile.website,
                 sector: this.companyProfile.sector,
-                logo_url: this.companyProfile.logo_url,
-                value_proposition: this.companyProfile.value_proposition
+                company_size: this.companyProfile.company_size,
+                company_stage: this.companyProfile.company_stage,
+                work_model: this.companyProfile.work_model,
+                country: this.companyProfile.country,
+                city: this.companyProfile.city,
+                value_proposition: this.companyProfile.value_proposition,
+                linkedin_url: this.companyProfile.linkedin_url,
+                technical_test: this.companyProfile.technical_test,
+                paid_test: this.companyProfile.paid_test,
+                selection_stages: this.companyProfile.selection_stages,
+                selection_duration: this.companyProfile.selection_duration,
+                culture_values: this.companyProfile.culture_values,
+                positions_looking: this.companyProfile.positions_looking,
+                seniority_levels: this.companyProfile.seniority_levels,
+                benefits: this.companyProfile.benefits,
+                tech_stack: this.companyProfile.tech_stack,
+                tags: this.companyProfile.tags,
+                logo_url: this.companyProfile.logo_url
             };
-            window.talentlyBackend.companies.update(this.currentUser.id, updateData)
-                .then(result => {
-                    if (result.error) console.error('Error saving company profile:', result.error);
-                    else console.log('✅ Company profile saved to DB');
-                })
-                .catch(err => console.error('Error saving company profile:', err));
-        }
 
-        this.updateCompanyHeader();
-        this.renderCompanyProfile();
-        this.closeCompanyProfile();
-        this.showToast('Perfil actualizado');
+            // FIX: Use the Company ID (PK) for direct update
+            const recordId = this.companyProfile.id;
+            // CRITICAL FIX: Bypass wrapper which forces user_id check. 
+            // We must use the Company ID directly.
+            let updatePromise;
+
+            if (recordId && window.supabaseClient) {
+                // DIRECT SUPABASE CALL
+                updatePromise = window.supabaseClient
+                    .from('companies')
+                    .update(updateData)
+                    .eq('id', recordId)
+                    .select()
+                    .single();
+            } else {
+                // Fallback (only if no recordId, which shouldn't happen for edit)
+                console.warn('⚠️ No Company ID found for direct update, falling back to wrapper (might fail)');
+                updatePromise = window.talentlyBackend.companies.update(this.currentUser.id, updateData);
+            }
+
+            updatePromise
+                .then(result => {
+                    if (result.error) {
+                        console.error('Error saving company profile:', result.error);
+                        this.showToast('Error al guardar: ' + result.error.message, 'error');
+                    } else {
+                        console.log('✅ Company profile saved to DB', result.data);
+                        // Update local state with returned data
+                        if (result.data) {
+                            this.companyProfile = { ...this.companyProfile, ...result.data };
+                            // Also update currentUser if it's acting as profile holder
+                            this.currentUser = { ...this.currentUser, ...result.data };
+                            // SYNC STATE:
+                            this.companyTechStack = result.data.tech_stack || [];
+                            this.companyTags = result.data.tags || [];
+                        }
+                        this.showToast('Perfil actualizado correctamente', 'success');
+
+                        // Re-render and close
+                        this.updateCompanyHeader();
+                        this.renderCompanyProfile();
+                        this.closeCompanyProfile();
+                    }
+                })
+                .catch(err => {
+                    console.error('Unexpected error saving company profile:', err);
+                    this.showToast('Error inesperado al guardar', 'error');
+                });
+        } else {
+            // Local save only (offline or no backend)
+            this.updateCompanyHeader();
+            this.renderCompanyProfile();
+            this.closeCompanyProfile();
+            this.showToast('Perfil actualizado (Local)');
+        }
     },
 
     updateCompanyHeader() {
-        const data = this.companyProfile || this.currentUser || {};
         const nameEl = document.getElementById('headerCompanyName');
         const logoEl = document.getElementById('headerCompanyLogo');
 
-        if (nameEl) nameEl.textContent = data.name || 'Talently Business';
+        // REVERTED to generic branding for header as requested by USER
+        if (nameEl) nameEl.textContent = 'Talently Business';
+
+        // Use generic logo for header (or specific if desired, user said "should show Talently Business logo")
+        // We'll use the default avatar with "Talently Business"
         if (logoEl) {
-            const logoUrl = data.logo_url || data.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || 'Company')}&background=6c5ce7&color=fff`;
-            logoEl.src = logoUrl;
+            logoEl.src = 'https://ui-avatars.com/api/?name=Talently+Business&background=6c5ce7&color=fff';
         }
     },
 
@@ -7189,17 +8513,14 @@ const app = {
 
 // Initialize app on page load
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM Content Loaded');
     app.init();
 
     // Make app globally accessible for debugging
     window.app = app;
-    console.log('App initialized and available as window.app');
 
     // Listener para recargar avatar cuando la página vuelve a ser visible
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden && app.currentUser) {
-            console.log('Página visible de nuevo, recargando avatar...');
             app.loadAvatarFromLocalStorage();
         }
     });
@@ -7211,15 +8532,72 @@ Object.assign(app, {
     candidatesDeck: [],
     currentCandidateIndex: 0,
 
-    initCandidateSwipe() {
+    async initCandidateSwipe() {
         this.currentCandidateIndex = 0;
+
+        // Load candidates from backend if deck is empty
+        if (this.candidatesDeck.length === 0) {
+            await this.loadCandidatesFromBackend();
+        }
         this.renderCandidateCard();
     },
 
-    resetCandidateSwipe() {
+    async loadCandidatesFromBackend() {
+        if (!window.talentlyBackend || !window.talentlyBackend.isReady) {
+            console.warn('Backend not ready for candidate loading');
+            return;
+        }
+
+        try {
+            // Load candidates and already-swiped IDs in parallel
+            const [candidatesResult, swipedResult] = await Promise.all([
+                window.talentlyBackend.profiles.getCandidatesForExplore(),
+                window.talentlyBackend.swipes.getSwipedUserIds()
+            ]);
+
+            if (candidatesResult.error) {
+                console.error('Error loading candidates:', candidatesResult.error);
+                return;
+            }
+
+            const swipedUserIds = swipedResult.data || [];
+
+            // Filter out already-swiped candidates and map to card format
+            this.candidatesDeck = (candidatesResult.data || [])
+                .filter(profile => !swipedUserIds.includes(profile.id))
+                .map(profile => ({
+                    id: profile.id, // auth user ID
+                    name: profile.name || 'Candidato',
+                    role: profile.current_position || profile.title || profile.role || 'Profesional',
+                    image: profile.avatar_url || profile.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name || 'C')}&background=6c5ce7&color=fff`,
+                    seniority: profile.experience_level || 'N/A',
+                    exp: profile.experience_years || 'N/A',
+                    salary: profile.expected_salary ? `${profile.currency || '$'} ${profile.expected_salary}` : 'A convenir',
+                    modality: profile.work_modality || profile.modality || 'Flexible',
+                    languages: profile.languages || ['Español'],
+                    skills: profile.skills || [],
+                    softSkills: profile.soft_skills || [],
+                    benefits: profile.interests || [],
+                    bio: profile.bio || profile.description || 'Sin descripción disponible.',
+                    fit: Math.floor(Math.random() * 20) + 80,
+                    location: profile.city || profile.country || 'Sin ubicación',
+                    education: profile.education_level || 'N/A',
+                    area: profile.professional_area || 'N/A'
+                }));
+
+            this.currentCandidateIndex = 0;
+            console.log('✅ Loaded candidates:', this.candidatesDeck.length, `(${swipedUserIds.length} already swiped)`);
+        } catch (e) {
+            console.error('Error loading candidates:', e);
+        }
+    },
+
+    async resetCandidateSwipe() {
         this.currentCandidateIndex = 0;
+        this.candidatesDeck = [];
         document.getElementById('noMoreCandidates').style.display = 'none';
         document.getElementById('candidateSwipeDeck').style.justifyContent = 'center';
+        await this.loadCandidatesFromBackend();
         this.renderCandidateCard();
     },
 
@@ -7241,93 +8619,38 @@ Object.assign(app, {
         const controls = document.getElementById('swipeControls');
         if (controls) controls.style.display = 'flex';
 
+        const imageUrl = candidate.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(candidate.name)}&background=6c5ce7&color=fff&size=600`;
+        const skillsHtml = (candidate.skills || []).slice(0, 4).map(s => `<span class="card-skill-chip">${s}</span>`).join('');
+
         const card = document.createElement('div');
         card.id = 'activeCandidateCard';
-        card.style.cssText = `
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            overflow-y: auto; 
-            -webkit-overflow-scrolling: touch;
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.3s ease, opacity 0.3s ease, rotate 0.3s ease;
-            transform-origin: bottom center;
-        `;
+        card.className = 'profile-card';
+        card.style.cssText = 'transition: transform 0.3s ease, opacity 0.3s ease; transform-origin: bottom center;';
 
         card.innerHTML = `
-            <div style="flex: 1; position: relative; min-height: 100%;">
-                <div style="height: 60%; min-height: 350px; background-image: url('${candidate.image}'); background-size: cover; background-position: center; position: relative;">
-                    <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 100px; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);"></div>
+            <div class="card-bg-image" style="background-image: url('${imageUrl}');"></div>
+            <div class="card-gradient-overlay"></div>
+            <div class="swipe-stamp stamp-like">LIKE</div>
+            <div class="swipe-stamp stamp-nope">NOPE</div>
+            <div class="card-info-overlay" onclick="app.openCardDetail('candidate')">
+                <h2 class="card-offer-title">${candidate.name}</h2>
+                <p class="card-company-name">${candidate.role || 'Profesional'}</p>
+                <div class="card-details-row">
+                    <span class="card-detail-item">${candidate.modality || 'Remoto'}</span>
+                    <span class="card-detail-item">${candidate.salary || ''}</span>
                 </div>
-                
-                <div style="padding: 20px 20px 100px; background: white;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                        <h2 style="color: var(--text-primary); font-size: 24px; font-weight: 700; margin: 0;">${candidate.name}</h2>
-                        <span style="background: rgba(0,184,148,0.1); color: var(--success); padding: 4px 10px; border-radius: 12px; font-size: 13px; font-weight: 700;">${candidate.fit}% Match</span>
-                    </div>
-                    
-                    <p style="color: var(--text-secondary); font-size: 16px; margin: 0 0 12px; font-weight: 500;">${candidate.role}</p>
-
-                    <!-- Main Stats Grid -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-                        <div style="background: var(--bg); padding: 10px; border-radius: 10px; border: 1px solid var(--border);">
-                            <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Experiencia</div>
-                            <div style="font-weight: 600; font-size: 14px; color: var(--text-primary);">${candidate.seniority} (${candidate.exp})</div>
-                        </div>
-                         <div style="background: var(--bg); padding: 10px; border-radius: 10px; border: 1px solid var(--border);">
-                            <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Expectativa Salarial</div>
-                            <div style="font-weight: 600; font-size: 14px; color: var(--text-primary);">${candidate.salary}</div>
-                        </div>
-                        <div style="background: var(--bg); padding: 10px; border-radius: 10px; border: 1px solid var(--border);">
-                            <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Modalidad</div>
-                            <div style="font-weight: 600; font-size: 14px; color: var(--text-primary);">${candidate.modality}</div>
-                        </div>
-                         <div style="background: var(--bg); padding: 10px; border-radius: 10px; border: 1px solid var(--border);">
-                            <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Idiomas</div>
-                            <div style="font-weight: 600; font-size: 14px; color: var(--text-primary);">${candidate.languages.join(', ')}</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Hard Skills -->
-                    <div style="margin-bottom: 20px;">
-                        <h4 style="margin: 0 0 10px; font-size: 13px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase;">Tech Stack</h4>
-                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                            ${candidate.skills.map(s => `<span style="background: #EEF2FF; color: #4F46E5; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;">${s}</span>`).join('')}
-                        </div>
-                    </div>
-
-                     <!-- Soft Skills -->
-                    <div style="margin-bottom: 20px;">
-                        <h4 style="margin: 0 0 10px; font-size: 13px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase;">Superpoderes (Soft Skills)</h4>
-                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                            ${candidate.softSkills.map(s => `<span style="background: #F0FDF4; color: #16A34A; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;">${s}</span>`).join('')}
-                        </div>
-                    </div>
-
-                    <!-- Benefits -->
-                    <div style="margin-bottom: 20px;">
-                        <h4 style="margin: 0 0 10px; font-size: 13px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase;">Valora en una empresa</h4>
-                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                            ${candidate.benefits.map(b => `<span style="border: 1px solid var(--border); color: var(--text-secondary); padding: 4px 10px; border-radius: 8px; font-size: 12px;">${b}</span>`).join('')}
-                        </div>
-                    </div>
-
-                    <div style="border-top: 1px solid var(--border); padding-top: 20px;">
-                        <h4 style="margin: 0 0 12px; font-size: 14px; color: var(--text-primary); font-weight: 700;">Sobre mí</h4>
-                        <p style="color: var(--text-secondary); line-height: 1.6; font-size: 15px;">${candidate.bio}</p>
-                    </div>
+                <p class="card-desc">${candidate.bio ? candidate.bio.substring(0, 100) + '...' : ''}</p>
+                <div class="card-skills-row">
+                    ${skillsHtml}
                 </div>
             </div>
+            <span class="match-badge-float">${candidate.fit}%</span>
         `;
 
         deck.appendChild(card);
     },
 
-    handleSwipe(direction) {
+    async handleSwipe(direction) {
         const card = document.getElementById('activeCandidateCard');
         if (!card) return;
 
@@ -7336,9 +8659,13 @@ Object.assign(app, {
         // Animate Swipe
         if (direction === 'left') {
             card.style.transform = 'translateX(-120%) rotate(-20deg)';
+            // Record left swipe in DB
+            if (candidate && candidate.id && window.talentlyBackend && window.talentlyBackend.isReady) {
+                window.talentlyBackend.swipes.create(candidate.id, 'left').catch(e => console.warn('Swipe record error:', e));
+            }
         } else {
             card.style.transform = 'translateX(120%) rotate(20deg)';
-            this.handleMatch(candidate);
+            await this.handleMatch(candidate);
         }
         card.style.opacity = '0';
 
@@ -7349,42 +8676,153 @@ Object.assign(app, {
     },
 
     // ===== CHAT & MATCH LOGIC =====
-    companyConversations: [], // Start empty
+    companyConversations: [], // Loaded from DB matches
+    companyNotifications: [], // Match notifications for company
     activeConversationId: null,
     currentMatchCandidate: null, // For modal
 
-    handleMatch(candidate) {
+    async handleMatch(candidate) {
+        if (!candidate || !candidate.id) return;
+
         this.currentMatchCandidate = candidate;
 
-        // Populate and show Match Modal
-        document.getElementById('matchCandidateName').textContent = candidate.name;
-
-        // Fix Image Source - use default if missing
-        const candidateImg = candidate.image || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(candidate.name);
-        document.getElementById('matchCandidateImage').src = candidateImg;
-
-        document.getElementById('matchCompanyLogo').src = this.companyProfile.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.companyProfile.name)}&background=6c5ce7&color=fff`;
-
-        const modal = document.getElementById('matchModal');
-        modal.style.display = 'flex';
-
-        // Auto-create conversation if not exists
-        if (!this.companyConversations.find(c => c.candidateId === candidate.id)) {
-            this.companyConversations.unshift({
-                id: Date.now(),
-                candidateId: candidate.id,
-                candidateName: candidate.name,
-                candidateImage: candidateImg, // Ensure image is passed
-                role: candidate.role,
-                lastMessage: '¡Nuevo Match! 🎉',
-                timestamp: 'Ahora',
-                unread: 0,
-                messages: [
-                    { text: `Has hecho match con ${candidate.name}. ¡Saluda! 👋`, sender: 'system', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
-                ]
-            });
-            this.renderConversationsList();
+        if (!window.talentlyBackend || !window.talentlyBackend.isReady) {
+            this.showToast('Backend no disponible');
+            return;
         }
+
+        try {
+            // Create RIGHT swipe in DB and check for mutual match
+            const result = await window.talentlyBackend.swipes.create(candidate.id, 'right');
+
+            if (result.error) {
+                console.error('Company swipe error:', result.error);
+                this.showToast('Error al registrar interés');
+                return;
+            }
+
+            window.talentlyBackend.statistics.increment('swipes_given').catch(e => console.warn('Stats error:', e));
+
+            if (result.isMutualMatch) {
+                // MUTUAL MATCH! Create real match in DB
+                const matchResult = await window.talentlyBackend.matches.create(candidate.id);
+
+                if (matchResult.error && !matchResult.alreadyExists) {
+                    console.error('Match creation error:', matchResult.error);
+                    this.showToast('Error al crear match');
+                    return;
+                }
+
+                const matchId = matchResult.data ? matchResult.data.id : null;
+
+                // Show Match Modal
+                document.getElementById('matchCandidateName').textContent = candidate.name;
+                const candidateImg = candidate.image || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(candidate.name);
+                document.getElementById('matchCandidateImage').src = candidateImg;
+                document.getElementById('matchCompanyLogo').src = this.companyProfile?.logo_url || this.companyProfile?.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.companyProfile?.name || 'E')}&background=6c5ce7&color=fff`;
+                document.getElementById('matchModal').style.display = 'flex';
+
+                // Add to local company conversations (backed by real match)
+                if (matchId && !this.companyConversations.find(c => c.matchId === matchId)) {
+                    this.companyConversations.unshift({
+                        id: matchId, // Use real match ID
+                        matchId: matchId,
+                        candidateId: candidate.id,
+                        candidateName: candidate.name,
+                        candidateImage: candidateImg,
+                        role: candidate.role,
+                        lastMessage: '¡Nuevo Match!',
+                        timestamp: 'Ahora',
+                        unread: 0,
+                        messages: []
+                    });
+                    this.renderConversationsList();
+                }
+
+                window.talentlyBackend.statistics.increment('matches_count').catch(e => console.warn('Stats error:', e));
+                this.showToast('¡Es un Match! Ambos tienen interés mutuo.');
+
+                // Add company notification
+                this.companyNotifications.unshift({
+                    id: matchId,
+                    name: candidate.name,
+                    image: candidateImg,
+                    matchDate: new Date().toISOString(),
+                    hasUnread: true
+                });
+                this.renderCompanyNotifications();
+                this.updateCompanyNotifBadge();
+            } else {
+                // One-sided interest only
+                this.showToast('Interés registrado. Si el candidato también te elige, harán Match.');
+            }
+        } catch (e) {
+            console.error('HandleMatch error:', e);
+            this.showToast('Error al procesar');
+        }
+    },
+
+    renderCompanyNotifications() {
+        const list = document.getElementById('companyNotificationList');
+        if (!list) return;
+
+        // Show ALL notifications (not just unread)
+        const allNotifs = this.companyNotifications || [];
+        if (allNotifs.length === 0) {
+            list.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-secondary);"><p>No tienes notificaciones</p></div>';
+            return;
+        }
+
+        list.innerHTML = allNotifs.map(notif => {
+            const safeName = (notif.name || 'Candidato').replace(/'/g, "\\'");
+            const time = notif.matchDate ? new Date(notif.matchDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Ahora';
+            const isUnread = notif.hasUnread;
+            const bgColor = isUnread ? 'rgba(108,92,231,0.08)' : 'transparent';
+            const fontWeight = isUnread ? '700' : '600';
+
+            return `
+            <div style="padding: 16px; border-bottom: 1px solid var(--border); background: ${bgColor}; cursor: pointer; transition: background 0.2s;"
+                 onclick="app.markCompanyNotifRead('${notif.id}'); app.closeNotifications(); app.showCompanySection('companyMessagesSection');">
+                <div style="display: flex; gap: 12px;">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #6C5CE7 0%, #a29bfe 100%); display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; opacity: ${isUnread ? '1' : '0.6'};">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: ${fontWeight}; font-size: 14px; color: var(--text-primary);">¡Match con ${safeName}!</div>
+                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Ahora pueden chatear. Envía un mensaje.</div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 6px;">${time}</div>
+                    </div>
+                    ${isUnread ? '<div style="width: 10px; height: 10px; background: var(--primary); border-radius: 50%; flex-shrink: 0; align-self: center;"></div>' : ''}
+                </div>
+            </div>`;
+        }).join('');
+    },
+
+    updateCompanyNotifBadge() {
+        // Combine: unread match notifications + unread messages from conversations
+        const notifCount = (this.companyNotifications || []).filter(n => n.hasUnread).length;
+        const msgCount = (this.companyConversations || []).reduce((sum, c) => sum + (c.unread || 0), 0);
+        const count = notifCount + msgCount;
+        console.log('[DEBUG] updateCompanyNotifBadge: notifCount =', notifCount, 'msgCount =', msgCount, 'total =', count);
+        // Update the bell badge in company header
+        const badges = document.querySelectorAll('#companyApp .icon-btn .badge');
+        badges.forEach(badge => {
+            if (count > 0) {
+                badge.textContent = count > 9 ? '9+' : count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        });
+    },
+
+    markCompanyNotifRead(notifId) {
+        const notif = (this.companyNotifications || []).find(n => n.id === notifId);
+        if (notif) notif.hasUnread = false;
+        this.renderCompanyNotifications();
+        this.updateCompanyNotifBadge();
     },
 
     closeMatchModal() {
@@ -7397,28 +8835,33 @@ Object.assign(app, {
         const candidate = this.currentMatchCandidate;
         this.closeMatchModal();
 
-        // Find conversation
+        // Find conversation by candidateId
         const conv = this.companyConversations.find(c => c.candidateId === candidate.id);
         if (conv) {
-            this.showCompanySection('companyMessagesSection'); // Switch tab
+            this.showCompanySection('companyMessagesSection');
             this.openCompanyChat(conv.id);
         }
     },
 
     createConversationStart(candidate) {
-        // Legacy/Placeholder - Redirecting to proper match flow
         this.handleMatch(candidate);
     },
 
-    renderConversationsList() {
+    async renderConversationsList() {
         const list = document.getElementById('companyConversationList');
         if (!list) return;
+
+        // Load matches from DB if conversations are empty
+        if (this.companyConversations.length === 0 && window.talentlyBackend && window.talentlyBackend.isReady) {
+            await this._loadCompanyMatches();
+        }
 
         if (this.companyConversations.length === 0) {
             list.innerHTML = `
                 <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
                     <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">💬</div>
                     <p>No tienes mensajes aún.</p>
+                    <p style="font-size: 13px; margin-top: 8px;">Explora candidatos y cuando ambos muestren interés, se creará un Match.</p>
                     <button class="btn-secondary" onclick="app.showCompanySection('companySearchSection')" style="margin-top: 16px;">Ir a Explorar</button>
                 </div>
             `;
@@ -7426,28 +8869,202 @@ Object.assign(app, {
         }
 
         list.innerHTML = this.companyConversations.map(conv => `
-            <div onclick="app.openCompanyChat(${conv.id})" 
+            <div onclick="app.openCompanyChat('${conv.id}')"
                 style="padding: 16px; display: flex; gap: 12px; align-items: center; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.2s;"
                 onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='transparent'">
                 <div style="position: relative;">
-                    <img src="${conv.candidateImage}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
+                    <img src="${conv.candidateImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(conv.candidateName)}`}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
                     ${conv.unread > 0 ? `<div style="position: absolute; top: 0; right: 0; width: 12px; height: 12px; background: var(--primary); border: 2px solid white; border-radius: 50%;"></div>` : ''}
                 </div>
                 <div style="flex: 1; min-width: 0;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                         <span style="font-weight: 700; color: var(--text-primary); font-size: 15px;">${conv.candidateName}</span>
-                        <span style="font-size: 12px; color: var(--text-secondary);">${conv.timestamp}</span>
+                        <span style="font-size: 12px; color: var(--text-secondary);">${conv.timestamp || ''}</span>
                     </div>
                     <div style="font-size: 14px; color: ${conv.unread > 0 ? 'var(--text-primary)' : 'var(--text-secondary)'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: ${conv.unread > 0 ? '600' : '400'};">
-                        ${conv.lastMessage}
+                        ${conv.lastMessage || '¡Nuevo Match! Saluda ahora.'}
                     </div>
                 </div>
             </div>
         `).join('');
     },
 
-    openCompanyChat(convId) {
-        console.log('Opening chat:', convId);
+    // Load matches from DB for company conversations
+    async _loadCompanyMatches() {
+        try {
+            const { data: matches, error } = await window.talentlyBackend.matches.get();
+            if (error || !matches || matches.length === 0) return;
+
+            const userId = (await window.supabaseClient.auth.getUser()).data.user?.id;
+            if (!userId) return;
+
+            for (const match of matches) {
+                const otherUserId = match.user_id_1 === userId ? match.user_id_2 : match.user_id_1;
+
+                // Try to get candidate profile
+                let name = 'Candidato';
+                let image = null;
+                let role = '';
+
+                try {
+                    const { data: profile } = await window.talentlyBackend.profiles.getById(otherUserId);
+                    if (profile) {
+                        name = profile.name || 'Candidato';
+                        image = profile.avatar_url || profile.image || null;
+                        role = profile.current_position || profile.title || '';
+                    }
+                } catch (e) { /* ignore */ }
+
+                // Get last message
+                let lastMessage = '¡Nuevo Match! Saluda ahora.';
+                let timestamp = new Date(match.created_at).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
+                try {
+                    const { data: msgs } = await window.talentlyBackend.matches.getMessages(match.id);
+                    if (msgs && msgs.length > 0) {
+                        const last = msgs[msgs.length - 1];
+                        lastMessage = last.sender_id === userId ? `Tú: ${last.content}` : last.content;
+                        timestamp = new Date(last.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    }
+                } catch (e) { /* ignore */ }
+
+                if (!this.companyConversations.find(c => c.matchId === match.id)) {
+                    this.companyConversations.push({
+                        id: match.id,
+                        matchId: match.id,
+                        candidateId: otherUserId,
+                        candidateName: name,
+                        candidateImage: image || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}`,
+                        role: role,
+                        lastMessage: lastMessage,
+                        timestamp: timestamp,
+                        unread: 0,
+                        messages: [] // Loaded on demand when chat is opened
+                    });
+                }
+            }
+            // Note: real-time subscription is set up once in enterMainApp(), not here
+        } catch (e) {
+            console.error('Error loading company matches:', e);
+        }
+    },
+
+    _subscribeToAllCompanyMatches() {
+        // Unsubscribe previous global subscription
+        if (this._companyGlobalMsgSub) {
+            this._companyGlobalMsgSub.unsubscribe();
+            this._companyGlobalMsgSub = null;
+        }
+
+        if (!window.supabaseClient) {
+            console.log('[DEBUG] _subscribeToAllCompanyMatches: no supabaseClient');
+            return;
+        }
+
+        console.log('[DEBUG] _subscribeToAllCompanyMatches: subscribing to all messages for company');
+
+        // Single global subscription to ALL new messages
+        this._companyGlobalMsgSub = window.supabaseClient
+            .channel('company-all-messages')
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'messages'
+            }, async (payload) => {
+                const newMsg = payload.new;
+                const userId = (await window.supabaseClient.auth.getUser()).data.user?.id;
+                console.log('[DEBUG] Company received message event:', newMsg.match_id, 'sender:', newMsg.sender_id, 'myId:', userId);
+                if (!userId || newMsg.sender_id === userId) return; // Skip own messages
+
+                const matchId = newMsg.match_id;
+
+                // Find existing conversation
+                let conv = this.companyConversations.find(c => c.matchId === matchId);
+                console.log('[DEBUG] Found conversation for matchId?', matchId, !!conv);
+
+                if (!conv) {
+                    // New match we don't know about yet — reload matches
+                    console.log('[DEBUG] Reloading company matches...');
+                    await this._loadCompanyMatches();
+                    conv = this.companyConversations.find(c => c.matchId === matchId);
+                    console.log('[DEBUG] After reload, found conv?', !!conv);
+                }
+
+                if (conv) {
+                    if (this.activeConversationId !== matchId) {
+                        conv.unread = (conv.unread || 0) + 1;
+                        console.log('[DEBUG] Incremented unread to:', conv.unread);
+                    }
+                    conv.lastMessage = newMsg.content;
+                    conv.timestamp = 'Ahora';
+                    this.renderConversationsList();
+                    this.updateCompanyMessagesBadge();
+                    this.updateCompanyNotifBadge();
+                }
+            })
+            .subscribe((status) => {
+                console.log('[DEBUG] Company messages subscription status:', status);
+            });
+    },
+
+    _subscribeToCandidateMessages() {
+        // Unsubscribe previous subscription
+        if (this._candidateGlobalMsgSub) {
+            this._candidateGlobalMsgSub.unsubscribe();
+            this._candidateGlobalMsgSub = null;
+        }
+
+        if (!window.supabaseClient) {
+            console.log('[DEBUG] _subscribeToCandidateMessages: no supabaseClient');
+            return;
+        }
+
+        console.log('[DEBUG] _subscribeToCandidateMessages: subscribing to all messages for candidate');
+
+        this._candidateGlobalMsgSub = window.supabaseClient
+            .channel('candidate-all-messages')
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'messages'
+            }, async (payload) => {
+                const newMsg = payload.new;
+                const userId = (await window.supabaseClient.auth.getUser()).data.user?.id;
+                if (!userId || newMsg.sender_id === userId) return; // Skip own messages
+
+                console.log('[DEBUG] Candidate received new message:', newMsg.match_id, 'from:', newMsg.sender_id);
+
+                const matchId = newMsg.match_id;
+
+                // Find existing match in candidate's matches list
+                let matchEntry = (this.matches || []).find(m => String(m.id) === String(matchId));
+
+                if (!matchEntry) {
+                    // New match we don't know about yet — try to load it
+                    console.log('[DEBUG] Match not found locally, reloading matches...');
+                    await this.renderMatches(); // This loads from DB and re-renders
+                    matchEntry = (this.matches || []).find(m => String(m.id) === String(matchId));
+                }
+
+                if (matchEntry) {
+                    // Mark as unread if we're not currently in that chat
+                    if (String(this.currentMatchId) !== String(matchId)) {
+                        matchEntry.hasUnread = true;
+                        console.log('[DEBUG] Marked match as unread:', matchId);
+                    }
+                    matchEntry.lastMessage = newMsg.content;
+                    localStorage.setItem('talently_matches', JSON.stringify(this.matches));
+                    this.updateBadge();
+                    this.renderNotifications();
+                } else {
+                    console.log('[DEBUG] Could not find match entry for:', matchId);
+                }
+            })
+            .subscribe((status) => {
+                console.log('[DEBUG] Candidate messages subscription status:', status);
+            });
+    },
+
+    async openCompanyChat(convId) {
         const conv = this.companyConversations.find(c => c.id === convId);
         if (!conv) {
             console.error('Conversation not found for id:', convId);
@@ -7455,151 +9072,200 @@ Object.assign(app, {
         }
 
         this.activeConversationId = convId;
-        console.log('Active Conv ID set to:', this.activeConversationId);
-
-        conv.unread = 0; // Mark read
+        conv.unread = 0;
         this.renderConversationsList();
+        this.updateCompanyMessagesBadge();
 
         // Setup Chat View
         const nameEl = document.getElementById('companyChatName');
         const avatarEl = document.getElementById('companyChatAvatar');
-
         if (nameEl) nameEl.textContent = conv.candidateName;
         if (avatarEl) avatarEl.src = conv.candidateImage;
 
         document.getElementById('messagesListView').style.display = 'none';
         document.getElementById('messagesChatView').style.display = 'flex';
 
-        this.renderMessages();
+        // Load messages from DB
+        await this._loadCompanyChatMessages(conv);
+
+        // Subscribe to new messages in real-time
+        this._subscribeToCompanyChat(conv.matchId);
+    },
+
+    async _loadCompanyChatMessages(conv) {
+        const container = document.getElementById('companyChatMessages');
+        if (!container) return;
+
+        try {
+            const { data: msgs } = await window.talentlyBackend.matches.getMessages(conv.matchId);
+            const userId = (await window.supabaseClient.auth.getUser()).data.user?.id;
+
+            let isChatBlocked = false;
+            if (msgs && msgs.length > 0) {
+                container.innerHTML = msgs.map(msg => {
+                    const isMe = msg.sender_id === userId;
+                    const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    // Detect system closure message
+                    if (msg.content && msg.content.startsWith('[Sistema]') && msg.content.includes('cerrada')) {
+                        isChatBlocked = true;
+                    }
+                    return `
+                        <div style="display: flex; justify-content: ${isMe ? 'flex-end' : 'flex-start'};">
+                            <div style="max-width: 75%; padding: 10px 16px; border-radius: 18px; font-size: 14px; line-height: 1.4;
+                                ${isMe ? 'background: var(--primary); color: white; border-bottom-right-radius: 4px;' : 'background: #f1f0f0; color: var(--text-primary); border-bottom-left-radius: 4px;'}">
+                                ${msg.content}
+                                <div style="font-size: 10px; opacity: 0.7; margin-top: 4px; text-align: right;">${time}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                container.innerHTML = `
+                    <div style="text-align: center; color: var(--text-secondary); font-size: 13px; margin: 20px 0;">
+                        ¡Match creado! Envía el primer mensaje.
+                    </div>
+                `;
+            }
+            container.scrollTop = container.scrollHeight;
+
+            // Block chat if offer was closed
+            if (isChatBlocked) {
+                this._blockChatInput('Esta conversación fue cerrada porque la oferta ya no está activa.');
+            } else {
+                this._unblockChatInput();
+            }
+        } catch (e) {
+            console.error('Error loading messages:', e);
+            container.innerHTML = '<div style="text-align: center; color: var(--text-secondary);">Error cargando mensajes</div>';
+        }
+    },
+
+    _companyMessageSubscription: null,
+
+    _subscribeToCompanyChat(matchId) {
+        // Unsubscribe from previous
+        if (this._companyMessageSubscription) {
+            this._companyMessageSubscription.unsubscribe();
+            this._companyMessageSubscription = null;
+        }
+
+        if (!window.talentlyBackend || !window.talentlyBackend.isReady) return;
+
+        this._companyMessageSubscription = window.talentlyBackend.matches.subscribe(matchId, async (newMsg) => {
+            const userId = (await window.supabaseClient.auth.getUser()).data.user?.id;
+            if (newMsg.sender_id === userId) return; // Skip own messages
+
+            // Add to UI if this chat is open
+            if (this.activeConversationId === matchId) {
+                const container = document.getElementById('companyChatMessages');
+                if (container) {
+                    const time = new Date(newMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const msgHtml = `
+                        <div style="display: flex; justify-content: flex-start;">
+                            <div style="max-width: 75%; padding: 10px 16px; border-radius: 18px; font-size: 14px; line-height: 1.4; background: #f1f0f0; color: var(--text-primary); border-bottom-left-radius: 4px;">
+                                ${newMsg.content}
+                                <div style="font-size: 10px; opacity: 0.7; margin-top: 4px; text-align: right;">${time}</div>
+                            </div>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', msgHtml);
+                    container.scrollTop = container.scrollHeight;
+                }
+            }
+
+            // Update conversation preview
+            const conv = this.companyConversations.find(c => c.matchId === matchId);
+            if (conv) {
+                conv.lastMessage = newMsg.content;
+                conv.timestamp = 'Ahora';
+                if (this.activeConversationId !== matchId) {
+                    conv.unread = (conv.unread || 0) + 1;
+                }
+                this.renderConversationsList();
+                this.updateCompanyMessagesBadge();
+            }
+        });
+    },
+
+    updateCompanyMessagesBadge() {
+        const badge = document.getElementById('companyMessagesBadge');
+        if (!badge) {
+            console.log('[DEBUG] updateCompanyMessagesBadge: badge element not found');
+            return;
+        }
+        const totalUnread = (this.companyConversations || []).reduce((sum, c) => sum + (c.unread || 0), 0);
+        console.log('[DEBUG] updateCompanyMessagesBadge: totalUnread =', totalUnread);
+        if (totalUnread > 0) {
+            badge.textContent = totalUnread > 9 ? '9+' : totalUnread;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
     },
 
     backToConversationsList() {
+        // Unsubscribe from chat
+        if (this._companyMessageSubscription) {
+            this._companyMessageSubscription.unsubscribe();
+            this._companyMessageSubscription = null;
+        }
         this.activeConversationId = null;
         document.getElementById('messagesChatView').style.display = 'none';
         document.getElementById('messagesListView').style.display = 'flex';
         this.renderConversationsList();
     },
 
-    renderMessages() {
-        console.log('Rendering messages for IDs:', this.activeConversationId);
+    async sendCompanyMessage() {
+        if (this._chatBlocked) return;
+        const input = document.getElementById('companyChatInput');
+        if (!input) return;
+
+        const text = input.value.trim();
+        if (!text || !this.activeConversationId) return;
+
         const conv = this.companyConversations.find(c => c.id === this.activeConversationId);
-        if (!conv) {
-            console.error('No conversation found during render.');
-            return;
-        }
+        if (!conv || !conv.matchId) return;
 
+        // Add to UI optimistically
         const container = document.getElementById('companyChatMessages');
-        if (!container) {
-            console.error('Chat container not found! Looking for companyChatMessages');
-            return;
-        }
-
-        console.log('Messages to render:', conv.messages.length);
-
-        container.innerHTML = conv.messages.map(msg => {
-            if (msg.sender === 'system') {
-                return `<div style="text-align: center; color: var(--text-secondary); font-size: 12px; margin: 10px 0;">${msg.text}</div>`;
-            }
-            const isMe = msg.sender === 'me';
-            return `
-                <div style="display: flex; justify-content: ${isMe ? 'flex-end' : 'flex-start'};">
-                    <div style="max-width: 75%; padding: 10px 16px; border-radius: 18px; font-size: 14px; line-height: 1.4; 
-                        ${isMe ? 'background: var(--primary); color: white; border-bottom-right-radius: 4px;' : 'background: #f1f0f0; color: var(--text-primary); border-bottom-left-radius: 4px;'}">
-                        ${msg.text}
-                        <div style="font-size: 10px; opacity: 0.7; margin-top: 4px; text-align: right;">${msg.time}</div>
+        if (container) {
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const msgHtml = `
+                <div style="display: flex; justify-content: flex-end;">
+                    <div style="max-width: 75%; padding: 10px 16px; border-radius: 18px; font-size: 14px; line-height: 1.4; background: var(--primary); color: white; border-bottom-right-radius: 4px;">
+                        ${text}
+                        <div style="font-size: 10px; opacity: 0.7; margin-top: 4px; text-align: right;">${time}</div>
                     </div>
                 </div>
             `;
-        }).join('');
-
-        container.scrollTop = container.scrollHeight;
-    },
-
-    sendMessage() {
-        const input = document.getElementById('companyChatInput');
-        if (!input) {
-            console.error('Chat input not found!');
-            return;
+            container.insertAdjacentHTML('beforeend', msgHtml);
+            container.scrollTop = container.scrollHeight;
         }
 
-        const text = input.value.trim();
-        console.log('Attempting to send:', text, 'ConvID:', this.activeConversationId);
-
-        if (!text || !this.activeConversationId) {
-            console.warn('Send aborted: Missing text or ConvID');
-            return;
-        }
-
-        const conv = this.companyConversations.find(c => c.id === this.activeConversationId);
-        if (!conv) {
-            console.error('Send aborted: Conv not found');
-            return;
-        }
-
-        // User Message
-        conv.messages.push({
-            text: text,
-            sender: 'me',
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        });
+        // Update conversation preview
         conv.lastMessage = 'Tú: ' + text;
         conv.timestamp = 'Ahora';
-
         input.value = '';
-        this.renderMessages();
-        this.renderConversationsList(); // Update preview
-
-        // Simulate Reply
-        setTimeout(() => {
-            this.receiveMockReply(this.activeConversationId);
-        }, 2000);
-    },
-
-    receiveMockReply(convId) {
-        const conv = this.companyConversations.find(c => c.id === convId);
-        if (!conv) return;
-
-        const replies = [
-            "¡Hola! Gracias por conectar. Me interesa mucho la propuesta.",
-            "¡Qué bueno hacer match! ¿Podemos agendar una llamada?",
-            "Hola, ¿cómo estás? Me gustaría saber más sobre la cultura del equipo.",
-            "¡Claro! Cuéntame más sobre el rol.",
-            "Gracias por contactarme."
-        ];
-        const randomReply = replies[Math.floor(Math.random() * replies.length)];
-
-        conv.messages.push({
-            text: randomReply,
-            sender: 'them',
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        });
-
-        conv.lastMessage = randomReply;
-        conv.timestamp = 'Ahora';
-        conv.unread = (this.activeConversationId !== convId) ? (conv.unread + 1) : 0;
-
-        if (this.activeConversationId === convId) {
-            this.renderMessages();
-        } else {
-            this.showToast(`Nuevo mensaje de ${conv.candidateName}`);
-        }
         this.renderConversationsList();
+
+        // Save to DB
+        try {
+            await window.talentlyBackend.matches.sendMessage(conv.matchId, text);
+            window.talentlyBackend.statistics.increment('messages_sent').catch(e => console.warn('Stats error:', e));
+        } catch (e) {
+            console.error('Error sending message:', e);
+            this.showToast('Error al enviar mensaje');
+        }
     },
 
     searchCandidates() {
         const input = document.getElementById('candidateSearchInput');
 
-        // Debug Logger
-        // Debug Logger
-        const log = (msg) => console.log(`[Search] ${msg}`);
-
         if (!input) {
-            log('ERROR: Input #candidateSearchInput not found!');
             return;
         }
 
         const query = input.value.trim().toLowerCase();
-        log(`Searching for: "${query}"`);
 
         // FALLBACK DATA (HARDCODED)
         const localData = [
@@ -7611,10 +9277,7 @@ Object.assign(app, {
 
         let candidates = window.mockCandidates || [];
         if (candidates.length === 0) {
-            log('WARNING: window.mockCandidates empty. Using fallback data.');
             candidates = localData;
-        } else {
-            log(`Loaded ${candidates.length} from window data.`);
         }
 
         // Filter
@@ -7627,7 +9290,6 @@ Object.assign(app, {
             );
         }
 
-        log(`Found ${filtered.length} matches.`);
         this.renderCandidates(filtered);
     },
 

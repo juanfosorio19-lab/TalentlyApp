@@ -19,6 +19,14 @@
     <style>
         /* CRITICAL FIXES */
         /* 1. App Container Layout */
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            overflow-x: hidden;
+        }
+
         body {
             margin: 0;
             padding: 0;
@@ -3515,7 +3523,7 @@
                                 <div class="chat-company-details">
                                     <h3 class="chat-company-name">TechCorp</h3>
                                     <span class="chat-company-role">Senior Full Stack Developer</span>
-                                    <div class="chat-status-online">? En línea</div>
+                                    <div class="chat-status-online" id="chatOnlineStatus" style="display: none;">● En línea</div>
                                 </div>
                             </div>
                         </div>
@@ -3780,11 +3788,12 @@
                         <span class="nav-label">Descubrir</span>
                     </div>
 
-                    <div class="nav-item" onclick="app.showAppSection('matchesSection')">
+                    <div class="nav-item" onclick="app.showAppSection('matchesSection')" style="position: relative;">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                         </svg>
+                        <span id="candidateMatchesBadge" style="display: none; position: absolute; top: 2px; right: 12px; width: 18px; height: 18px; background: #ff3b30; color: white; border-radius: 50%; font-size: 10px; font-weight: 700; align-items: center; justify-content: center;">0</span>
                         <span class="nav-label">Matches</span>
                     </div>
 
@@ -4110,12 +4119,12 @@
                 <!-- OFFERS SECTION -->
                 <div id="companyOffersSection" class="company-section active" style="padding: 24px;">
                     <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                        <h2 style="font-size: 24px; font-weight: 700; color: var(--text-primary);">Mis Ofertas</h2>
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-shrink: 0;">
+                        <h2 style="font-size: 24px; font-weight: 700; color: var(--text-primary); margin: 0;">Mis Ofertas</h2>
                         <button class="btn-primary" onclick="app.createOffer()"
-                            style="padding: 8px 16px; font-size: 14px; width: auto;">+ Crear</button>
+                            style="padding: 8px 16px; font-size: 14px; width: auto; margin: 0; flex-shrink: 0;">+ Crear</button>
                     </div>
-                    <div id="companyOffersList" style="display: flex; flex-direction: column; gap: 16px;">
+                    <div id="companyOffersList" style="display: flex; flex-direction: column; gap: 12px;">
                         <!-- JS Rendered -->
                         <div style="text-align: center; color: var(--text-secondary); padding: 40px;">No tienes
                             ofertas
@@ -4125,7 +4134,7 @@
 
                 <!-- SWIPE DISCOVERY SECTION (Previously Search) -->
                 <div id="companySearchSection" class="company-section"
-                    style="display: none; height: calc(100vh - 80px); flex-direction: column;">
+                    style="display: none; height: calc(100vh - 80px); flex-direction: column; overflow: hidden;">
                     <div style="padding: 16px 24px; flex-shrink: 0;">
                         <h2 style="font-size: 24px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">
                             Explorar Talentos</h2>
@@ -4136,7 +4145,7 @@
 
 
                     <div id="candidateSwipeDeck"
-                        style="flex: 1; position: relative; margin: 0 24px 24px; display: flex; justify-content: center; align-items: center;">
+                        style="position: relative; width: 100%; max-width: 400px; height: 560px; margin: 0 auto 24px;">
                         <!-- Cards will be injected here -->
                         <div id="noMoreCandidates" style="text-align: center; display: none;">
                             <div style="font-size: 48px; margin-bottom: 16px;">🎉</div>
@@ -4197,9 +4206,9 @@
                                     <h3 id="companyChatName"
                                         style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 0;">
                                     </h3>
-                                    <span
-                                        style="font-size: 12px; color: var(--success); display: flex; align-items: center; gap: 4px;">●
-                                        En línea</span>
+                                    <span id="companyChatOnlineStatus"
+                                        style="font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 4px;">●
+                                        Desconectado</span>
                                 </div>
                             </div>
                         </div>
@@ -4216,9 +4225,9 @@
                             <button onclick="document.getElementById('fileInput').click()"
                                 style="background: none; border: none; font-size: 20px; color: var(--text-secondary); cursor: pointer;">📎</button>
                             <input type="text" id="companyChatInput" placeholder="Escribe un mensaje..."
-                                onkeyup="if(event.key === 'Enter') app.sendMessage()"
+                                onkeyup="if(event.key === 'Enter') app.sendCompanyMessage()"
                                 style="flex: 1; padding: 12px 16px; border: 1px solid var(--border); border-radius: 24px; outline: none; font-size: 14px; background: #f8f9fa;">
-                            <button onclick="app.sendMessage()"
+                            <button onclick="app.sendCompanyMessage()"
                                 style="background: var(--primary); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(108, 92, 231, 0.3);">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -4300,13 +4309,13 @@
                                 <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Website
                                 </div>
                                 <a id="companyProfileWebsite" href="#" target="_blank"
-                                    style="font-size: 14px; color: var(--primary); text-decoration: none;">-</a>
+                                    style="font-size: 14px; color: var(--primary); text-decoration: none; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">-</a>
                             </div>
                             <div>
                                 <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">LinkedIn
                                 </div>
                                 <a id="companyProfileLinkedin" href="#" target="_blank"
-                                    style="font-size: 14px; color: var(--primary); text-decoration: none;">-</a>
+                                    style="font-size: 14px; color: var(--primary); text-decoration: none; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">-</a>
                             </div>
                             <div>
                                 <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Modelo
@@ -4347,6 +4356,41 @@
                                 <!-- Tech tags will be rendered here -->
                             </div>
                         </div>
+
+                        <!-- Positions Looking For -->
+                        <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Posiciones que Buscamos</div>
+                            <div id="companyProfilePositions" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            </div>
+                        </div>
+
+                        <!-- Seniority Levels -->
+                        <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Niveles de Seniority</div>
+                            <div id="companyProfileSeniority" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            </div>
+                        </div>
+
+                        <!-- Benefits -->
+                        <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Beneficios</div>
+                            <div id="companyProfileBenefits" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            </div>
+                        </div>
+
+                        <!-- Selection Process -->
+                        <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Proceso de Seleccion</div>
+                            <div id="companyProfileSelection" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            </div>
+                        </div>
+
+                        <!-- Tags -->
+                        <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Tags</div>
+                            <div id="companyProfileTags" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -4367,11 +4411,12 @@
                     </svg>
                     <span class="nav-label">Explorar</span>
                 </div>
-                <div class="nav-item" onclick="app.showCompanySection('companyMessagesSection')">
+                <div class="nav-item" onclick="app.showCompanySection('companyMessagesSection')" style="position: relative;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                     </svg>
+                    <span id="companyMessagesBadge" style="display: none; position: absolute; top: 2px; right: 12px; width: 18px; height: 18px; background: #ff3b30; color: white; border-radius: 50%; font-size: 10px; font-weight: 700; align-items: center; justify-content: center;">0</span>
                     <span class="nav-label">Mensajes</span>
                 </div>
                 <div class="nav-item" onclick="app.showCompanySection('companyProfileSection')">
@@ -4845,17 +4890,38 @@
                     <label class="form-label">Nombre de la Empresa</label>
                     <input type="text" class="form-input" id="cpName" placeholder="Ej: Tech Solutions">
                 </div>
+
+                <div class="form-group">
+                    <label class="form-label">Sitio Web</label>
+                    <input type="url" class="form-input" id="cpWebsite" placeholder="https://ejemplo.com">
+                </div>
+
                 <div class="form-group">
                     <label class="form-label">Industria / Sector</label>
                     <select class="form-input" id="cpIndustry">
-                        <option value="Tecnología">Tecnología</option>
-                        <option value="Fintech">Fintech</option>
-                        <option value="Salud">Salud</option>
-                        <option value="E-commerce">E-commerce</option>
-                        <option value="Educación">Educación</option>
-                        <option value="Otro">Otro</option>
+                        <option value="">Cargando...</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label class="form-label">Tamaño</label>
+                    <select class="form-input" id="cpSize">
+                        <option value="">Cargando...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Etapa</label>
+                    <select class="form-input" id="cpStage">
+                        <option value="">Cargando...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Modalidad</label>
+                    <select class="form-input" id="cpWorkModel">
+                        <option value="">Cargando...</option>
+                    </select>
+                </div>
+
                 <div class="form-group">
                     <label class="form-label">Logo de la Empresa</label>
                     <div style="display: flex; gap: 8px; align-items: center;">
@@ -4869,14 +4935,116 @@
                     </div>
                     <input type="hidden" id="cpLogo"> <!-- Stores DataURL or URL -->
                 </div>
+
                 <div class="form-group">
-                    <label class="form-label">Ubicación</label>
-                    <input type="text" class="form-input" id="cpLocation" placeholder="Ej: Santiago, Remoto">
+                    <label class="form-label">País</label>
+                    <select class="form-input" id="cpCountry" onchange="app.loadCitiesForEdit(this.value)">
+                        <option value="">Cargando...</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Descripción</label>
+                    <label class="form-label">Ciudad</label>
+                    <select class="form-input" id="cpCity">
+                        <option value="">Selecciona un país</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Propuesta de Valor (Descripción)</label>
                     <textarea class="form-input" id="cpDescription" rows="4"
                         placeholder="Breve descripción de la empresa y cultura..."></textarea>
+                </div>
+
+                <!-- NEW FIELDS -->
+                <div class="form-group">
+                    <label class="form-label">LinkedIn (URL)</label>
+                    <input type="url" class="form-input" id="cpLinkedin" placeholder="https://linkedin.com/company/...">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Proceso de Selección</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <label
+                                style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: block;">Prueba
+                                Técnica</label>
+                            <select class="form-input" id="cpTechTest">
+                                <option value="">Seleccionar</option>
+                                <option value="si">Sí</option>
+                                <option value="no">No</option>
+                                <option value="depende">Depende</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label
+                                style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: block;">Prueba
+                                Pagada</label>
+                            <select class="form-input" id="cpPaidTest">
+                                <option value="">Seleccionar</option>
+                                <option value="si">Sí</option>
+                                <option value="no">No</option>
+                                <option value="a-veces">A veces</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Etapas de Selección</label>
+                    <select class="form-input" id="cpStages">
+                        <option value="">Seleccionar</option>
+                        <option value="1">1 etapa</option>
+                        <option value="2">2 etapas</option>
+                        <option value="3">3 etapas</option>
+                        <option value="4">4 etapas</option>
+                        <option value="5">5+ etapas</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Duración del Proceso</label>
+                    <select class="form-input" id="cpSelectionDuration">
+                        <option value="">Cargando...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Valores de Cultura</label>
+                    <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">Selecciona los valores que definen tu cultura</p>
+                    <div id="cpCultureContainer" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-height: 240px; overflow-y: auto; padding: 4px;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Posiciones que Buscas</label>
+                    <div id="cpPositionsContainer" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-height: 240px; overflow-y: auto; padding: 4px;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Niveles de Seniority</label>
+                    <div id="cpSeniorityContainer" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-height: 200px; overflow-y: auto; padding: 4px;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Beneficios</label>
+                    <div id="cpBenefitsContainer" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-height: 280px; overflow-y: auto; padding: 4px;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tech Stack</label>
+                    <input type="text" class="form-input" id="cpTechStackInput" placeholder="Escribe y presiona Enter..." onkeydown="app.addEditTech(event)">
+                    <div id="cpTechStackTags" style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tags de la Empresa</label>
+                    <input type="text" class="form-input" id="cpTagsInput" placeholder="Escribe y presiona Enter..." onkeydown="app.addEditTag(event)">
+                    <div id="cpTagsTags" style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
+                    </div>
                 </div>
             </div>
             <div class="company-modal-footer"
@@ -4884,6 +5052,16 @@
                 <button class="btn-secondary" onclick="app.closeCompanyProfile()" style="flex: 1;">Cancelar</button>
                 <button class="btn-primary" onclick="app.saveCompanyProfile()" style="flex: 1;">Guardar</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Card Detail Modal (Tinder-style profile expand) -->
+    <div id="cardDetailModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10002; justify-content: center; align-items: flex-start;">
+        <div style="width: 100%; max-width: 480px; height: 100%; background: var(--surface); overflow-y: auto; -webkit-overflow-scrolling: touch; position: relative; margin: 0 auto;">
+            <button onclick="app.closeCardDetail()" style="position: sticky; top: 16px; left: 16px; z-index: 10003; width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.5); border: none; color: white; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 16px 0 -52px 16px;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div id="cardDetailContent"></div>
         </div>
     </div>
 
@@ -5196,7 +5374,7 @@
 
     <script src="js/supabase-client.js"></script>
     <script src="js/data.js?v=v57"></script>
-    <script src="js/app_fixed.js?v=profile_fix_417"></script>
+    <script src="js/app_fixed.js?v=profile_fix_418"></script>
     <script>
         // FORCE UNREGISTER SERVICE WORKER TO FIX CACHING ISSUES
         if ('serviceWorker' in navigator) {
