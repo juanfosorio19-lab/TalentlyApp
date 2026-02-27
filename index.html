@@ -11,6 +11,25 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <!-- Tailwind CSS for Stitch Views (Preflight disabled) -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            corePlugins: {
+                preflight: false,
+            },
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1392ec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101a22",
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6C5CE7">
@@ -8750,7 +8769,7 @@
             class="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 h-16 flex items-center justify-between">
             <button onclick="app.closeSettingsFullScreen()"
                 class="flex items-center justify-center size-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                <span class="material-symbols-outlined text-slate-900 dark:text-slate-100">arrow_back</span>
+                <span class="material-icons text-slate-900 dark:text-slate-100">arrow_back</span>
             </button>
             <h1 class="text-lg font-bold tracking-tight text-center flex-1">Configuración</h1>
             <div class="size-10"></div>
@@ -8764,7 +8783,7 @@
                         class="flex items-center justify-between px-4 py-4 border-b border-slate-100 dark:border-slate-800">
                         <div class="flex items-center gap-3">
                             <div class="size-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                <span class="material-symbols-outlined text-primary">notifications</span>
+                                <span class="material-icons text-primary">notifications</span>
                             </div>
                             <span class="text-base font-medium">Notificaciones</span>
                         </div>
@@ -8787,8 +8806,7 @@
                         <div class="flex items-center gap-3">
                             <div
                                 class="size-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                <span
-                                    class="material-symbols-outlined text-slate-600 dark:text-slate-400">dark_mode</span>
+                                <span class="material-icons text-slate-600 dark:text-slate-400">dark_mode</span>
                             </div>
                             <span class="text-base font-medium">Modo Oscuro</span>
                         </div>
@@ -8812,29 +8830,29 @@
                         <div class="flex items-center gap-3">
                             <div
                                 class="size-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                <span class="material-symbols-outlined text-slate-600 dark:text-slate-400">help</span>
+                                <span class="material-icons text-slate-600 dark:text-slate-400">help</span>
                             </div>
                             <span class="text-base font-medium">Soporte</span>
                         </div>
-                        <span class="material-symbols-outlined text-slate-400 text-sm">chevron_right</span>
+                        <span class="material-icons text-slate-400 text-sm">chevron_right</span>
                     </button>
                     <button
                         class="w-full flex items-center justify-between px-4 py-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                         <div class="flex items-center gap-3">
                             <div
                                 class="size-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                <span class="material-symbols-outlined text-slate-600 dark:text-slate-400">lock</span>
+                                <span class="material-icons text-slate-600 dark:text-slate-400">lock</span>
                             </div>
                             <span class="text-base font-medium">Privacidad</span>
                         </div>
-                        <span class="material-symbols-outlined text-slate-400 text-sm">chevron_right</span>
+                        <span class="material-icons text-slate-400 text-sm">chevron_right</span>
                     </button>
                 </div>
             </div>
             <div class="px-4 pt-10 pb-10">
                 <button onclick="app.logout()"
                     class="w-full flex items-center justify-center gap-2 py-4 px-4 bg-white dark:bg-slate-900 rounded-xl ios-shadow text-red-500 font-semibold hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
-                    <span class="material-symbols-outlined">logout</span>
+                    <span class="material-icons">logout</span>
                     <span>Cerrar Sesión</span>
                 </button>
                 <p class="text-center text-slate-400 dark:text-slate-500 text-xs mt-6">Versión 2.4.0</p>
