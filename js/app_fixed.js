@@ -57,25 +57,25 @@ const app = {
 
 
     switchProfileTab(tabName) {
-
-        // Update Buttons
-        document.querySelectorAll('.profile-tab').forEach(btn => {
-            btn.classList.remove('active');
-            btn.style.background = 'transparent';
-            btn.style.color = 'var(--text-secondary)';
-        });
-
-        const activeBtn = document.getElementById(`tab-${tabName}`);
-        if (activeBtn) {
-            activeBtn.classList.add('active');
-            activeBtn.style.background = 'var(--surface)';
-            activeBtn.style.color = 'var(--text-primary)';
+        // Update Stitch tab buttons
+        const tabCv = document.getElementById('tab-cv');
+        const tabActivity = document.getElementById('tab-activity');
+        if (tabCv) {
+            tabCv.style.background = tabName === 'cv' ? '#ffffff' : 'transparent';
+            tabCv.style.color = tabName === 'cv' ? '#1e293b' : '#64748b';
+            tabCv.style.fontWeight = tabName === 'cv' ? '600' : '500';
+            tabCv.style.boxShadow = tabName === 'cv' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none';
+        }
+        if (tabActivity) {
+            tabActivity.style.background = tabName === 'activity' ? '#ffffff' : 'transparent';
+            tabActivity.style.color = tabName === 'activity' ? '#1e293b' : '#64748b';
+            tabActivity.style.fontWeight = tabName === 'activity' ? '600' : '500';
+            tabActivity.style.boxShadow = tabName === 'activity' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none';
         }
 
         // Show/Hide Content
         const cvContent = document.getElementById('profile-content-cv');
         const activityContent = document.getElementById('profile-content-activity');
-
 
         if (tabName === 'cv') {
             if (cvContent) { cvContent.style.display = 'block'; cvContent.style.visibility = 'visible'; }
@@ -83,10 +83,8 @@ const app = {
         } else {
             if (cvContent) { cvContent.style.display = 'none'; cvContent.style.visibility = 'hidden'; }
             if (activityContent) { activityContent.style.display = 'block'; activityContent.style.visibility = 'visible'; }
-            // Load dynamic stats when switching to activity tab
             this.renderActivityStats();
         }
-
     },
 
     toggleDarkMode() {
@@ -97,6 +95,12 @@ const app = {
         // Update toggle UI if exists
         const toggle = document.getElementById('darkModeToggleModal');
         if (toggle) toggle.checked = isDark;
+
+        // Update status text in settings
+        const statusText = document.getElementById('darkModeStatusText');
+        if (statusText) {
+            statusText.textContent = isDark ? 'Modo oscuro' : 'Modo claro';
+        }
     },
 
 
@@ -513,18 +517,54 @@ const app = {
 
         document.querySelectorAll('.app-section').forEach(section => {
             section.classList.remove('active');
-        });
-        document.getElementById(sectionId).classList.add('active');
-
-        // Update nav
-        document.querySelectorAll('.nav-item').forEach((item, index) => {
-            item.classList.remove('active');
+            section.style.display = 'none';
         });
 
+        // Pause video pitch if playing
+        const videoPitchPlayer = document.getElementById('videoPitchPlayer');
+        if (videoPitchPlayer && !videoPitchPlayer.paused) {
+            videoPitchPlayer.pause();
+            const btn = document.getElementById('videoPitchPlayBtn');
+            const controls = document.getElementById('videoPitchControls');
+            if (btn) btn.innerHTML = '<span class="material-icons" style="font-size: 40px;">play_arrow</span>';
+            if (controls) controls.style.opacity = '1';
+        }
+
+        const activeSection = document.getElementById(sectionId);
+        activeSection.classList.add('active');
+        // Stitch sections use flex layout
+        const flexSections = ['matchesSection', 'settingsSection', 'chatSection'];
+        activeSection.style.display = flexSections.includes(sectionId) ? 'flex' : 'block';
+
+        // Update nav (Stitch inline style nav)
+        const navMap = {
+            'swipeSection': 'navSwipe',
+            'matchesSection': 'navMatches',
+            'chatSection': 'navChat',
+            'settingsSection': 'navProfile',
+        };
+        const navIds = ['navSwipe', 'navMatches', 'navChat', 'navProfile'];
+        navIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const iconDiv = el.querySelector('div');
+            const label = el.querySelector('span:last-child');
+            if (id === navMap[sectionId]) {
+                if (iconDiv) { iconDiv.style.color = '#1392ec'; }
+                if (label) { label.style.color = '#1392ec'; label.style.fontWeight = '700'; }
+            } else {
+                if (iconDiv) { iconDiv.style.color = '#9ca3af'; }
+                if (label) { label.style.color = '#9ca3af'; label.style.fontWeight = '500'; }
+            }
+        });
+
+        // Legacy nav-item support
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
         const sections = ['swipeSection', 'matchesSection', 'settingsSection'];
         const sectionIndex = sections.indexOf(sectionId);
         if (sectionIndex >= 0) {
-            document.querySelectorAll('.nav-item')[sectionIndex].classList.add('active');
+            const navItems = document.querySelectorAll('.nav-item');
+            if (navItems[sectionIndex]) navItems[sectionIndex].classList.add('active');
         }
 
         this.currentSection = sectionId;
@@ -654,6 +694,155 @@ const app = {
         }
 
         return allValid;
+    },
+
+    async handleForgotPassword() {
+        const emailInput = document.getElementById('emailInput');
+        const email = emailInput ? emailInput.value.trim() : '';
+
+        if (!email) {
+            this.showToast('Ingresa tu correo electronico primero', 'error');
+            if (emailInput) emailInput.focus();
+            return;
+        }
+
+        if (!window.talentlyBackend || !window.talentlyBackend.isReady) {
+            this.showToast('Backend no configurado', 'error');
+            return;
+        }
+
+        try {
+            const { error } = await window.talentlyBackend.auth.resetPassword(email);
+            if (error) throw error;
+            this._recoveryEmail = email;
+            this.showView('recoveryView');
+            const emailDisplay = document.getElementById('recoveryEmailDisplay');
+            if (emailDisplay) emailDisplay.textContent = email;
+            // Focus first input
+            const firstInput = document.querySelector('.recovery-code-input[data-index="0"]');
+            if (firstInput) setTimeout(() => firstInput.focus(), 100);
+            this.showToast('Se envio un codigo de recuperacion a tu correo');
+        } catch (err) {
+            this.showToast('Error al enviar el codigo: ' + (err.message || err), 'error');
+        }
+    },
+
+    handleRecoveryCodeInput(input, index) {
+        // Only allow digits
+        input.value = input.value.replace(/[^0-9]/g, '');
+        if (input.value && index < 5) {
+            const next = document.querySelector(`.recovery-code-input[data-index="${index + 1}"]`);
+            if (next) next.focus();
+        }
+        // Auto-verify when all 6 digits are entered
+        const inputs = document.querySelectorAll('.recovery-code-input');
+        const code = Array.from(inputs).map(i => i.value).join('');
+        if (code.length === 6) {
+            this.verifyRecoveryCode();
+        }
+    },
+
+    handleRecoveryCodeKeydown(e, index) {
+        if (e.key === 'Backspace' && !e.target.value && index > 0) {
+            const prev = document.querySelector(`.recovery-code-input[data-index="${index - 1}"]`);
+            if (prev) { prev.focus(); prev.value = ''; }
+        }
+    },
+
+    async verifyRecoveryCode() {
+        const inputs = document.querySelectorAll('.recovery-code-input');
+        const code = Array.from(inputs).map(i => i.value).join('');
+
+        if (code.length !== 6) {
+            this.showToast('Ingresa los 6 digitos del codigo', 'error');
+            return;
+        }
+
+        if (!this._recoveryEmail) {
+            this.showToast('Error: email de recuperacion no encontrado', 'error');
+            return;
+        }
+
+        try {
+            const { data, error } = await window.talentlyBackend.auth.verifyOtp(this._recoveryEmail, code, 'recovery');
+            if (error) throw error;
+            this.showToast('Codigo verificado correctamente');
+            this.showView('newPasswordView');
+        } catch (err) {
+            this.showToast('Codigo incorrecto o expirado: ' + (err.message || err), 'error');
+            // Clear inputs
+            inputs.forEach(i => { i.value = ''; });
+            if (inputs[0]) inputs[0].focus();
+        }
+    },
+
+    async resendRecoveryCode() {
+        if (!this._recoveryEmail) {
+            this.showToast('Error: no hay email registrado', 'error');
+            return;
+        }
+        try {
+            const { error } = await window.talentlyBackend.auth.resetPassword(this._recoveryEmail);
+            if (error) throw error;
+            this.showToast('Se reenvio el codigo a ' + this._recoveryEmail);
+        } catch (err) {
+            this.showToast('Error al reenviar: ' + (err.message || err), 'error');
+        }
+    },
+
+    validateNewPassword() {
+        const pw = document.getElementById('newPassword').value;
+        const checks = [
+            { id: 'npReqLength', pass: pw.length >= 8 },
+            { id: 'npReqNumber', pass: /[0-9]/.test(pw) },
+            { id: 'npReqUpper', pass: /[A-Z]/.test(pw) },
+            { id: 'npReqSpecial', pass: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/.test(pw) }
+        ];
+        checks.forEach(({ id, pass }) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const dot = el.querySelector('div');
+            const icon = el.querySelector('.material-icons');
+            if (pass) {
+                if (dot) dot.style.background = '#22C55E';
+                if (icon) { icon.textContent = 'check'; icon.style.color = 'white'; icon.style.fontSize = '14px'; }
+                el.querySelector('span:last-child').style.color = '#111827';
+                el.querySelector('span:last-child').style.fontWeight = '500';
+            } else {
+                if (dot) dot.style.background = '#E5E7EB';
+                if (icon) { icon.textContent = 'circle'; icon.style.color = '#9CA3AF'; icon.style.fontSize = '14px'; }
+                el.querySelector('span:last-child').style.color = '#617589';
+                el.querySelector('span:last-child').style.fontWeight = '400';
+            }
+        });
+    },
+
+    async handleSetNewPassword() {
+        const password = document.getElementById('newPassword').value;
+        const confirm = document.getElementById('confirmNewPassword').value;
+
+        if (!password || !confirm) {
+            this.showToast('Completa ambos campos', 'error');
+            return;
+        }
+        if (password.length < 8) {
+            this.showToast('La contrasena debe tener al menos 8 caracteres', 'error');
+            return;
+        }
+        if (password !== confirm) {
+            this.showToast('Las contrasenas no coinciden', 'error');
+            return;
+        }
+
+        try {
+            const { error } = await window.talentlyBackend.auth.updateUser({ password });
+            if (error) throw error;
+            this.showToast('Contrasena actualizada correctamente');
+            this._recoveryEmail = null;
+            this.showLogin();
+        } catch (err) {
+            this.showToast('Error al actualizar: ' + (err.message || err), 'error');
+        }
     },
 
     async handleLogin(e) {
@@ -998,6 +1187,9 @@ const app = {
         // 5. Render Experience & Education
         this.renderExperience();
         this.renderEducation();
+
+        // 6. Initialize Video Pitch
+        this.initializeVideoPitch();
     },
 
     // ============================================
@@ -1349,44 +1541,45 @@ const app = {
     // ============================================
 
     renderExperience() {
-        // Use currentUser.experience if available, fallback to userProfile.experience (mock)
-        // Ensure it's an array
         const expList = this.currentUser.experience || this.userProfile.experience || [];
         const container = document.getElementById('experienceList');
-
         if (!container) return;
 
         if (expList.length === 0) {
-            container.innerHTML = '<div style="color: var(--text-secondary); font-size: 14px; padding: 10px 0;">No has agregado experiencia laboral.</div>';
+            container.innerHTML = '<div style="color: #6c757d; font-size: 14px; padding: 8px 0;">No has agregado experiencia laboral.</div>';
             return;
         }
 
-        container.innerHTML = expList.map((exp, index) => `
-            <div class="timeline-item">
-                <div class="timeline-dot"></div>
-                <div class="timeline-content">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div>
-                            <h4 class="timeline-title">${exp.role}</h4>
-                            <div class="timeline-subtitle">${exp.company}</div>
-                            <div class="timeline-date">${exp.period}</div>
-                        </div>
-                        <div style="display: flex; gap: 8px;">
-                            <button class="icon-btn" onclick="app.openEditExperience(${index})">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                </svg>
-                            </button>
-                            <button class="icon-btn" onclick="app.removeExperience(${index})" style="color: var(--danger);">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                            </button>
-                        </div>
+        container.innerHTML = expList.map((exp, index) => {
+            const isCurrent = exp.isCurrent || exp.is_current;
+            const initial = (exp.company || '?').charAt(0).toUpperCase();
+            const period = exp.period || '';
+            const isLast = index === expList.length - 1;
+            const periodColor = isCurrent ? 'color: #1392ec; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;' : 'color: #6c757d; font-weight: 500;';
+            const lineHtml = !isLast ? `<div style="position: absolute; left: 26px; top: 52px; bottom: 0; width: 2px; background: #E5E7EB;"></div>` : '';
+
+            return `
+            <div style="position: relative; display: flex; gap: 16px; padding-bottom: ${isLast ? '0' : '24px'};">
+                ${lineHtml}
+                <div style="position: relative; flex-shrink: 0; z-index: 1;">
+                    <div style="height: 52px; width: 52px; border-radius: 8px; background: #ffffff; border: 1px solid #E5E7EB; box-shadow: 0 1px 2px rgba(0,0,0,0.05); overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                        <span style="font-size: 20px; font-weight: 700; color: #6c757d;">${initial}</span>
                     </div>
                 </div>
-            </div>
-        `).join('');
+                <div style="flex: 1; padding-top: 4px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div style="min-width: 0;">
+                            <h3 style="font-weight: 700; font-size: 16px; line-height: 1.3; color: #212529; margin: 0;">${exp.role || ''}</h3>
+                            <p style="font-size: 14px; color: #6c757d; margin: 2px 0 0;">${exp.company || ''}${exp.type ? ' • ' + exp.type : ''}</p>
+                        </div>
+                        <button onclick="app.openEditExperience(${index})" style="color: #9CA3AF; background: none; border: none; cursor: pointer; padding: 4px; flex-shrink: 0; transition: color 0.15s;" onmouseenter="this.style.color='#1392ec'" onmouseleave="this.style.color='#9CA3AF'">
+                            <span class="material-icons" style="font-size: 20px;">edit</span>
+                        </button>
+                    </div>
+                    <p style="font-size: 12px; ${periodColor} margin: 8px 0 0;">${period}</p>
+                </div>
+            </div>`;
+        }).join('');
     },
 
     openEditExperience(index = null) {
@@ -1451,18 +1644,186 @@ const app = {
     toggleExpEndDate() {
         const checkbox = document.getElementById('expCurrent');
         const endInput = document.getElementById('expEndDate');
+        const endGroup = document.getElementById('expEndDateGroup');
         if (checkbox && endInput) {
             endInput.disabled = checkbox.checked;
             if (checkbox.checked) {
                 endInput.value = '';
-                endInput.style.backgroundColor = 'var(--bg-secondary)'; // Visual indication
-                endInput.style.color = 'var(--text-disabled)';
+                endInput.style.backgroundColor = '#f3f4f6';
+                endInput.style.color = '#9CA3AF';
+                if (endGroup) { endGroup.style.opacity = '0.6'; endGroup.style.pointerEvents = 'none'; }
             } else {
-                endInput.style.backgroundColor = '';
-                endInput.style.color = '';
+                endInput.style.backgroundColor = '#ffffff';
+                endInput.style.color = '#212529';
+                if (endGroup) { endGroup.style.opacity = '1'; endGroup.style.pointerEvents = 'auto'; }
             }
         }
     },
+
+    // ===== VIDEO PITCH LOGIC =====
+    requestVideoUpload() {
+        document.getElementById('videoPitchInput').click();
+    },
+
+    async handleVideoPitchUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Check file size (max 50MB)
+        if (file.size > 50 * 1024 * 1024) {
+            this.showToast('El video excede el límite de 50MB.', 'error');
+            return;
+        }
+
+        // Check file type
+        if (!file.type.startsWith('video/')) {
+            this.showToast('Por favor sube un archivo de video válido.', 'error');
+            return;
+        }
+
+        this.showToast('Subiendo video, por favor espera...', 'info');
+
+        try {
+            const { data: authData } = await window.supabaseClient.auth.getUser();
+            if (!authData || !authData.user) throw new Error("Debes iniciar sesión para subir un video.");
+            const userId = authData.user.id;
+
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${userId}_video_pitch_${Date.now()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            // Upload to Supabase Storage
+            const { data: uploadData, error: uploadError } = await window.supabaseClient.storage
+                .from('videos')
+                .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            // Get Public URL
+            const { data: { publicUrl } } = window.supabaseClient.storage
+                .from('videos')
+                .getPublicUrl(filePath);
+
+            // Update user profile in database
+            const { error: updateError } = await window.supabaseClient
+                .from('profiles')
+                .update({ video_url: publicUrl })
+                .eq('id', userId);
+
+            if (updateError) throw updateError;
+
+            // Update local state
+            if (this.currentUser) this.currentUser.videoUrl = publicUrl;
+            if (this.userProfile) this.userProfile.videoUrl = publicUrl;
+            localStorage.setItem('talently_user', JSON.stringify(this.currentUser || this.userProfile));
+
+            this.showToast('¡Video subido y actualizado con éxito!', 'success');
+
+            // Initialize the player with the new video
+            this.initializeVideoPitch();
+
+        } catch (error) {
+            console.error('Error uploading video:', error);
+            this.showToast('Error al subir el video: ' + error.message, 'error');
+        }
+    },
+
+    initializeVideoPitch() {
+        const user = this.currentUser || this.userProfile;
+        const videoUrl = user?.videoUrl || user?.video_url;
+
+        const emptyState = document.getElementById('videoPitchEmptyState');
+        const player = document.getElementById('videoPitchPlayer');
+        const controls = document.getElementById('videoPitchControls');
+
+        if (!emptyState || !player || !controls) return;
+
+        if (videoUrl) {
+            emptyState.style.display = 'none';
+            player.style.display = 'block';
+            controls.style.display = 'flex';
+
+            player.src = videoUrl;
+
+            // Setup timeupdate and duration events
+            player.addEventListener('timeupdate', this.updateVideoProgress);
+            player.addEventListener('loadedmetadata', this.updateVideoDuration);
+            player.addEventListener('ended', () => {
+                const btn = document.getElementById('videoPitchPlayBtn');
+                if (btn) btn.innerHTML = '<span class="material-icons" style="font-size: 40px;">replay</span>';
+                if (controls) controls.style.opacity = '1';
+            });
+        } else {
+            emptyState.style.display = 'flex';
+            player.style.display = 'none';
+            controls.style.display = 'none';
+            player.src = '';
+        }
+    },
+
+    toggleVideoPitchPlayback() {
+        const player = document.getElementById('videoPitchPlayer');
+        const btn = document.getElementById('videoPitchPlayBtn');
+        const controls = document.getElementById('videoPitchControls');
+
+        if (!player || !btn) return;
+
+        if (player.paused || player.ended) {
+            player.play();
+            btn.innerHTML = '<span class="material-icons" style="font-size: 40px;">pause</span>';
+            // Fade out controls slightly when playing
+            if (controls) {
+                controls.style.transition = 'opacity 0.3s';
+                controls.style.opacity = '0';
+            }
+        } else {
+            player.pause();
+            btn.innerHTML = '<span class="material-icons" style="font-size: 40px;">play_arrow</span>';
+            // Show controls when paused
+            if (controls) controls.style.opacity = '1';
+        }
+    },
+
+    updateVideoProgress(e) {
+        const player = e.target;
+        const timeDisplay = document.getElementById('videoPitchTime');
+        const progressBar = document.getElementById('videoPitchProgress');
+
+        if (timeDisplay && player.currentTime) {
+            const mins = Math.floor(player.currentTime / 60);
+            const secs = Math.floor(player.currentTime % 60);
+            timeDisplay.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        if (progressBar && player.duration) {
+            const percentage = (player.currentTime / player.duration) * 100;
+            progressBar.style.width = `${percentage}%`;
+        }
+    },
+
+    updateVideoDuration(e) {
+        const player = e.target;
+        const durationDisplay = document.getElementById('videoPitchDuration');
+
+        if (durationDisplay && player.duration) {
+            const mins = Math.floor(player.duration / 60);
+            const secs = Math.floor(player.duration % 60);
+            durationDisplay.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+    },
+
+    seekVideoPitch(e) {
+        const progressBarContainer = e.currentTarget;
+        const player = document.getElementById('videoPitchPlayer');
+        if (!player || !player.duration) return;
+
+        const rect = progressBarContainer.getBoundingClientRect();
+        const clickPosition = e.clientX - rect.left;
+        const percentage = clickPosition / rect.width;
+
+        player.currentTime = percentage * player.duration;
+    },
+    // ===== END VIDEO PITCH LOGIC =====
 
     saveExperience() {
         const indexStr = document.getElementById('expIndex').value;
@@ -1598,45 +1959,119 @@ const app = {
         const eduIndex = document.getElementById('eduIndex');
         const degree = document.getElementById('eduDegree');
         const school = document.getElementById('eduSchool');
+        const fieldOfStudy = document.getElementById('eduFieldOfStudy');
         const start = document.getElementById('eduStartDate');
         const end = document.getElementById('eduEndDate');
+        const endGroup = document.getElementById('eduEndDateGroup');
         const current = document.getElementById('eduCurrent');
 
-        // Reset
+        // Reset form
         eduIndex.value = '';
         degree.value = '';
         school.value = '';
+        if (fieldOfStudy) fieldOfStudy.value = '';
         start.value = '';
         end.value = '';
         current.checked = false;
-        if (end) end.disabled = false;
+        if (end) { end.disabled = false; end.style.backgroundColor = '#ffffff'; end.style.color = '#1f2937'; }
+        if (endGroup) { endGroup.style.opacity = '1'; endGroup.style.pointerEvents = 'auto'; }
 
         if (index !== null) {
             const list = this.currentUser.education || this.userProfile.education || [];
             const item = list[index];
             if (item) {
-                title.textContent = 'Editar Educación';
+                title.textContent = 'Editar formación';
                 eduIndex.value = index;
-                degree.value = item.degree;
-                school.value = item.school;
+                degree.value = item.degree || '';
+                school.value = item.school || '';
+                if (fieldOfStudy) fieldOfStudy.value = item.field_of_study || '';
+                if (item.start_date) start.value = item.start_date;
+                if (item.end_date) end.value = item.end_date;
 
-                if (item.period && item.period.includes('Presente')) {
+                if (item.is_current || (item.period && item.period.includes('Presente'))) {
                     current.checked = true;
-                    end.disabled = true;
+                    if (end) { end.disabled = true; end.style.backgroundColor = '#f3f4f6'; end.style.color = '#9ca3af'; }
+                    if (endGroup) { endGroup.style.opacity = '0.5'; endGroup.style.pointerEvents = 'none'; }
                 }
             }
         } else {
-            title.textContent = 'Agregar Educación';
+            title.textContent = 'Nueva formación';
         }
 
-        modal.classList.add('active');
+        // Render timeline inside modal
+        this.renderEduTimeline();
+
         modal.style.display = 'flex';
+    },
+
+    clearEduForm() {
+        const title = document.getElementById('eduModalTitle');
+        const eduIndex = document.getElementById('eduIndex');
+        const degree = document.getElementById('eduDegree');
+        const school = document.getElementById('eduSchool');
+        const fieldOfStudy = document.getElementById('eduFieldOfStudy');
+        const start = document.getElementById('eduStartDate');
+        const end = document.getElementById('eduEndDate');
+        const endGroup = document.getElementById('eduEndDateGroup');
+        const current = document.getElementById('eduCurrent');
+
+        if (title) title.textContent = 'Nueva formación';
+        if (eduIndex) eduIndex.value = '';
+        if (degree) degree.value = '';
+        if (school) school.value = '';
+        if (fieldOfStudy) fieldOfStudy.value = '';
+        if (start) start.value = '';
+        if (end) { end.value = ''; end.disabled = false; end.style.backgroundColor = '#ffffff'; end.style.color = '#1f2937'; }
+        if (endGroup) { endGroup.style.opacity = '1'; endGroup.style.pointerEvents = 'auto'; }
+        if (current) current.checked = false;
+
+        // Scroll form into view
+        if (title) title.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
+
+    renderEduTimeline() {
+        const container = document.getElementById('eduTimeline');
+        if (!container) return;
+
+        const eduList = (Array.isArray(this.currentUser?.education) ? this.currentUser.education : [])
+            || (Array.isArray(this.userProfile?.education) ? this.userProfile.education : [])
+            || [];
+
+        if (eduList.length === 0) {
+            container.innerHTML = '<div style="color: #9ca3af; font-size: 14px; padding: 8px 0;">No has agregado educación aún.</div>';
+            return;
+        }
+
+        container.innerHTML = eduList.map((edu, index) => {
+            const initial = (edu.school || '?').charAt(0).toUpperCase();
+            const period = edu.period || '';
+            const fieldText = edu.field_of_study ? `<p style="font-size: 13px; font-weight: 500; color: #4b5563; margin: 4px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${edu.field_of_study}</p>` : '';
+
+            return `
+            <div style="display: flex; gap: 16px; background: #ffffff; padding: 16px; margin-bottom: 12px; justify-content: space-between; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; transition: border-color 0.15s;" onmouseenter="this.style.borderColor='rgba(19,146,236,0.3)'" onmouseleave="this.style.borderColor='#e5e7eb'">
+                <div style="display: flex; align-items: flex-start; gap: 16px; flex: 1; min-width: 0;">
+                    <div style="width: 60px; height: 60px; border-radius: 8px; background: #f3f4f6; border: 1px solid #f3f4f6; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: #1392ec;">
+                        ${initial}
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <p style="font-size: 16px; font-weight: 700; color: #1f2937; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${edu.school || ''}</p>
+                        <p style="font-size: 14px; font-weight: 500; color: #4b5563; margin: 4px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${edu.degree || ''}</p>
+                        ${fieldText}
+                        <p style="font-size: 12px; font-weight: 700; color: #1392ec; margin: 4px 0 0; text-transform: uppercase; letter-spacing: 0.05em;">${period}</p>
+                    </div>
+                </div>
+                <div style="flex-shrink: 0; display: flex; align-items: center;">
+                    <button onclick="app.openEditEducation(${index})" style="color: #9ca3af; background: none; border: none; cursor: pointer; padding: 8px; border-radius: 50%; transition: all 0.15s;" onmouseenter="this.style.color='#1392ec';this.style.background='#f3f4f6'" onmouseleave="this.style.color='#9ca3af';this.style.background='none'">
+                        <span class="material-icons" style="font-size: 20px;">edit</span>
+                    </button>
+                </div>
+            </div>`;
+        }).join('');
     },
 
     closeEditEducation() {
         const modal = document.getElementById('editEducationModal');
         if (modal) {
-            modal.classList.remove('active');
             modal.style.display = 'none';
         }
     },
@@ -1644,15 +2079,18 @@ const app = {
     toggleEduEndDate() {
         const checkbox = document.getElementById('eduCurrent');
         const endInput = document.getElementById('eduEndDate');
+        const endGroup = document.getElementById('eduEndDateGroup');
         if (checkbox && endInput) {
             endInput.disabled = checkbox.checked;
             if (checkbox.checked) {
                 endInput.value = '';
-                endInput.style.backgroundColor = 'var(--bg-secondary)';
-                endInput.style.color = 'var(--text-disabled)';
+                endInput.style.backgroundColor = '#f3f4f6';
+                endInput.style.color = '#9ca3af';
+                if (endGroup) { endGroup.style.opacity = '0.5'; endGroup.style.pointerEvents = 'none'; }
             } else {
-                endInput.style.backgroundColor = '';
-                endInput.style.color = '';
+                endInput.style.backgroundColor = '#ffffff';
+                endInput.style.color = '#1f2937';
+                if (endGroup) { endGroup.style.opacity = '1'; endGroup.style.pointerEvents = 'auto'; }
             }
         }
     },
@@ -1661,6 +2099,7 @@ const app = {
         const indexStr = document.getElementById('eduIndex').value;
         const degree = document.getElementById('eduDegree').value;
         const school = document.getElementById('eduSchool').value;
+        const fieldOfStudy = document.getElementById('eduFieldOfStudy')?.value || '';
         const start = document.getElementById('eduStartDate').value;
         const end = document.getElementById('eduEndDate').value;
         const current = document.getElementById('eduCurrent').checked;
@@ -1688,6 +2127,7 @@ const app = {
             id: Date.now(),
             degree,
             school,
+            field_of_study: fieldOfStudy,
             period,
             start_date: start,
             end_date: end,
@@ -2018,52 +2458,117 @@ const app = {
             displayProfiles = [...realOffers, ...displayProfiles];
         }
 
+        // Shadow cards visibility
+        const shadow1 = document.getElementById('cardShadow1');
+        const shadow2 = document.getElementById('cardShadow2');
+
         // Index Check
         if (this.currentIndex >= displayProfiles.length) {
             cardStack.innerHTML = `
-                <div class="empty-state">
-                    <h3>¡Has revisado todos los perfiles!</h3>
-                    <p>Vuelve más tarde para ver nuevas oportunidades</p>
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 40px; font-family: 'Inter', sans-serif;">
+                    <span class="material-icons" style="font-size: 64px; color: #e2e8f0; margin-bottom: 16px;">check_circle</span>
+                    <h3 style="font-size: 20px; font-weight: 700; color: #1e293b; margin: 0 0 8px;">¡Has revisado todos los perfiles!</h3>
+                    <p style="font-size: 14px; color: #94a3b8; margin: 0;">Vuelve más tarde para ver nuevas oportunidades</p>
                 </div>
             `;
             const bu = document.querySelector('.action-buttons');
             if (bu) bu.style.display = 'none';
+            if (shadow1) shadow1.style.display = 'none';
+            if (shadow2) shadow2.style.display = 'none';
             return;
         }
         const bu = document.querySelector('.action-buttons');
         if (bu) bu.style.display = 'flex';
+        if (shadow1) shadow1.style.display = 'block';
+        if (shadow2) shadow2.style.display = 'block';
 
         const profile = displayProfiles[this.currentIndex];
 
         // Store DATA for logic
         this.currentProfileData = profile;
 
+        // Build skill tags HTML (small bordered chips)
+        const tagsHtml = profile.tags ? profile.tags.slice(0, 4).map(tag =>
+            `<span style="font-size: 12px; border: 1px solid #e5e7eb; padding: 4px 8px; border-radius: 4px; color: #6b7280;">${tag}</span>`
+        ).join('') : '';
+
+        // Build info chips with icons
+        const modalityChip = `<span style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; background: #f3f4f6; font-size: 13px; font-weight: 500; border-radius: 8px; color: #4b5563;">
+            <span class="material-icons" style="font-size: 14px;">work_outline</span> ${profile.modality || 'Remoto'}
+        </span>`;
+
+        const typeChip = `<span style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; background: #f3f4f6; font-size: 13px; font-weight: 500; border-radius: 8px; color: #4b5563;">
+            <span class="material-icons" style="font-size: 14px;">schedule</span> Full-time
+        </span>`;
+
+        const salaryChip = profile.salary ? `<span style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; background: #EFF6FF; font-size: 13px; font-weight: 500; border-radius: 8px; color: #2563EB;">
+            <span class="material-icons" style="font-size: 14px;">attach_money</span> ${profile.salary}
+        </span>` : '';
+
+        // Match % calculation
+        const matchPct = profile.match_score || Math.floor(Math.random() * 15 + 85);
+
+        // Time ago
+        let timeAgo = 'Publicado recientemente';
+        if (profile.created_at) {
+            const diff = Date.now() - new Date(profile.created_at).getTime();
+            const hours = Math.floor(diff / 3600000);
+            if (hours < 1) timeAgo = 'Hace unos minutos';
+            else if (hours < 24) timeAgo = `Hace ${hours}h`;
+            else timeAgo = `Hace ${Math.floor(hours / 24)}d`;
+        }
+
+        // Logo
+        const logoInitial = (profile.company || profile.name || 'E').charAt(0).toUpperCase();
+        const logoSrc = profile.image || profile.logo;
+        const logoHtml = logoSrc
+            ? `<img src="${logoSrc}" alt="${profile.name}" style="width: 64px; height: 64px; border-radius: 16px; object-fit: cover;">`
+            : `<div style="width: 64px; height: 64px; background: #EFF6FF; border-radius: 16px; display: flex; align-items: center; justify-content: center;"><span style="color: #3b82f6; font-weight: 700; font-size: 24px;">${logoInitial}</span></div>`;
+
+        const escapedId = String(profile.id).replace(/'/g, "\\'");
+
         cardStack.innerHTML = `
-            <div class="profile-card" id="currentCard">
-                <img src="${profile.image || 'https://via.placeholder.com/400'}" alt="${profile.name}" class="profile-image">
-                <button class="view-details-btn" onclick="event.stopPropagation(); app.openCompanyModal('${profile.id}')">
-                    Ver más detalles
-                </button>
-                <div class="profile-overlay">
-                    <h2 class="profile-name">${profile.name}</h2>
-                    <div class="profile-title">${profile.title}</div>
+            <div id="currentCard" style="width: 100%; height: 100%; background: #fff; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); padding: 24px; display: flex; flex-direction: column; position: relative; overflow: hidden; border: 1px solid #e5e7eb; font-family: 'Inter', sans-serif;">
+                <!-- Gradient top -->
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 128px; background: linear-gradient(to right, rgba(239,246,255,0.5), rgba(238,242,255,0.5)); opacity: 0.5; pointer-events: none; z-index: 0;"></div>
+
+                <!-- Top row: logo + match badge -->
+                <div style="position: relative; z-index: 10; display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
+                    <div style="background: white; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #f3f4f6; overflow: hidden;">
+                        ${logoHtml}
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                        <span style="padding: 4px 12px; background: rgba(16,185,129,0.1); color: #15803d; font-size: 12px; font-weight: 600; border-radius: 9999px;">${matchPct}% Match</span>
+                        <span style="font-size: 11px; color: #9ca3af;">${timeAgo}</span>
+                    </div>
                 </div>
-                <div class="profile-content">
-                    <div class="profile-tags">
-                        ${profile.tags ? profile.tags.slice(0, 3).map(tag => `<span class="tag">${tag}</span>`).join('') : ''}
+
+                <!-- Title + Company -->
+                <div style="position: relative; z-index: 10; flex: 1; display: flex; flex-direction: column;">
+                    <h2 style="font-size: 28px; font-weight: 700; color: #111827; margin: 0 0 4px; line-height: 1.15;">${profile.title || profile.name}</h2>
+                    <p style="font-size: 18px; font-weight: 500; color: #6b7280; margin: 0 0 24px;">${profile.company || profile.name}</p>
+
+                    <!-- Info chips -->
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px;">
+                        ${modalityChip}
+                        ${typeChip}
+                        ${salaryChip}
                     </div>
-                    <div class="info-row">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                        </svg>
-                        <span>${profile.location || 'Remoto'}</span>
+
+                    <!-- Description -->
+                    <p style="font-size: 14px; color: #6b7280; line-height: 1.6; margin: 0 0 16px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${profile.description || profile.value_proposition || ''}</p>
+
+                    <!-- Skill tags -->
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: auto;">
+                        ${tagsHtml}
                     </div>
-                    <div class="info-row">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span>${profile.salary || 'A convenir'}</span>
-                    </div>
+                </div>
+
+                <!-- View Details -->
+                <div style="position: relative; z-index: 10; width: 100%; margin-top: 16px; padding-top: 16px; border-top: 1px solid #f3f4f6;">
+                    <button onclick="event.stopPropagation(); app.openCardDetail('offer')" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 14px; font-weight: 600; color: #3b82f6; background: none; border: none; cursor: pointer; padding: 4px; font-family: inherit; transition: color 0.2s;">
+                        Ver detalles <span class="material-icons" style="font-size: 16px;">expand_more</span>
+                    </button>
                 </div>
             </div>
         `;
@@ -2106,6 +2611,7 @@ const app = {
             if (matchIndex !== -1) this.matches[matchIndex] = match;
             localStorage.setItem('talently_matches', JSON.stringify(this.matches));
             this.updateBadge();
+            if (typeof this.renderMatches === 'function') this.renderMatches();
         }
         // --------------------------------
 
@@ -2254,6 +2760,106 @@ const app = {
                 }, 300);
             }
         }
+    },
+
+    viewChatCandidateProfile() {
+        if (!this.currentMatchId || !this.matches) return;
+        const match = this.matches.find(m => String(m.id) === String(this.currentMatchId));
+        if (match) {
+            this.openCardDetail('candidate', 'match');
+        }
+    },
+
+    async scheduleInterview() {
+        this.closeCardDetail();
+        if (!this.currentMatchId) return;
+
+        const matchId = String(this.currentMatchId);
+        const match = (this.matches || []).find(m => String(m.id) === matchId);
+
+        if (!match) {
+            this.showToast('Error: Match no encontrado.', 'error');
+            return;
+        }
+
+        const isRealMatch = matchId.includes('-');
+
+        if (isRealMatch && window.talentlyBackend && window.talentlyBackend.isReady) {
+            try {
+                const { data: authData } = await window.supabaseClient.auth.getUser();
+                if (!authData || !authData.user) throw new Error("Usuario no autenticado");
+                const companyId = authData.user.id;
+                const candidateId = match.otherUserId;
+
+                if (!candidateId) throw new Error("ID del candidato no disponible");
+
+                // Prevenir duplicados (opcional)
+                const { data: existing } = await window.supabaseClient.from('interviews')
+                    .select('id')
+                    .eq('match_id', matchId)
+                    .eq('company_id', companyId)
+                    .maybeSingle();
+
+                if (!existing) {
+                    const { error: insertError } = await window.supabaseClient.from('interviews').insert([{
+                        match_id: matchId,
+                        company_id: companyId,
+                        candidate_id: candidateId,
+                        status: 'pending'
+                    }]);
+
+                    if (insertError) throw insertError;
+                }
+
+                // Enviar mensaje en el chat
+                const text = "¡Nos encantaría agendarte una entrevista! ¿Cuándo podríamos tener una llamada?";
+                await window.talentlyBackend.matches.sendMessage(matchId, text);
+
+                this.showToast('Invitación a entrevista enviada exitosamente.');
+            } catch (error) {
+                console.error('Error al agendar entrevista:', error);
+                this.showToast('Error al agendar la entrevista: ' + error.message, 'error');
+            }
+        } else {
+            // Local fallback for mocks
+            this.saveLocalMessage(matchId, "¡Nos encantaría agendarte una entrevista! ¿Cuándo podríamos tener una llamada?", 'sent');
+            this.showToast('Invitación a entrevista simulada enviada.');
+
+            // Actualizar UI local
+            const matchIndex = (this.matches || []).findIndex(m => String(m.id) === matchId);
+            if (matchIndex !== -1) {
+                this.matches[matchIndex].lastMessage = "¡Nos encantaría agendarte una entrevista! ¿Cuándo podríamos tener una llamada?";
+                this.matches[matchIndex].timestamp = new Date().toISOString();
+                localStorage.setItem('talently_matches', JSON.stringify(this.matches));
+            }
+        }
+    },
+
+    async discardMatchFromProfile() {
+        if (!confirm('¿Estás seguro de que deseas descartar/eliminar este match?')) return;
+        this.closeCardDetail();
+        if (!this.currentMatchId) return;
+
+        const matchId = String(this.currentMatchId);
+        const isRealMatch = matchId.includes('-');
+
+        if (isRealMatch && window.supabaseClient) {
+            try {
+                // Eliminar de base de datos
+                await window.supabaseClient.from('matches').delete().eq('id', matchId);
+            } catch (err) {
+                console.error("Error al eliminar el match en la base de datos:", err);
+            }
+        }
+
+        if (this.matches) {
+            this.matches = this.matches.filter(m => String(m.id) !== matchId);
+            localStorage.setItem('talently_matches', JSON.stringify(this.matches));
+            this.updateBadge();
+        }
+
+        this.backToConversationsList();
+        this.showToast('Match eliminado exitosamente.');
     },
 
     saveLocalMessage(matchId, content, type) {
@@ -2422,6 +3028,16 @@ const app = {
 
     // ... setupSwipeGestures (unchanged) ...
 
+    undoSwipe() {
+        if (this.currentIndex > 0) {
+            this.currentIndex--;
+            this.renderCard();
+            this.showToast('Perfil anterior recuperado', 'info');
+        } else {
+            this.showToast('No hay perfiles anteriores');
+        }
+    },
+
     swipeLeft() {
         const profile = this.currentProfileData || this.profiles[this.currentIndex];
         if (profile && profile.id) {
@@ -2526,8 +3142,6 @@ const app = {
     },
 
     async renderMatches() {
-        const grid = document.querySelector('.matches-grid');
-        const conversastionList = document.getElementById('conversationsList');
 
         // PREPARATION: Get current user ID to know who the "other" person is
         let myId = null;
@@ -2634,57 +3248,107 @@ const app = {
                 .replace(/'/g, "&#039;");
         };
 
-        // Render Grid (Matches View)
-        if (grid) {
+        // Render Horizontal Matches Row (Stitch)
+        const matchesRow = document.getElementById('matchesRow');
+        const matchesBadge = document.getElementById('newMatchesBadge');
+        if (matchesRow) {
             if (finalMatches.length === 0) {
-                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 20px;">No tienes matches aún</div>';
+                matchesRow.innerHTML = '<div style="display: flex; flex-direction: column; align-items: center; gap: 8px; color: #94a3b8; font-size: 14px; padding: 20px 0; width: 100%;"><span class="material-icons" style="font-size: 36px; color: #cbd5e1;">people_outline</span>No tienes matches aún</div>';
+                if (matchesBadge) matchesBadge.style.display = 'none';
             } else {
-                grid.innerHTML = finalMatches.map(match => {
+                if (matchesBadge) {
+                    const newMatchesCount = finalMatches.filter(m => !m.lastMessage || m.lastMessage.includes('Match!')).length;
+                    if (newMatchesCount > 0) {
+                        matchesBadge.textContent = newMatchesCount + (newMatchesCount === 1 ? ' Nuevo' : ' Nuevos');
+                        matchesBadge.style.display = 'inline-block';
+                    } else {
+                        matchesBadge.style.display = 'none';
+                    }
+                }
+                matchesRow.innerHTML = finalMatches.map((match, idx) => {
                     const safeName = escapeHtml(match.name || 'Usuario');
                     const safeId = escapeHtml(String(match.id));
-                    const imgUrl = match.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(safeName)}&background=random`;
+                    const imgUrl = match.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(safeName)}&background=1392ec&color=fff`;
+                    const isNew = idx < 2;
+                    const borderStyle = isNew
+                        ? 'background: linear-gradient(135deg, #1392ec, #0b6cb3); padding: 2.5px; border-radius: 50%; box-shadow: 0 4px 12px rgba(19,146,236,0.25);'
+                        : 'background: #e2e8f0; padding: 2.5px; border-radius: 50%;';
+                    const imgFilter = isNew ? '' : 'filter: grayscale(0.6); opacity: 0.65;';
+                    const nameWeight = isNew ? 'font-weight: 600; color: #0f172a;' : 'font-weight: 500; color: #94a3b8;';
+                    const onlineHtml = isNew ? `<div style="position: absolute; bottom: 4px; right: 4px; width: 14px; height: 14px; background: #22c55e; border: 2px solid white; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.1);"></div>` : '';
 
                     return `
-                    <div class="match-card-container" onclick="app.openChat('${safeId}', '${safeName}')">
-                        <div class="match-card">
-                            <img src="${imgUrl}" alt="${safeName}">
-                            <div class="online-indicator"></div>
-                            <div class="match-card-overlay">
-                                <div class="match-name">${safeName}</div>
+                    <div onclick="app.openChat('${safeId}', '${safeName}')" style="display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 72px; cursor: pointer;">
+                        <div style="position: relative; ${borderStyle}">
+                            <div style="width: 68px; height: 68px; background: #f8fafc; border-radius: 50%; padding: 2px; border: 2px solid white; overflow: hidden;">
+                                <img src="${imgUrl}" alt="${safeName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; ${imgFilter}">
                             </div>
+                            ${onlineHtml}
                         </div>
-                    </div>
-                `}).join('');
+                        <p style="font-size: 12px; ${nameWeight} text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%; margin: 0;">${safeName}</p>
+                    </div>`;
+                }).join('');
             }
         }
-        // Render Conversation List (Messages View)
-        if (conversastionList) {
+
+        // Render Conversation List (Stitch)
+        const conversationList = document.getElementById('conversationsList');
+        if (conversationList) {
             if (finalMatches.length === 0) {
-                conversastionList.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px; font-size: 14px;">No tienes mensajes aún</div>';
+                conversationList.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 40px 24px; font-size: 14px;"><span class="material-icons" style="font-size: 48px; color: #cbd5e1; display: block; margin-bottom: 12px;">forum</span>No tienes mensajes aún</div>';
             } else {
-                conversastionList.innerHTML = finalMatches.map(match => {
+                conversationList.innerHTML = finalMatches.map((match, idx) => {
                     const safeName = escapeHtml(match.name || 'Usuario');
                     const safeId = escapeHtml(String(match.id));
-                    const imgUrl = match.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(safeName)}&background=random`;
+                    const imgUrl = match.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(safeName)}&background=1392ec&color=fff`;
+                    const isUnread = !!match.hasUnread;
+                    const bgStyle = isUnread ? 'background: rgba(19,146,236,0.04); border-left: 4px solid #1392ec;' : 'border-left: 4px solid transparent;';
+                    const titleWeight = isUnread ? 'font-weight: 700;' : 'font-weight: 600;';
+                    const timeColor = isUnread ? 'color: #1392ec; font-weight: 500;' : 'color: #94a3b8;';
+                    const msgColor = isUnread ? 'color: #475569; font-weight: 500;' : 'color: #94a3b8;';
+                    const dotHtml = isUnread ? '<div style="width: 10px; height: 10px; background: #1392ec; border-radius: 50%; flex-shrink: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.1); animation: pulse 2s infinite;"></div>' : '';
+                    const matchBadgeBg = isUnread ? 'background: #1392ec;' : 'background: #f1f5f9; border: 1px solid #e2e8f0;';
+                    const matchBadgeIconColor = isUnread ? 'color: white;' : 'color: #94a3b8;';
 
                     return `
-                    <div class="conversation-item" onclick="app.openChat('${safeId}', '${safeName}')">
-                        <div style="position: relative;">
-                            <img src="${imgUrl}" class="conversation-avatar">
-                            <div class="online-indicator"></div>
-                        </div>
-                        <div class="conversation-content">
-                            <div class="conversation-header">
-                                <span class="conversation-name">${safeName}</span>
-                                <span class="conversation-time">Ahora</span>
+                    <div class="match-conversation-item" data-match-name="${safeName.toLowerCase()}" onclick="app.openChat('${safeId}', '${safeName}')" style="display: flex; align-items: center; gap: 16px; padding: 16px 24px; ${bgStyle} cursor: pointer; transition: background 0.2s;">
+                        <div style="position: relative; width: 56px; height: 56px; flex-shrink: 0;">
+                            <img src="${imgUrl}" alt="${safeName}" style="width: 100%; height: 100%; border-radius: 12px; object-fit: cover; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">
+                            <div style="position: absolute; bottom: -4px; right: -4px; background: white; border-radius: 50%; padding: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                                <div style="${matchBadgeBg} border-radius: 50%; padding: 2px; display: flex; align-items: center; justify-content: center; width: 20px; height: 20px;">
+                                    <span class="material-icons" style="font-size: 12px; font-weight: 700; ${matchBadgeIconColor}">handshake</span>
+                                </div>
                             </div>
-                            <p class="conversation-message">${match.lastMessage || '¡Es un Match! Saluda ahora.'}</p>
                         </div>
-                        ${match.hasUnread ? '<span class="unread-badge">1</span>' : ''}
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
+                                <h4 style="margin: 0; ${titleWeight} color: #0f172a; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px;">${safeName}</h4>
+                                <span style="font-size: 12px; ${timeColor} white-space: nowrap;">Ahora</span>
+                            </div>
+                            <p style="margin: 0; font-size: 14px; ${msgColor} overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(match.lastMessage) || '¡Es un Match! Saluda ahora.'}</p>
+                        </div>
+                        ${dotHtml}
                     </div>
-                `}).join('');
+                    ${idx < finalMatches.length - 1 ? '<div style="border-bottom: 1px solid #e2e8f0; margin: 0 24px;"></div>' : ''}`;
+                }).join('');
             }
         }
+    },
+
+    filterMatchConversations(query) {
+        const items = document.querySelectorAll('.match-conversation-item');
+        const q = (query || '').toLowerCase().trim();
+        items.forEach(item => {
+            const name = item.getAttribute('data-match-name') || '';
+            const divider = item.nextElementSibling;
+            if (!q || name.includes(q)) {
+                item.style.display = 'flex';
+                if (divider && divider.tagName === 'DIV' && !divider.classList.contains('match-conversation-item')) divider.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+                if (divider && divider.tagName === 'DIV' && !divider.classList.contains('match-conversation-item')) divider.style.display = 'none';
+            }
+        });
     },
 
     async loadOffers() {
@@ -2735,20 +3399,28 @@ const app = {
 
         cardStack.innerHTML = '';
 
+        // Shadow cards visibility
+        const shadow1 = document.getElementById('cardShadow1');
+        const shadow2 = document.getElementById('cardShadow2');
+
         if (!this.profiles || this.profiles.length === 0 || this.currentIndex >= this.profiles.length) {
             cardStack.innerHTML = `
-                <div class="no-profiles" style="text-align: center; padding: 40px; color: var(--text-secondary);">
-                    <div style="font-size: 48px; margin-bottom: 20px;">🎉</div>
-                    <h3>¡Estás al día!</h3>
-                    <p>Vuelve más tarde para nuevas oportunidades.</p>
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 40px; font-family: 'Inter', sans-serif;">
+                    <span class="material-icons" style="font-size: 64px; color: #e2e8f0; margin-bottom: 16px;">check_circle</span>
+                    <h3 style="font-size: 20px; font-weight: 700; color: #1e293b; margin: 0 0 8px;">¡Estás al día!</h3>
+                    <p style="font-size: 14px; color: #94a3b8; margin: 0;">Vuelve más tarde para nuevas oportunidades</p>
                 </div>`;
             const bu = document.querySelector('.action-buttons');
             if (bu) bu.style.display = 'none';
+            if (shadow1) shadow1.style.display = 'none';
+            if (shadow2) shadow2.style.display = 'none';
             return;
         }
 
         const bu = document.querySelector('.action-buttons');
         if (bu) bu.style.display = 'flex';
+        if (shadow1) shadow1.style.display = 'block';
+        if (shadow2) shadow2.style.display = 'block';
 
         const profile = this.profiles[this.currentIndex];
         this.currentProfileData = profile;
@@ -2757,32 +3429,55 @@ const app = {
 
         let cardContent = '';
         if (isJobOffer) {
-            // TINDER-STYLE JOB OFFER CARD — full-width background image
-            const imageUrl = profile.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.company)}&background=6c5ce7&color=fff&size=600`;
+            // STITCH-STYLE JOB OFFER CARD
+            const logoInitial = (profile.company || 'E').charAt(0).toUpperCase();
+            const logoImg = profile.logo
+                ? `<img src="${profile.logo}" alt="${profile.company}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 12px;">`
+                : `<span style="color: #3b82f6; font-weight: 700; font-size: 24px;">${logoInitial}</span>`;
+
+            const skillTags = (profile.skills || []).slice(0, 4).map(skill =>
+                `<span style="font-size: 12px; border: 1px solid #e5e7eb; background: #f9fafb; padding: 4px 8px; border-radius: 4px; color: #6b7280;">${skill}</span>`
+            ).join('');
+
+            const salaryChip = profile.salary ? `<span style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; background: #eff6ff; border: 1px solid #dbeafe; font-size: 13px; font-weight: 500; border-radius: 8px; color: #1d4ed8;">
+                <span class="material-icons" style="font-size: 14px;">attach_money</span> ${profile.salary}
+            </span>` : '';
 
             cardContent = `
-                <div class="profile-card" id="currentCard">
-                    <div class="card-bg-image" style="background-image: url('${imageUrl}');"></div>
-                    <div class="card-gradient-overlay"></div>
-                    <div class="swipe-stamp stamp-like">LIKE</div>
-                    <div class="swipe-stamp stamp-nope">NOPE</div>
-                    <div class="card-info-overlay" onclick="app.openCardDetail('offer')">
-                        <h2 class="card-offer-title">${profile.name}</h2>
-                        <p class="card-company-name">${profile.company}</p>
-                        <div class="card-details-row">
-                            <span class="card-detail-item"><i class="fas fa-briefcase"></i> ${profile.modality || 'Remoto'}</span>
-                            <span class="card-detail-item"><i class="fas fa-money-bill-wave"></i> ${profile.salary || 'Competitivo'}</span>
+                <div id="currentCard" style="width: 100%; height: 100%; background: #fff; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); padding: 24px; display: flex; flex-direction: column; position: relative; overflow: hidden; border: 1px solid #f3f4f6; font-family: 'Inter', sans-serif;">
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 160px; background: linear-gradient(to bottom, rgba(249,250,251,0.5), transparent); pointer-events: none;"></div>
+                    <div style="position: relative; z-index: 10; display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
+                        <div style="width: 64px; height: 64px; background: #fff; border-radius: 16px; display: flex; align-items: center; justify-content: center; border: 1px solid #f3f4f6; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; padding: 4px;">
+                            ${logoImg}
                         </div>
-                        <p class="card-desc">${profile.description ? profile.description.substring(0, 100) + '...' : ''}</p>
-                        <div class="card-skills-row">
-                            ${(profile.skills || []).slice(0, 4).map(skill => `<span class="card-skill-chip">${skill}</span>`).join('')}
+                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                            <span style="padding: 4px 12px; background: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; font-size: 12px; font-weight: 600; border-radius: 99px;">${profile.match}% Match</span>
+                            <span style="font-size: 11px; color: #9ca3af;">Publicado recientemente</span>
                         </div>
                     </div>
-                    <span class="match-badge-float">${profile.match}%</span>
+                    <div style="position: relative; z-index: 10; flex: 1; display: flex; flex-direction: column;">
+                        <h2 style="font-size: 26px; font-weight: 700; color: #111827; margin: 0 0 4px; line-height: 1.2;">${profile.name}</h2>
+                        <p style="font-size: 17px; font-weight: 500; color: #6b7280; margin: 0 0 20px;">${profile.company}</p>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">
+                            <span style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; background: #f9fafb; border: 1px solid #e5e7eb; font-size: 13px; font-weight: 500; border-radius: 8px; color: #4b5563;">
+                                <span class="material-icons" style="font-size: 14px; color: #9ca3af;">work_outline</span> ${profile.modality || 'Remoto'}
+                            </span>
+                            ${salaryChip}
+                        </div>
+                        <p style="font-size: 14px; color: #4b5563; line-height: 1.6; margin: 0 0 16px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${profile.description ? profile.description.substring(0, 150) + '...' : ''}</p>
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: auto;">
+                            ${skillTags}
+                        </div>
+                    </div>
+                    <div style="position: relative; z-index: 10; width: 100%; margin-top: 16px; padding-top: 16px; border-top: 1px solid #f3f4f6;">
+                        <button onclick="event.stopPropagation(); app.openCardDetail('offer')" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 14px; font-weight: 600; color: #3b82f6; background: none; border: none; cursor: pointer; padding: 4px; font-family: inherit;">
+                            Ver detalles <span class="material-icons" style="font-size: 16px;">expand_more</span>
+                        </button>
+                    </div>
                 </div>
             `;
         } else {
-            // CANDIDATE CARD (Company View)
+            // CANDIDATE CARD (Company View) — keep existing style with minor Stitch updates
             const imageUrl = profile.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=random&size=600`;
             cardContent = `
                 <div class="profile-card" id="currentCard">
@@ -2799,11 +3494,11 @@ const app = {
                         </div>
                         <div class="card-details">
                             <div class="detail-item">
-                                <i class="fas fa-briefcase"></i>
+                                <span class="material-icons" style="font-size: 16px; color: #9ca3af;">work_outline</span>
                                 <span>${profile.experience || '3 años'}</span>
                             </div>
                             <div class="detail-item">
-                                <i class="fas fa-map-marker-alt"></i>
+                                <span class="material-icons" style="font-size: 16px; color: #9ca3af;">location_on</span>
                                 <span>${profile.location || 'Santiago'}</span>
                             </div>
                         </div>
@@ -3025,13 +3720,6 @@ const app = {
         document.getElementById('editSkillsModal').classList.remove('active');
     },
 
-    saveEditSkills() {
-        this.currentUser.skills = [...this.activeEditSkills];
-        this.saveProfile();
-        this.renderProfile();
-        this.closeEditSkills();
-    },
-
     renderEditSkillsSelected() {
         const container = document.getElementById('editSkillsSelected');
         if (!container) return;
@@ -3119,18 +3807,43 @@ const app = {
         this.openEditSkills();
     },
 
-    // ================= EXPERIENCE MODAL =================
+    // ================= EXPERIENCE MODAL (Stitch) =================
     openEditExperience(index = null) {
         const modal = document.getElementById('editExperienceModal');
         if (!modal) return;
 
+        // Render the timeline
+        this.renderExpTimeline();
+
+        if (index !== null && this.currentUser.experience && this.currentUser.experience[index]) {
+            // Edit Mode - show form with data
+            this._showExpForm(index);
+        } else if (index === null && arguments.length > 0) {
+            // Called from "Agregar" button - show blank form
+            this._showExpForm(null);
+        } else {
+            // Just opening the modal - hide form, only show timeline
+            const form = document.getElementById('expEditForm');
+            if (form) form.style.display = 'none';
+        }
+
+        modal.style.display = 'flex';
+    },
+
+    _showExpForm(index) {
+        const form = document.getElementById('expEditForm');
         const roleInput = document.getElementById('expRole');
         const companyInput = document.getElementById('expCompany');
         const startInput = document.getElementById('expStartDate');
         const endInput = document.getElementById('expEndDate');
         const currentInput = document.getElementById('expCurrent');
         const indexInput = document.getElementById('expIndex');
-        const title = document.getElementById('expModalTitle');
+        const descInput = document.getElementById('expDescription');
+        const descCount = document.getElementById('expDescCount');
+        const deleteBtn = document.getElementById('expDeleteBtn');
+        const formTitle = document.getElementById('expFormTitle');
+
+        if (!form) return;
 
         // Reset
         roleInput.value = '';
@@ -3140,74 +3853,168 @@ const app = {
         currentInput.checked = false;
         endInput.disabled = false;
         indexInput.value = '';
+        if (descInput) descInput.value = '';
+        if (descCount) descCount.textContent = '0/2000';
+
+        // Reset end date visual
+        const endGroup = document.getElementById('expEndDateGroup');
+        if (endGroup) { endGroup.style.opacity = '1'; endGroup.style.pointerEvents = 'auto'; }
 
         if (index !== null && this.currentUser.experience && this.currentUser.experience[index]) {
-            // Edit Mode
+            // Edit existing
             const item = this.currentUser.experience[index];
             roleInput.value = item.role || '';
             companyInput.value = item.company || '';
             indexInput.value = index;
-            title.textContent = 'Editar Experiencia';
+            formTitle.textContent = 'Editar Experiencia';
 
-            if (item.startDate) startInput.value = item.startDate;
-            if (item.endDate) endInput.value = item.endDate;
-            if (item.isCurrent) {
+            if (item.startDate || item.start_date) startInput.value = item.startDate || item.start_date || '';
+            if (item.endDate || item.end_date) endInput.value = item.endDate || item.end_date || '';
+            if (item.isCurrent || item.is_current) {
                 currentInput.checked = true;
                 endInput.value = '';
                 endInput.disabled = true;
+                if (endGroup) { endGroup.style.opacity = '0.5'; endGroup.style.pointerEvents = 'none'; }
             }
+            if (item.description && descInput) {
+                descInput.value = item.description;
+                if (descCount) descCount.textContent = item.description.length + '/2000';
+            }
+
+            // Show delete button
+            if (deleteBtn) deleteBtn.style.display = 'inline-flex';
         } else {
-            // Add Mode
-            title.textContent = 'Agregar Experiencia';
+            // Add new
+            formTitle.textContent = 'Nueva Experiencia';
+            if (deleteBtn) deleteBtn.style.display = 'none';
         }
 
-        modal.classList.add('active');
+        form.style.display = 'block';
+        // Scroll to form
+        setTimeout(() => form.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    },
+
+    renderExpTimeline() {
+        const container = document.getElementById('expTimeline');
+        if (!container) return;
+
+        const expList = this.currentUser.experience || [];
+
+        if (expList.length === 0) {
+            container.innerHTML = '<div style="color: #6c757d; font-size: 14px; padding: 8px 0;">No has agregado experiencia laboral aún.</div>';
+            return;
+        }
+
+        const formatPeriodLabel = (item) => {
+            if (item.period) return item.period;
+            const formatM = (iso) => {
+                if (!iso) return '';
+                const [y, m] = iso.split('-');
+                const d = new Date(parseInt(y), parseInt(m) - 1);
+                const s = d.toLocaleString('es-ES', { month: 'short', year: 'numeric' });
+                return s.charAt(0).toUpperCase() + s.slice(1);
+            };
+            const start = item.startDate || item.start_date || '';
+            const end = item.endDate || item.end_date || '';
+            const isCurr = item.isCurrent || item.is_current;
+            return `${formatM(start)} - ${isCurr ? 'Presente' : formatM(end)}`;
+        };
+
+        container.innerHTML = expList.map((exp, index) => {
+            const isCurrent = exp.isCurrent || exp.is_current;
+            const isLast = index === expList.length - 1;
+            const periodText = formatPeriodLabel(exp);
+            const initial = (exp.company || '?').charAt(0).toUpperCase();
+            const periodStyle = isCurrent
+                ? 'color: #1392ec; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;'
+                : 'color: #6c757d; font-weight: 500;';
+
+            return `
+            <div style="position: relative; display: flex; gap: 16px; margin-bottom: 0; padding-bottom: ${isLast ? '0' : '24px'};">
+                ${!isLast ? `<div style="position: absolute; left: 26px; top: 52px; bottom: 0; width: 2px; background: #E5E7EB;"></div>` : ''}
+                <div style="position: relative; flex-shrink: 0;">
+                    <div style="height: 52px; width: 52px; border-radius: 8px; background: #ffffff; border: 1px solid #E5E7EB; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; z-index: 10; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                        <span style="font-size: 20px; font-weight: 700; color: #6c757d;">${initial}</span>
+                    </div>
+                </div>
+                <div style="display: flex; flex-direction: column; flex: 1; padding-top: 4px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <h3 style="font-weight: 700; font-size: 16px; line-height: 1.3; color: #212529; margin: 0;">${exp.role || ''}</h3>
+                            <p style="color: #6c757d; font-size: 14px; margin: 2px 0 0;">${exp.company || ''}${exp.type ? ' \u2022 ' + exp.type : ''}</p>
+                        </div>
+                        <button onclick="app.editExpEntry(${index})" style="color: #9CA3AF; background: none; border: none; cursor: pointer; padding: 4px; border-radius: 50%; transition: color 0.15s;" onmouseenter="this.style.color='#1392ec'" onmouseleave="this.style.color='#9CA3AF'">
+                            <span class="material-icons" style="font-size: 20px;">edit</span>
+                        </button>
+                    </div>
+                    <p style="font-size: 12px; ${periodStyle} margin: 8px 0 0;">${periodText}</p>
+                </div>
+            </div>`;
+        }).join('');
+    },
+
+    editExpEntry(index) {
+        this._showExpForm(index);
     },
 
     closeEditExperience() {
         const modal = document.getElementById('editExperienceModal');
-        if (modal) modal.classList.remove('active');
+        if (modal) modal.style.display = 'none';
     },
 
     toggleExpEndDate() {
         const isCurrent = document.getElementById('expCurrent').checked;
         const endInput = document.getElementById('expEndDate');
-        endInput.disabled = isCurrent;
-        if (isCurrent) endInput.value = '';
+        const endGroup = document.getElementById('expEndDateGroup');
+        if (endInput) {
+            endInput.disabled = isCurrent;
+            if (isCurrent) endInput.value = '';
+        }
+        if (endGroup) {
+            endGroup.style.opacity = isCurrent ? '0.5' : '1';
+            endGroup.style.pointerEvents = isCurrent ? 'none' : 'auto';
+        }
     },
 
     saveExperience() {
-        const role = document.getElementById('expRole').value;
-        const company = document.getElementById('expCompany').value;
+        const form = document.getElementById('expEditForm');
+        // If form is hidden, nothing to save - just close
+        if (!form || form.style.display === 'none') {
+            this.closeEditExperience();
+            return;
+        }
+
+        const role = document.getElementById('expRole').value.trim();
+        const company = document.getElementById('expCompany').value.trim();
         const start = document.getElementById('expStartDate').value;
         const end = document.getElementById('expEndDate').value;
         const isCurrent = document.getElementById('expCurrent').checked;
         const indexStr = document.getElementById('expIndex').value;
+        const description = (document.getElementById('expDescription') || {}).value || '';
 
         if (!role || !company) {
-            this.showToast('Cargo y Empresa son obligatorios');
+            this.showToast('Cargo y Empresa son obligatorios', 'error');
             return;
         }
         if (!start) {
-            this.showToast('Fecha de inicio requerida');
+            this.showToast('Fecha de inicio requerida', 'error');
             return;
         }
         if (!isCurrent && !end) {
-            this.showToast('Fecha fin requerida');
+            this.showToast('Fecha fin requerida', 'error');
             return;
         }
 
-        // Format
+        // Format period string
         const formatMonth = (iso) => {
             if (!iso) return '';
             const [y, m] = iso.split('-');
             const date = new Date(parseInt(y), parseInt(m) - 1);
-            return date.toLocaleString('es-ES', { month: 'short', year: 'numeric' });
+            const s = date.toLocaleString('es-ES', { month: 'short', year: 'numeric' });
+            return s.charAt(0).toUpperCase() + s.slice(1);
         };
-        // Capitalize
-        const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
-        const periodStr = `${cap(formatMonth(start))} - ${isCurrent ? 'Presente' : cap(formatMonth(end))}`;
+        const periodStr = `${formatMonth(start)} - ${isCurrent ? 'Presente' : formatMonth(end)}`;
 
         const newItem = {
             role,
@@ -3215,13 +4022,11 @@ const app = {
             period: periodStr,
             startDate: start,
             endDate: isCurrent ? null : end,
-            isCurrent
+            isCurrent,
+            description
         };
 
         if (!Array.isArray(this.currentUser.experience)) {
-            // If it exists but is not an array (e.g. object), we might want to preserve it or just reset?
-            // Safest is to reset to array if it's garbage, or wrap it. 
-            // Given the error, it's likely garbage or {} from bad init.
             this.currentUser.experience = [];
         }
 
@@ -3234,7 +4039,12 @@ const app = {
 
         this.saveProfile();
         this.renderProfile();
-        this.closeEditExperience();
+        // Re-render timeline in modal
+        this.renderExpTimeline();
+        // Hide form, keep modal open to see updated timeline
+        const formEl = document.getElementById('expEditForm');
+        if (formEl) formEl.style.display = 'none';
+        this.showToast('Experiencia guardada');
     },
 
     // Legacy Support
@@ -3242,122 +4052,25 @@ const app = {
         this.openEditExperience();
     },
 
-    removeExperience(id) {
-        if (confirm('¿Eliminar experiencia?')) {
-            this.currentUser.experience = (this.currentUser.experience || []).filter(e => e.id !== id);
+    removeExperience() {
+        const indexStr = document.getElementById('expIndex').value;
+        if (indexStr === '') return;
+        if (!confirm('¿Eliminar esta experiencia?')) return;
+
+        const index = parseInt(indexStr);
+        if (this.currentUser.experience && this.currentUser.experience[index]) {
+            this.currentUser.experience.splice(index, 1);
             this.saveProfile();
             this.renderProfile();
+            this.renderExpTimeline();
+            const form = document.getElementById('expEditForm');
+            if (form) form.style.display = 'none';
+            this.showToast('Experiencia eliminada');
         }
     },
 
-    // ================= EDUCATION MODAL =================
-    openEditEducation(index = null) {
-        const modal = document.getElementById('editEducationModal');
-        if (!modal) return;
-
-        const degreeInput = document.getElementById('eduDegree');
-        const schoolInput = document.getElementById('eduSchool');
-        const startInput = document.getElementById('eduStartDate');
-        const endInput = document.getElementById('eduEndDate');
-        const currentInput = document.getElementById('eduCurrent');
-        const indexInput = document.getElementById('eduIndex');
-        const title = document.getElementById('eduModalTitle');
-
-        // Reset
-        degreeInput.value = '';
-        schoolInput.value = '';
-        startInput.value = '';
-        endInput.value = '';
-        currentInput.checked = false;
-        endInput.disabled = false;
-        indexInput.value = '';
-
-        if (index !== null && this.currentUser.education && this.currentUser.education[index]) {
-            const item = this.currentUser.education[index];
-            degreeInput.value = item.degree || '';
-            schoolInput.value = item.school || '';
-            indexInput.value = index;
-            title.textContent = 'Editar Educación';
-
-            if (item.startDate) startInput.value = item.startDate;
-            if (item.endDate) endInput.value = item.endDate;
-            if (item.isCurrent) {
-                currentInput.checked = true;
-                endInput.value = '';
-                endInput.disabled = true;
-            }
-        } else {
-            title.textContent = 'Agregar Educación';
-        }
-
-        modal.classList.add('active');
-    },
-
-    closeEditEducation() {
-        const modal = document.getElementById('editEducationModal');
-        if (modal) modal.classList.remove('active');
-    },
-
-    toggleEduEndDate() {
-        const isCurrent = document.getElementById('eduCurrent').checked;
-        const endInput = document.getElementById('eduEndDate');
-        endInput.disabled = isCurrent;
-        if (isCurrent) endInput.value = '';
-    },
-
-    saveEducation() {
-        const degree = document.getElementById('eduDegree').value;
-        const school = document.getElementById('eduSchool').value;
-        const start = document.getElementById('eduStartDate').value;
-        const end = document.getElementById('eduEndDate').value;
-        const isCurrent = document.getElementById('eduCurrent').checked;
-        const indexStr = document.getElementById('eduIndex').value;
-
-        if (!degree || !school) {
-            this.showToast('Título e Institución son obligatorios');
-            return;
-        }
-        if (!start) {
-            this.showToast('Fecha de inicio requerida');
-            return;
-        }
-        if (!isCurrent && !end) {
-            this.showToast('Fecha fin requerida');
-            return;
-        }
-
-        const formatMonth = (iso) => {
-            if (!iso) return '';
-            const [y, m] = iso.split('-');
-            const date = new Date(parseInt(y), parseInt(m) - 1);
-            return date.toLocaleString('es-ES', { month: 'short', year: 'numeric' });
-        };
-        const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-
-        const periodStr = `${cap(formatMonth(start))} - ${isCurrent ? 'Presente' : cap(formatMonth(end))}`;
-
-        const newItem = {
-            degree,
-            school,
-            period: periodStr,
-            startDate: start,
-            endDate: isCurrent ? null : end,
-            isCurrent
-        };
-
-        if (!this.currentUser.education) this.currentUser.education = [];
-
-        if (indexStr !== '') {
-            const index = parseInt(indexStr);
-            this.currentUser.education[index] = { ...this.currentUser.education[index], ...newItem };
-        } else {
-            this.currentUser.education.push({ ...newItem, id: Date.now() });
-        }
-
-        this.saveProfile();
-        this.renderProfile();
-        this.closeEditEducation();
-    },
+    // ================= EDUCATION MODAL (delegates to primary block) =================
+    // Primary education functions defined earlier (~line 1775). These are kept as pass-through for safety.
 
     // Legacy Support
     addEducation() {
@@ -3375,11 +4088,24 @@ const app = {
 
         // Pre-fill data
         document.getElementById('editName').value = this.currentUser.name || '';
-        document.getElementById('editPosition').value = this.currentUser.current_position || '';
-        document.getElementById('editSalary').value = this.currentUser.expected_salary ? new Intl.NumberFormat('es-CL').format(this.currentUser.expected_salary) : '';
-        document.getElementById('editCurrency').value = this.currentUser.currency || 'CLP';
-        document.getElementById('editModality').value = this.currentUser.work_modality || 'Remoto';
-        document.getElementById('editBio').value = this.currentUser.bio || '';
+        document.getElementById('editPosition').value = this.currentUser.current_position || this.currentUser.professional_title || '';
+        document.getElementById('editSalary').value = this.currentUser.expected_salary || '';
+        document.getElementById('editCurrency').value = this.currentUser.currency || 'usd';
+
+        // Show current profile photo
+        const photoPreview = document.getElementById('editPhotoPreview');
+        if (photoPreview) {
+            const photoUrl = this.currentUser.photo_url || this.currentUser.avatar_url || '';
+            if (photoUrl) {
+                photoPreview.style.backgroundImage = `url('${photoUrl}')`;
+            } else {
+                photoPreview.style.backgroundImage = 'none';
+                photoPreview.innerHTML = `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #f1f5f9;"><span class="material-icons" style="font-size: 48px; color: #94a3b8;">person</span></div>`;
+            }
+        }
+
+        // Reset pending photo
+        this._editPendingPhoto = null;
 
         // Load Countries (Reuse Onboarding Logic)
         this.renderCountries('editCountry');
@@ -3388,7 +4114,6 @@ const app = {
         const setCityAfterLoad = () => {
             const countrySelect = document.getElementById('editCountry');
             if (this.currentUser.country) {
-                // Try to find by ID or Name
                 for (let i = 0; i < countrySelect.options.length; i++) {
                     const opt = countrySelect.options[i];
                     if (opt.value === this.currentUser.country || opt.text === this.currentUser.country) {
@@ -3397,7 +4122,6 @@ const app = {
                     }
                 }
             }
-
             // Trigger City Load
             this.updateCities('editCountry', 'editCity').then(() => {
                 const citySelect = document.getElementById('editCity');
@@ -3407,208 +4131,327 @@ const app = {
             });
         };
 
-        // Small delay to ensure renderCountries fills the select
         setTimeout(setCityAfterLoad, 100);
-
-        modal.classList.add('active');
+        modal.style.display = 'flex';
     },
 
     closeEditPersonal() {
-        document.getElementById('editPersonalModal').classList.remove('active');
+        const modal = document.getElementById('editPersonalModal');
+        if (modal) modal.style.display = 'none';
     },
 
-    saveEditPersonal() {
-        const name = document.getElementById('editName').value;
+    handleEditPhotoUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) {
+            this.showToast('La imagen no puede superar 5MB', 'error');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const preview = document.getElementById('editPhotoPreview');
+            if (preview) {
+                preview.innerHTML = '';
+                preview.style.backgroundImage = `url('${e.target.result}')`;
+            }
+        };
+        reader.readAsDataURL(file);
+        this._editPendingPhoto = file;
+    },
+
+    async saveEditPersonal() {
+        const name = document.getElementById('editName').value.trim();
         if (!name) {
-            this.showToast('El nombre es obligatorio');
+            this.showToast('El nombre es obligatorio', 'error');
             return;
         }
 
-        const salaryStr = document.getElementById('editSalary').value.replace(/\./g, '');
+        const salaryVal = document.getElementById('editSalary').value.replace(/[^\d]/g, '');
+
+        // Upload photo if pending
+        if (this._editPendingPhoto && window.talentlyBackend && window.talentlyBackend.storage) {
+            const url = await window.talentlyBackend.storage.uploadImage(this._editPendingPhoto);
+            if (url) {
+                this.currentUser.photo_url = url;
+            }
+            this._editPendingPhoto = null;
+        }
 
         this.currentUser = {
             ...this.currentUser,
             name: name,
-            current_position: document.getElementById('editPosition').value,
-            country: document.getElementById('editCountry').value, // This stores ID now
+            current_position: document.getElementById('editPosition').value.trim(),
+            country: document.getElementById('editCountry').value,
             city: document.getElementById('editCity').value,
-            expected_salary: salaryStr ? parseInt(salaryStr) : 0,
-            currency: document.getElementById('editCurrency').value,
-            work_modality: document.getElementById('editModality').value,
-            bio: document.getElementById('editBio').value
+            expected_salary: salaryVal ? parseInt(salaryVal) : 0,
+            currency: document.getElementById('editCurrency').value
         };
 
         this.saveProfile();
         this.renderProfile();
         this.closeEditPersonal();
+        this.showToast('Perfil actualizado');
     },
 
     // Legacy function support (redirect to new)
     editPersonalInfo() {
-        this.openEditPersonal();
+        this.openEditProfileFullScreen();
+    },
+    openEditPersonal() {
+        this.openEditProfileFullScreen();
     },
 
-    renderProfile() {
-        // Use Real User Data if available, otherwise fallback to mock
-        const profileData = this.currentUser || {};
+    openEditProfileFullScreen() {
+        if (!this.currentUser) return;
+        const modal = document.getElementById('editProfileFullScreen');
+        if (modal) {
+            const bioEl = document.getElementById('editProfileBio');
+            if (bioEl) bioEl.value = this.currentUser.about || this.currentUser.bio || '';
 
-        // console.log('✓ renderProfile() EJECUTÁNDOSE (línea 2980)');
-
-        // 1. Update Header Info
-        const profileHero = document.querySelector('.profile-hero');
-        if (profileHero) {
-            // Update Name
-            const nameEl = profileHero.querySelector('h2');
-            if (nameEl) nameEl.textContent = profileData.name || 'Usuario';
-
-            // Update Position
-            const titleEl = profileHero.querySelector('p');
-            if (titleEl) titleEl.textContent = profileData.current_position || 'Sin cargo definido';
-        }
-
-        // Update Avatar - PRIORIZAR avatar_url sobre image y EVITAR blob: URLs
-        const imageUrl = profileData.avatar_url || profileData.image;
-        const avatarElements = document.querySelectorAll('.profile-avatar-large, .profile-image-large, .preview-image');
-
-        // console.log('renderProfile() - Avatar info:', {
-        //     imageUrl: imageUrl?.substring(0, 80) + '...',
-        //     isBlob: imageUrl?.startsWith('blob:'),
-        //     elementos: avatarElements.length
-        // });
-
-        if (imageUrl && !imageUrl.startsWith('blob:')) {
-            avatarElements.forEach(el => {
-                el.src = imageUrl;
-                // console.log('✓ Avatar actualizado:', el.className);
-            });
-        } else if (!imageUrl || imageUrl.startsWith('blob:')) {
-            // Fallback a avatar generado
-            const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.name || 'User')}&background=random`;
-            avatarElements.forEach(el => el.src = fallbackUrl);
-            // console.log('⚠ Usando fallback avatar (sin URL válida o blob: temporal)');
-        }
-
-        // 2. Update Personal Information List
-        const updateInfoRow = (label, value) => {
-            const rows = document.querySelectorAll('.profile-info-row');
-            for (const row of rows) {
-                const labelEl = row.querySelector('.profile-info-label');
-                if (labelEl && labelEl.textContent.includes(label)) {
-                    const valueEl = row.querySelector('.profile-info-value');
-                    if (valueEl) valueEl.textContent = value;
-                    break;
+            // Populating Experience
+            const expContainer = document.getElementById('unifiedEditExperienceList');
+            if (expContainer) {
+                const exps = this.currentUser.experience || [];
+                if (exps.length === 0) {
+                    expContainer.innerHTML = '<p class="text-slate-500 text-sm">Sin experiencia registrada.</p>';
+                } else {
+                    expContainer.innerHTML = exps.map(exp => `
+                        <div class="grid grid-cols-[40px_1fr] gap-x-2 relative group mb-2">
+                            <div class="flex flex-col items-center">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                    <span class="material-symbols-outlined text-xl">work</span>
+                                </div>
+                                <div class="w-[2px] bg-slate-100 dark:bg-slate-800 h-full"></div>
+                            </div>
+                            <div class="flex flex-1 flex-col pb-4 pt-1 pr-8">
+                                <p class="text-slate-900 dark:text-slate-100 text-base font-semibold">${exp.position}</p>
+                                <p class="text-slate-500 dark:text-slate-400 text-sm">${exp.company} • ${exp.start_date || ''} - ${exp.end_date || 'Presente'}</p>
+                                <button onclick="app.removeExperience('${exp.id}')" class="absolute right-0 top-1 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined">delete</span></button>
+                            </div>
+                        </div>`).join('');
                 }
             }
-        };
 
-        // Prepare Location
-        let locationString = '';
-        let countryDisplay = profileData.country || '';
-        // Try to resolve Country ID to Name
-        if (this.referenceData && this.referenceData.countries) {
-            const countryObj = this.referenceData.countries.find(c => c.id === countryDisplay || c.name === countryDisplay);
-            if (countryObj) countryDisplay = countryObj.name;
+            // Populating Education
+            const eduContainer = document.getElementById('unifiedEditEducationList');
+            if (eduContainer) {
+                const edus = this.currentUser.education || [];
+                if (edus.length === 0) {
+                    eduContainer.innerHTML = '<p class="text-slate-500 text-sm">Sin educación registrada.</p>';
+                } else {
+                    eduContainer.innerHTML = edus.map(edu => `
+                        <div class="grid grid-cols-[40px_1fr] gap-x-2 relative group mb-2">
+                            <div class="flex flex-col items-center">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                    <span class="material-symbols-outlined text-xl">school</span>
+                                </div>
+                                <div class="w-[2px] bg-slate-100 dark:bg-slate-800 h-full"></div>
+                            </div>
+                            <div class="flex flex-1 flex-col pb-4 pt-1 pr-8">
+                                <p class="text-slate-900 dark:text-slate-100 text-base font-semibold">${edu.degree}</p>
+                                <p class="text-slate-500 dark:text-slate-400 text-sm">${edu.institution} • ${edu.start_date || ''} - ${edu.end_date || 'Presente'}</p>
+                                <button onclick="app.removeEducation('${edu.id}')" class="absolute right-0 top-1 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined">delete</span></button>
+                            </div>
+                        </div>`).join('');
+                }
+            }
+
+            // Populating Skills
+            const skillsContainer = document.getElementById('unifiedEditSkillsChips');
+            if (skillsContainer) {
+                const skills = this.currentUser.skills || [];
+                if (skills.length === 0) {
+                    skillsContainer.innerHTML = '<p class="text-slate-500 text-sm">Sin habilidades. Añade algunas.</p>';
+                } else {
+                    skillsContainer.innerHTML = skills.map(s => `
+                        <div class="flex items-center gap-1 px-3 py-1.5 bg-primary text-white rounded-full text-sm font-medium">
+                            <span>${s}</span>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            modal.style.zIndex = '99999';
         }
-        if (profileData.city) {
-            locationString = `${profileData.city}, ${countryDisplay}`;
-        } else {
-            locationString = countryDisplay || 'No especificada';
+    },
+
+    closeEditProfileFullScreen() {
+        const modal = document.getElementById('editProfileFullScreen');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    },
+
+    async saveUnifiedProfile() {
+        if (!this.currentUser) return;
+        const bioEl = document.getElementById('editProfileBio');
+        if (bioEl) {
+            this.currentUser.about = bioEl.value;
+            this.currentUser.bio = bioEl.value;
+        }
+        this.saveProfile();
+        this.renderProfile();
+        this.closeEditProfileFullScreen();
+        this.showToast('Perfil actualizado');
+    },
+
+
+    renderProfile() {
+        const profileData = this.currentUser || {};
+
+        // 1. Name & Title (Stitch)
+        const nameEl = document.getElementById('profileDisplayName');
+        if (nameEl) nameEl.textContent = profileData.name || 'Usuario';
+        const titleEl = document.getElementById('profileDisplayTitle');
+        if (titleEl) {
+            let locationString = '';
+            let countryDisplay = profileData.country || '';
+            if (this.referenceData && this.referenceData.countries) {
+                const countryObj = this.referenceData.countries.find(c => c.id === countryDisplay || c.name === countryDisplay);
+                if (countryObj) countryDisplay = countryObj.name;
+            }
+            if (profileData.city) locationString = ` • ${profileData.city}, ${countryDisplay}`;
+            else if (countryDisplay) locationString = ` • ${countryDisplay}`;
+            titleEl.textContent = (profileData.current_position || 'Sin cargo definido') + locationString;
         }
 
-        updateInfoRow('Ubicación', locationString);
-        if (profileData.birth_date) updateInfoRow('Fecha de nacimiento', profileData.birth_date);
-        if (profileData.email) updateInfoRow('Email', profileData.email);
-        updateInfoRow('Disponibilidad', profileData.availability || 'No especificada');
-        updateInfoRow('Modalidad', profileData.work_modality || 'No especificada');
+        // 2. Avatar
+        const imageUrl = profileData.avatar_url || profileData.image;
+        const avatarEl = document.getElementById('profileAvatarImg');
+        if (avatarEl) {
+            if (imageUrl && !imageUrl.startsWith('blob:')) {
+                avatarEl.src = imageUrl;
+            } else {
+                avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.name || 'User')}&background=1392ec&color=fff&size=200`;
+            }
+        }
+        // Also update preview images
+        document.querySelectorAll('.preview-image').forEach(el => {
+            if (avatarEl) el.src = avatarEl.src;
+        });
 
-        if (profileData.expected_salary) {
-            const formatted = new Intl.NumberFormat('es-CL').format(profileData.expected_salary);
-            updateInfoRow('Pretensión salarial', `$${formatted} ${profileData.currency || 'CLP'}`);
-        } else {
-            updateInfoRow('Pretensión salarial', 'No especificada');
+        // 3. Top Tags (first 3 skills)
+        const topTags = document.getElementById('profileTopTags');
+        if (topTags) {
+            const skills = profileData.skills || [];
+            if (skills.length > 0) {
+                topTags.innerHTML = skills.map(s => `<span style="padding: 4px 12px; background: #EFF6FF; color: #3B82F6; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid #DBEAFE;">${s}</span>`).join('');
+            } else {
+                topTags.innerHTML = '';
+            }
         }
 
-        // Button Listeners for Personal Info
-        const infoSection = document.querySelector('.profile-section:first-of-type'); // Assuming first section is personal info
-        if (infoSection) {
-            const editBtn = infoSection.querySelector('.edit-section-btn');
-            if (editBtn) editBtn.onclick = () => this.editPersonalInfo();
+        // 4. Bio
+        const bioEl = document.getElementById('profileBioText');
+        if (bioEl) bioEl.textContent = profileData.bio || 'Sin descripción.';
+
+        // 4.5 CV Document State
+        const cvViewState = document.getElementById('cvViewState');
+        const cvEmptyState = document.getElementById('cvEmptyState');
+        const cvUploadBtn = document.getElementById('profileCvUploadBtn');
+
+        if (cvViewState && cvEmptyState) {
+            if (profileData.cv_url) {
+                cvViewState.style.display = 'flex';
+                cvEmptyState.style.display = 'none';
+                if (cvUploadBtn) cvUploadBtn.style.display = 'block';
+
+                const fileNameEl = cvViewState.querySelector('p:first-child');
+                if (fileNameEl) {
+                    try {
+                        const urlParts = profileData.cv_url.split('/');
+                        const rawName = decodeURIComponent(urlParts[urlParts.length - 1]);
+                        const cleanName = rawName.includes('_') ? rawName.substring(rawName.indexOf('_') + 1) : rawName;
+                        fileNameEl.textContent = cleanName || 'Mi_Curriculum.pdf';
+                    } catch (e) {
+                        fileNameEl.textContent = 'Mi_Curriculum.pdf';
+                    }
+                }
+            } else {
+                cvViewState.style.display = 'none';
+                cvEmptyState.style.display = 'block';
+                if (cvUploadBtn) cvUploadBtn.style.display = 'none';
+            }
         }
 
-
-        // 3. Update Skills
-        const skillsContainer = document.querySelector('.skills-display');
+        // 5. Skills (full list - Stitch rounded pills)
+        const skillsContainer = document.getElementById('profileSkillsDisplay');
         if (skillsContainer) {
             const skills = profileData.skills || [];
             if (skills.length > 0) {
-                skillsContainer.innerHTML = skills.map(s => `<span class="skill-badge">${s}</span>`).join('');
+                skillsContainer.innerHTML = skills.map(s => `<span style="padding: 6px 12px; background: #F3F4F6; color: #1F2937; border-radius: 8px; font-size: 14px; font-weight: 500;">${s}</span>`).join('');
             } else {
-                skillsContainer.innerHTML = '<span style="color: var(--text-secondary); font-size: 14px;">Sin habilidades registradas</span>';
-            }
-            // Add Listener to localized edit button
-            const section = skillsContainer.closest('.profile-section');
-            if (section) {
-                const editBtn = section.querySelector('.edit-section-btn');
-                if (editBtn) editBtn.onclick = () => this.editSkills();
+                skillsContainer.innerHTML = '<span style="color: #6B7280; font-size: 14px;">Sin habilidades registradas</span>';
             }
         }
 
-        // 4. Update About Me
-        const aboutMeEl = document.querySelector('.about-text');
-        if (aboutMeEl) {
-            aboutMeEl.textContent = profileData.bio || 'Sin descripción.';
-        }
-
-        // Render Experience
+        // 6. Experience (Stitch cards with colored initials)
         const expList = document.getElementById('experienceList');
         if (expList) {
             let experience = profileData.experience || [];
-            if (typeof experience === 'string') {
-                try { experience = JSON.parse(experience); } catch (e) { experience = []; }
-            }
+            if (typeof experience === 'string') { try { experience = JSON.parse(experience); } catch (e) { experience = []; } }
             if (!Array.isArray(experience)) experience = [];
 
             if (experience.length === 0) {
-                expList.innerHTML = '<div style="color: var(--text-secondary); font-size: 14px; text-align: center; padding: 20px;">Sin experiencia registrada</div>';
+                expList.innerHTML = '<div style="color: #6B7280; font-size: 14px; text-align: center; padding: 20px;">Sin experiencia registrada</div>';
             } else {
-                expList.innerHTML = experience.map((exp, index) => `
-                    <div class="profile-info-row">
-                        <div>
-                            <div style="font-weight: 600; color: var(--text-primary);">${exp.role}</div>
-                            <div style="font-size: 13px; color: var(--text-secondary);">${exp.company} • ${exp.period}</div>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                             <button onclick="app.openEditExperience(${index})" style="color: var(--primary); background: none; border: none; font-size: 18px; cursor: pointer;">✎</button>
-                             <button onclick="app.removeExperience(${exp.id})" style="color: var(--danger); background: none; border: none; font-size: 20px; cursor: pointer;">×</button>
+                const colors = ['#EEF2FF', '#FCE7F3', '#ECFDF5', '#FEF3C7', '#F0F9FF'];
+                const textColors = ['#4F46E5', '#DB2777', '#059669', '#D97706', '#0284C7'];
+                expList.innerHTML = experience.map((exp, index) => {
+                    const initial = (exp.company || 'E')[0].toUpperCase();
+                    const bg = colors[index % colors.length];
+                    const tc = textColors[index % textColors.length];
+                    const isCurrent = exp.isCurrent || exp.is_current;
+                    const desc = exp.description ? `<p style="font-size: 12px; color: #6B7280; margin: 8px 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5;">${exp.description}</p>` : '';
+                    return `
+                    <div style="display: flex; gap: 16px;">
+                        <div style="flex-shrink: 0; width: 48px; height: 48px; background: ${bg}; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: ${tc}; font-weight: 700; font-size: 18px;">${initial}</div>
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <h4 style="font-weight: 600; font-size: 16px; color: #1F2937; margin: 0;">${exp.role || ''}</h4>
+                                <button onclick="app.openEditExperience(${index})" style="background: none; border: none; color: #9CA3AF; cursor: pointer; padding: 2px;" onmouseenter="this.style.color='#6B7280'" onmouseleave="this.style.color='#9CA3AF'">
+                                    <span class="material-icons" style="font-size: 16px;">edit</span>
+                                </button>
+                            </div>
+                            <p style="font-size: 14px; font-weight: 500; color: #4B5563; margin: 2px 0 0;">${exp.company || ''}</p>
+                            <p style="font-size: 12px; color: ${isCurrent ? '#3B82F6' : '#6B7280'}; margin: 4px 0 0; font-weight: ${isCurrent ? '500' : '400'};">${exp.period || ''}</p>${desc}
                         </div>
                     </div>
-                `).join('');
+                    ${index < experience.length - 1 ? '<div style="height: 1px; background: #E5E7EB; width: 100%;"></div>' : ''}`;
+                }).join('');
             }
         }
 
-        // Render Education
+        // 7. Education (Stitch cards with school icon)
         const eduList = document.getElementById('educationList');
         if (eduList) {
             let education = profileData.education || [];
-            if (typeof education === 'string') {
-                try { education = JSON.parse(education); } catch (e) { education = []; }
-            }
+            if (typeof education === 'string') { try { education = JSON.parse(education); } catch (e) { education = []; } }
             if (!Array.isArray(education)) education = [];
 
             if (education.length === 0) {
-                eduList.innerHTML = '<div style="color: var(--text-secondary); font-size: 14px; text-align: center; padding: 20px;">Sin educación registrada</div>';
+                eduList.innerHTML = '<div style="color: #6B7280; font-size: 14px; text-align: center; padding: 20px;">Sin educación registrada</div>';
             } else {
                 eduList.innerHTML = education.map((edu, index) => `
-                    <div class="profile-info-row">
-                        <div>
-                            <div style="font-weight: 600; color: var(--text-primary);">${edu.degree}</div>
-                            <div style="font-size: 13px; color: var(--text-secondary);">${edu.school} • ${edu.period}</div>
+                    <div style="display: flex; gap: 16px;">
+                        <div style="flex-shrink: 0; width: 48px; height: 48px; background: #F3F4F6; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                            <span class="material-icons" style="color: #6B7280;">school</span>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <button onclick="app.openEditEducation(${index})" style="color: var(--primary); background: none; border: none; font-size: 18px; cursor: pointer;">✎</button>
-                            <button onclick="app.removeEducation(${edu.id})" style="color: var(--danger); background: none; border: none; font-size: 20px; cursor: pointer;">×</button>
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <h4 style="font-weight: 600; font-size: 16px; color: #1F2937; margin: 0;">${edu.degree || ''}</h4>
+                                <button onclick="app.openEditEducation(${index})" style="background: none; border: none; color: #9CA3AF; cursor: pointer; padding: 2px;" onmouseenter="this.style.color='#6B7280'" onmouseleave="this.style.color='#9CA3AF'">
+                                    <span class="material-icons" style="font-size: 16px;">edit</span>
+                                </button>
+                            </div>
+                            <p style="font-size: 14px; font-weight: 500; color: #4B5563; margin: 2px 0 0;">${edu.school || ''}</p>
+                            <p style="font-size: 12px; color: #6B7280; margin: 4px 0 0;">${edu.period || ''}</p>
                         </div>
                     </div>
+                    ${index < education.length - 1 ? '<div style="height: 1px; background: #E5E7EB; width: 100%;"></div>' : ''}
                 `).join('');
             }
         }
@@ -3656,12 +4499,42 @@ const app = {
 
 
     appendMessageToUI(text, type) {
-        const messagesContainer = document.getElementById('chatMessages');
-        const messageHTML = `
-            <div class="message ${type}">
-                <div class="message-bubble">${text}</div>
-            </div>
-        `;
+        const messagesContainer = document.getElementById('chatMessages') || document.getElementById('companyChatMessages');
+        if (!messagesContainer) return;
+
+        let messageHTML = '';
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+        if (type === 'sent') {
+            messageHTML = `
+            <div style="display: flex; align-items: flex-end; gap: 12px; max-width: 85%; align-self: flex-end;">
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                    <div style="background: #1392ec; padding: 14px; border-radius: 16px 16px 4px 16px; box-shadow: 0 2px 8px rgba(19,146,236,0.2);">
+                        <p style="font-size: 15px; line-height: 1.5; color: #ffffff; font-weight: 500; margin: 0;">${text}</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 4px; margin-right: 4px;">
+                        <span style="font-size: 10px; color: #868E96;">${timeStr}</span>
+                        <span class="material-icons" style="font-size: 14px; color: #1392ec;">done_all</span>
+                    </div>
+                </div>
+            </div>`;
+        } else if (type === 'received') {
+            messageHTML = `
+            <div style="display: flex; align-items: flex-end; gap: 12px; max-width: 85%; align-self: flex-start;">
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div style="background: #F1F3F5; padding: 14px; border-radius: 16px 16px 16px 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+                        <p style="font-size: 15px; line-height: 1.5; color: #343A40; margin: 0;">${text}</p>
+                    </div>
+                </div>
+            </div>`;
+        } else if (type === 'error') {
+            messageHTML = `
+            <div style="display: flex; justify-content: center; padding: 8px;">
+                <span style="font-size: 13px; color: #ef4444; font-weight: 500;">${text}</span>
+            </div>`;
+        }
+
         messagesContainer.insertAdjacentHTML('beforeend', messageHTML);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     },
@@ -3767,7 +4640,15 @@ const app = {
 
         // Abrir filtros
         view.style.transform = 'translateY(0)';
-        this.loadFilterOptions();
+
+        if (isCompany) {
+            // Inicializar slider y cargar sugerencias de skills
+            this.updateSalarySlider();
+            this._loadCompanyFilterSkillSuggestions();
+            this._renderFilterSkillTags();
+        } else {
+            this.loadFilterOptions();
+        }
     },
 
     closeFilters() {
@@ -3781,7 +4662,13 @@ const app = {
         const supabase = window.supabaseClient;
         if (!supabase) return;
 
-        // 1. MODALIDAD - Desde BD
+        const chipStyle = "padding: 10px 16px; border-radius: 12px; background: #ffffff; border: 1px solid #e5e7eb; color: #64748b; font-size: 14px; font-weight: 500; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s; font-family: 'Inter', sans-serif; white-space: nowrap;";
+        const chipIconStyle = "display: flex; align-items: center; gap: 8px; " + chipStyle;
+
+        // Icon mapping for modalities
+        const modalityIcons = { 'remoto': 'home_work', 'hibrido': 'commute', 'presencial': 'apartment', 'remote': 'home_work', 'hybrid': 'commute', 'onsite': 'apartment' };
+
+        // 1. MODALIDAD - Desde BD (with icons)
         const modalityContainer = document.getElementById('filterModalityChips');
         if (modalityContainer) {
             try {
@@ -3792,8 +4679,9 @@ const app = {
                         const btn = document.createElement('button');
                         btn.className = 'filter-chip';
                         btn.onclick = () => this.toggleFilterChip(btn, 'work_modality', m.slug);
-                        btn.textContent = m.name;
-                        btn.style.cssText = 'padding: 10px 20px; border: 1.5px solid var(--border); border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; background: var(--bg); color: var(--text-primary); transition: all 0.2s;';
+                        const icon = modalityIcons[m.slug] || modalityIcons[m.name?.toLowerCase()] || '';
+                        btn.innerHTML = icon ? `<span class="material-icons" style="font-size: 18px;">${icon}</span>${m.name}` : m.name;
+                        btn.style.cssText = icon ? chipIconStyle : chipStyle;
                         modalityContainer.appendChild(btn);
                     });
                 }
@@ -3802,87 +4690,170 @@ const app = {
             }
         }
 
-        // 2. EDUCACIÓN - Desde BD
-        const eduContainer = document.getElementById('filterEducationChips');
-        if (eduContainer) {
-            try {
-                const { data: levels } = await window.talentlyBackend.reference.getEducationLevels();
-                if (levels && levels.length > 0) {
-                    eduContainer.innerHTML = '';
-                    levels.forEach(l => {
+        // Additional filters loaded dynamically
+        if (window.talentlyBackend?.reference) {
+            // Seniority
+            const expGrid = document.getElementById('filterExperienceGrid');
+            if (expGrid && typeof window.talentlyBackend.reference.getSeniorityLevels === 'function') {
+                window.talentlyBackend.reference.getSeniorityLevels().then(({ data }) => {
+                    if (data && data.length) {
+                        expGrid.innerHTML = '';
+                        data.forEach(lvl => {
+                            const btn = document.createElement('button');
+                            btn.className = 'filter-exp-card';
+                            btn.onclick = () => this.selectFilterExperience(btn, lvl.dbSlug || lvl.slug);
+                            btn.style.cssText = `display:flex;flex-direction:column;align-items:center;padding:12px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;cursor:pointer;font-family:'Inter', sans-serif;`;
+                            btn.innerHTML = `<span style="font-size:12px;text-transform:uppercase;color:#64748b;font-weight:500;">${lvl.name}</span>`;
+                            expGrid.appendChild(btn);
+                        });
+                    }
+                }).catch(() => { });
+            }
+            // Job Types
+            const jobContainer = document.getElementById('filterJobTypeChips');
+            if (jobContainer && window.supabaseClient) {
+                window.supabaseClient.from('job_types').select('*').then(({ data }) => {
+                    let d = data || [];
+                    if (d.length === 0) d = [
+                        { name: 'Full-time', slug: 'full-time' }, { name: 'Part-time', slug: 'part-time' },
+                        { name: 'Freelance', slug: 'freelance' }
+                    ];
+                    jobContainer.innerHTML = '';
+                    d.forEach(jt => {
                         const btn = document.createElement('button');
                         btn.className = 'filter-chip';
-                        btn.onclick = () => this.toggleFilterChip(btn, 'education_level', l.slug);
-                        btn.textContent = l.name;
-                        btn.style.cssText = 'padding: 10px 20px; border: 1.5px solid var(--border); border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; background: var(--bg); color: var(--text-primary); transition: all 0.2s;';
-                        eduContainer.appendChild(btn);
+                        btn.onclick = () => this.toggleFilterChip(btn, 'job_type', jt.slug);
+                        btn.style.cssText = chipStyle;
+                        btn.textContent = jt.name;
+                        jobContainer.appendChild(btn);
                     });
-                }
-            } catch (e) {
-                console.error('Error loading education levels:', e);
+                }).catch(() => { });
             }
         }
 
-        // 3. EXPERIENCIA - Desde BD
-        const expContainer = document.getElementById('filterExperienceChips');
-        if (expContainer) {
-            try {
-                const { data: ranges } = await window.talentlyBackend.reference.getExperienceRanges();
-                if (ranges && ranges.length > 0) {
-                    expContainer.innerHTML = '';
-                    ranges.forEach(r => {
-                        const btn = document.createElement('button');
-                        btn.className = 'filter-chip';
-                        btn.onclick = () => this.toggleFilterChip(btn, 'experience_range', r.slug);
-                        btn.textContent = r.name;
-                        btn.style.cssText = 'padding: 10px 20px; border: 1.5px solid var(--border); border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; background: var(--bg); color: var(--text-primary); transition: all 0.2s;';
-                        expContainer.appendChild(btn);
-                    });
-                }
-            } catch (e) {
-                console.error('Error loading experience ranges:', e);
-            }
+        // 2. Load Categories
+        this.loadFilterCategories();
+    },
+
+    handleSalaryTrackClick(e, type) {
+        const track = e.currentTarget;
+        const rect = track.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const percent = Math.max(0, Math.min(1, clickX / rect.width));
+        const clickedValue = percent * 15000;
+
+        let minEl, maxEl;
+        if (type === 'candidate') {
+            minEl = document.getElementById('filterSalaryMinRange');
+            maxEl = document.getElementById('filterSalaryMaxRange');
+        } else {
+            minEl = document.getElementById('companyFilterSalaryMin');
+            maxEl = document.getElementById('companyFilterSalaryMax');
         }
 
-        // 4. Countries (DB)
-        const countrySelect = document.getElementById('filterCountry');
-        if (countrySelect && countrySelect.options.length <= 1) {
-            try {
-                const { data: countries } = await supabase.from('countries').select('id, name').order('name');
-                if (countries) {
-                    countries.forEach(c => {
-                        const opt = document.createElement('option');
-                        opt.value = c.id;
-                        opt.textContent = c.name;
-                        countrySelect.appendChild(opt);
-                    });
-                }
-            } catch (e) {
-                console.warn('Error fetching countries:', e);
-            }
+        if (!minEl || !maxEl) return;
+        const minVal = parseInt(minEl.value) || 0;
+        const maxVal = parseInt(maxEl.value) || 0;
+
+        // Snap to nearest
+        if (Math.abs(clickedValue - minVal) < Math.abs(clickedValue - maxVal)) {
+            minEl.value = Math.round(clickedValue / 500) * 500;
+            minEl.style.zIndex = '4'; maxEl.style.zIndex = '3';
+        } else {
+            maxEl.value = Math.round(clickedValue / 500) * 500;
+            maxEl.style.zIndex = '4'; minEl.style.zIndex = '3';
         }
 
-        // 5. Skills (DB)
-        const skillsContainer = document.getElementById('filterSkillsChips');
-        if (skillsContainer) { // Always refresh skills to avoid "Loading..." stuck
-            try {
-                const { data: skills } = await supabase.from('skills').select('id, name').order('name').limit(30);
-                if (skills && skills.length > 0) {
-                    skillsContainer.innerHTML = '';
-                    skills.forEach(s => {
-                        const btn = document.createElement('button');
-                        btn.className = 'filter-chip';
-                        btn.textContent = s.name;
-                        btn.style.cssText = 'padding: 10px 20px; border: 1.5px solid var(--border); border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; background: var(--bg); color: var(--text-primary); transition: all 0.2s;';
-                        btn.onclick = () => this.toggleFilterChip(btn, 'skills', s.name);
-                        skillsContainer.appendChild(btn);
-                    });
-                } else {
-                    skillsContainer.innerHTML = '<span style="font-size: 13px; color: var(--text-secondary);">Sin habilidades disponibles</span>';
-                }
-            } catch (e) {
-                skillsContainer.innerHTML = '<span style="font-size: 13px; color: var(--text-secondary);">Error al cargar habilidades</span>';
+        if (type === 'candidate') this.updateCandidateSalarySlider(null, 'track');
+        else this.updateSalarySlider();
+    },
+
+    async loadFilterCategories() {
+        const categoryContainer = document.getElementById('filterCategoryChips');
+        if (!categoryContainer || !window.talentlyBackend?.isReady) return;
+        const chipStyle = "padding: 10px 16px; border-radius: 12px; background: #ffffff; border: 1px solid #e5e7eb; color: #64748b; font-size: 14px; font-weight: 500; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s; font-family: 'Inter', sans-serif; white-space: nowrap;";
+
+        try {
+            const { data: areas } = await window.talentlyBackend.reference.getAreas();
+            if (areas && areas.length > 0) {
+                categoryContainer.innerHTML = '';
+                areas.forEach(area => {
+                    const btn = document.createElement('button');
+                    btn.className = 'filter-chip';
+                    btn.onclick = () => this.toggleFilterChip(btn, 'category', area.id);
+                    btn.textContent = area.name;
+                    btn.style.cssText = chipStyle;
+                    categoryContainer.appendChild(btn);
+                });
             }
+        } catch (e) {
+            console.error('Error loading filter categories:', e);
+        }
+    },
+
+    updateCandidateSalarySlider(el, source) {
+        const minRange = document.getElementById('filterSalaryMinRange');
+        const maxRange = document.getElementById('filterSalaryMaxRange');
+        const minText = document.getElementById('filterSalaryMin');
+        const maxText = document.getElementById('filterSalaryMax');
+        const fill = document.getElementById('candidateSalaryFill');
+        if (!minRange || !maxRange || !minText || !maxText) return;
+
+        let minVal = parseInt(minRange.value) || 0;
+        let maxVal = parseInt(maxRange.value) || 0;
+
+        if (source === 'minText') {
+            minVal = parseInt(el.value) || 0;
+            minRange.value = minVal;
+        } else if (source === 'maxText') {
+            maxVal = parseInt(el.value) || 0;
+            maxRange.value = maxVal;
+        } else {
+            minText.value = minVal === 0 ? '' : minVal;
+            maxText.value = maxVal === 15000 ? '' : maxVal;
+        }
+
+        // Prevent crossing
+        if (minVal > maxVal && source !== 'maxText') {
+            maxVal = minVal;
+            maxRange.value = maxVal;
+            if (source !== 'maxText') maxText.value = maxVal;
+        } else if (minVal > maxVal && source === 'maxText') {
+            minVal = maxVal;
+            minRange.value = minVal;
+            if (source !== 'minText') minText.value = minVal;
+        }
+
+        const range = 15000;
+        const leftPct = Math.max(0, Math.min(100, (minVal / range) * 100));
+        const rightPct = Math.max(0, Math.min(100, ((range - maxVal) / range) * 100));
+
+        if (fill) {
+            fill.style.left = `${leftPct}%`;
+            fill.style.right = `${rightPct}%`;
+        }
+    },
+
+    selectFilterExperience(element, value) {
+        // Radio-like single select for experience cards
+        document.querySelectorAll('#filterExperienceGrid .filter-exp-card').forEach(card => {
+            card.classList.remove('selected');
+            card.style.background = '#ffffff';
+            card.style.color = '#64748b';
+            card.style.borderColor = '#e5e7eb';
+        });
+
+        if (this._selectedFilterExp === value) {
+            // Deselect if clicking same
+            this._selectedFilterExp = null;
+            this.activeFilters.experience_range = [];
+        } else {
+            element.classList.add('selected');
+            element.style.background = 'rgba(19,146,236,0.06)';
+            element.style.color = '#1392ec';
+            element.style.borderColor = '#1392ec';
+            this._selectedFilterExp = value;
+            this.activeFilters.experience_range = [value];
         }
     },
 
@@ -3915,51 +4886,218 @@ const app = {
     },
 
     clearAllFilters() {
-        // Reset all filter chips
+        // Reset candidate filter chips (Stitch solid pills)
         document.querySelectorAll('#filtersView .filter-chip.selected').forEach(chip => {
             chip.classList.remove('selected');
-            chip.style.background = 'var(--bg)';
-            chip.style.color = 'var(--text-primary)';
-            chip.style.borderColor = 'var(--border)';
+            chip.style.background = '#ffffff';
+            chip.style.color = '#64748b';
+            chip.style.borderColor = '#e5e7eb';
         });
 
-        // Reset salary inputs
+        // Reset candidate experience radio cards
+        document.querySelectorAll('#filterExperienceGrid .filter-exp-card').forEach(card => {
+            card.classList.remove('selected');
+            card.style.background = '#ffffff';
+            card.style.color = '#64748b';
+            card.style.borderColor = '#e5e7eb';
+        });
+        this._selectedFilterExp = null;
+
+        // Reset candidate salary inputs
         const salaryMin = document.getElementById('filterSalaryMin');
         const salaryMax = document.getElementById('filterSalaryMax');
         if (salaryMin) salaryMin.value = '';
         if (salaryMax) salaryMax.value = '';
+        const salaryMinR = document.getElementById('filterSalaryMinRange');
+        const salaryMaxR = document.getElementById('filterSalaryMaxRange');
+        if (salaryMinR) salaryMinR.value = '0';
+        if (salaryMaxR) salaryMaxR.value = '15000';
+        if (salaryMinR) this.updateCandidateSalarySlider(salaryMinR, 'min');
+        const catSelect = document.getElementById('filterCategory');
+        if (catSelect) catSelect.value = '';
 
-        // Reset dropdowns
-        const countrySelect = document.getElementById('filterCountry');
-        const citySelect = document.getElementById('filterCity');
-        if (countrySelect) countrySelect.value = '';
-        if (citySelect) {
-            citySelect.innerHTML = '<option value="">Todas</option>';
-            citySelect.value = '';
-        }
+        // Reset candidate location input
+        const locInput = document.getElementById('filterLocationInput');
+        if (locInput) locInput.value = '';
+
+        // Reset COMPANY filter chips (Stitch checkbox pills)
+        document.querySelectorAll('#companyFiltersView .filter-chip.selected').forEach(chip => {
+            chip.classList.remove('selected');
+            chip.style.background = '#ffffff';
+            chip.style.color = '#475569';
+            chip.style.borderColor = '#e2e8f0';
+            const cb = chip.querySelector('.cf-check');
+            if (cb) { cb.style.background = '#ffffff'; cb.style.borderColor = '#cbd5e1'; cb.innerHTML = ''; }
+        });
+
+        // Reset company salary slider
+        const cMin = document.getElementById('companyFilterSalaryMin');
+        const cMax = document.getElementById('companyFilterSalaryMax');
+        if (cMin) cMin.value = 0;
+        if (cMax) cMax.value = 15000;
+        this.updateSalarySlider();
+
+        // Reset company location
+        const cLocInput = document.getElementById('companyFilterLocation');
+        if (cLocInput) cLocInput.value = '';
+
+        // Reset company experience segmented control
+        document.querySelectorAll('#companyFilterExperienceSegments .exp-seg').forEach(btn => {
+            btn.classList.remove('active');
+            btn.style.background = 'transparent';
+            btn.style.color = '#64748b';
+            btn.style.boxShadow = 'none';
+        });
+        this._selectedExpSegment = null;
+
+        // Reset company skill tags
+        this._filterSkills = [];
+        const skillTags = document.getElementById('companyFilterSkillTags');
+        if (skillTags) skillTags.innerHTML = '';
+        const skillInput = document.getElementById('companyFilterSkillInput');
+        if (skillInput) skillInput.value = '';
+        // Re-show all suggestions
+        document.querySelectorAll('#companyFilterSkillSuggestions button').forEach(b => b.style.display = '');
 
         // Reset filter state
         this.activeFilters = {};
-        this.showToast('Filtros limpiados');
+        this.showToast('Filtros restablecidos');
     },
 
-    applyFilters() {
-        // Collect all filter state
-        const filters = { ...this.activeFilters };
+    /* ===== Company Filters - Salary Dual Range Slider ===== */
+    updateSalarySlider() {
+        const minEl = document.getElementById('companyFilterSalaryMin');
+        const maxEl = document.getElementById('companyFilterSalaryMax');
+        const fill = document.getElementById('companySalaryFill');
+        const label = document.getElementById('companySalaryRangeLabel');
+        if (!minEl || !maxEl) return;
 
-        const salaryMin = document.getElementById('filterSalaryMin')?.value;
-        const salaryMax = document.getElementById('filterSalaryMax')?.value;
-        if (salaryMin) filters.salaryMin = parseInt(salaryMin);
-        if (salaryMax) filters.salaryMax = parseInt(salaryMax);
+        let minVal = parseInt(minEl.value) || 0;
+        let maxVal = parseInt(maxEl.value) || 0;
 
-        const country = document.getElementById('filterCountry')?.value;
-        const city = document.getElementById('filterCity')?.value;
-        if (country) filters.country = country;
-        if (city) filters.city = city;
+        // Prevent crossing
+        if (minVal > maxVal) {
+            maxVal = minVal;
+            maxEl.value = maxVal;
+        }
 
-        this.activeFilters = filters;
-        this.closeFilters();
-        this.showToast('Filtros aplicados');
+        // Update fill bar position
+        const range = 15000;
+        const leftPct = Math.max(0, Math.min(100, (minVal / range) * 100));
+        const rightPct = Math.max(0, Math.min(100, ((range - maxVal) / range) * 100));
+        if (fill) {
+            fill.style.left = `calc(8px + ${leftPct}%)`;
+            fill.style.right = `calc(8px + ${rightPct}%)`;
+        }
+
+        // Dynamic z-index for thumb overlapping
+        if (minVal > range / 2) {
+            minEl.style.zIndex = '4';
+            maxEl.style.zIndex = '3';
+        } else {
+            maxEl.style.zIndex = '4';
+            minEl.style.zIndex = '3';
+        }
+
+        // Update label
+        if (label) {
+            const fmtMin = '$' + minVal.toLocaleString('en-US');
+            const fmtMax = maxVal >= 15000 ? '$15,000+' : '$' + maxVal.toLocaleString('en-US');
+            label.textContent = `${fmtMin} - ${fmtMax}`;
+        }
+    },
+
+    /* ===== Company Filters - Experience Segmented Control ===== */
+    selectExpSegment(el, value) {
+        const wasActive = el.classList.contains('active');
+
+        // Deselect all
+        document.querySelectorAll('#companyFilterExperienceSegments .exp-seg').forEach(btn => {
+            btn.classList.remove('active');
+            btn.style.background = 'transparent';
+            btn.style.color = '#64748b';
+            btn.style.boxShadow = 'none';
+        });
+
+        if (wasActive) {
+            // Toggle off
+            this._selectedExpSegment = null;
+        } else {
+            // Activate
+            el.classList.add('active');
+            el.style.background = '#ffffff';
+            el.style.color = '#1392ec';
+            el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+            this._selectedExpSegment = value;
+        }
+    },
+
+    /* ===== Company Filters - Skill Tags ===== */
+    _filterSkills: [],
+
+    addFilterSkill() {
+        const input = document.getElementById('companyFilterSkillInput');
+        if (!input) return;
+        const val = input.value.trim();
+        if (!val || this._filterSkills.includes(val)) { input.value = ''; return; }
+        this._filterSkills.push(val);
+        input.value = '';
+        this._renderFilterSkillTags();
+        // Hide matching suggestion
+        document.querySelectorAll('#companyFilterSkillSuggestions button').forEach(b => {
+            if (b.textContent.trim().toLowerCase() === val.toLowerCase()) b.style.display = 'none';
+        });
+    },
+
+    removeFilterSkill(skill) {
+        this._filterSkills = this._filterSkills.filter(s => s !== skill);
+        this._renderFilterSkillTags();
+        // Re-show matching suggestion
+        document.querySelectorAll('#companyFilterSkillSuggestions button').forEach(b => {
+            if (b.textContent.trim().toLowerCase() === skill.toLowerCase()) b.style.display = '';
+        });
+    },
+
+    addFilterSkillFromSuggestion(el, name) {
+        if (this._filterSkills.includes(name)) return;
+        this._filterSkills.push(name);
+        el.style.display = 'none';
+        this._renderFilterSkillTags();
+    },
+
+    _renderFilterSkillTags() {
+        const container = document.getElementById('companyFilterSkillTags');
+        if (!container) return;
+        container.innerHTML = this._filterSkills.map(s => `
+            <span style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; background: rgba(19,146,236,0.08); color: #1392ec; border-radius: 99px; font-size: 12px; font-weight: 600; font-family: 'Inter', sans-serif;">
+                ${s}
+                <span onclick="app.removeFilterSkill('${s.replace(/'/g, "\\'")}')" style="cursor: pointer; display: flex; align-items: center;">
+                    <span class="material-icons" style="font-size: 14px; color: #1392ec;">close</span>
+                </span>
+            </span>
+        `).join('');
+    },
+
+    async _loadCompanyFilterSkillSuggestions() {
+        const container = document.getElementById('companyFilterSkillSuggestions');
+        if (!container) return;
+        const supabase = window.supabaseClient;
+        if (!supabase) return;
+        try {
+            const { data: skills } = await supabase.from('skills').select('id, name').order('name').limit(20);
+            if (skills && skills.length > 0) {
+                container.innerHTML = skills.map(s => `
+                    <button onclick="app.addFilterSkillFromSuggestion(this, '${s.name.replace(/'/g, "\\'")}')"
+                        style="padding: 6px 14px; border: 1px solid #e2e8f0; border-radius: 99px; font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif; cursor: pointer; background: #f8fafc; color: #64748b; transition: all 0.15s;"
+                        onmouseover="this.style.borderColor='#1392ec';this.style.color='#1392ec'"
+                        onmouseout="this.style.borderColor='#e2e8f0';this.style.color='#64748b'">
+                        ${s.name}
+                    </button>
+                `).join('');
+            }
+        } catch (e) {
+            console.warn('Error loading skill suggestions:', e);
+        }
     },
 
     async handleAvatarUpload(event) {
@@ -4066,31 +5204,21 @@ const app = {
 
     // === NOTIFICATION TOGGLE ===
     async toggleNotificationSetting() {
-        const toggle = document.getElementById('notifToggle');
-        const knob = document.getElementById('notifToggleKnob');
         const statusText = document.getElementById('notifStatusText');
-        if (!toggle || !knob || !statusText) return;
-
-        const isCurrentlyOn = toggle.dataset.on === 'true';
+        const isCurrentlyOn = localStorage.getItem('talently_notifications') === 'true';
 
         if (!isCurrentlyOn) {
             // Turning ON — request permission
             if ('Notification' in window) {
                 const permission = await Notification.requestPermission();
                 if (permission === 'granted') {
-                    // Enable
-                    toggle.dataset.on = 'true';
-                    toggle.style.background = 'var(--primary)';
-                    knob.style.transform = 'translateX(20px)';
-                    statusText.textContent = 'Activado';
-                    statusText.style.color = 'var(--success)';
                     localStorage.setItem('talently_notifications', 'true');
+                    if (statusText) { statusText.textContent = 'Activado'; statusText.style.color = '#10B981'; }
                     this.showToast('Notificaciones activadas');
 
-                    // Show a test notification
                     new Notification('Talently', {
                         body: '¡Notificaciones activadas! Recibirás alertas de matches y mensajes.',
-                        icon: 'https://ui-avatars.com/api/?name=T&background=6C5CE7&color=fff'
+                        icon: 'https://ui-avatars.com/api/?name=T&background=1392ec&color=fff'
                     });
                 } else {
                     this.showToast('Permiso de notificaciones denegado por el navegador');
@@ -4100,31 +5228,23 @@ const app = {
             }
         } else {
             // Turning OFF
-            toggle.dataset.on = 'false';
-            toggle.style.background = 'var(--border)';
-            knob.style.transform = 'translateX(0)';
-            statusText.textContent = 'Desactivado';
-            statusText.style.color = 'var(--text-secondary)';
             localStorage.setItem('talently_notifications', 'false');
+            if (statusText) { statusText.textContent = 'Desactivado'; statusText.style.color = '#9CA3AF'; }
             this.showToast('Notificaciones desactivadas');
         }
     },
 
     initNotificationToggle() {
         const isOn = localStorage.getItem('talently_notifications') === 'true';
-        const toggle = document.getElementById('notifToggle');
-        const knob = document.getElementById('notifToggleKnob');
         const statusText = document.getElementById('notifStatusText');
-        if (!toggle || !knob || !statusText) return;
+        if (!statusText) return;
 
         if (isOn && 'Notification' in window && Notification.permission === 'granted') {
-            toggle.dataset.on = 'true';
-            toggle.style.background = 'var(--primary)';
-            knob.style.transform = 'translateX(20px)';
             statusText.textContent = 'Activado';
-            statusText.style.color = 'var(--success)';
+            statusText.style.color = '#10B981';
         } else {
-            toggle.dataset.on = 'false';
+            statusText.textContent = 'Desactivado';
+            statusText.style.color = '#9CA3AF';
         }
     },
 
@@ -4209,12 +5329,58 @@ const app = {
         }
     },
 
+    // Video Logic
+    async handleVideoUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        if (file.size > 50 * 1024 * 1024) return this.showToast('El video debe ser menor a 50MB');
+        try {
+            this.showToast('Subiendo video...', 'info');
+            const fileName = `${this.state.user.id}_intro.${file.name.split('.').pop()}`;
+            const { error } = await window.supabaseClient.storage.from('videos').upload(fileName, file, { upsert: true });
+            if (error) throw error;
+            const { data: p } = window.supabaseClient.storage.from('videos').getPublicUrl(fileName);
+            const { error: e2 } = await window.supabaseClient.from('profiles').update({ video_url: p.publicUrl }).eq('id', this.state.user.id);
+            if (e2) throw e2;
+            this.setupVideoPlayer(p.publicUrl);
+            this.showToast('Video subido exitosamente', 'success');
+        } catch (e) {
+            console.error(e); this.showToast('Error al subir video. Asegúrate de configurar Supabase Storage primero.', 'error');
+        }
+    },
+    setupVideoPlayer(url) {
+        const v = document.getElementById('candidateVideoPlayer'); const t = document.getElementById('candidateVideoThumbnail');
+        if (!v || !url) return; v.src = url; v.classList.remove('hidden'); if (t) t.classList.add('hidden');
+        v.addEventListener('timeupdate', () => {
+            const p = document.getElementById('videoProgressBar'), td = document.getElementById('videoTimeDisplay');
+            if (p) p.style.width = `${(v.currentTime / v.duration) * 100}%`;
+            if (td) td.innerText = `${Math.floor(v.currentTime)}s / ${Math.floor(v.duration || 0)}s`;
+        });
+    },
+    toggleVideoPlay() {
+        const v = document.getElementById('candidateVideoPlayer'), b = document.getElementById('videoPlayBtn');
+        if (!v || !v.src) return this.showToast('Aún no tienes un video.');
+        if (v.paused) { v.play(); b.innerHTML = '<span class="material-icons text-5xl">pause</span>'; }
+        else { v.pause(); b.innerHTML = '<span class="material-icons text-5xl">play_arrow</span>'; }
+    },
+    toggleVideoMute() {
+        const v = document.getElementById('candidateVideoPlayer'), m = document.getElementById('videoMuteIcon');
+        if (v) { v.muted = !v.muted; m.innerText = v.muted ? 'volume_off' : 'volume_up'; }
+    },
+    seekVideo(e) {
+        const v = document.getElementById('candidateVideoPlayer');
+        if (v && v.duration) { const r = e.currentTarget.getBoundingClientRect(); v.currentTime = (Math.max(0, Math.min(e.clientX - r.left, r.width)) / r.width) * v.duration; }
+    },
+
     updateBadge() {
         const badge = document.querySelector('.icon-btn .badge');
+        const dot = document.getElementById('notifBadgeDot');
 
         // Count unread matches
         const count = this.matches ? this.matches.filter(m => m.hasUnread).length : 0;
         console.log('[DEBUG] updateBadge: unread count =', count, 'total matches =', (this.matches || []).length);
+
+        if (dot) dot.style.display = count > 0 ? 'block' : 'none';
 
         if (badge) {
             if (count > 0) {
@@ -4244,133 +5410,299 @@ const app = {
         const list = document.getElementById('notificationList');
         if (!list) return;
 
-        // Show ALL matches as notifications (not just unread)
-        const allMatches = (this.matches || []).filter(m => m.matchDate || m.isReal);
+        // Build notifications array from matches + any custom notifications
+        const notifications = [];
+        const escapeHtml = (unsafe) => {
+            if (typeof unsafe !== 'string') return '';
+            return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        };
 
-        if (allMatches.length === 0) {
-            list.innerHTML = `
-                <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
-                    <p>No tienes notificaciones</p>
-                </div>
-            `;
+        // Match-based notifications
+        (this.matches || []).filter(m => m.matchDate || m.isReal).forEach(match => {
+            const type = match.lastMessage ? 'message' : 'match';
+            notifications.push({
+                id: String(match.id),
+                type: type,
+                name: match.name || 'Usuario',
+                image: match.image || match.avatar || null,
+                title: type === 'match' ? '¡Nuevo Match!' : 'Mensaje recibido',
+                body: type === 'match'
+                    ? `<span style="font-weight:600;color:#333333;">${escapeHtml(match.name || 'Usuario')}</span> le ha gustado tu perfil. ¡Comienza a chatear ahora!`
+                    : escapeHtml(match.lastMessage || 'Tienes un nuevo mensaje'),
+                date: match.matchDate ? new Date(match.matchDate) : new Date(),
+                isUnread: !!match.hasUnread,
+                onclick: `app.markSingleNotificationRead('${escapeHtml(String(match.id))}'); app.openChat('${escapeHtml(String(match.id))}', '${escapeHtml(match.name || 'Usuario')}'); app.closeNotifications();`
+            });
+        });
+
+        // Add custom notifications if stored
+        (this.candidateNotifications || []).forEach(n => {
+            notifications.push(n);
+        });
+
+        // Sort by date descending
+        notifications.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        if (notifications.length === 0) {
+            list.innerHTML = `<div style="text-align: center; padding: 60px 24px; color: #666666;">
+                <span class="material-icons" style="font-size: 48px; color: #E5E7EB; display: block; margin-bottom: 12px;">notifications_none</span>
+                <p style="margin: 0; font-size: 14px;">No tienes notificaciones</p>
+            </div>`;
             return;
         }
 
-        const escapeHtml = (unsafe) => {
-            if (typeof unsafe !== 'string') return '';
-            return unsafe
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+        // Group by date
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+        const groups = { 'Hoy': [], 'Ayer': [], 'Anteriores': [] };
+
+        notifications.forEach(n => {
+            const d = new Date(n.date);
+            if (d >= today) groups['Hoy'].push(n);
+            else if (d >= yesterday) groups['Ayer'].push(n);
+            else groups['Anteriores'].push(n);
+        });
+
+        // Type config
+        const typeConfig = {
+            match: { icon: 'favorite', badgeBg: '#22c55e', badgeColor: '#ffffff' },
+            message: { icon: 'chat', badgeBg: '#1392ec', badgeColor: '#ffffff' },
+            offer: { icon: 'work', badgeBg: '#8b5cf6', badgeColor: '#ffffff' },
+            viewed: { icon: 'mark_email_read', badgeBg: '#6B7280', badgeColor: '#ffffff' },
+            security: { icon: 'security', badgeBg: null, badgeColor: '#6B7280' }
         };
 
-        list.innerHTML = allMatches.map(match => {
-            const safeName = escapeHtml(match.name || 'Usuario');
-            const safeId = escapeHtml(String(match.id));
-            const imgUrl = match.image || match.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(safeName)}&background=random`;
-            const time = match.matchDate ? new Date(match.matchDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Ahora';
-            const isUnread = match.hasUnread;
-            const bgColor = isUnread ? 'rgba(108,92,231,0.08)' : 'transparent';
-            const fontWeight = isUnread ? '700' : '600';
+        // Relative time
+        const relativeTime = (d) => {
+            const diff = Math.floor((now - new Date(d)) / 1000);
+            if (diff < 60) return 'Ahora';
+            if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+            return new Date(d).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+        };
 
-            return `
-            <div style="padding: 16px; border-bottom: 1px solid var(--border); background: ${bgColor}; cursor: pointer; transition: background 0.2s;"
-                 onclick="app.markSingleNotificationRead('${safeId}'); app.openChat('${safeId}', '${safeName}'); app.closeNotifications();">
-                <div style="display: flex; gap: 12px;">
-                    <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #6C5CE7 0%, #a29bfe 100%); display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; opacity: ${isUnread ? '1' : '0.6'};">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                        </svg>
-                    </div>
-                    <div style="flex: 1;">
-                        <div style="font-weight: ${fontWeight}; font-size: 14px; color: var(--text-primary);">
-                            ¡Hiciste Match con ${safeName}!
-                        </div>
-                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
-                            Ahora pueden chatear. Envía un mensaje.
-                        </div>
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 6px;">
-                            ${time}
-                        </div>
-                    </div>
-                    ${isUnread ? '<div style="width: 10px; height: 10px; background: var(--primary); border-radius: 50%; flex-shrink: 0; align-self: center;"></div>' : ''}
+        let html = '';
+        Object.entries(groups).forEach(([label, items]) => {
+            if (items.length === 0) return;
+            html += `<div style="padding: 16px 16px 8px;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <h2 style="font-size: 12px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">${label}</h2>
                 </div>
-            </div>
-            `;
-        }).join('');
+            </div>`;
+
+            items.forEach(n => {
+                const cfg = typeConfig[n.type] || typeConfig.match;
+                const safeName = escapeHtml(n.name || '');
+                const imgUrl = n.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(safeName)}&background=1392ec&color=fff`;
+                const isUnread = n.isUnread;
+                const cardBg = isUnread ? 'background: rgba(59,130,246,0.04); border: 1px solid rgba(59,130,246,0.15);' : 'background: #ffffff; border: 1px solid #E5E7EB;';
+                const unreadDot = isUnread ? `<div style="width: 10px; height: 10px; border-radius: 50%; background: #1392ec; box-shadow: 0 0 8px rgba(19,146,236,0.4);"></div>` : '';
+                const timeColor = isUnread ? 'color: #1392ec; font-weight: 500;' : 'color: #9CA3AF;';
+
+                // Avatar section
+                let avatarHtml;
+                if (n.type === 'security') {
+                    avatarHtml = `<div style="height: 48px; width: 48px; border-radius: 50%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; border: 1px solid #E5E7EB; flex-shrink: 0;">
+                        <span class="material-icons" style="font-size: 24px; color: #6B7280;">security</span>
+                    </div>`;
+                } else {
+                    avatarHtml = `<div style="position: relative; flex-shrink: 0;">
+                        <div style="height: 48px; width: 48px; border-radius: 50%; background: #E5E7EB center / cover; border: 1px solid #f3f4f6; background-image: url('${imgUrl}');"></div>
+                        <div style="position: absolute; bottom: -4px; right: -4px; background: ${cfg.badgeBg}; border-radius: 50%; padding: 2px; border: 2px solid #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center;">
+                            <span class="material-icons" style="font-size: 10px; color: ${cfg.badgeColor}; display: block;">${cfg.icon}</span>
+                        </div>
+                    </div>`;
+                }
+
+                html += `<div style="margin: 0 12px 8px;">
+                    <div onclick="${n.onclick || ''}" style="position: relative; display: flex; align-items: flex-start; gap: 12px; padding: 16px; border-radius: 12px; ${cardBg} cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.04);">
+                        <div style="position: absolute; top: 16px; right: 16px; display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 12px; ${timeColor}">${relativeTime(n.date)}</span>
+                            ${unreadDot}
+                        </div>
+                        ${avatarHtml}
+                        <div style="flex: 1; padding-right: 48px;">
+                            <h3 style="font-size: 16px; font-weight: 700; color: #333333; line-height: 1.3; margin: 0 0 4px;">${escapeHtml(n.title)}</h3>
+                            <p style="font-size: 14px; color: #666666; line-height: 1.5; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${n.body}</p>
+                        </div>
+                    </div>
+                </div>`;
+            });
+        });
+
+        list.innerHTML = html;
     },
 
-    openCardDetail(type) {
+    openCardDetail(type, context = 'discovery') {
         const modal = document.getElementById('cardDetailModal');
-        const content = document.getElementById('cardDetailContent');
-        if (!modal || !content) return;
+        if (!modal) return;
 
         let data;
-        if (type === 'offer') {
-            data = this.currentProfileData || this.profiles[this.currentIndex];
-            if (!data) return;
-            const imageUrl = data.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.company || data.name)}&background=6c5ce7&color=fff&size=600`;
-            content.innerHTML = `
-                <div style="width: 100%; height: 300px; background-image: url('${imageUrl}'); background-size: cover; background-position: center;"></div>
-                <div style="padding: 24px;">
-                    <h2 style="font-size: 24px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">${data.name}</h2>
-                    <p style="font-size: 16px; color: var(--primary); font-weight: 600; margin-bottom: 12px;">${data.company || ''}</p>
-                    <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
-                        <span style="background: var(--bg); padding: 6px 14px; border-radius: 20px; font-size: 13px; color: var(--text-secondary);">${data.modality || 'Remoto'}</span>
-                        <span style="background: var(--bg); padding: 6px 14px; border-radius: 20px; font-size: 13px; color: var(--text-secondary);">${data.salary || 'Competitivo'}</span>
-                        <span style="background: var(--bg); padding: 6px 14px; border-radius: 20px; font-size: 13px; color: var(--text-secondary);">${data.location || ''}</span>
-                    </div>
-                    ${data.description ? `<div style="margin-bottom: 20px;"><h4 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Descripción</h4><p style="color: var(--text-secondary); line-height: 1.6; font-size: 15px;">${data.description}</p></div>` : ''}
-                    ${(data.skills || []).length > 0 ? `<div style="margin-bottom: 20px;"><h4 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Skills requeridos</h4><div style="display: flex; flex-wrap: wrap; gap: 8px;">${data.skills.map(s => `<span style="background: #EEF2FF; color: #4F46E5; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;">${s}</span>`).join('')}</div></div>` : ''}
-                </div>`;
-        } else {
+        if (type === 'self') {
+            const profile = this.currentUser;
+            if (!profile) return;
+            data = {
+                id: profile.id,
+                name: profile.full_name || profile.name,
+                role: profile.current_position || profile.title || profile.role || 'Profesional',
+                image: profile.avatar_url || profile.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || profile.name || 'C')}&background=1392ec&color=fff`,
+                seniority: profile.experience_level || 'N/A',
+                exp: profile.experience_years || 'N/A',
+                salary: profile.expected_salary ? `${profile.currency || '$'} ${profile.expected_salary}` : 'A convenir',
+                modality: profile.work_modality || profile.modality || 'Flexible',
+                languages: profile.languages || ['Español'],
+                skills: profile.skills || [],
+                softSkills: profile.soft_skills || [],
+                benefits: profile.interests || [],
+                bio: profile.bio || profile.description || 'Sin descripción disponible.',
+                fit: 100, // Own profile always shows 100% fit dynamically
+                location: profile.city || profile.country || 'Sin ubicación',
+                education: profile.education_level || 'N/A',
+                area: profile.professional_area || 'N/A'
+            };
+        } else if (type === 'candidate') {
             data = this.candidatesDeck[this.currentCandidateIndex];
             if (!data) return;
-            const imageUrl = data.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=6c5ce7&color=fff&size=600`;
-            content.innerHTML = `
-                <div style="width: 100%; height: 300px; background-image: url('${imageUrl}'); background-size: cover; background-position: center;"></div>
-                <div style="padding: 24px;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                        <h2 style="font-size: 24px; font-weight: 700; color: var(--text-primary); margin: 0;">${data.name}</h2>
-                        <span style="background: rgba(0,184,148,0.1); color: var(--success); padding: 4px 10px; border-radius: 12px; font-size: 13px; font-weight: 700;">${data.fit}% Match</span>
+        }
+
+        if (type === 'self' || type === 'candidate') {
+            // Hero image
+            const heroImg = document.getElementById('cdHeroImg');
+            const imageUrl = data.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=1392ec&color=fff&size=600`;
+            if (heroImg) heroImg.style.backgroundImage = `url("${imageUrl}")`;
+
+            // Name, role, location
+            const nameEl = document.getElementById('cdName');
+            const roleEl = document.getElementById('cdRole');
+            const locText = document.getElementById('cdLocationText');
+            if (nameEl) nameEl.textContent = data.name || 'Candidato';
+            if (roleEl) roleEl.textContent = data.role || 'Profesional';
+            if (locText) locText.textContent = data.location || 'Sin ubicación';
+
+            // Bio
+            const bioEl = document.getElementById('cdBio');
+            if (bioEl) bioEl.textContent = data.bio || 'Sin descripción disponible.';
+
+            // Skills
+            const skillsEl = document.getElementById('cdSkills');
+            if (skillsEl) {
+                const allSkills = [...(data.skills || []), ...(data.softSkills || [])];
+                skillsEl.innerHTML = allSkills.map((s, i) => {
+                    const isSoft = i >= (data.skills || []).length;
+                    return isSoft
+                        ? `<div style="display: flex; height: 34px; align-items: center; justify-content: center; padding: 0 14px; border-radius: 10px; background: rgba(19,146,236,0.08); border: 1px solid rgba(19,146,236,0.2);"><span style="font-size: 13px; font-weight: 700; color: #1392ec;">${s}</span></div>`
+                        : `<div style="display: flex; height: 34px; align-items: center; justify-content: center; padding: 0 14px; border-radius: 10px; background: #e5e7eb; border: 1px solid #d1d5db;"><span style="font-size: 13px; font-weight: 600; color: #1f2937;">${s}</span></div>`;
+                }).join('');
+            }
+
+            // Experience timeline
+            const expEl = document.getElementById('cdExperience');
+            if (expEl) {
+                expEl.innerHTML = `
+                    <div style="position: relative; margin-bottom: 0;">
+                        <div style="position: absolute; left: -25px; top: 0; width: 40px; height: 40px; border-radius: 50%; background: #ffffff; border: 2px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                            <span class="material-icons" style="font-size: 20px; color: #1392ec;">work</span>
+                        </div>
+                        <div style="padding-left: 24px;">
+                            <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #1a202c;">${data.role || 'Profesional'}</h3>
+                            <p style="margin: 2px 0 0; font-size: 13px; font-weight: 700; color: #1392ec;">${data.area || ''}</p>
+                            <p style="margin: 2px 0 0; font-size: 13px; color: #94a3b8; font-weight: 500;">${data.seniority || ''} ${data.exp ? '• ' + data.exp + ' años' : ''}</p>
+                        </div>
                     </div>
-                    <p style="color: var(--text-secondary); font-size: 16px; font-weight: 500; margin-bottom: 16px;">${data.role || 'Profesional'}</p>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-                        <div style="background: var(--bg); padding: 10px; border-radius: 10px; border: 1px solid var(--border);"><div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Experiencia</div><div style="font-weight: 600; font-size: 14px; color: var(--text-primary);">${data.seniority || ''} ${data.exp ? '(' + data.exp + ')' : ''}</div></div>
-                        <div style="background: var(--bg); padding: 10px; border-radius: 10px; border: 1px solid var(--border);"><div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Expectativa Salarial</div><div style="font-weight: 600; font-size: 14px; color: var(--text-primary);">${data.salary || 'A convenir'}</div></div>
-                        <div style="background: var(--bg); padding: 10px; border-radius: 10px; border: 1px solid var(--border);"><div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Modalidad</div><div style="font-weight: 600; font-size: 14px; color: var(--text-primary);">${data.modality || 'Remoto'}</div></div>
-                        <div style="background: var(--bg); padding: 10px; border-radius: 10px; border: 1px solid var(--border);"><div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Idiomas</div><div style="font-weight: 600; font-size: 14px; color: var(--text-primary);">${(data.languages || []).join(', ') || '-'}</div></div>
+                `;
+            }
+
+            // Education
+            const eduEl = document.getElementById('cdEducation');
+            if (eduEl) {
+                eduEl.innerHTML = `
+                    <div style="position: relative;">
+                        <div style="position: absolute; left: -25px; top: 0; width: 40px; height: 40px; border-radius: 50%; background: #ffffff; border: 2px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: center;">
+                            <span class="material-icons" style="font-size: 18px; color: #1392ec;">school</span>
+                        </div>
+                        <div style="padding-left: 24px;">
+                            <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #1a202c;">${data.education || 'N/A'}</h3>
+                        </div>
                     </div>
-                    ${(data.skills || []).length > 0 ? `<div style="margin-bottom: 20px;"><h4 style="font-size: 13px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; margin-bottom: 10px;">Tech Stack</h4><div style="display: flex; flex-wrap: wrap; gap: 8px;">${data.skills.map(s => `<span style="background: #EEF2FF; color: #4F46E5; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;">${s}</span>`).join('')}</div></div>` : ''}
-                    ${(data.softSkills || []).length > 0 ? `<div style="margin-bottom: 20px;"><h4 style="font-size: 13px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; margin-bottom: 10px;">Soft Skills</h4><div style="display: flex; flex-wrap: wrap; gap: 8px;">${data.softSkills.map(s => `<span style="background: #F0FDF4; color: #16A34A; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;">${s}</span>`).join('')}</div></div>` : ''}
-                    ${data.bio ? `<div style="border-top: 1px solid var(--border); padding-top: 20px;"><h4 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">Sobre mí</h4><p style="color: var(--text-secondary); line-height: 1.6; font-size: 15px;">${data.bio}</p></div>` : ''}
-                </div>`;
+                `;
+            }
+
+            // Preferences
+            const salaryEl = document.getElementById('cdSalary');
+            const modalityEl = document.getElementById('cdModality');
+            if (salaryEl) salaryEl.textContent = data.salary || 'A convenir';
+            if (modalityEl) modalityEl.textContent = data.modality || 'Flexible';
+
+            // Show action buttons for candidates
+            const actionBtns = document.getElementById('cdActionButtons');
+            const matchActionBtns = document.getElementById('cdMatchActionButtons');
+            if (context === 'match') {
+                if (actionBtns) actionBtns.style.display = 'none';
+                if (matchActionBtns) matchActionBtns.style.display = 'block';
+            } else if (type === 'self') {
+                // Own profile preview - hide action buttons
+                if (actionBtns) actionBtns.style.display = 'none';
+                if (matchActionBtns) matchActionBtns.style.display = 'none';
+            } else {
+                if (actionBtns) actionBtns.style.display = 'flex';
+                if (matchActionBtns) matchActionBtns.style.display = 'none';
+            }
+
+            // Scroll to top
+            const scroll = document.getElementById('cardDetailScroll');
+            if (scroll) scroll.scrollTop = 0;
+        } else {
+            // Offer detail - populate same template with offer data
+            data = this.currentProfileData || this.profiles[this.currentIndex];
+            if (!data) return;
+
+            const heroImg = document.getElementById('cdHeroImg');
+            const imageUrl = data.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.company || data.name)}&background=1392ec&color=fff&size=600`;
+            if (heroImg) heroImg.style.backgroundImage = `url("${imageUrl}")`;
+
+            const nameEl = document.getElementById('cdName');
+            const roleEl = document.getElementById('cdRole');
+            const locText = document.getElementById('cdLocationText');
+            if (nameEl) nameEl.textContent = data.name || 'Oferta';
+            if (roleEl) roleEl.textContent = data.company || '';
+            if (locText) locText.textContent = data.location || '';
+
+            const bioEl = document.getElementById('cdBio');
+            if (bioEl) bioEl.textContent = data.description || 'Sin descripción.';
+
+            const skillsEl = document.getElementById('cdSkills');
+            if (skillsEl) {
+                skillsEl.innerHTML = (data.skills || []).map(s =>
+                    `<div style="display: flex; height: 34px; align-items: center; justify-content: center; padding: 0 14px; border-radius: 10px; background: #e5e7eb; border: 1px solid #d1d5db;"><span style="font-size: 13px; font-weight: 600; color: #1f2937;">${s}</span></div>`
+                ).join('');
+            }
+
+            const expEl = document.getElementById('cdExperience');
+            if (expEl) expEl.innerHTML = `<p style="padding-left: 24px; color: #94a3b8; font-size: 13px;">—</p>`;
+            const eduEl = document.getElementById('cdEducation');
+            if (eduEl) eduEl.innerHTML = `<p style="padding-left: 24px; color: #94a3b8; font-size: 13px;">—</p>`;
+
+            const salaryEl = document.getElementById('cdSalary');
+            const modalityEl = document.getElementById('cdModality');
+            if (salaryEl) salaryEl.textContent = data.salary || 'Competitivo';
+            if (modalityEl) modalityEl.textContent = data.modality || 'Remoto';
+
+            // Hide candidate action buttons for offers
+            const actionBtns = document.getElementById('cdActionButtons');
+            if (actionBtns) actionBtns.style.display = 'none';
+
+            const scroll = document.getElementById('cardDetailScroll');
+            if (scroll) scroll.scrollTop = 0;
         }
 
         modal.style.display = 'flex';
 
         // Track profile view
         if (window.talentlyBackend && window.talentlyBackend.isReady) {
-            // Increment profile_views for the OWNER of the card being viewed
             const targetUserId = type === 'offer' ? data.userId : (data.profileId || data.id);
-            console.log('[DEBUG] openCardDetail - type:', type, 'targetUserId:', targetUserId, 'data keys:', Object.keys(data));
             if (targetUserId && typeof targetUserId === 'string' && targetUserId.includes('-')) {
-                console.log('[DEBUG] Incrementing profile_views for target user:', targetUserId);
-                window.talentlyBackend.statistics.incrementForUser(targetUserId, 'profile_views')
-                    .then(result => {
-                        if (result.error) {
-                            console.error('[DEBUG] incrementForUser failed:', result.error);
-                        } else {
-                            console.log('[DEBUG] profile_views incremented successfully for:', targetUserId);
-                        }
-                    })
-                    .catch(err => {
-                        console.error('[DEBUG] incrementForUser exception:', err);
-                    });
-            } else {
-                console.log('[DEBUG] No valid targetUserId, skipping profile view tracking. targetUserId:', targetUserId);
+                window.talentlyBackend.statistics.incrementForUser(targetUserId, 'profile_views').catch(() => { });
             }
         }
     },
@@ -4406,16 +5738,36 @@ const app = {
 
     toggleFilterChip(element, category, value) {
         const isSelected = element.classList.toggle('selected');
+        const checkBox = element.querySelector('.cf-check');
 
-        // Visual toggle
+        // Visual toggle - Stitch style
         if (isSelected) {
-            element.style.background = 'rgba(108,92,231,0.15)';
-            element.style.color = 'var(--primary)';
-            element.style.borderColor = 'var(--primary)';
+            // Check if inside company filters (checkbox pill style) or candidate filters (solid pill)
+            if (checkBox) {
+                element.style.background = 'rgba(19,146,236,0.08)';
+                element.style.color = '#1392ec';
+                element.style.borderColor = '#1392ec';
+                checkBox.style.background = '#1392ec';
+                checkBox.style.borderColor = '#1392ec';
+                checkBox.innerHTML = '<span class="material-icons" style="font-size:12px;color:#fff;line-height:16px;">check</span>';
+            } else {
+                element.style.background = '#1392ec';
+                element.style.color = '#ffffff';
+                element.style.borderColor = '#1392ec';
+            }
         } else {
-            element.style.background = 'var(--bg)';
-            element.style.color = 'var(--text-primary)';
-            element.style.borderColor = 'var(--border)';
+            if (checkBox) {
+                element.style.background = '#ffffff';
+                element.style.color = '#475569';
+                element.style.borderColor = '#e2e8f0';
+                checkBox.style.background = '#ffffff';
+                checkBox.style.borderColor = '#cbd5e1';
+                checkBox.innerHTML = '';
+            } else {
+                element.style.background = '#ffffff';
+                element.style.color = '#64748b';
+                element.style.borderColor = '#e5e7eb';
+            }
         }
 
         // Update filter state
@@ -4431,6 +5783,8 @@ const app = {
         }
 
         this.updateActiveFiltersDisplay();
+        if (typeof this.applyFilters === 'function') this.applyFilters();
+        else if (typeof this.triggerSearch === 'function') this.triggerSearch();
     },
 
     updateActiveFiltersDisplay() {
@@ -4482,14 +5836,41 @@ const app = {
     },
 
     applyFilters() {
+        const type = localStorage.getItem('talently_user_type');
+        const isCompany = (type === 'company' || this.profileType === 'company');
+
+        // 1. Collect filters from UI into this.activeFilters
+        const filters = { ...this.activeFilters };
+
+        if (isCompany) {
+            const sMin = parseInt(document.getElementById('companyFilterSalaryMin')?.value || '0');
+            const sMax = parseInt(document.getElementById('companyFilterSalaryMax')?.value || '15000');
+            if (sMin > 0) filters.salaryMin = sMin;
+            if (sMax < 15000) filters.salaryMax = sMax;
+            const loc = document.getElementById('companyFilterLocation')?.value?.trim();
+            if (loc) filters.location = loc;
+            if (this._selectedExpSegment) filters.experience = this._selectedExpSegment;
+            if (this._filterSkills && this._filterSkills.length > 0) filters.skills = [...this._filterSkills];
+        } else {
+            const salaryMin = document.getElementById('filterSalaryMin')?.value;
+            const salaryMax = document.getElementById('filterSalaryMax')?.value;
+            if (salaryMin) filters.salaryMin = parseInt(salaryMin);
+            if (salaryMax) filters.salaryMax = parseInt(salaryMax);
+            const locationText = document.getElementById('filterLocationInput')?.value?.trim();
+            if (locationText) filters.location = locationText;
+            if (this._selectedFilterExp) filters.experience = this._selectedFilterExp;
+
+            // Nota: Category es manejado vía array de chips en this.activeFilters['category']
+        }
+        this.activeFilters = filters;
+
+        // 2. Apply filtering to profile cards (company explore view)
         const active = this.activeFilters;
-        // Use the original unfiltered profiles as base (saved on first filter or from loadOffers)
         if (!this._unfilteredProfiles || this._unfilteredProfiles.length === 0) {
             this._unfilteredProfiles = [...this.profiles];
         }
         let filtered = [...this._unfilteredProfiles];
 
-        // Filter by Salary range
         if (active.salaryMin) {
             filtered = filtered.filter(p => {
                 const min = p.salary_min || (p.salary ? parseInt(String(p.salary).replace(/[^0-9]/g, '')) : 0);
@@ -4502,24 +5883,70 @@ const app = {
                 return max <= active.salaryMax;
             });
         }
-
-        // Filter by Modalidad
+        if (active.modality && active.modality.length > 0) {
+            filtered = filtered.filter(p => active.modality.some(m => p.modality && p.modality.includes(m)));
+        }
         if (active.modalidad && active.modalidad.length > 0) {
             filtered = filtered.filter(p => active.modalidad.some(m => p.modality && p.modality.includes(m)));
         }
-
-        // Filter by Sector
+        if (active.location) {
+            const loc = active.location.toLowerCase();
+            filtered = filtered.filter(p => {
+                const city = (p.city || '').toLowerCase();
+                const country = (p.country || '').toLowerCase();
+                return city.includes(loc) || country.includes(loc);
+            });
+        }
+        if (active.experience) {
+            filtered = filtered.filter(p => {
+                const yrs = parseInt(p.experience_years || p.years_experience || '0');
+                const [lo, hi] = active.experience.includes('+') ? [10, 99] : active.experience.split('-').map(Number);
+                return yrs >= lo && yrs <= hi;
+            });
+        }
+        if (active.skills && active.skills.length > 0) {
+            filtered = filtered.filter(p => {
+                const pSkills = (p.skills || p.techStack || p.tech_stack || []).map(s => s.toLowerCase());
+                return active.skills.some(s => pSkills.includes(s.toLowerCase()));
+            });
+        }
         if (active.sector && active.sector.length > 0) {
             filtered = filtered.filter(p => active.sector.some(s => p.sector && p.sector.includes(s)));
         }
-
-        // Filter by Tech Stack / Skills
         if (active.techStack && active.techStack.length > 0) {
             filtered = filtered.filter(p => {
                 const skills = p.skills || p.techStack || [];
                 return active.techStack.some(t => skills.includes(t));
             });
         }
+        if (active.category) {
+            filtered = filtered.filter(p => {
+                const category = p.category || p.area || p.area_id || '';
+                return category.toString().toLowerCase() === active.category.toLowerCase();
+            });
+        }
+
+        // --- NATIVE GEOLOCATION DISTANCE FILTER ---
+        if (this.filterDistance && this.filterDistance < 200) {
+            // Get current active user/company coordinated
+            const sourceLat = this.companyProfile?.latitude || this.currentUser?.latitude;
+            const sourceLng = this.companyProfile?.longitude || this.currentUser?.longitude;
+
+            if (sourceLat && sourceLng) {
+                filtered = filtered.filter(p => {
+                    const targetLat = p.latitude;
+                    const targetLng = p.longitude;
+
+                    // Accept candidate if they have no location but we want to filter? 
+                    // Usually we drop them if we are filtering explicitly by distance.
+                    if (!targetLat || !targetLng) return false;
+
+                    const distKm = this.calculateDistance(sourceLat, sourceLng, targetLat, targetLng);
+                    return distKm <= this.filterDistance;
+                });
+            }
+        }
+        // ------------------------------------------
 
         this.profiles = filtered;
         this.currentIndex = 0;
@@ -4534,7 +5961,7 @@ const app = {
                         <button class="btn-secondary" onclick="app.clearFilters(); app.applyFilters()" style="margin-top: 16px;">Limpiar Filtros</button>
                     </div>`;
             }
-            this.showToast('No se encontraron perfiles');
+            this.showToast('No se encontraron perfiles en este radio de búsqueda');
         } else {
             this.renderCard();
             this.showToast(`${this.profiles.length} perfiles encontrados`);
@@ -4547,17 +5974,26 @@ const app = {
         this.profileType = type;
         localStorage.setItem('talently_user_type', type);
 
-        // Update UI
+        // Reset all cards
         document.querySelectorAll('.profile-type-option').forEach(opt => {
-            opt.style.borderColor = 'var(--border)';
-            opt.style.background = 'var(--surface)';
+            opt.style.borderColor = 'transparent';
+            opt.style.background = 'white';
+            opt.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.05)';
+            opt.classList.remove('selected');
+            const icon = opt.querySelector('.role-radio-icon');
+            if (icon) { icon.textContent = 'radio_button_unchecked'; icon.style.color = '#CBD5E1'; }
         });
 
-        element.style.borderColor = 'var(--primary)';
-        element.style.background = 'linear-gradient(135deg, rgba(108, 92, 231, 0.1) 0%, rgba(162, 155, 254, 0.1) 100%)';
+        // Highlight selected card
+        element.style.borderColor = '#6366F1';
+        element.style.boxShadow = '0 0 15px rgba(99,102,241,0.3)';
+        element.classList.add('selected');
+        const selectedIcon = element.querySelector('.role-radio-icon');
+        if (selectedIcon) { selectedIcon.textContent = 'radio_button_checked'; selectedIcon.style.color = '#6366F1'; }
 
         // Enable continue button
-        document.getElementById('continueStep1').disabled = false;
+        const btn = document.getElementById('continueStep1');
+        if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
     },
 
     continueFromStep1() {
@@ -4570,6 +6006,12 @@ const app = {
         } else {
 
             this.showView('onboardingStep2');
+            // Pre-populate full name from registration data
+            const fullNameInput = document.getElementById('onboardFullName');
+            if (fullNameInput && !fullNameInput.value) {
+                const name = this.currentUser?.name || this.currentUser?.user_metadata?.full_name || '';
+                fullNameInput.value = name;
+            }
         }
     },
 
@@ -4611,82 +6053,45 @@ const app = {
         const currentStep = step - 1;
         let isValid = true;
 
-        // Step 2: Personal Data
+        // Step 2: Personal Info (Stitch design - name, position, country, city, salary)
         if (currentStep === 2) {
-            const dobValid = validateInput('birthDate', 'La fecha de nacimiento es obligatoria');
-            // Gender is optional now, so we remove validation check for it
-            if (!dobValid) return;
-
-            // Age validation
-            const dob = document.getElementById('birthDate').value;
-            if (dob) {
-                const birthDate = new Date(dob);
-                const ageDifMs = Date.now() - birthDate.getTime();
-                const ageDate = new Date(ageDifMs);
-                const age = Math.abs(ageDate.getUTCFullYear() - 1970);
-
-                if (age < 18) {
-                    const el = document.getElementById('birthDate');
-                    el.style.borderColor = 'var(--danger)';
-
-                    // Remove existing error if any
-                    const prevError = el.parentNode.querySelector('.field-error-msg');
-                    if (prevError) prevError.remove();
-
-                    const errorMsg = document.createElement('div');
-                    errorMsg.className = 'field-error-msg';
-                    errorMsg.style.cssText = 'color: var(--danger); font-size: 12px; margin-top: 4px; font-weight: 500;';
-                    errorMsg.innerHTML = 'Debes ser mayor de 18 años';
-                    el.parentNode.appendChild(errorMsg);
-                    return;
-                }
-            }
+            const nameValid = validateInput('onboardFullName', 'El nombre es obligatorio');
+            if (!nameValid) return;
+            // Country, city, position, salary are optional - user can skip
         }
 
-        // Step 3: Location
+        // Step 3: Location (fields moved to step 2, auto-skip)
         if (currentStep === 3) {
-            const countryValid = validateInput('country', 'Selecciona tu país');
-            // City is dependent on country. If disabled (loading or no country), don't validate strictly?
-            // But user must select it.
-            const cityValid = validateInput('city', 'La ciudad es obligatoria');
-            if (!countryValid || !cityValid) return;
+            // Country and city are now in step 2, no validation needed here
         }
 
-        // Step 4: Experience Level
+        // Step 4: Find your field (interests/areas - optional multi-select)
         if (currentStep === 4) {
-            // Validation is implicit by selection, but let's ensure something is selected if needed
-            // Currently handled by direct onclick in HTML, so logic moves to next step directly.
-            // If button is used:
-            const experienceLevel = document.querySelector('input[name="experienceLevel"]:checked');
-            if (!experienceLevel && !(step === 5)) { // Allow skip if intended, but usually required
-                // For now, let's assume it requires selection if we are validating
-            }
+            // Multi-select is optional, no validation needed
         }
 
-        // Step 7: Salary
+        // Step 7: Salary (fields moved to step 2, auto-skip)
         if (currentStep === 7) {
-            const salaryValid = validateInput('expectedSalary', 'Ingresa tu pretensión salarial');
-            const currencyValid = validateInput('currency', 'Selecciona la moneda');
-            if (!salaryValid || !currencyValid) return;
+            // Salary and currency are now in step 2, no validation needed here
         }
 
-        // Step 10: Professional Area
-        // Step 10: Professional Area
+        // Step 10: Professional Area (moved to step 4, auto-skip)
         if (currentStep === 10) {
-            const areaValid = validateInput('professionalArea', 'Selecciona tu área profesional');
-            if (!areaValid) return;
+            // Professional area is now in step 4, no validation needed here
         }
 
         this.renderedSteps = this.renderedSteps || {};
 
         // Render dynamic content only if not already rendered or if needed
-        if (step === 3 && !this.renderedSteps['country']) {
+        if (step === 2 && !this.renderedSteps['country']) {
             this.renderCountries('country');
             this.renderedSteps['country'] = true;
         }
+        if (step === 4) {
+            this.renderFieldTags();
+        }
         if (step === 11) {
-            // Always re-render skills to ensure category changes are reflected if user went back
-            this.renderSkillsBubbles();
+            this.renderSkillsStep();
         }
         if (step === 15) {
             this.renderInterestsBubbles();
@@ -4889,7 +6294,200 @@ const app = {
         this.renderSkillsBubbles();
     },
 
+    // ===== STITCH SKILLS STEP (unified technical + soft skills) =====
 
+    _skillCategoryMap: {},
+
+    _skillCatColors: {
+        engineering: { bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe' },
+        soft: { bg: '#f0fdfa', text: '#0f766e', border: '#99f6e4' },
+        design: { bg: '#faf5ff', text: '#7c3aed', border: '#ddd6fe' },
+        data: { bg: '#fef3c7', text: '#92400e', border: '#fde68a' },
+        product: { bg: '#fce7f3', text: '#be185d', border: '#fbcfe8' },
+        marketing: { bg: '#fff1f2', text: '#be123c', border: '#fecdd3' },
+        default: { bg: '#f3f4f6', text: '#374151', border: '#d1d5db' }
+    },
+
+    _softSkillsList: ['Liderazgo', 'Trabajo en equipo', 'Comunicación', 'Resolución de problemas', 'Creatividad', 'Adaptabilidad', 'Gestión del tiempo', 'Inteligencia emocional', 'Toma de decisiones', 'Proactividad', 'Mentoría', 'Oratoria'],
+
+    _skillCategoriesData: null,
+
+    async renderSkillsStep() {
+        const container = document.getElementById('skillsCategoriesContainer');
+        if (!container) return;
+
+        container.innerHTML = '<div style="text-align: center; padding: 20px;"><span class="material-icons" style="color: #1392ec; font-size: 28px;">hourglass_empty</span></div>';
+
+        const selectedFields = this._selectedFields || [];
+        const primarySlug = selectedFields[0] || 'desarrollo';
+
+        const slugToArea = {
+            'desarrollo': { key: 'engineering', label: 'Populares en Ingeniería', icon: 'code', dbSlug: 'desarrollo' },
+            'diseno-ux': { key: 'design', label: 'Populares en Diseño', icon: 'palette', dbSlug: 'diseno-ux' },
+            'producto': { key: 'product', label: 'Populares en Producto', icon: 'hub', dbSlug: 'producto' },
+            'marketing': { key: 'marketing', label: 'Populares en Marketing', icon: 'campaign', dbSlug: 'marketing' },
+            'data': { key: 'data', label: 'Populares en Data', icon: 'storage', dbSlug: 'data' },
+            'ventas': { key: 'marketing', label: 'Populares en Ventas', icon: 'trending_up', dbSlug: 'ventas' },
+            'rrhh': { key: 'default', label: 'Populares en RRHH', icon: 'people', dbSlug: 'rrhh' },
+            'finanzas': { key: 'data', label: 'Populares en Finanzas', icon: 'account_balance', dbSlug: 'finanzas' }
+        };
+
+        const categories = [];
+
+        // Primary category from user's field selection
+        const primaryArea = slugToArea[primarySlug] || slugToArea['desarrollo'];
+        let primarySkills = [];
+        try {
+            const result = await window.talentlyBackend.reference.getSkills(primaryArea.dbSlug);
+            if (result.data && result.data.length > 0) primarySkills = result.data.map(s => s.name);
+        } catch (e) { }
+        if (primarySkills.length === 0) primarySkills = skillsByArea[primaryArea.dbSlug] || skillsByArea.desarrollo || [];
+
+        categories.push({ key: primaryArea.key, label: primaryArea.label, icon: primaryArea.icon, skills: primarySkills.slice(0, 12) });
+
+        // Soft skills (always)
+        categories.push({ key: 'soft', label: 'Habilidades Blandas', icon: 'psychology', skills: [...this._softSkillsList] });
+
+        // Secondary category
+        if (selectedFields.length > 1) {
+            const secSlug = selectedFields[1];
+            const secArea = slugToArea[secSlug];
+            if (secArea && secArea.key !== primaryArea.key) {
+                let secSkills = [];
+                try {
+                    const result = await window.talentlyBackend.reference.getSkills(secArea.dbSlug);
+                    if (result.data && result.data.length > 0) secSkills = result.data.map(s => s.name);
+                } catch (e) { }
+                if (secSkills.length === 0) secSkills = skillsByArea[secArea.dbSlug] || [];
+                if (secSkills.length > 0) categories.push({ key: secArea.key, label: secArea.label, icon: secArea.icon, skills: secSkills.slice(0, 10) });
+            }
+        } else if (primaryArea.key !== 'design') {
+            let designSkills = [];
+            try {
+                const result = await window.talentlyBackend.reference.getSkills('diseno-ux');
+                if (result.data && result.data.length > 0) designSkills = result.data.map(s => s.name);
+            } catch (e) { }
+            if (designSkills.length === 0) designSkills = skillsByArea['diseno-ux'] || [];
+            if (designSkills.length > 0) categories.push({ key: 'design', label: 'Populares en Diseño', icon: 'palette', skills: designSkills.slice(0, 8) });
+        }
+
+        this._skillCategoriesData = categories;
+        this._renderSkillCategories(categories);
+        this.renderSkillsSelection();
+    },
+
+    _renderSkillCategories(categories, filter) {
+        const container = document.getElementById('skillsCategoriesContainer');
+        if (!container) return;
+
+        container.innerHTML = '';
+        const filterLower = (filter || '').toLowerCase();
+
+        categories.forEach(cat => {
+            const filteredSkills = filterLower ? cat.skills.filter(s => s.toLowerCase().includes(filterLower)) : cat.skills;
+            if (filteredSkills.length === 0) return;
+
+            const colors = this._skillCatColors[cat.key] || this._skillCatColors.default;
+
+            const section = document.createElement('div');
+            const header = document.createElement('h4');
+            header.style.cssText = 'font-size: 13px; font-weight: 700; color: #6b7280; margin: 0 0 16px 4px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 1px;';
+            header.innerHTML = '<span class="material-icons" style="font-size: 18px;">' + cat.icon + '</span> ' + cat.label;
+            section.appendChild(header);
+
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'display: flex; flex-wrap: wrap; gap: 10px;';
+
+            filteredSkills.forEach(skill => {
+                const isSelected = this.skillsSelected.includes(skill);
+                const btn = document.createElement('button');
+                btn.type = 'button';
+
+                if (isSelected) {
+                    btn.style.cssText = 'display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 12px; border: 1px solid ' + colors.border + '; background: ' + colors.bg + '; color: ' + colors.text + '; font-size: 14px; font-weight: 600; font-family: Inter, sans-serif; cursor: pointer; transition: all 0.2s;';
+                    btn.innerHTML = '<span class="material-icons" style="font-size: 18px;">check_circle</span> ' + skill;
+                } else {
+                    btn.style.cssText = 'display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 12px; border: 1px solid #e5e7eb; background: #fff; color: #111827; font-size: 14px; font-weight: 600; font-family: Inter, sans-serif; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: all 0.2s;';
+                    btn.innerHTML = '<span class="material-icons" style="font-size: 18px; color: #9ca3af;">add</span> ' + skill;
+                }
+
+                btn.onclick = () => this.toggleSkillInStep(skill, cat.key);
+                wrap.appendChild(btn);
+            });
+
+            section.appendChild(wrap);
+            container.appendChild(section);
+        });
+    },
+
+    toggleSkillInStep(skill, categoryKey) {
+        if (this.skillsSelected.includes(skill)) {
+            this.skillsSelected = this.skillsSelected.filter(s => s !== skill);
+            delete this._skillCategoryMap[skill];
+        } else {
+            if (this.skillsSelected.length >= 10) {
+                this.showToast('Máximo 10 habilidades');
+                return;
+            }
+            this.skillsSelected.push(skill);
+            this._skillCategoryMap[skill] = categoryKey;
+        }
+
+        const filter = document.getElementById('skillsSearchInput')?.value || '';
+        this._renderSkillCategories(this._skillCategoriesData || [], filter);
+        this.renderSkillsSelection();
+    },
+
+    removeSkillFromSelection(skill) {
+        this.skillsSelected = this.skillsSelected.filter(s => s !== skill);
+        delete this._skillCategoryMap[skill];
+
+        const filter = document.getElementById('skillsSearchInput')?.value || '';
+        this._renderSkillCategories(this._skillCategoriesData || [], filter);
+        this.renderSkillsSelection();
+    },
+
+    renderSkillsSelection() {
+        const area = document.getElementById('skillsSelectionArea');
+        const divider = document.getElementById('skillsDivider');
+        const tagsContainer = document.getElementById('skillsSelectedTags');
+        const badge = document.getElementById('skillsSelectedBadge');
+
+        if (!area || !tagsContainer) return;
+
+        const count = this.skillsSelected.length;
+
+        if (count === 0) {
+            area.style.display = 'none';
+            if (divider) divider.style.display = 'none';
+            return;
+        }
+
+        area.style.display = 'block';
+        if (divider) divider.style.display = 'block';
+
+        badge.textContent = count + ' seleccionada' + (count !== 1 ? 's' : '');
+
+        tagsContainer.innerHTML = '';
+        this.skillsSelected.forEach(skill => {
+            const catKey = this._skillCategoryMap[skill] || 'default';
+            const colors = this._skillCatColors[catKey] || this._skillCatColors.default;
+
+            const tag = document.createElement('button');
+            tag.type = 'button';
+            tag.style.cssText = 'display: flex; align-items: center; gap: 8px; padding: 10px 8px 10px 16px; border-radius: 12px; background: ' + colors.bg + '; color: ' + colors.text + '; border: 1px solid ' + colors.border + '; font-size: 14px; font-weight: 700; font-family: Inter, sans-serif; cursor: pointer; transition: all 0.2s;';
+            tag.innerHTML = '<span>' + skill + '</span><div style="padding: 2px; border-radius: 50%;"><span class="material-icons" style="font-size: 18px;">close</span></div>';
+            tag.onclick = () => this.removeSkillFromSelection(skill);
+            tagsContainer.appendChild(tag);
+        });
+    },
+
+    filterSkillsSearch(query) {
+        if (!this._skillCategoriesData) return;
+        this._renderSkillCategories(this._skillCategoriesData, query);
+    },
+
+    // ===== END STITCH SKILLS STEP =====
 
     renderInterestsBubbles() {
         const container = document.getElementById('interestsBubbleSection');
@@ -4954,6 +6552,328 @@ const app = {
         }
 
         this.renderInterests();
+    },
+
+    // ===== STEP 4: FIND YOUR FIELD (Stitch) =====
+    _fieldRoles: [
+        { slug: 'desarrollo', name: 'Ingeniería de Software', color: '#e0f2fe', border: '#93c5fd' },
+        { slug: 'diseno-ux', name: 'Diseño UX/UI', color: '#f3e8ff', border: '#c4b5fd' },
+        { slug: 'marketing', name: 'Marketing Digital', color: '#fce7f3', border: '#f9a8d4' },
+        { slug: 'producto', name: 'Product Management', color: '#fef9c3', border: '#fde047' },
+        { slug: 'data', name: 'Data Science', color: '#e0f2fe', border: '#93c5fd' },
+        { slug: 'ventas', name: 'Ventas / Comercial', color: '#ffedd5', border: '#fdba74' },
+        { slug: 'soporte', name: 'Customer Success', color: '#dcfce7', border: '#86efac' },
+        { slug: 'devops', name: 'DevOps / Cloud', color: '#e0f2fe', border: '#93c5fd' },
+    ],
+    _fieldIndustries: [
+        { slug: 'fintech', name: 'FinTech', color: '#dcfce7', border: '#86efac' },
+        { slug: 'salud', name: 'Salud / Healthcare', color: '#fce7f3', border: '#f9a8d4' },
+        { slug: 'ecommerce', name: 'E-Commerce', color: '#ffedd5', border: '#fdba74' },
+        { slug: 'edtech', name: 'EdTech', color: '#f3e8ff', border: '#c4b5fd' },
+        { slug: 'ciberseguridad', name: 'Ciberseguridad', color: '#e0f2fe', border: '#93c5fd' },
+        { slug: 'rrhh', name: 'Recursos Humanos', color: '#fef9c3', border: '#fde047' },
+        { slug: 'operaciones', name: 'Operaciones', color: '#dcfce7', border: '#86efac' },
+        { slug: 'finanzas', name: 'Finanzas', color: '#ffedd5', border: '#fdba74' },
+        { slug: 'legal', name: 'Legal', color: '#f3e8ff', border: '#c4b5fd' },
+        { slug: 'administracion', name: 'Administración', color: '#fef9c3', border: '#fde047' },
+    ],
+    _selectedFields: [],
+
+    renderFieldTags() {
+        const renderGroup = (items, containerId) => {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+            items.forEach(item => {
+                const isSelected = this._selectedFields.includes(item.slug);
+                const btn = document.createElement('button');
+                btn.setAttribute('data-slug', item.slug);
+                btn.setAttribute('data-name', item.name.toLowerCase());
+                btn.style.cssText = `display: flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 9999px; font-size: 14px; font-weight: ${isSelected ? '700' : '500'}; border: 1px solid ${isSelected ? item.border : '#e2e8f0'}; background: ${isSelected ? item.color : 'white'}; color: ${isSelected ? '#1e293b' : '#64748b'}; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-family: 'Inter', sans-serif;`;
+                btn.innerHTML = `<span>${item.name}</span>${isSelected ? '<span class="material-icons" style="font-size: 18px; color: #1392ec;">check_circle</span>' : ''}`;
+                btn.onclick = () => this.toggleFieldTag(item.slug, item);
+                container.appendChild(btn);
+            });
+        };
+        renderGroup(this._fieldRoles, 'fieldRolesContainer');
+        renderGroup(this._fieldIndustries, 'fieldIndustriesContainer');
+        // Update counter
+        const countEl = document.getElementById('fieldSelectedCount');
+        const numEl = document.getElementById('fieldCountNum');
+        if (countEl && numEl) {
+            numEl.textContent = this._selectedFields.length;
+            countEl.style.display = this._selectedFields.length > 0 ? 'block' : 'none';
+        }
+    },
+
+    toggleFieldTag(slug, item) {
+        const idx = this._selectedFields.indexOf(slug);
+        if (idx >= 0) {
+            this._selectedFields.splice(idx, 1);
+        } else {
+            this._selectedFields.push(slug);
+        }
+        // Also sync to interests array for completeOnboarding
+        this.interests = [...this._selectedFields];
+        this.renderFieldTags();
+    },
+
+    filterFieldTags(query) {
+        const q = query.toLowerCase().trim();
+        document.querySelectorAll('#fieldRolesContainer button, #fieldIndustriesContainer button').forEach(btn => {
+            const name = btn.getAttribute('data-name') || '';
+            btn.style.display = !q || name.includes(q) ? 'flex' : 'none';
+        });
+    },
+
+    // ===== STEP 6: EDUCATION HISTORY (Stitch) =====
+    _educationEntries: [],
+    _editingEduIndex: -1,
+
+    renderEducationEntries() {
+        const list = document.getElementById('educationEntriesList');
+        if (!list) return;
+        list.innerHTML = '';
+        const colors = [
+            { bg: '#eff6ff', color: '#1392ec', icon: 'school' },
+            { bg: '#ecfdf5', color: '#059669', icon: 'history_edu' },
+            { bg: '#fef3c7', color: '#d97706', icon: 'workspace_premium' },
+            { bg: '#f3e8ff', color: '#7c3aed', icon: 'psychology' },
+        ];
+        this._educationEntries.forEach((entry, idx) => {
+            const c = colors[idx % colors.length];
+            const card = document.createElement('div');
+            card.style.cssText = 'position: relative; background: white; border: 1px solid #f1f5f9; border-radius: 16px; padding: 20px; display: flex; align-items: flex-start; gap: 16px; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);';
+            card.innerHTML = `
+                <div style="flex-shrink: 0; width: 48px; height: 48px; border-radius: 12px; background: ${c.bg}; color: ${c.color}; display: flex; align-items: center; justify-content: center;">
+                    <span class="material-icons">${c.icon}</span>
+                </div>
+                <div style="flex: 1; min-width: 0; padding-top: 2px;">
+                    <h3 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${entry.degree}</h3>
+                    <p style="color: #64748b; font-size: 14px; margin: 2px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${entry.institution}</p>
+                    <p style="color: #94a3b8; font-size: 12px; margin: 4px 0 0; font-weight: 500;">${entry.year ? (entry.year === 'cursando' ? 'Cursando actualmente' : 'Egreso ' + entry.year) : ''}</p>
+                </div>
+                <div style="display: flex; gap: 4px;">
+                    <button onclick="app.editEducationEntry(${idx})" style="padding: 8px; color: #94a3b8; border: none; background: transparent; border-radius: 50%; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.color='#1392ec'; this.style.background='#eff6ff'" onmouseout="this.style.color='#94a3b8'; this.style.background='transparent'">
+                        <span class="material-icons" style="font-size: 20px;">edit</span>
+                    </button>
+                    <button onclick="app.removeEducationEntry(${idx})" style="padding: 8px; color: #94a3b8; border: none; background: transparent; border-radius: 50%; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.color='#ef4444'; this.style.background='#fef2f2'" onmouseout="this.style.color='#94a3b8'; this.style.background='transparent'">
+                        <span class="material-icons" style="font-size: 20px;">delete</span>
+                    </button>
+                </div>
+            `;
+            list.appendChild(card);
+        });
+    },
+
+    showEducationForm() {
+        this._editingEduIndex = -1;
+        const form = document.getElementById('educationFormSection');
+        const title = document.getElementById('educationFormTitle');
+        if (form) form.style.display = 'block';
+        if (title) title.textContent = 'Agregar nuevo título';
+        document.getElementById('eduDegree').value = '';
+        document.getElementById('eduInstitution').value = '';
+        // Populate year select
+        const yearSel = document.getElementById('eduYear');
+        if (yearSel && yearSel.options.length <= 1) {
+            const currentYear = new Date().getFullYear();
+            const optCursando = document.createElement('option');
+            optCursando.value = 'cursando';
+            optCursando.textContent = 'Cursando actualmente';
+            yearSel.appendChild(optCursando);
+            for (let y = currentYear; y >= 1970; y--) {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y;
+                yearSel.appendChild(opt);
+            }
+        }
+        yearSel.value = '';
+        document.getElementById('addEducationBtn').style.display = 'none';
+        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    },
+
+    editEducationEntry(idx) {
+        const entry = this._educationEntries[idx];
+        if (!entry) return;
+        this._editingEduIndex = idx;
+        this.showEducationForm();
+        document.getElementById('eduDegree').value = entry.degree;
+        document.getElementById('eduInstitution').value = entry.institution;
+        document.getElementById('eduYear').value = entry.year || '';
+        const title = document.getElementById('educationFormTitle');
+        if (title) title.textContent = 'Editar título';
+    },
+
+    removeEducationEntry(idx) {
+        this._educationEntries.splice(idx, 1);
+        this.renderEducationEntries();
+    },
+
+    saveEducationEntry() {
+        const degree = document.getElementById('eduDegree').value.trim();
+        const institution = document.getElementById('eduInstitution').value.trim();
+        const year = document.getElementById('eduYear').value;
+        if (!degree) { this.showToast('Ingresa el nombre del título', 'error'); return; }
+        if (!institution) { this.showToast('Ingresa la institución', 'error'); return; }
+        const entry = { degree, institution, year };
+        if (this._editingEduIndex >= 0) {
+            this._educationEntries[this._editingEduIndex] = entry;
+        } else {
+            this._educationEntries.push(entry);
+        }
+        this._editingEduIndex = -1;
+        this.cancelEducationForm();
+        this.renderEducationEntries();
+    },
+
+    cancelEducationForm() {
+        const form = document.getElementById('educationFormSection');
+        if (form) form.style.display = 'none';
+        document.getElementById('addEducationBtn').style.display = 'flex';
+        this._editingEduIndex = -1;
+    },
+
+    // ===== STEP 8: WORK EXPERIENCE (Stitch) =====
+    _experienceEntries: [],
+    _editingExpIndex: -1,
+
+    renderExperienceEntries() {
+        const list = document.getElementById('experienceEntriesList');
+        const line = document.getElementById('expTimelineLine');
+        if (!list) return;
+        list.innerHTML = '';
+        if (line) line.style.display = this._experienceEntries.length > 0 ? 'block' : 'none';
+        const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        this._experienceEntries.forEach((entry, idx) => {
+            const isCurrent = entry.currentlyWorking;
+            let dateStr = '', durationStr = '';
+            if (entry.startDate) {
+                const [sy, sm] = entry.startDate.split('-');
+                dateStr = `${months[parseInt(sm) - 1]} ${sy}`;
+                const endMs = isCurrent ? Date.now() : (entry.endDate ? new Date(entry.endDate).getTime() : null);
+                if (isCurrent) dateStr += ' - Presente';
+                else if (entry.endDate) { const [ey, em] = entry.endDate.split('-'); dateStr += ` - ${months[parseInt(em) - 1]} ${ey}`; }
+                if (endMs) {
+                    const diff = endMs - new Date(entry.startDate).getTime();
+                    const yrs = Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000));
+                    const mos = Math.floor((diff % (365.25 * 24 * 60 * 60 * 1000)) / (30.44 * 24 * 60 * 60 * 1000));
+                    durationStr = (yrs > 0 ? yrs + ' año' + (yrs > 1 ? 's ' : ' ') : '') + mos + ' mes' + (mos !== 1 ? 'es' : '');
+                }
+            }
+            const row = document.createElement('div');
+            row.style.cssText = 'position: relative; display: grid; grid-template-columns: 40px 1fr; gap: 0 20px; margin-bottom: 40px; z-index: 10;';
+            row.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; padding-top: 4px;">
+                    <div style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; ${isCurrent ? 'background: #1392ec; color: white; box-shadow: 0 10px 15px -3px rgba(19,146,236,0.3);' : 'background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0;'} z-index: 10;">
+                        <span class="material-icons" style="font-size: 20px;">${isCurrent ? 'work' : 'work_history'}</span>
+                    </div>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: ${isCurrent ? '0 2px 15px -3px rgba(0,0,0,0.07)' : '0 1px 3px rgba(0,0,0,0.05)'}; border: 1px solid #f1f5f9;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                        <h3 style="font-size: 19px; font-weight: 700; color: #0f172a; margin: 0;">${entry.title}</h3>
+                        <div style="display: flex; gap: 2px;">
+                            <button onclick="app.editExperienceEntry(${idx})" style="padding: 4px; color: #cbd5e1; border: none; background: transparent; cursor: pointer;" onmouseover="this.style.color='#1392ec'" onmouseout="this.style.color='#cbd5e1'"><span class="material-icons" style="font-size: 20px;">edit</span></button>
+                            <button onclick="app.removeExperienceEntry(${idx})" style="padding: 4px; color: #cbd5e1; border: none; background: transparent; cursor: pointer;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#cbd5e1'"><span class="material-icons" style="font-size: 20px;">delete</span></button>
+                        </div>
+                    </div>
+                    <p style="color: #334155; font-weight: 600; font-size: 16px; margin: 0 0 12px;">${entry.company}</p>
+                    ${dateStr ? `<div style="display: flex; align-items: center; gap: 8px; ${entry.description ? 'margin-bottom: 16px;' : ''}">
+                        <div style="background: #f8fafc; padding: 4px 8px; border-radius: 4px; color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+                            <span class="material-icons" style="font-size: 14px;">calendar_today</span>${dateStr}
+                        </div>
+                        ${durationStr ? `<span style="color: #cbd5e1;">&#8226;</span><span style="color: #94a3b8; font-size: 12px;">${durationStr}</span>` : ''}
+                    </div>` : ''}
+                    ${entry.description ? `<p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0;">${entry.description}</p>` : ''}
+                </div>`;
+            list.appendChild(row);
+        });
+    },
+
+    showExperienceForm() {
+        this._editingExpIndex = -1;
+        const form = document.getElementById('experienceFormSection');
+        if (form) form.style.display = 'block';
+        document.getElementById('experienceFormTitle').textContent = 'Agregar posición';
+        document.getElementById('expTitle').value = '';
+        document.getElementById('expCompany').value = '';
+        document.getElementById('expStartDate').value = '';
+        document.getElementById('expEndDate').value = '';
+        document.getElementById('expEndDate').disabled = false;
+        document.getElementById('expCurrentlyWorking').checked = false;
+        document.getElementById('expDescription').value = '';
+        document.getElementById('addExpBtnRow').style.display = 'none';
+        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    },
+
+    editExperienceEntry(idx) {
+        const entry = this._experienceEntries[idx];
+        if (!entry) return;
+        this._editingExpIndex = idx;
+        this.showExperienceForm();
+        document.getElementById('expTitle').value = entry.title;
+        document.getElementById('expCompany').value = entry.company;
+        document.getElementById('expStartDate').value = entry.startDate || '';
+        document.getElementById('expEndDate').value = entry.endDate || '';
+        document.getElementById('expCurrentlyWorking').checked = entry.currentlyWorking || false;
+        document.getElementById('expEndDate').disabled = entry.currentlyWorking || false;
+        document.getElementById('expDescription').value = entry.description || '';
+        document.getElementById('experienceFormTitle').textContent = 'Editar posición';
+    },
+
+    removeExperienceEntry(idx) {
+        this._experienceEntries.splice(idx, 1);
+        this.renderExperienceEntries();
+    },
+
+    saveExperienceEntry() {
+        const title = document.getElementById('expTitle').value.trim();
+        const company = document.getElementById('expCompany').value.trim();
+        const startDate = document.getElementById('expStartDate').value;
+        const endDate = document.getElementById('expEndDate').value;
+        const currentlyWorking = document.getElementById('expCurrentlyWorking').checked;
+        const description = document.getElementById('expDescription').value.trim();
+        if (!title) { this.showToast('Ingresa el cargo', 'error'); return; }
+        if (!company) { this.showToast('Ingresa la empresa', 'error'); return; }
+        const entry = { title, company, startDate, endDate: currentlyWorking ? null : endDate, currentlyWorking, description };
+        if (this._editingExpIndex >= 0) {
+            this._experienceEntries[this._editingExpIndex] = entry;
+        } else {
+            this._experienceEntries.unshift(entry);
+        }
+        this._editingExpIndex = -1;
+        this.cancelExperienceForm();
+        this.renderExperienceEntries();
+    },
+
+    cancelExperienceForm() {
+        const form = document.getElementById('experienceFormSection');
+        if (form) form.style.display = 'none';
+        document.getElementById('addExpBtnRow').style.display = 'grid';
+        this._editingExpIndex = -1;
+    },
+
+    selectWorkModality(value, element) {
+        // Stitch-style work modality card selection
+        document.querySelectorAll('#onboardingStep3 .modality-option').forEach(opt => {
+            opt.style.border = '1px solid transparent';
+            const radio = opt.querySelector('input[type="radio"]');
+            if (radio) radio.checked = false;
+            const icon = opt.querySelector('.modality-icon');
+            if (icon) { icon.style.background = '#f3f4f6'; icon.style.color = '#6b7280'; }
+            const check = opt.querySelector('.modality-check');
+            if (check) { check.style.borderColor = '#d1d5db'; check.style.background = 'transparent'; check.style.color = 'transparent'; }
+        });
+        // Select clicked
+        element.style.border = '2px solid #1392ec';
+        element.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)';
+        const radio = element.querySelector('input[type="radio"]');
+        if (radio) radio.checked = true;
+        const icon = element.querySelector('.modality-icon');
+        if (icon) { icon.style.background = '#1392ec'; icon.style.color = 'white'; icon.style.boxShadow = '0 4px 6px -1px rgba(19,146,236,0.3)'; }
+        const check = element.querySelector('.modality-check');
+        if (check) { check.style.borderColor = '#1392ec'; check.style.background = '#1392ec'; check.style.color = 'white'; }
     },
 
     selectOption(category, value, element) {
@@ -5144,42 +7064,158 @@ const app = {
     handlePhotoUpload(event) {
         const file = event.target.files[0];
         if (file) {
-            // Check file size (5MB max)
             if (file.size > 5 * 1024 * 1024) {
                 this.showToast('La foto debe ser menor a 5MB');
                 return;
             }
 
-            // Save file for later upload
             if (!this.pendingUploads) this.pendingUploads = {};
             this.pendingUploads.photo = file;
 
-            // Show success message
-            document.getElementById('photoPreview').style.display = 'block';
+            // Update Stitch photo circle with preview
+            const circle = document.getElementById('mediaPhotoCircle');
+            if (circle) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    circle.innerHTML = '';
+                    circle.style.backgroundImage = 'url(' + e.target.result + ')';
+                    circle.style.backgroundSize = 'cover';
+                    circle.style.backgroundPosition = 'center';
+                };
+                reader.readAsDataURL(file);
+            }
+
+            const preview = document.getElementById('photoPreview');
+            if (preview) preview.style.display = 'block';
         }
     },
 
     handleCVUpload(event) {
         const file = event.target.files[0];
         if (file) {
-            // Check file size (10MB max)
-            if (file.size > 10 * 1024 * 1024) {
-                this.showToast('El CV debe ser menor a 10MB');
+            if (file.size > 5 * 1024 * 1024) {
+                this.showToast('El CV debe ser menor a 5MB');
                 return;
             }
 
-            // Check if PDF
-            if (file.type !== 'application/pdf') {
-                this.showToast('El CV debe ser un archivo PDF');
+            const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+            if (!validTypes.includes(file.type)) {
+                this.showToast('El CV debe ser PDF o DOCX');
                 return;
             }
 
-            // Save file for later upload
             if (!this.pendingUploads) this.pendingUploads = {};
             this.pendingUploads.cv = file;
 
-            // Show success message
-            document.getElementById('cvPreview').style.display = 'block';
+            // Show Stitch file info
+            const fileInfo = document.getElementById('mediaCvFileInfo');
+            const dropzone = document.getElementById('mediaCvDropzone');
+            const fileName = document.getElementById('mediaCvFileName');
+            const fileSize = document.getElementById('mediaCvFileSize');
+
+            if (fileInfo && dropzone) {
+                const sizeKB = (file.size / 1024).toFixed(0);
+                const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                const sizeText = file.size > 1024 * 1024 ? sizeMB + ' MB' : sizeKB + ' KB';
+
+                if (fileName) fileName.textContent = file.name;
+                if (fileSize) fileSize.textContent = sizeText + ' \u2022 Completado';
+                fileInfo.style.display = 'block';
+                dropzone.style.display = 'none';
+            }
+
+            const preview = document.getElementById('cvPreview');
+            if (preview) preview.style.display = 'block';
+        }
+    },
+
+    removeCVUpload() {
+        if (this.pendingUploads) delete this.pendingUploads.cv;
+
+        const fileInfo = document.getElementById('mediaCvFileInfo');
+        const dropzone = document.getElementById('mediaCvDropzone');
+        const cvInput = document.getElementById('cvInput');
+        const preview = document.getElementById('cvPreview');
+
+        if (fileInfo) fileInfo.style.display = 'none';
+        if (dropzone) dropzone.style.display = 'flex';
+        if (cvInput) cvInput.value = '';
+        if (preview) preview.style.display = 'none';
+    },
+
+    async handleProfileCVUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (file.size > 5 * 1024 * 1024) {
+            this.showToast('El CV debe ser menor a 5MB', 'error');
+            return;
+        }
+
+        const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        if (!validTypes.includes(file.type)) {
+            this.showToast('El CV debe ser PDF o DOCX', 'error');
+            return;
+        }
+
+        const cvUploadingState = document.getElementById('cvUploadingState');
+        const cvEmptyState = document.getElementById('cvEmptyState');
+        const cvViewState = document.getElementById('cvViewState');
+        const cvUploadBtn = document.getElementById('profileCvUploadBtn');
+
+        if (cvEmptyState) cvEmptyState.style.display = 'none';
+        if (cvViewState) cvViewState.style.display = 'none';
+        if (cvUploadBtn) cvUploadBtn.style.display = 'none';
+        if (cvUploadingState) cvUploadingState.style.display = 'flex';
+
+        try {
+            const publicUrl = await window.talentlyBackend.storage.uploadDocument(file);
+
+            if (publicUrl) {
+                // Actualizar info en base de datos de usuario
+                const { error } = await window.supabaseClient.from('profiles').update({ cv_url: publicUrl }).eq('id', this.currentUser.id);
+                if (error) throw error;
+
+                this.currentUser.cv_url = publicUrl;
+                this.showToast('CV subido exitosamente', 'success');
+            } else {
+                throw new Error("No se pudo obtener URL del documento");
+            }
+        } catch (error) {
+            console.error('Error al subir CV:', error);
+            this.showToast('Error al subir el documento. Revisa la consola y los permisos de Storage.', 'error');
+        } finally {
+            if (cvUploadingState) cvUploadingState.style.display = 'none';
+            // Restablecer el input file para permitir seleccionar el mismo archivo de nuevo si falló
+            const input = document.getElementById('profileCvInput');
+            if (input) input.value = '';
+
+            // Volver a dibujar
+            this.renderProfile();
+        }
+    },
+
+    viewProfileCV() {
+        if (this.currentUser && this.currentUser.cv_url) {
+            window.open(this.currentUser.cv_url, '_blank');
+        } else {
+            this.showToast('No hay CV disponible', 'warning');
+        }
+    },
+
+    async deleteProfileCV() {
+        if (!confirm('¿Estás seguro de que deseas eliminar tu Currículum guardado?')) return;
+
+        try {
+            const { error } = await window.supabaseClient.profiles.update({ cv_url: null });
+            if (error) throw error;
+
+            this.currentUser.cv_url = null;
+            this.showToast('Currículum eliminado', 'success');
+            this.renderProfile();
+        } catch (error) {
+            console.error('Error eliminando CV:', error);
+            this.showToast('Error al eliminar el documento.', 'error');
         }
     },
 
@@ -5358,6 +7394,29 @@ const app = {
     },
 
     // Cargar culture values desde BD
+    // Pastel color palette for culture value chips (cycles through)
+    _cultureChipColors: [
+        { bg: '#e0f2fe', text: '#0c4a6e' },   // blue
+        { bg: '#fce7f3', text: '#831843' },   // pink
+        { bg: '#dcfce7', text: '#14532d' },   // green
+        { bg: '#eff6ff', text: '#1e3a5f' },   // light blue
+        { bg: '#f3e8ff', text: '#581c87' },   // purple
+        { bg: '#ffedd5', text: '#7c2d12' },   // orange
+        { bg: '#ccfbf1', text: '#134e4a' },   // teal
+        { bg: '#fef9c3', text: '#713f12' },   // yellow
+    ],
+
+    // Icon map for culture values (slug → material icon)
+    _cultureIconMap: {
+        'innovacion': 'lightbulb', 'diversidad': 'diversity_3', 'sustentabilidad': 'eco',
+        'trabajo-remoto': 'laptop_chromebook', 'mentoria': 'school', 'agilidad': 'bolt',
+        'transparencia': 'handshake', 'bienestar': 'favorite', 'equipo': 'groups',
+        'autonomia': 'self_improvement', 'balance': 'balance', 'crecimiento': 'trending_up',
+        'resultados': 'target', 'aprendizaje': 'menu_book', 'informal': 'mood',
+        'formal': 'business_center', 'agil': 'speed', 'data-driven': 'analytics',
+        'impacto': 'public', 'customer': 'support_agent',
+    },
+
     async loadCompanyCultureValues() {
         const backend = window.talentlyBackend;
         if (!backend) return;
@@ -5368,105 +7427,284 @@ const app = {
             if (!container || !values) return;
 
             container.innerHTML = '';
-            values.forEach(value => {
-                const label = document.createElement('label');
-                label.className = 'company-culture-option';
-                label.style.cssText = 'padding: 14px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500;';
-                label.onclick = () => this.toggleCompanyCulture(label);
+            const colors = this._cultureChipColors;
 
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.value = value.slug;
-                checkbox.style.cssText = 'width: 16px; height: 16px; accent-color: var(--primary);';
+            values.forEach((value, i) => {
+                const color = colors[i % colors.length];
+                const icon = this._cultureIconMap[value.slug] || 'star';
+                const btn = document.createElement('button');
+                btn.className = 'company-culture-option';
+                btn.dataset.value = value.slug;
+                btn.dataset.selected = 'false';
+                btn.dataset.defaultBg = color.bg;
+                btn.dataset.defaultText = color.text;
+                btn.style.cssText = 'display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 99px; border: 1px solid transparent; background: ' + color.bg + '; color: ' + color.text + '; font-weight: 500; font-size: 14px; font-family: Inter, sans-serif; cursor: pointer; transition: all 0.2s; outline: none;';
+                btn.onclick = () => this.toggleCompanyCulture(btn);
 
-                const span = document.createElement('span');
-                span.textContent = value.name;
+                const iconEl = document.createElement('span');
+                iconEl.className = 'material-icons';
+                iconEl.style.cssText = 'font-size: 18px; color: ' + color.text + '; transition: color 0.2s;';
+                iconEl.textContent = icon;
 
-                label.appendChild(checkbox);
-                label.appendChild(span);
-                container.appendChild(label);
+                const label = document.createElement('span');
+                label.textContent = value.name;
+
+                btn.appendChild(iconEl);
+                btn.appendChild(label);
+                container.appendChild(btn);
             });
         } catch (error) {
             console.error('Error loading culture values:', error);
         }
     },
 
-    // Cargar company stages desde BD
+    // Icon + color map for stage cards (Stitch style)
+    _stageCardStyles: {
+        'pre-seed': { icon: 'lightbulb', iconBg: '#fef9c3', iconColor: '#a16207' },
+        'seed': { icon: 'rocket_launch', iconBg: '#eff6ff', iconColor: '#1392ec' },
+        'early': { icon: 'trending_up', iconBg: '#eff6ff', iconColor: '#1392ec' },
+        'growth': { icon: 'trending_up', iconBg: '#eff6ff', iconColor: '#1392ec' },
+        'scaleup': { icon: 'trending_up', iconBg: '#eff6ff', iconColor: '#1392ec' },
+        'startup': { icon: 'rocket_launch', iconBg: '#eff6ff', iconColor: '#1392ec' },
+        'sme': { icon: 'storefront', iconBg: '#f3e8ff', iconColor: '#7c3aed' },
+        'pyme': { icon: 'storefront', iconBg: '#f3e8ff', iconColor: '#7c3aed' },
+        'enterprise': { icon: 'domain', iconBg: '#dcfce7', iconColor: '#16a34a' },
+        'mature': { icon: 'domain', iconBg: '#dcfce7', iconColor: '#16a34a' },
+    },
+
+    // Currently selected company stage slug
+    _selectedCompanyStage: null,
+
+    // Cargar company stages desde BD (Stitch card style)
     async loadCompanyStages() {
         const backend = window.talentlyBackend;
         if (!backend) return;
 
         try {
             const { data: stages } = await backend.reference.getCompanyStages();
-            // Target the OPTIONS container (first div after subtitle), NOT the buttons div
-            const optionsContainer = document.querySelector('#companyStep6 .auth-content > div[style*="flex-direction: column"]');
-            if (!optionsContainer || !stages) return;
+            const container = document.getElementById('companyStageContainer');
+            if (!container || !stages) return;
 
-            // Clear ALL existing hardcoded options
-            optionsContainer.innerHTML = '';
+            container.innerHTML = '';
 
             stages.forEach(stage => {
-                const label = document.createElement('label');
-                label.className = 'company-stage-option';
-                label.style.cssText = 'padding: 18px; border: 2px solid var(--border); border-radius: 14px; cursor: pointer; transition: all 0.3s ease;';
-                label.onclick = () => this.selectOption('companyStage', stage.slug, label);
+                const style = this._stageCardStyles[stage.slug] || { icon: 'business', iconBg: '#f1f5f9', iconColor: '#64748b' };
+                const card = document.createElement('button');
+                card.className = 'company-stage-option';
+                card.dataset.value = stage.slug;
+                card.style.cssText = 'position: relative; display: flex; flex-direction: column; align-items: flex-start; padding: 16px; border-radius: 16px; border: 1px solid #f1f5f9; background: #fff; cursor: pointer; transition: all 0.3s; text-align: left; box-shadow: 0 2px 10px rgba(0,0,0,0.03); outline: none; font-family: Inter, sans-serif;';
+                card.onclick = () => this.selectCompanyStage(stage.slug, card);
 
+                // Hidden radio for form compatibility
                 const radio = document.createElement('input');
                 radio.type = 'radio';
                 radio.name = 'companyStage';
                 radio.value = stage.slug;
-                radio.style.cssText = 'width: 18px; height: 18px; accent-color: var(--primary); margin-right: 12px;';
+                radio.style.display = 'none';
 
-                const span = document.createElement('span');
-                span.style.cssText = 'font-weight: 600; font-size: 14px;';
-                span.textContent = stage.description ? `${stage.name} / ${stage.description}` : stage.name;
+                // Check icon (hidden by default)
+                const check = document.createElement('span');
+                check.className = 'material-icons stage-check';
+                check.style.cssText = 'position: absolute; top: 12px; right: 12px; font-size: 20px; color: #1392ec; display: none;';
+                check.textContent = 'check_circle';
 
-                label.appendChild(radio);
-                label.appendChild(span);
-                optionsContainer.appendChild(label);
+                // Icon container
+                const iconWrap = document.createElement('div');
+                iconWrap.style.cssText = 'margin-bottom: 12px; padding: 12px; border-radius: 12px; background: ' + style.iconBg + '; color: ' + style.iconColor + '; transition: all 0.3s;';
+                const iconEl = document.createElement('span');
+                iconEl.className = 'material-icons';
+                iconEl.style.fontSize = '24px';
+                iconEl.textContent = style.icon;
+                iconWrap.appendChild(iconEl);
+
+                // Title
+                const title = document.createElement('h3');
+                title.style.cssText = 'font-weight: 700; font-size: 17px; margin: 0 0 4px; color: #0f172a;';
+                title.textContent = stage.name;
+
+                // Description
+                const desc = document.createElement('p');
+                desc.style.cssText = 'font-size: 12px; color: #64748b; font-weight: 500; line-height: 1.5; margin: 0;';
+                desc.textContent = stage.description || '';
+
+                card.appendChild(radio);
+                card.appendChild(check);
+                card.appendChild(iconWrap);
+                card.appendChild(title);
+                card.appendChild(desc);
+                container.appendChild(card);
             });
         } catch (error) {
             console.error('Error loading company stages:', error);
         }
     },
 
-    // Cargar work models desde BD
+    // Select a company stage card (Stitch style)
+    selectCompanyStage(slug, element) {
+        this._selectedCompanyStage = slug;
+
+        // Deselect all
+        document.querySelectorAll('.company-stage-option').forEach(card => {
+            card.style.borderColor = '#f1f5f9';
+            card.style.background = '#fff';
+            card.style.transform = 'scale(1)';
+            card.style.boxShadow = '0 2px 10px rgba(0,0,0,0.03)';
+            const radio = card.querySelector('input[type="radio"]');
+            if (radio) radio.checked = false;
+            const check = card.querySelector('.stage-check');
+            if (check) check.style.display = 'none';
+            const title = card.querySelector('h3');
+            if (title) title.style.color = '#0f172a';
+        });
+
+        // Select this one
+        element.style.borderColor = '#1392ec';
+        element.style.borderWidth = '2px';
+        element.style.background = 'rgba(219,234,254,0.3)';
+        element.style.transform = 'scale(1.02)';
+        element.style.boxShadow = '0 4px 20px rgba(0,0,0,0.05)';
+        const radio = element.querySelector('input[type="radio"]');
+        if (radio) radio.checked = true;
+        const check = element.querySelector('.stage-check');
+        if (check) check.style.display = 'block';
+        const title = element.querySelector('h3');
+        if (title) title.style.color = '#1392ec';
+    },
+
+    // Size slider labels and slug mapping
+    _companySizeLabels: ['1 - 10', '11 - 50', '51 - 200', '201 - 500', '500+'],
+    _companySizeSlugs: null, // Populated from DB
+
+    // Load company sizes from DB into slider mapping
+    async loadCompanySizesForSlider() {
+        const backend = window.talentlyBackend;
+        if (!backend) return;
+        try {
+            const { data: sizes } = await backend.reference.getCompanySizes();
+            if (sizes && sizes.length > 0) {
+                this._companySizeSlugs = sizes.map(s => s.slug);
+                // Update labels from DB if available
+                this._companySizeLabels = sizes.map(s => s.name || s.slug);
+            }
+        } catch (e) {
+            console.error('Error loading sizes for slider:', e);
+        }
+    },
+
+    // Update the size slider visual (Stitch range slider)
+    updateCompanySizeSlider(value) {
+        const val = parseInt(value);
+        const pct = ((val - 1) / 4) * 100;
+
+        // Update label
+        const label = document.getElementById('companySizeLabel');
+        if (label) label.textContent = this._companySizeLabels[val - 1] || '';
+
+        // Update track fill
+        const fill = document.getElementById('companySizeTrackFill');
+        if (fill) fill.style.width = pct + '%';
+
+        // Update thumb position
+        const thumb = document.getElementById('companySizeThumb');
+        if (thumb) thumb.style.left = 'calc(' + pct + '% - 14px)';
+
+        // Update tick styles
+        for (let i = 1; i <= 5; i++) {
+            const tick = document.getElementById('companySizeTick' + i);
+            if (!tick) continue;
+            const dot = tick.querySelector('div');
+            const text = tick.querySelector('span');
+            if (i === val) {
+                if (dot) { dot.style.width = '6px'; dot.style.height = '6px'; dot.style.background = '#1392ec'; dot.style.boxShadow = '0 0 8px rgba(19,146,236,0.6)'; }
+                if (text) { text.style.fontSize = '11px'; text.style.fontWeight = '700'; text.style.color = '#1392ec'; }
+            } else {
+                if (dot) { dot.style.width = '4px'; dot.style.height = '4px'; dot.style.background = '#cbd5e1'; dot.style.boxShadow = 'none'; }
+                if (text) { text.style.fontSize = '10px'; text.style.fontWeight = '500'; text.style.color = '#94a3b8'; }
+            }
+        }
+
+        // Store the selected slug
+        if (this._companySizeSlugs && this._companySizeSlugs[val - 1]) {
+            this._selectedCompanySize = this._companySizeSlugs[val - 1];
+        } else {
+            // Fallback: generate slug from label
+            this._selectedCompanySize = this._companySizeLabels[val - 1];
+        }
+    },
+
+    // Icon map for work model cards (slug → { icon, iconColor, iconBg })
+    _workModelIcons: {
+        '100-remoto': { icon: 'public', color: '#1392ec', bg: '#eff6ff' },
+        'remote-first': { icon: 'public', color: '#1392ec', bg: '#eff6ff' },
+        'hibrido-flexible': { icon: 'home_work', color: '#7c3aed', bg: '#f3e8ff' },
+        'hibrido-fijo': { icon: 'home_work', color: '#7c3aed', bg: '#f3e8ff' },
+        'presencial': { icon: 'apartment', color: '#16a34a', bg: '#dcfce7' },
+    },
+
+    // Cargar work models desde BD (Stitch card style)
     async loadWorkModels() {
         const backend = window.talentlyBackend;
         if (!backend) return;
 
         try {
             const { data: models } = await backend.reference.getWorkModalities();
-            // Target the OPTIONS container (first div after subtitle), NOT the buttons div
-            const container = document.querySelector('#companyStep7 .auth-content > div[style*="flex-direction: column"]');
+            const container = document.getElementById('workModelContainer');
             if (!container || !models) return;
 
-            // Clear ALL existing hardcoded options
             container.innerHTML = '';
 
             models.forEach(model => {
+                const style = this._workModelIcons[model.slug] || { icon: 'work', color: '#64748b', bg: '#f1f5f9' };
+
                 const label = document.createElement('label');
                 label.className = 'work-model-option';
-                label.style.cssText = 'padding: 20px; border: 2px solid var(--border); border-radius: 16px; cursor: pointer; transition: all 0.3s ease;';
-                label.onclick = () => this.selectOption('workModel', model.slug, label);
+                label.style.cssText = 'position: relative; cursor: pointer; display: block;';
 
                 const radio = document.createElement('input');
                 radio.type = 'radio';
                 radio.name = 'workModel';
                 radio.value = model.slug;
-                radio.style.cssText = 'width: 20px; height: 20px; accent-color: var(--primary); margin-right: 12px;';
+                radio.style.cssText = 'position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0);';
+                radio.onchange = () => this._updateWorkModelCards();
 
-                const nameSpan = document.createElement('span');
-                nameSpan.style.fontWeight = '600';
-                nameSpan.textContent = model.name;
+                const card = document.createElement('div');
+                card.className = 'work-model-card';
+                card.style.cssText = 'display: flex; align-items: center; padding: 16px; border-radius: 12px; border: 1px solid transparent; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.03); transition: all 0.2s;';
 
-                const descDiv = document.createElement('div');
-                descDiv.style.cssText = 'font-size: 13px; color: var(--text-secondary); margin-left: 32px; margin-top: 4px;';
-                descDiv.textContent = model.description || '';
+                // Icon
+                const iconWrap = document.createElement('div');
+                iconWrap.style.cssText = 'display: flex; width: 48px; height: 48px; flex-shrink: 0; align-items: center; justify-content: center; border-radius: 8px; background: ' + style.bg + '; color: ' + style.color + ';';
+                const iconEl = document.createElement('span');
+                iconEl.className = 'material-icons';
+                iconEl.textContent = style.icon;
+                iconWrap.appendChild(iconEl);
 
+                // Text
+                const textWrap = document.createElement('div');
+                textWrap.style.cssText = 'margin-left: 16px; flex: 1;';
+                const name = document.createElement('span');
+                name.style.cssText = 'display: block; font-size: 15px; font-weight: 700; color: #111827;';
+                name.textContent = model.name;
+                const desc = document.createElement('span');
+                desc.style.cssText = 'display: block; font-size: 13px; color: #6b7280;';
+                desc.textContent = model.description || '';
+                textWrap.appendChild(name);
+                textWrap.appendChild(desc);
+
+                // Radio circle
+                const circle = document.createElement('div');
+                circle.className = 'wm-radio-circle';
+                circle.style.cssText = 'width: 24px; height: 24px; border-radius: 50%; border: 2px solid #e5e7eb; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s;';
+                const dot = document.createElement('div');
+                dot.className = 'wm-radio-dot';
+                dot.style.cssText = 'width: 10px; height: 10px; border-radius: 50%; background: #fff; opacity: 0; transition: opacity 0.2s;';
+                circle.appendChild(dot);
+
+                card.appendChild(iconWrap);
+                card.appendChild(textWrap);
+                card.appendChild(circle);
                 label.appendChild(radio);
-                label.appendChild(nameSpan);
-                if (model.description) label.appendChild(descDiv);
+                label.appendChild(card);
                 container.appendChild(label);
             });
         } catch (error) {
@@ -5474,81 +7712,263 @@ const app = {
         }
     },
 
+    // Update visual state of work model cards
+    _updateWorkModelCards() {
+        document.querySelectorAll('.work-model-option').forEach(label => {
+            const radio = label.querySelector('input[type="radio"]');
+            const card = label.querySelector('.work-model-card');
+            const circle = label.querySelector('.wm-radio-circle');
+            const dot = label.querySelector('.wm-radio-dot');
+            if (!radio || !card) return;
+
+            if (radio.checked) {
+                card.style.borderColor = '#1392ec';
+                card.style.boxShadow = '0 0 0 1px #1392ec, 0 4px 20px rgba(0,0,0,0.05)';
+                if (circle) { circle.style.borderColor = '#1392ec'; circle.style.background = '#1392ec'; }
+                if (dot) dot.style.opacity = '1';
+            } else {
+                card.style.borderColor = 'transparent';
+                card.style.boxShadow = '0 2px 10px rgba(0,0,0,0.03)';
+                if (circle) { circle.style.borderColor = '#e5e7eb'; circle.style.background = 'transparent'; }
+                if (dot) dot.style.opacity = '0';
+            }
+        });
+    },
+
+    // Icon map for benefit chips
+    _benefitIcons: {
+        'seguro-medico': 'medical_services', 'seguro-dental': 'volunteer_activism',
+        'stock-options': 'trending_up', 'bonos-desempeno': 'savings',
+        'flexibilidad': 'schedule', 'presupuesto-cursos': 'school',
+        'almuerzo': 'restaurant', 'pet-friendly': 'pets',
+        'gimnasio': 'fitness_center', 'seguro-vida': 'health_and_safety',
+        'salud-mental': 'psychology', 'vacaciones-extra': 'beach_access',
+        'dia-cumpleanos': 'cake', 'viernes-cortos': 'wb_sunny',
+        'semana-4-dias': 'date_range', 'unlimited-pto': 'all_inclusive',
+        'licencias-parentales': 'child_friendly', 'conferencias': 'groups',
+        'certificaciones': 'workspace_premium', 'mentoring': 'handshake',
+        'bono-bienvenida': 'card_giftcard', 'bono-anual': 'payments',
+        'incrementos': 'arrow_upward', 'dias-salud': 'spa',
+        'equipamiento': 'devices', 'coworking': 'meeting_room',
+        'estacionamiento': 'local_parking',
+    },
+
+    // Load benefits from DB as Stitch-style chips for step 7
+    async loadCompanyBenefitsChips() {
+        const backend = window.talentlyBackend;
+        if (!backend) return;
+
+        try {
+            const { data: benefits } = await backend.reference.getCompanyBenefits();
+            const container = document.getElementById('companyBenefitsContainer');
+            if (!container || !benefits) return;
+
+            container.innerHTML = '';
+
+            benefits.forEach(benefit => {
+                const icon = this._benefitIcons[benefit.slug] || 'star';
+
+                const label = document.createElement('label');
+                label.className = 'benefit-option';
+                label.style.cssText = 'cursor: pointer; display: inline-block;';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = benefit.slug;
+                checkbox.style.cssText = 'position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0);';
+                checkbox.onchange = () => this._updateBenefitChipStyle(chip, checkbox.checked);
+
+                const chip = document.createElement('div');
+                chip.style.cssText = 'padding: 10px 16px; border-radius: 99px; border: 1px solid #e5e7eb; background: #fff; color: #4b5563; font-size: 13px; font-weight: 500; font-family: Inter, sans-serif; transition: all 0.2s; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);';
+
+                const iconEl = document.createElement('span');
+                iconEl.className = 'material-icons';
+                iconEl.style.cssText = 'font-size: 18px; color: #9ca3af; transition: color 0.2s;';
+                iconEl.textContent = icon;
+
+                const text = document.createElement('span');
+                text.textContent = benefit.name;
+
+                chip.appendChild(iconEl);
+                chip.appendChild(text);
+                label.appendChild(checkbox);
+                label.appendChild(chip);
+                container.appendChild(label);
+            });
+        } catch (error) {
+            console.error('Error loading benefits chips:', error);
+        }
+    },
+
+    // Update benefit chip visual on toggle
+    _updateBenefitChipStyle(chip, isChecked) {
+        const icon = chip.querySelector('.material-icons');
+        if (isChecked) {
+            chip.style.background = '#1392ec';
+            chip.style.borderColor = '#1392ec';
+            chip.style.color = '#fff';
+            chip.style.boxShadow = '0 4px 6px rgba(19,146,236,0.3)';
+            if (icon) icon.style.color = '#fff';
+        } else {
+            chip.style.background = '#fff';
+            chip.style.borderColor = '#e5e7eb';
+            chip.style.color = '#4b5563';
+            chip.style.boxShadow = '0 1px 2px rgba(0,0,0,0.03)';
+            if (icon) icon.style.color = '#9ca3af';
+        }
+    },
+
     // Cargar positions desde BD
+    // Position icon map for Stitch chip style
+    _positionIconMap: {
+        'ingenieria': 'terminal', 'engineering': 'terminal',
+        'diseno': 'palette', 'design': 'palette',
+        'producto': 'inventory_2', 'product': 'inventory_2',
+        'marketing': 'campaign',
+        'ventas': 'trending_up', 'sales': 'trending_up',
+        'data': 'analytics', 'datos': 'analytics',
+        'operaciones': 'settings', 'operations': 'settings',
+        'finanzas': 'account_balance', 'finance': 'account_balance',
+        'rrhh': 'people', 'hr': 'people', 'recursos-humanos': 'people',
+        'legal': 'gavel',
+        'soporte': 'support_agent', 'support': 'support_agent',
+        'devops': 'cloud', 'infraestructura': 'cloud',
+        'qa': 'bug_report', 'calidad': 'bug_report',
+        'seguridad': 'shield', 'security': 'shield',
+        'contenido': 'edit_note', 'content': 'edit_note',
+    },
+
     async loadCompanyPositions() {
         const backend = window.talentlyBackend;
         if (!backend) return;
 
         try {
             const { data: positions } = await backend.reference.getCompanyPositions();
-            const container = document.querySelector('#companyStep8 > div > div:nth-child(2) > div:nth-child(3)');
+            const container = document.getElementById('companyPositionsContainer');
             if (!container || !positions) return;
 
             container.innerHTML = '';
-            positions.forEach(position => {
-                const label = document.createElement('label');
-                label.className = 'position-option';
-                label.style.cssText = 'padding: 14px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500;';
-                label.onclick = () => this.togglePosition(label);
-
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.value = position.slug;
-                checkbox.style.cssText = 'width: 16px; height: 16px; accent-color: var(--primary);';
-
-                const span = document.createElement('span');
-                span.textContent = position.name;
-
-                label.appendChild(checkbox);
-                label.appendChild(span);
-                container.appendChild(label);
+            positions.forEach(pos => {
+                const icon = this._positionIconMap[pos.slug] || 'work';
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'position-option';
+                chip.dataset.value = pos.slug;
+                chip.dataset.selected = 'false';
+                chip.style.cssText = 'display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 99px; border: 2px solid #e2e8f0; background: #fff; color: #475569; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: inherit;';
+                chip.onclick = () => this.togglePositionChip(chip);
+                chip.innerHTML = `<span class="material-icons" style="font-size: 18px;">${icon}</span>${pos.name}`;
+                container.appendChild(chip);
             });
         } catch (error) {
             console.error('Error loading positions:', error);
         }
     },
 
-    // Cargar seniority levels desde BD
+    togglePositionChip(chip) {
+        const isSelected = chip.dataset.selected === 'true';
+        chip.dataset.selected = isSelected ? 'false' : 'true';
+
+        if (!isSelected) {
+            chip.style.background = '#1392ec';
+            chip.style.color = '#fff';
+            chip.style.borderColor = '#1392ec';
+            chip.style.boxShadow = '0 4px 12px rgba(19,146,236,0.3)';
+        } else {
+            chip.style.background = '#fff';
+            chip.style.color = '#475569';
+            chip.style.borderColor = '#e2e8f0';
+            chip.style.boxShadow = 'none';
+        }
+    },
+
+    // Seniority card styles
+    _seniorityCardStyles: {
+        'junior': { icon: 'school', iconBg: '#dcfce7', iconColor: '#16a34a' },
+        'semi-senior': { icon: 'trending_up', iconBg: '#eff6ff', iconColor: '#1392ec' },
+        'senior': { icon: 'star', iconBg: '#fef3c7', iconColor: '#d97706' },
+        'lead': { icon: 'military_tech', iconBg: '#f3e8ff', iconColor: '#7c3aed' },
+        'manager': { icon: 'supervisor_account', iconBg: '#fce7f3', iconColor: '#db2777' },
+        'director': { icon: 'diamond', iconBg: '#fef2f2', iconColor: '#dc2626' },
+    },
+
     async loadSeniorityLevels() {
         const backend = window.talentlyBackend;
         if (!backend) return;
 
         try {
             const { data: levels } = await backend.reference.getSeniorityLevels();
-            const container = document.querySelector('#companyStep9 .auth-content > div:nth-child(3)');
+            const container = document.getElementById('companySeniorityContainer');
             if (!container || !levels) return;
 
             container.innerHTML = '';
             levels.forEach(level => {
-                const label = document.createElement('label');
-                label.className = 'seniority-option';
-                label.style.cssText = 'padding: 18px; border: 2px solid var(--border); border-radius: 14px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center;';
-                label.onclick = () => this.toggleSeniority(label);
+                const style = this._seniorityCardStyles[level.slug] || { icon: 'person', iconBg: '#f1f5f9', iconColor: '#64748b' };
+                const card = document.createElement('div');
+                card.className = 'seniority-option';
+                card.dataset.value = level.slug;
+                card.dataset.selected = 'false';
+                card.style.cssText = 'position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px 16px; border-radius: 16px; border: 2px solid #e2e8f0; background: #fff; cursor: pointer; transition: all 0.2s ease; text-align: center;';
+                card.onclick = () => this.toggleSeniorityCard(card);
 
+                // Checkbox circle (top-right)
+                const checkCircle = document.createElement('div');
+                checkCircle.className = 'seniority-check';
+                checkCircle.style.cssText = 'position: absolute; top: 12px; right: 12px; width: 22px; height: 22px; border-radius: 50%; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; transition: all 0.2s;';
+
+                // Icon
+                const iconWrap = document.createElement('div');
+                iconWrap.style.cssText = `width: 48px; height: 48px; border-radius: 12px; background: ${style.iconBg}; display: flex; align-items: center; justify-content: center;`;
+                iconWrap.innerHTML = `<span class="material-icons" style="font-size: 24px; color: ${style.iconColor};">${style.icon}</span>`;
+
+                // Name
+                const name = document.createElement('span');
+                name.style.cssText = 'font-size: 14px; font-weight: 700; color: #0f172a;';
+                name.textContent = level.name;
+
+                // Hidden checkbox for compatibility
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.value = level.slug;
-                checkbox.style.cssText = 'width: 18px; height: 18px; accent-color: var(--primary); margin-right: 14px;';
+                checkbox.style.display = 'none';
 
-                const div = document.createElement('div');
-
-                const nameDiv = document.createElement('div');
-                nameDiv.style.cssText = 'font-weight: 600; font-size: 15px;';
-                nameDiv.textContent = level.name;
-
-                const descDiv = document.createElement('div');
-                descDiv.style.cssText = 'font-size: 13px; color: var(--text-secondary); margin-top: 2px;';
-                descDiv.textContent = level.description || '';
-
-                div.appendChild(nameDiv);
-                if (level.description) div.appendChild(descDiv);
-
-                label.appendChild(checkbox);
-                label.appendChild(div);
-                container.appendChild(label);
+                card.appendChild(checkCircle);
+                card.appendChild(iconWrap);
+                card.appendChild(name);
+                card.appendChild(checkbox);
+                container.appendChild(card);
             });
         } catch (error) {
             console.error('Error loading seniority levels:', error);
+        }
+    },
+
+    toggleSeniorityCard(card) {
+        const isSelected = card.dataset.selected === 'true';
+        const checkbox = card.querySelector('input[type="checkbox"]');
+        const check = card.querySelector('.seniority-check');
+
+        card.dataset.selected = isSelected ? 'false' : 'true';
+        if (checkbox) checkbox.checked = !isSelected;
+
+        if (!isSelected) {
+            card.style.borderColor = '#1392ec';
+            card.style.background = '#eff6ff';
+            card.style.boxShadow = '0 4px 12px rgba(19,146,236,0.15)';
+            if (check) {
+                check.style.borderColor = '#1392ec';
+                check.style.background = '#1392ec';
+                check.innerHTML = '<span class="material-icons" style="font-size: 14px; color: #fff;">check</span>';
+            }
+        } else {
+            card.style.borderColor = '#e2e8f0';
+            card.style.background = '#fff';
+            card.style.boxShadow = 'none';
+            if (check) {
+                check.style.borderColor = '#cbd5e1';
+                check.style.background = 'transparent';
+                check.innerHTML = '';
+            }
         }
     },
 
@@ -5569,24 +7989,11 @@ const app = {
         let isValid = true;
 
         if (step === 2) {
-            // Info
+            // Basic Info: name + sector + website + country + city
             isValid = validateInput('companyName', 'El nombre de la empresa es obligatorio') && isValid;
-
-            // Validar RUT (obligatorio)
-            const taxId = document.getElementById('companyTaxId');
-            if (taxId) {
-                if (!taxId.value || taxId.value.trim() === '') {
-                    taxId.style.borderColor = 'var(--danger)';
-                    this.showToast('El RUT es obligatorio');
-                    isValid = false;
-                } else if (!this.validateRUT(taxId.value)) {
-                    taxId.style.borderColor = 'var(--danger)';
-                    this.showToast('El RUT ingresado no es válido');
-                    isValid = false;
-                } else {
-                    taxId.style.borderColor = 'var(--border)';
-                }
-            }
+            isValid = validateInput('companySector', 'El sector es obligatorio') && isValid;
+            isValid = validateInput('companyCountry', 'El país es obligatorio') && isValid;
+            isValid = validateInput('companyCity', 'La ciudad es obligatoria') && isValid;
 
             // Validar sitio web (opcional, pero si existe debe ser válido)
             const website = document.getElementById('companyWebsite');
@@ -5601,21 +8008,9 @@ const app = {
             }
         }
 
-        if (step === 3) {
-            // Size/Sector
-            isValid = validateInput('companySize', 'El tamaño de la empresa es obligatorio') && isValid;
-            isValid = validateInput('companySector', 'El sector es obligatorio') && isValid;
-        }
-
-        if (step === 4) {
-            // Location
-            isValid = validateInput('companyCountry', 'El país es obligatorio') && isValid;
-            isValid = validateInput('companyCity', 'La ciudad es obligatoria') && isValid;
-        }
-
         if (step === 5) {
-            // Culture - min 3 max 8
-            const cultureCount = document.querySelectorAll('.company-culture-option input:checked').length;
+            // Culture - min 3, max 5 (chip-based)
+            const cultureCount = document.querySelectorAll('.company-culture-option[data-selected="true"]').length;
             if (cultureCount < 3) {
                 this.showToast('Selecciona al menos 3 valores de cultura');
                 return false;
@@ -5639,19 +8034,16 @@ const app = {
         }
 
         if (step === 8) {
-            // Positions - at least 1
-            const posCount = document.querySelectorAll('.position-option input:checked').length;
+            // Positions - at least 1 (chip-based)
+            const posCount = document.querySelectorAll('.position-option[data-selected="true"]').length;
             if (posCount === 0) {
-                this.showToast('Selecciona al menos un perfil');
+                this.showToast('Selecciona al menos un departamento');
                 return false;
             }
-        }
-
-        if (step === 9) {
-            // Seniority - at least 1
-            const seniorityCount = document.querySelectorAll('.seniority-option input:checked').length;
+            // Seniority - at least 1 (card-based, consolidated from step 9)
+            const seniorityCount = document.querySelectorAll('.seniority-option[data-selected="true"]').length;
             if (seniorityCount === 0) {
-                this.showToast('Selecciona el nivel de seniority');
+                this.showToast('Selecciona al menos un nivel de seniority');
                 return false;
             }
         }
@@ -5667,40 +8059,15 @@ const app = {
         return isValid;
     },
 
-    toggleSeniority(element) {
-        const checkbox = element.querySelector('input');
-        checkbox.checked = !checkbox.checked;
-
-        if (checkbox.checked) {
-            element.style.borderColor = 'var(--primary)';
-            element.style.background = 'rgba(108, 92, 231, 0.05)';
-        } else {
-            element.style.borderColor = 'var(--border)';
-            element.style.background = 'transparent';
-        }
-
-        // Update counter
-        const count = document.querySelectorAll('.seniority-option input:checked').length;
-        const counterEl = document.getElementById('seniorityCountValue');
-        if (counterEl) counterEl.textContent = count;
-    },
+    // toggleSeniority removed — replaced by toggleSeniorityCard (Stitch style)
 
     nextCompanyStep(step) {
         if (this.validateCompanyStep(step - 1)) {
 
             // Trigger specific renders for steps
             if (step === 2) {
-                // Setup RUT formatting for company
-                setTimeout(() => this.setupRUTFormatting(), 100);
-            }
-
-            if (step === 3) {
-                // Load company sizes and sectors from database
+                // Load sectors and countries for the consolidated Basic Info step
                 this.loadCompanySizesAndSectors();
-            }
-
-            if (step === 4) {
-                // Render countries for Company
                 this.renderCountries('companyCountry');
             }
 
@@ -5710,22 +8077,20 @@ const app = {
             }
 
             if (step === 6) {
-                // Load company stages from database
+                // Load company stages + sizes from database (size slider)
                 this.loadCompanyStages();
+                this.loadCompanySizesForSlider();
             }
 
             if (step === 7) {
-                // Load work models from database
+                // Load work models + benefits from database (consolidated step)
                 this.loadWorkModels();
+                this.loadCompanyBenefitsChips();
             }
 
             if (step === 8) {
-                // Load positions from database
+                // Load positions + seniority from database (consolidated step)
                 this.loadCompanyPositions();
-            }
-
-            if (step === 9) {
-                // Load seniority levels from database
                 this.loadSeniorityLevels();
             }
 
@@ -5756,64 +8121,37 @@ const app = {
     },
 
     toggleCompanyCulture(element) {
-        const checkbox = element.querySelector('input[type="checkbox"]');
-        const allChecked = document.querySelectorAll('.company-culture-option input:checked');
-        const count = allChecked.length;
+        const isSelected = element.dataset.selected === 'true';
+        const allSelected = document.querySelectorAll('.company-culture-option[data-selected="true"]');
 
-        // If trying to check and already at max
-        if (!checkbox.checked && count >= 8) {
-            this.showToast('Máximo 8 valores de cultura');
+        // If trying to select and already at max 5
+        if (!isSelected && allSelected.length >= 5) {
+            this.showToast('Máximo 5 valores de cultura');
             return;
         }
 
-        // Toggle checkbox
-        checkbox.checked = !checkbox.checked;
+        // Toggle state
+        element.dataset.selected = isSelected ? 'false' : 'true';
+        const iconEl = element.querySelector('.material-icons');
 
-        // Update styling
-        if (checkbox.checked) {
-            element.style.borderColor = 'var(--primary)';
-            element.style.background = 'rgba(108,92,231,0.1)';
+        if (!isSelected) {
+            // Select → Stitch selected style (blue border + light blue bg)
+            element.style.borderColor = '#1392ec';
+            element.style.background = '#e0f2fe';
+            element.style.color = '#0c4a6e';
+            element.style.fontWeight = '600';
+            if (iconEl) iconEl.style.color = '#1392ec';
         } else {
-            element.style.borderColor = 'var(--border)';
-            element.style.background = 'var(--surface)';
-        }
-
-        // Update counter
-        const newCount = document.querySelectorAll('.company-culture-option input:checked').length;
-        document.getElementById('companyCultureCount').textContent = newCount;
-    },
-
-    togglePosition(element) {
-        const checkbox = element.querySelector('input[type="checkbox"]');
-        checkbox.checked = !checkbox.checked;
-
-        // Update styling
-        if (checkbox.checked) {
-            element.style.borderColor = 'var(--primary)';
-            element.style.background = 'rgba(108,92,231,0.1)';
-        } else {
-            element.style.borderColor = 'var(--border)';
-            element.style.background = 'var(--surface)';
-        }
-
-        // Update counter
-        const count = document.querySelectorAll('.position-option input:checked').length;
-        document.getElementById('positionsCount').textContent = count;
-    },
-
-    toggleSeniority(element) {
-        const checkbox = element.querySelector('input[type="checkbox"]');
-        checkbox.checked = !checkbox.checked;
-
-        // Update styling
-        if (checkbox.checked) {
-            element.style.borderColor = 'var(--primary)';
-            element.style.background = 'rgba(108,92,231,0.1)';
-        } else {
-            element.style.borderColor = 'var(--border)';
-            element.style.background = 'var(--surface)';
+            // Deselect → restore pastel default
+            element.style.borderColor = 'transparent';
+            element.style.background = element.dataset.defaultBg;
+            element.style.color = element.dataset.defaultText;
+            element.style.fontWeight = '500';
+            if (iconEl) iconEl.style.color = element.dataset.defaultText;
         }
     },
+
+    // togglePosition/toggleSeniority removed — replaced by togglePositionChip/toggleSeniorityCard (Stitch style)
 
     addTechStack(event) {
         if (event.key === 'Enter') {
@@ -6003,116 +8341,120 @@ const app = {
         const modal = document.getElementById('editSkillsModal');
         if (!modal) return;
 
-        // 1. Populate Areas
-        const areaSelect = document.getElementById('editSkillsArea');
-        areaSelect.innerHTML = '<option value="">Selecciona un área</option>';
-
-        let areas = this.referenceData?.areas || [];
-        if (areas.length === 0) {
-            // Fallback to local keys if no DB data
-            areas = Object.keys(this.skillsByArea).map(k => ({ id: k, name: k.charAt(0).toUpperCase() + k.slice(1) }));
-        }
-
-        areas.forEach(area => {
-            const opt = document.createElement('option');
-            opt.value = area.id || area.name; // Robust fallback
-            opt.textContent = area.name;
-            areaSelect.appendChild(opt);
-        });
-
-        // 2. Load User's Current Skills
+        // Load user's current skills
         this.skillsSelected = [...(this.currentUser.skills || [])];
+
+        // Clear search
+        const searchInput = document.getElementById('editSkillsSearch');
+        if (searchInput) searchInput.value = '';
+
+        // Render selected chips and all suggestions
         this.renderSelectedSkillsChips();
+        this.renderEditSkillsBubbles();
 
-        // 3. Clear Bubbles initially
-        document.getElementById('editSkillsBubbles').innerHTML = '<div style="color:var(--text-secondary); text-align:center; padding:20px;">Selecciona un área para ver sugerencias</div>';
-
-        modal.classList.add('active');
         modal.style.display = 'flex';
     },
 
     closeEditSkills() {
         const modal = document.getElementById('editSkillsModal');
-        if (modal) {
-            modal.classList.remove('active');
-            modal.style.display = 'none';
-        }
+        if (modal) modal.style.display = 'none';
     },
 
     renderSelectedSkillsChips() {
         const container = document.getElementById('editSkillsSelected');
+        const countEl = document.getElementById('editSkillsCount');
         if (!container) return;
 
+        // Update counter
+        if (countEl) countEl.textContent = `${this.skillsSelected.length} Seleccionadas`;
+
         if (this.skillsSelected.length === 0) {
-            container.innerHTML = '<span style="color:var(--text-secondary); font-size:13px;">No tienes habilidades seleccionadas aún.</span>';
+            container.innerHTML = '<span style="color: #64748b; font-size: 13px;">No tienes habilidades seleccionadas aún.</span>';
             return;
         }
 
         container.innerHTML = this.skillsSelected.map((skill, index) => `
-            <div class="skill-badge" style="display:inline-flex; align-items:center; gap:6px; padding:6px 12px; background:var(--primary); color:white; border-radius:16px; font-size:13px;">
-                ${skill}
-                <span onclick="app.removeSkill(${index})" style="cursor:pointer; font-weight:bold; opacity:0.8; font-size:16px;">&times;</span>
-            </div>
+            <button onclick="app.removeSkill(${index})" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: #1392ec; color: #ffffff; border: none; border-radius: 9999px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; box-shadow: 0 4px 12px rgba(19,146,236,0.2); transition: all 0.15s;" onmouseenter="this.style.background='#0f7fd0'" onmouseleave="this.style.background='#1392ec'">
+                <span>${skill}</span>
+                <span class="material-icons" style="font-size: 18px; opacity: 0.7;">close</span>
+            </button>
         `).join('');
     },
 
     removeSkill(index) {
         this.skillsSelected.splice(index, 1);
         this.renderSelectedSkillsChips();
-        // Also re-render bubbles to uncheck the removed skill if visible
         this.renderEditSkillsBubbles();
     },
 
-    renderEditSkillsBubbles() {
-        const areaSelect = document.getElementById('editSkillsArea');
+    renderEditSkillsBubbles(filter) {
         const container = document.getElementById('editSkillsBubbles');
-        const selectedArea = areaSelect.value;
+        if (!container) return;
 
-        if (!selectedArea) {
-            container.innerHTML = '';
-            return;
+        // Category label map
+        const categoryLabels = {
+            'desarrollo': 'Desarrollo',
+            'diseno-ux': 'Diseño UX',
+            'producto': 'Producto',
+            'marketing': 'Marketing',
+            'data': 'Data & Analytics',
+            'ventas': 'Ventas',
+            'rrhh': 'Recursos Humanos',
+            'finanzas': 'Finanzas',
+            'other': 'Habilidades Blandas'
+        };
+
+        const query = (filter || '').toLowerCase().trim();
+        let html = '<h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; position: sticky; top: 0; background: #ffffff; padding: 8px 0; z-index: 10; color: #2D3436;">Sugerencias para ti</h2>';
+        html += '<div style="display: flex; flex-direction: column; gap: 24px;">';
+
+        const allAreas = this.skillsByArea || {};
+        let hasResults = false;
+
+        Object.entries(allAreas).forEach(([areaKey, skills]) => {
+            // Filter skills by search query
+            const filtered = query ? skills.filter(s => s.toLowerCase().includes(query)) : skills;
+            if (filtered.length === 0) return;
+            hasResults = true;
+
+            const label = categoryLabels[areaKey] || areaKey.charAt(0).toUpperCase() + areaKey.slice(1);
+            html += `<div>
+                <h3 style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #9CA3AF; margin: 0 0 12px 4px;">${label}</h3>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">`;
+
+            filtered.forEach(skill => {
+                const isSelected = this.skillsSelected.includes(skill);
+                const escapedSkill = skill.replace(/'/g, "\\'");
+                if (isSelected) {
+                    html += `<button onclick="app.toggleSkillSelection('${escapedSkill}')" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: #1392ec; color: #ffffff; border: none; border-radius: 9999px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; box-shadow: 0 4px 12px rgba(19,146,236,0.2); transition: all 0.15s;">
+                        <span>${skill}</span>
+                        <span class="material-icons" style="font-size: 18px; opacity: 0.7;">check</span>
+                    </button>`;
+                } else {
+                    html += `<button onclick="app.toggleSkillSelection('${escapedSkill}')" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: #E9ECEF; color: #495057; border: none; border-radius: 9999px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s;">
+                        <span>${skill}</span>
+                        <span class="material-icons" style="font-size: 18px; color: #6c757d;">add</span>
+                    </button>`;
+                }
+            });
+
+            html += '</div></div>';
+        });
+
+        html += '</div>';
+
+        if (!hasResults && query) {
+            html += `<div style="text-align: center; padding: 32px 16px; color: #64748b;">
+                <span class="material-icons" style="font-size: 48px; display: block; margin-bottom: 12px;">search_off</span>
+                <p style="font-size: 14px;">No se encontraron habilidades para "${query}"</p>
+            </div>`;
         }
 
-        // Try to find skills for this area
-        // 1. From DB reference if structure supports it (assuming area object might have skills?)
-        // 2. From local map 'skillsByArea' (Most reliable right now based on data.js)
+        container.innerHTML = html;
+    },
 
-        // Match area ID to local key (handle case-sensitivity or exact match)
-        // Our local keys: 'desarrollo', 'diseno-ux'. 
-        // If DB returns 'UUID' we might need a mapping, but let's assume loose matching for now or 
-        // that DB returns readable IDs.
-
-        let skillsForArea = this.skillsByArea[selectedArea] || [];
-
-        // If empty, maybe the area name in DB matches a key?
-        if (skillsForArea.length === 0 && this.referenceData.areas) {
-            const areaObj = this.referenceData.areas.find(a => a.id == selectedArea);
-            if (areaObj && this.skillsByArea[areaObj.name.toLowerCase()]) {
-                skillsForArea = this.skillsByArea[areaObj.name.toLowerCase()];
-            }
-        }
-
-        // Fallback: Default generic skills if none found
-        if (!skillsForArea || skillsForArea.length === 0) {
-            container.innerHTML = '<div style="padding:10px;">No hay sugerencias para esta área. Escribe abajo para agregar (Próximamente).</div>';
-            return;
-        }
-
-        container.innerHTML = `<div style="display:flex; flex-wrap:wrap; gap:8px; padding:10px;">
-            ${skillsForArea.map(skill => {
-            const isSelected = this.skillsSelected.includes(skill);
-            const bg = isSelected ? 'var(--primary)' : 'var(--bg)';
-            const color = isSelected ? 'white' : 'var(--text-primary)';
-            const border = isSelected ? 'var(--primary)' : 'var(--border)';
-
-            return `
-                <button onclick="app.toggleSkillSelection('${skill}')" 
-                    style="padding:8px 16px; border-radius:20px; border:1px solid ${border}; background:${bg}; color:${color}; cursor:pointer; font-size:13px; transition:all 0.2s;">
-                    ${skill} ${isSelected ? '✓' : '+'}
-                </button>
-                `;
-        }).join('')}
-        </div>`;
+    filterEditSkills(query) {
+        this.renderEditSkillsBubbles(query);
     },
 
     toggleSkillSelection(skill) {
@@ -6126,30 +8468,17 @@ const app = {
             this.skillsSelected.push(skill);
         }
         this.renderSelectedSkillsChips();
-        this.renderEditSkillsBubbles(); // Refresh buttons
+        // Re-render bubbles preserving current search filter
+        const searchInput = document.getElementById('editSkillsSearch');
+        this.renderEditSkillsBubbles(searchInput ? searchInput.value : '');
     },
 
     async saveEditSkills() {
         this.currentUser.skills = [...this.skillsSelected];
-        this.renderProfile(); // Update UI immediately
+        this.saveProfile();
+        this.renderProfile();
         this.closeEditSkills();
-
-        if (window.talentlyBackend && window.talentlyBackend.profiles && window.talentlyBackend.profiles.create) {
-            const { error } = await window.talentlyBackend.profiles.create({
-                id: this.currentUser.id,
-                skills: this.currentUser.skills,
-                email: this.currentUser.email // Required for upsert usually
-            });
-
-            if (error) {
-                console.error('Error saving skills:', error);
-                this.showToast('Error al guardar en servidor', 'error');
-            } else {
-                this.showToast('Habilidades actualizadas');
-            }
-        } else {
-            this.showToast('Habilidades guardadas (Local)');
-        }
+        this.showToast('Habilidades actualizadas');
     },
 
     renderCompanyTagSuggestions() {
@@ -6206,13 +8535,11 @@ const app = {
     handleCompanyLogoUpload(event) {
         const file = event.target.files[0];
         if (file) {
-            // Check file size (5MB max - matches Supabase config)
             if (file.size > 5 * 1024 * 1024) {
                 this.showToast('El logo debe ser menor a 5MB');
                 return;
             }
 
-            // Check file type (must match Supabase bucket: png, jpeg, jpg, webp)
             const validTypes = ['image/png', 'image/jpeg', 'image/webp'];
             if (!validTypes.includes(file.type)) {
                 this.showToast('El logo debe ser PNG, JPG o WEBP');
@@ -6220,56 +8547,102 @@ const app = {
             }
 
             this.companyLogo = file;
-            const previewDiv = document.getElementById('logoPreview');
-            if (previewDiv) {
-                // Show image preview
+
+            // Show preview in circular avatar
+            const avatarDiv = document.getElementById('logoAvatarPreview');
+            if (avatarDiv) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    previewDiv.innerHTML = `
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <img src="${e.target.result}" alt="Logo preview" style="width: 48px; height: 48px; border-radius: 12px; object-fit: cover; border: 2px solid white;">
-                            <div>
-                                <div style="font-weight: 700;">✅ Logo cargado correctamente</div>
-                                <div style="font-size: 12px; opacity: 0.9;">${file.name}</div>
-                            </div>
-                        </div>`;
-                    previewDiv.style.display = 'block';
+                    avatarDiv.innerHTML = `<img src="${e.target.result}" alt="Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+                    avatarDiv.style.border = '2px solid #1392ec';
+                    avatarDiv.style.background = 'transparent';
                 };
                 reader.readAsDataURL(file);
+            }
+
+            // Show text confirmation
+            const previewDiv = document.getElementById('logoPreview');
+            if (previewDiv) {
+                previewDiv.textContent = 'Logo cargado correctamente';
+                previewDiv.style.display = 'block';
             }
         }
     },
 
     handleCompanyPhotosUpload(event) {
         const files = event.target.files;
-        if (files.length > 5) {
+        const totalAllowed = 5 - this.companyPhotos.length;
+        if (totalAllowed <= 0) {
             this.showToast('Máximo 5 fotos');
             return;
         }
 
         let validFiles = [];
-        for (let i = 0; i < files.length; i++) {
+        for (let i = 0; i < Math.min(files.length, totalAllowed); i++) {
             const file = files[i];
-
-            // Check size
             if (file.size > 5 * 1024 * 1024) {
                 this.showToast(`${file.name} es muy grande (máx 5MB)`);
                 continue;
             }
-
-            // Check type
             if (!['image/png', 'image/jpeg'].includes(file.type)) {
                 this.showToast(`${file.name} debe ser PNG o JPG`);
                 continue;
             }
-
             validFiles.push(file);
         }
 
         if (validFiles.length > 0) {
-            this.companyPhotos = validFiles;
-            document.getElementById('photosPreview').style.display = 'block';
-            document.getElementById('photosCount').textContent = validFiles.length;
+            this.companyPhotos = [...this.companyPhotos, ...validFiles];
+            this.renderCompanyPhotosGallery();
+        }
+    },
+
+    removeCompanyPhoto(index) {
+        this.companyPhotos.splice(index, 1);
+        this.renderCompanyPhotosGallery();
+    },
+
+    renderCompanyPhotosGallery() {
+        const gallery = document.getElementById('companyPhotosGallery');
+        if (!gallery) return;
+
+        gallery.innerHTML = '';
+
+        // Render existing photo previews
+        this.companyPhotos.forEach((file, index) => {
+            const slot = document.createElement('div');
+            slot.style.cssText = 'position: relative; aspect-ratio: 4/3; border-radius: 16px; overflow: hidden; border: 1px solid #f1f5f9; box-shadow: 0 2px 8px rgba(0,0,0,0.06);';
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                slot.innerHTML = `
+                    <img src="${e.target.result}" alt="Foto ${index + 1}" style="width: 100%; height: 100%; object-fit: cover;">
+                    <button type="button" onclick="app.removeCompanyPhoto(${index})" style="position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: center; cursor: pointer; color: #475569; box-shadow: 0 2px 6px rgba(0,0,0,0.1); transition: color 0.2s;"
+                        onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#475569'">
+                        <span class="material-icons" style="font-size: 16px;">close</span>
+                    </button>`;
+            };
+            reader.readAsDataURL(file);
+            gallery.appendChild(slot);
+        });
+
+        // Add placeholder slots (up to 4 visible total = photos + placeholders, min 2 placeholders if < 4 photos)
+        const remainingSlots = Math.max(2, 4 - this.companyPhotos.length);
+        if (this.companyPhotos.length < 5) {
+            for (let i = 0; i < Math.min(remainingSlots, 5 - this.companyPhotos.length); i++) {
+                const addBtn = document.createElement('button');
+                addBtn.type = 'button';
+                addBtn.onclick = () => document.getElementById('companyPhotosInput').click();
+                addBtn.style.cssText = 'aspect-ratio: 4/3; border-radius: 16px; background: #f8fafc; border: 2px dashed #e2e8f0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s; font-family: inherit;';
+                addBtn.onmouseover = function () { this.style.borderColor = '#1392ec'; this.style.background = 'rgba(19,146,236,0.03)'; };
+                addBtn.onmouseout = function () { this.style.borderColor = '#e2e8f0'; this.style.background = '#f8fafc'; };
+                addBtn.innerHTML = `
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: center; border: 1px solid #f1f5f9;">
+                        <span class="material-icons" style="font-size: 22px; color: #94a3b8;">add</span>
+                    </div>
+                    <span style="font-size: 12px; font-weight: 700; color: #64748b;">Agregar foto</span>`;
+                gallery.appendChild(addBtn);
+            }
         }
     },
 
@@ -6307,24 +8680,27 @@ const app = {
             // Collect Data
             const companyName = document.getElementById('companyName')?.value;
             const companyWebsite = document.getElementById('companyWebsite')?.value;
-            const companySize = document.getElementById('companySize')?.value;
+            const companySize = this._selectedCompanySize || document.getElementById('companySize')?.value;
             const companySector = document.getElementById('companySector')?.value;
             const companyCountry = document.getElementById('companyCountry')?.value;
             const companyCity = document.getElementById('companyCity')?.value;
             const companyTaxId = document.getElementById('companyTaxId')?.value;
             const companyValueProp = document.getElementById('companyValueProp')?.value;
 
-            // Culture
-            const culture = Array.from(document.querySelectorAll('.company-culture-option input:checked')).map(el => el.value);
+            // Mission
+            const companyMission = document.getElementById('companyMission')?.value;
+
+            // Culture (chip-based, data-selected attribute)
+            const culture = Array.from(document.querySelectorAll('.company-culture-option[data-selected="true"]')).map(el => el.dataset.value);
 
             const stage = document.querySelector('input[name="companyStage"]:checked')?.value;
             const workModel = document.querySelector('input[name="workModel"]:checked')?.value;
 
-            // Positions
-            const positions = Array.from(document.querySelectorAll('.position-option input:checked')).map(el => el.value);
+            // Positions (chip-based, data-selected + data-value)
+            const positions = Array.from(document.querySelectorAll('.position-option[data-selected="true"]')).map(el => el.dataset.value);
 
-            // Seniority
-            const seniority = Array.from(document.querySelectorAll('.seniority-option input:checked')).map(el => el.value);
+            // Seniority (card-based, data-selected + data-value)
+            const seniority = Array.from(document.querySelectorAll('.seniority-option[data-selected="true"]')).map(el => el.dataset.value);
 
             // Benefits
             const benefitsSelected = Array.from(document.querySelectorAll('.benefit-option input:checked')).map(el => el.value);
@@ -6370,6 +8746,7 @@ const app = {
                 company_stage: stage,
                 work_model: workModel,
                 logo_url: logoUrl,
+                mission: companyMission,
                 culture_values: culture,
                 positions_looking: positions,
                 seniority_levels: seniority,
@@ -6407,11 +8784,24 @@ const app = {
                 localStorage.setItem('talently_user_type', 'company');
             }
 
-            // Navigate to company dashboard
+            // Navigate to company success screen
             this.isAuthenticated = true;
             this.userType = 'company';
-            this.showView('companyApp');
-            this.showCompanySection('companyOffersSection');
+
+            // Populate success view with company data
+            const successName = document.getElementById('companySuccessName');
+            const successCardName = document.getElementById('companySuccessCardName');
+            const successCardLocation = document.getElementById('companySuccessCardLocation');
+            const successLogo = document.getElementById('companySuccessLogo');
+
+            if (successName) successName.textContent = companyName || 'Tu Empresa';
+            if (successCardName) successCardName.textContent = companyName || 'Tu Empresa';
+            if (successCardLocation) successCardLocation.textContent = [companyCity, companyCountry].filter(Boolean).join(', ') || 'Ubicación';
+            if (successLogo && logoUrl && !logoUrl.includes('ui-avatars.com')) {
+                successLogo.innerHTML = `<img src="${logoUrl}" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;">`;
+            }
+
+            this.showView('companySuccessView');
             this.showToast('¡Perfil de empresa creado exitosamente!', 'success');
             window.scrollTo(0, 0);
 
@@ -6419,6 +8809,12 @@ const app = {
             console.error('Error saving company profile:', error);
             this.showToast('Error al guardar perfil: ' + error.message);
         }
+    },
+
+    goToCompanyDashboard() {
+        this.showView('companyApp');
+        this.showCompanySection('companyDashboardSection');
+        window.scrollTo(0, 0);
     },
 
     async completeOnboarding() {
@@ -6463,11 +8859,11 @@ const app = {
 
             const profileData = {
                 onboarding_completed: true,
-                // CRITICAL FIX: robust name extraction from metadata (Google) or local state
-                name: userNameForAvatar,
+                // Use name from step 2 field if filled, fallback to metadata
+                name: document.getElementById('onboardFullName')?.value?.trim() || userNameForAvatar,
 
-                birth_date: document.getElementById('birthDate')?.value,
-                gender: document.getElementById('gender')?.value,
+                birth_date: document.getElementById('birthDate')?.value || null,
+                gender: document.getElementById('gender')?.value || null,
                 country: document.getElementById('country')?.value,
                 city: document.getElementById('city')?.value,
                 relocation: document.getElementById('relocation')?.value === 'si',
@@ -6475,11 +8871,11 @@ const app = {
                 expected_salary: parseInt((document.getElementById('expectedSalary')?.value || '0').replace(/\./g, '')),
                 currency: document.getElementById('currency')?.value,
                 current_position: document.getElementById('currentPosition')?.value || 'Sin cargo',
-                professional_area: document.getElementById('professionalArea')?.value,
+                professional_area: (this._selectedFields && this._selectedFields.length > 0) ? this._selectedFields[0] : (document.getElementById('professionalArea')?.value || ''),
 
-                // Arrays
-                skills: (this.skillsSelected && this.skillsSelected.length > 0) ? this.skillsSelected : [],
-                interests: this.interests || [],
+                // Arrays - split skills by category (soft vs technical)
+                skills: (this.skillsSelected || []).filter(s => !(this._softSkillsList || []).includes(s)),
+                interests: (this._selectedFields && this._selectedFields.length > 0) ? this._selectedFields : (this.interests || []),
                 experience_level: experienceLevel,
                 education_level: educationLink,
                 work_modality: workModality,
@@ -6492,11 +8888,11 @@ const app = {
                 image: imageUrl,
 
                 languages: [],
-                soft_skills: Array.from(document.querySelectorAll('.soft-skill-option input:checked')).map(cb => cb.value),
+                soft_skills: (this.skillsSelected || []).filter(s => (this._softSkillsList || []).includes(s)),
 
                 // Empty arrays (User can add later)
-                experience: [],
-                education: [],
+                experience: (this._experienceEntries && this._experienceEntries.length > 0) ? this._experienceEntries : [],
+                education: (this._educationEntries && this._educationEntries.length > 0) ? this._educationEntries : [],
                 bio: document.getElementById('bioInput')?.value || ''
             };
 
@@ -6527,14 +8923,14 @@ const app = {
 
                 // Force save to local storage as backup/cache
                 localStorage.setItem('talently_current_user', JSON.stringify(this.currentUser));
-                this.enterMainApp();
+                this.showSuccessView();
             } else {
                 // FALLBACK
                 console.warn('Backend not ready, using Mock fallback');
                 this.currentUser = { ...this.currentUser, ...profileData };
                 localStorage.setItem('talently_profile', JSON.stringify(this.currentUser));
                 this.showToast('Perfil guardado (Modo Demo)');
-                this.enterMainApp();
+                this.showSuccessView();
             }
 
         } catch (err) {
@@ -6542,6 +8938,17 @@ const app = {
             // Alert user but also log to console
             this.showToast('Error al guardar: ' + err.message, 'error');
         }
+    },
+
+    showSuccessView() {
+        // Personalize title with user's first name
+        const titleEl = document.getElementById('successTitle');
+        if (titleEl) {
+            const fullName = this.currentUser?.name || '';
+            const firstName = fullName.split(' ')[0] || '';
+            titleEl.textContent = firstName ? '\u00A1Todo listo, ' + firstName + '!' : '\u00A1Todo listo!';
+        }
+        this.showView('successView');
     },
 
 
@@ -6658,12 +9065,94 @@ const app = {
     // PREVIEW MODAL (HOW COMPANIES SEE YOU)
     // ============================================
 
+    shareProfile() {
+        if (navigator.share) {
+            navigator.share({
+                title: 'Mi perfil en Talently',
+                text: 'Echa un vistazo a mi perfil profesional',
+                url: window.location.href
+            }).catch(console.error);
+        } else {
+            navigator.clipboard.writeText(window.location.href)
+                .then(() => this.showToast('Enlace copiado al portapapeles', 'success'))
+                .catch(err => console.error('Error copying link:', err));
+        }
+    },
+
     openPreviewModal() {
-        document.getElementById('previewModalOverlay').classList.add('active');
+        const overlay = document.getElementById('previewModalOverlay');
+        if (!overlay) return;
+
+        const user = this.currentUser || {};
+        const name = user.name || 'Tu Nombre';
+        const role = user.current_position || user.title || 'Tu cargo';
+        const imageUrl = user.avatar_url || user.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=1392ec&color=fff&size=600`;
+        const videoUrl = user.video_url || user.videoUrl;
+        const skills = user.skills || [];
+
+        // Populate card
+        const cardImg = document.getElementById('pvCardImage');
+        const cardVideo = document.getElementById('pvCardVideo');
+
+        if (cardVideo && videoUrl) {
+            // Display Video if available
+            if (cardImg) cardImg.style.display = 'none';
+            cardVideo.style.display = 'block';
+            cardVideo.src = videoUrl;
+            cardVideo.play().catch(e => console.warn("Autoplay prevented:", e));
+        } else if (cardImg) {
+            // Fallback to Image
+            if (cardVideo) cardVideo.style.display = 'none';
+            cardImg.style.display = 'block';
+            cardImg.src = imageUrl;
+        }
+
+        const cardName = document.getElementById('pvCardName');
+        if (cardName) {
+            const age = user.birth_date ? Math.floor((Date.now() - new Date(user.birth_date).getTime()) / 31557600000) : null;
+            cardName.textContent = age ? `${name.split(' ')[0]}, ${age}` : name.split(' ')[0];
+        }
+
+        const roleText = document.getElementById('pvCardRoleText');
+        if (roleText) roleText.textContent = role;
+
+        // Skills (max 3 + overflow count)
+        const skillsEl = document.getElementById('pvCardSkills');
+        if (skillsEl) {
+            const shown = skills.slice(0, 3);
+            const extra = skills.length - 3;
+            skillsEl.innerHTML = shown.map(s =>
+                `<span style="padding: 5px 12px; border-radius: 8px; background: #f3f4f6; border: 1px solid #e5e7eb; font-size: 12px; font-weight: 700; color: #374151; letter-spacing: 0.02em;">${s}</span>`
+            ).join('') + (extra > 0 ? `<span style="padding: 5px 10px; border-radius: 8px; background: #f9fafb; border: 1px solid #e5e7eb; font-size: 12px; font-weight: 700; color: #9ca3af;">+${extra}</span>` : '');
+        }
+
+        // Completeness
+        const completenessEl = document.getElementById('pvCompletenessPercent');
+        if (completenessEl) {
+            const fields = ['name', 'email', 'birth_date', 'country', 'city', 'current_position', 'work_modality', 'availability', 'expected_salary', 'bio', 'image'];
+            const arrayFields = ['skills', 'experience'];
+            let filled = 0;
+            const total = fields.length + arrayFields.length;
+            fields.forEach(f => { if (user[f]) filled++; });
+            arrayFields.forEach(f => { if (user[f] && Array.isArray(user[f]) && user[f].length > 0) filled++; });
+            const pct = Math.round((filled / total) * 100);
+            completenessEl.textContent = pct + '%';
+        }
+
+        overlay.style.display = 'flex';
     },
 
     closePreviewModal() {
-        document.getElementById('previewModalOverlay').classList.remove('active');
+        const overlay = document.getElementById('previewModalOverlay');
+        const cardVideo = document.getElementById('pvCardVideo');
+
+        if (cardVideo && !cardVideo.paused) {
+            cardVideo.pause();
+            // Reset to beginning on close
+            cardVideo.currentTime = 0;
+        }
+
+        if (overlay) overlay.style.display = 'none';
     },
 
     // ============================================
@@ -6818,10 +9307,7 @@ const app = {
         document.querySelectorAll('.company-section').forEach(section => {
             if (section.id === sectionId) {
                 section.classList.add('active');
-                // Only Flex for Search/Messages potentially, Block for Offers/Profile
-                if (sectionId === 'companySearchSection') {
-                    section.style.display = 'flex';
-                } else if (sectionId === 'companyMessagesSection') {
+                if (sectionId === 'companySearchSection' || sectionId === 'companyMessagesSection' || sectionId === 'companyProfileSection') {
                     section.style.display = 'flex';
                 } else {
                     section.style.display = 'block';
@@ -6832,16 +9318,28 @@ const app = {
             }
         });
 
-        // Update Nav
-        const navItems = document.querySelectorAll('#companyApp .nav-item');
-        if (navItems.length > 0) {
-            navItems.forEach(item => item.classList.remove('active'));
-
-            if (sectionId === 'companyOffersSection') navItems[0].classList.add('active');
-            if (sectionId === 'companySearchSection') navItems[1].classList.add('active');
-            if (sectionId === 'companyMessagesSection') navItems[2].classList.add('active');
-            if (sectionId === 'companyProfileSection') navItems[3].classList.add('active');
-        }
+        // Update Stitch bottom nav active state
+        const sectionToNav = {
+            'companyOffersSection': 'companyNavOfertas',
+            'companySearchSection': 'companyNavExplorar',
+            'companyMessagesSection': 'companyNavMensajes',
+            'companyProfileSection': 'companyNavPerfil',
+            'companySettingsSection': 'companyNavPerfil',
+        };
+        const activeNavId = sectionToNav[sectionId] || 'companyNavPerfil';
+        const activeColor = '#1392ec';
+        const inactiveColor = '#9ca3af';
+        ['companyNavOfertas', 'companyNavExplorar', 'companyNavMensajes', 'companyNavPerfil'].forEach(navId => {
+            const el = document.getElementById(navId);
+            if (!el) return;
+            const isActive = navId === activeNavId;
+            el.style.color = isActive ? activeColor : inactiveColor;
+            el.style.filter = isActive ? `drop-shadow(0 0 8px rgba(19,146,236,0.2))` : 'none';
+            const icon = el.querySelector('.material-icons');
+            if (icon) icon.style.transform = isActive ? 'scale(1.1)' : 'scale(1)';
+            const label = el.querySelector('span:last-child');
+            if (label) label.style.fontWeight = isActive ? '700' : '500';
+        });
 
         if (sectionId === 'companyOffersSection') this.renderCompanyOffers();
         if (sectionId === 'companySearchSection') this.initCandidateSwipe();
@@ -6850,163 +9348,124 @@ const app = {
     },
 
     renderCompanyProfile() {
-        // Render company profile data
-        const companyData = this.companyProfile || this.currentUser || {};
+        // Smart merge: start with currentUser (onboarding data), overlay companyProfile
+        const data = { ...this.currentUser };
+        if (this.companyProfile) {
+            Object.keys(this.companyProfile).forEach(key => {
+                const val = this.companyProfile[key];
+                if (val !== null && val !== undefined && val !== '') data[key] = val;
+            });
+        }
 
+        const getLabel = (cat, id) => this.getRefLabel ? this.getRefLabel(cat, id) : id;
 
         // Set logo
         const logoEl = document.getElementById('companyProfileLogo');
         if (logoEl) {
-            // Check for logo_url (DB), image (Local), logo (Legacy), or avatar_url (User table fallback)
-            let logoSrc = companyData.logo_url || companyData.image || companyData.logo || companyData.avatar_url;
-
-
-            // Clean up relative URLs if needed (though Supabase usually gives absolute)
-            if (logoSrc && !logoSrc.startsWith('http') && !logoSrc.startsWith('blob:') && !logoSrc.startsWith('data:')) {
-                // If it looks like a path, try to prepend storage url? 
-                // Better to leave it for now or log warning.
-            }
-
+            let logoSrc = data.logo_url || data.image || data.logo || data.avatar_url;
             if (logoSrc) {
                 logoEl.src = logoSrc;
-                // Add error handler fallback just in case
-                logoEl.onerror = (e) => {
-                    console.warn('❌ Logo failed to load:', logoSrc, e);
-                    logoEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(companyData.name || 'C')}&background=6c5ce7&color=fff`;
+                logoEl.onerror = () => {
+                    logoEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || 'C')}&background=1392ec&color=fff&size=200`;
                 };
             } else {
-                // Fallback to initials if no logo
-                logoEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(companyData.name || 'Company')}&background=6c5ce7&color=fff`;
+                logoEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || 'Company')}&background=1392ec&color=fff&size=200`;
             }
         }
 
         // Set company name
         const nameEl = document.getElementById('companyProfileName');
-        if (nameEl) {
-            // Prefer company name, then user name (from profile), then default
-            nameEl.textContent = companyData.name || this.currentUser?.name || this.currentUser?.user_metadata?.name || 'Nombre de la Empresa';
-        }
+        if (nameEl) nameEl.textContent = data.name || this.currentUser?.user_metadata?.name || 'Nombre de la Empresa';
 
-        // Set sector (Display: "Sector • City")
+        // Set sector subtitle (Sector • City, Country)
         const sectorEl = document.getElementById('companyProfileSector');
         if (sectorEl) {
             const parts = [];
-            if (companyData.sector) parts.push(companyData.sector);
-            // Use city if available, ignore country if it's a UUID (long string with numbers)
-            if (companyData.city) parts.push(companyData.city);
-            else if (companyData.country && companyData.country.length < 10) parts.push(companyData.country);
+            const sectorName = getLabel('sectors', data.sector);
+            if (sectorName && sectorName !== data.sector) parts.push(sectorName);
+            else if (data.sector) parts.push(data.sector);
 
+            if (data.city_name) {
+                const countryName = getLabel('countries', data.country);
+                parts.push(`${data.city_name}, ${countryName && countryName !== data.country ? countryName : (data.country || '')}`);
+            } else if (data.city) {
+                parts.push(data.city);
+            } else if (data.country && data.country.length < 10) {
+                parts.push(data.country);
+            }
             sectorEl.textContent = parts.join(' • ') || 'Sector no definido';
         }
 
-        // Set size & location badges (Now reusing for Stage/Size)
+        // Set size
         const sizeEl = document.getElementById('companyProfileSize');
         if (sizeEl) {
-            // Map size to readable text
-            let sizeText = companyData.company_size || companyData.size;
-            if (sizeText === 'pequena') sizeText = 'Pequeña (1-50)';
-            else if (sizeText === 'mediana') sizeText = 'Mediana (51-200)';
-            else if (sizeText === 'grande') sizeText = 'Grande (201-1000)';
-            else if (sizeText === 'corporativa') sizeText = '+1000';
-
-            if (sizeText) {
-                sizeEl.textContent = sizeText;
-                sizeEl.style.display = 'inline-block';
-            } else {
-                sizeEl.style.display = 'none';
+            let sizeText = getLabel('sizes', data.company_size || data.size);
+            if (!sizeText || sizeText === data.company_size) {
+                const sizeMap = { 'pequena': 'Pequeña (1-50)', 'mediana': 'Mediana (51-200)', 'grande': 'Grande (201-1000)', 'corporativa': '+1000' };
+                sizeText = sizeMap[data.company_size] || data.company_size;
             }
+            sizeEl.textContent = sizeText || '-';
         }
 
-        // Use the second badge for STAGE instead of Location (since location is in subheader)
+        // Set location
         const locationEl = document.getElementById('companyProfileLocation');
         if (locationEl) {
-            let stageText = companyData.company_stage || companyData.stage;
-
-            // Translate Stage
-            const stageMap = {
-                'early': 'Early Stage (Inicios)',
-                'growth': 'Growth (Crecimiento)',
-                'expansion': 'Expansión',
-                'consolidation': 'Consolidación'
-            };
-
-            if (stageText && stageMap[stageText.toLowerCase()]) {
-                stageText = stageMap[stageText.toLowerCase()];
-            } else if (stageText === 'early') {
-                stageText = 'Early Stage';
-            }
-
-            if (stageText) {
-                locationEl.textContent = stageText;
-                locationEl.style.display = 'inline-block';
-                // Ensure it uses purple badge style
-                locationEl.className = 'badge badge-purple';
-            } else {
-                locationEl.style.display = 'none';
-            }
+            const parts = [];
+            if (data.city_name) parts.push(data.city_name);
+            else if (data.city) parts.push(data.city);
+            const countryName = getLabel('countries', data.country);
+            if (countryName && countryName !== data.country) parts.push(countryName);
+            else if (data.country && data.country.length < 20) parts.push(data.country);
+            locationEl.textContent = parts.join(', ') || '-';
         }
-
-        // Set website
-        const websiteEl = document.getElementById('companyProfileWebsite');
-        const websiteLink = document.getElementById('companyProfileWebsiteLink');
-
-        // Handle website display
-        if (websiteEl) {
-            if (companyData.website) {
-                websiteEl.style.display = 'block';
-                // If we have a dedicated link element, use it
-                if (websiteLink) {
-                    websiteLink.href = companyData.website.startsWith('http') ? companyData.website : `https://${companyData.website}`;
-                    websiteLink.textContent = companyData.website.replace(/^https?:\/\//, '').replace(/\/$/, '');
-                    websiteLink.target = "_blank";
-                } else {
-                    // Fallback if no link element found, try to set href on container if it is an anchor, or find anchor inside
-                    if (websiteEl.tagName === 'A') {
-                        websiteEl.href = companyData.website.startsWith('http') ? companyData.website : `https://${companyData.website}`;
-                        websiteEl.target = "_blank";
-                        websiteEl.textContent = companyData.website;
-                    }
-                }
-            } else {
-                websiteEl.style.display = 'none';
-            }
-        }
-
-        // Set description / About Us / Value Proposition (using Value Proposition as Description if bio missing)
-        const aboutEl = document.getElementById('companyProfileDescription');
-        if (aboutEl) {
-            const desc = companyData.value_proposition || companyData.description || companyData.bio;
-            if (desc) {
-                aboutEl.textContent = desc;
-                aboutEl.parentElement.style.display = 'block'; // Ensure container is visible
-            } else {
-                aboutEl.parentElement.style.display = 'none';
-            }
-        }
-
-        // Set company stage
-        const stageEl = document.getElementById('companyProfileStage');
-        if (stageEl) stageEl.textContent = this.getRefLabel('stages', companyData.company_stage) || companyData.stage || '-';
 
         // Set value proposition
         const valuePropEl = document.getElementById('companyProfileValueProp');
-        if (valuePropEl) valuePropEl.textContent = companyData.value_proposition || companyData.description || '-';
+        if (valuePropEl) valuePropEl.textContent = data.value_proposition || data.description || '-';
 
-        // Set work model
+        // Set website
+        const websiteEl = document.getElementById('companyProfileWebsite');
+        if (websiteEl) {
+            if (data.website) {
+                websiteEl.href = data.website.startsWith('http') ? data.website : `https://${data.website}`;
+                websiteEl.textContent = data.website.replace(/^https?:\/\//, '').replace(/\/$/, '');
+            } else {
+                websiteEl.textContent = '-';
+                websiteEl.removeAttribute('href');
+            }
+        }
+
+        // Set linkedin
+        const linkedinEl = document.getElementById('companyProfileLinkedin');
+        if (linkedinEl) {
+            if (data.linkedin_url || data.linkedin) {
+                const url = data.linkedin_url || data.linkedin;
+                linkedinEl.href = url.startsWith('http') ? url : `https://${url}`;
+                linkedinEl.textContent = 'Ver Perfil';
+            } else {
+                linkedinEl.textContent = '-';
+                linkedinEl.removeAttribute('href');
+            }
+        }
+
+        // Set work model & stage details
         const workModelEl = document.getElementById('companyProfileWorkModel');
-        if (workModelEl) workModelEl.textContent = this.getRefLabel('work_modalities', companyData.work_model) || '-';
+        if (workModelEl) workModelEl.textContent = getLabel('work_modalities', data.work_model) || '-';
 
-        // Render array sections using static HTML containers
-        this._renderProfileSection('companyProfileCulture', 'Valores de Cultura', companyData.culture_values, 'culture_values', 'rgba(108,92,231,0.1)', 'var(--primary)');
-        this._renderProfileSection('companyProfileTech', 'Tech Stack', companyData.tech_stack || this.companyTechStack, null, 'var(--bg)', 'var(--text-primary)', true);
-        this._renderProfileSection('companyProfilePositions', 'Posiciones que Buscamos', companyData.positions_looking, 'positions', 'rgba(0,184,148,0.1)', '#00b894');
-        this._renderProfileSection('companyProfileSeniority', 'Niveles de Seniority', companyData.seniority_levels, 'seniority_levels', 'rgba(253,203,110,0.2)', '#e17055');
-        this._renderProfileSection('companyProfileBenefits', 'Beneficios', companyData.benefits, 'benefits', 'rgba(116,185,255,0.15)', '#0984e3');
-        this._renderProfileTags('companyProfileTags', 'Tags', companyData.tags || this.companyTags);
-        this._renderProfileSelection('companyProfileSelection', companyData);
+        const stageEl = document.getElementById('companyProfileStage');
+        if (stageEl) stageEl.textContent = getLabel('stages', data.company_stage) || data.stage || '-';
 
-        // Compute stats dynamically from backend
-        this._loadCompanyStats(companyData);
+        // Render array sections (hide parent card if empty)
+        this._renderProfileSection('companyProfileCulture', data.culture_values, 'culture_values', 'rgba(79,70,229,0.08)', '#4F46E5');
+        this._renderProfileSection('companyProfileTech', data.tech_stack || this.companyTechStack, null, '#F3F4F6', '#111827', true);
+        this._renderProfileSection('companyProfilePositions', data.positions_looking, 'positions', 'rgba(16,185,129,0.08)', '#10B981');
+        this._renderProfileSection('companyProfileSeniority', data.seniority_levels, 'seniority_levels', 'rgba(245,158,11,0.08)', '#F59E0B');
+        this._renderProfileSection('companyProfileBenefits', data.benefits, 'benefits', 'rgba(59,130,246,0.08)', '#3B82F6');
+        this._renderProfileTags('companyProfileTags', data.tags || this.companyTags);
+        this._renderProfileSelection('companyProfileSelection', data);
+
+        // Load stats from backend
+        this._loadCompanyStats(data);
     },
 
     async _loadCompanyStats(companyData) {
@@ -7046,6 +9505,45 @@ const app = {
     openCompanyEditModal() {
         // Open the company edit modal with current data
         this.openCompanyProfile();
+    },
+
+    previewCompanyProfile() {
+        // Show how the company profile looks to candidates
+        this.showToast('Vista previa próximamente', 'info');
+    },
+
+    openCompanySettings() {
+        this.showCompanySection('companySettingsSection');
+    },
+
+    async uploadCompanyLogo() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                this.showToast('La imagen no debe superar 5MB', 'error');
+                return;
+            }
+            this.showToast('Subiendo logo...', 'info');
+            try {
+                const url = await window.talentlyBackend.storage.uploadImage(file, 'company-logos');
+                if (url) {
+                    const userId = this.currentUser?.user_id || this.currentUser?.id;
+                    await window.talentlyBackend.companies.update(userId, { logo_url: url });
+                    if (this.companyProfile) this.companyProfile.logo_url = url;
+                    const logoEl = document.getElementById('companyProfileLogo');
+                    if (logoEl) logoEl.src = url;
+                    this.showToast('Logo actualizado');
+                }
+            } catch (err) {
+                console.error('Error uploading logo:', err);
+                this.showToast('Error al subir el logo', 'error');
+            }
+        };
+        input.click();
     },
 
     getRefLabel(category, id) {
@@ -7240,29 +9738,285 @@ const app = {
         }
     },
 
+    // Multi-step offer state
+    _offerStep: 1,
+    _offerStepNames: ['Datos Básicos', 'Compensación', 'Habilidades', 'Revisión'],
+
     createOffer() {
-        this.editingOfferId = null; // Reset edit state
+        this.editingOfferId = null;
+        this._offerStep = 1;
         const view = document.getElementById('createOfferView');
         if (view) {
             view.style.display = 'flex';
-            // Reset form
             this.clearFormErrors();
+            // Reset all fields
             document.getElementById('offerTitle').value = '';
             document.getElementById('offerDescription').value = '';
             document.getElementById('offerProfessionalTitle').value = '';
-
-            const minInput = document.getElementById('offerSalaryMin');
-            const maxInput = document.getElementById('offerSalaryMax');
-            minInput.value = '';
-            maxInput.value = '';
-            // Listeners are now inline in HTML for robustness
-
+            document.getElementById('offerSalaryMin').value = '';
+            document.getElementById('offerSalaryMax').value = '';
             document.getElementById('offerSkills').value = '';
-            document.getElementById('offerSkillsDisplay').innerHTML = '<span style="color: var(--text-muted);">Seleccionar habilidades...</span>';
-
-            document.getElementById('offerExperience').value = '';
+            this.selectedSkills = new Set();
+            document.getElementById('offerExperience').value = '0';
+            const expDisplay = document.getElementById('offerExpDisplay');
+            if (expDisplay) expDisplay.textContent = '0';
             document.getElementById('offerModality').value = '';
-            document.querySelectorAll('input[name="offerSoftSkills"]').forEach(cb => cb.checked = false);
+            document.getElementById('offerCurrency').value = '$';
+            // Reset seniority
+            document.getElementById('offerSeniority').value = '';
+            const senContainer = document.getElementById('offerSeniorityContainer');
+            if (senContainer) {
+                senContainer.querySelectorAll('label').forEach(lbl => {
+                    const radio = lbl.querySelector('input[type="radio"]');
+                    if (radio) radio.checked = false;
+                    lbl.style.borderColor = '#e5e7eb';
+                    lbl.style.background = '#f9fafb';
+                    lbl.style.color = '#6b7280';
+                });
+            }
+            // Reset soft skills tag input
+            this._offerSoftSkills = [];
+            const softDisplay = document.getElementById('offerSoftSkillsDisplay');
+            if (softDisplay) softDisplay.innerHTML = '';
+            const softInput = document.getElementById('offerSoftSkillsSearch');
+            if (softInput) softInput.value = '';
+            const softHidden = document.getElementById('offerSoftSkillsValue');
+            if (softHidden) softHidden.value = '';
+            // Reset skills display
+            const skillsDisplay = document.getElementById('offerSkillsDisplay');
+            if (skillsDisplay) skillsDisplay.innerHTML = '';
+            // Reset description counter
+            const descCount = document.getElementById('offerDescCount');
+            if (descCount) descCount.textContent = '0/2500';
+            // Reset modality cards
+            ['Remoto', 'Híbrido', 'Presencial'].forEach(m => {
+                const card = document.getElementById('offerModality' + m);
+                if (card) { card.style.borderColor = '#e2e8f0'; card.style.background = '#ffffff'; }
+            });
+            this._renderOfferStep();
+        }
+    },
+
+    _renderOfferStep() {
+        const step = this._offerStep;
+        // Show/hide steps
+        for (let i = 1; i <= 4; i++) {
+            const el = document.getElementById('offerStep' + i);
+            if (el) el.style.display = i === step ? 'block' : 'none';
+        }
+        // Segmented progress bars
+        for (let i = 1; i <= 4; i++) {
+            const bar = document.getElementById('offerBar' + i);
+            if (bar) bar.style.background = i <= step ? '#1392ec' : '#e2e8f0';
+        }
+        // Title
+        const title = document.getElementById('offerStepTitle');
+        if (title) title.textContent = this.editingOfferId ? 'Editar Oferta' : 'Nueva Oferta';
+        // Button text
+        const btnText = document.getElementById('offerBtnText');
+        const btnIcon = document.getElementById('offerBtnIcon');
+        if (step === 4) {
+            if (btnText) btnText.textContent = this.editingOfferId ? 'Guardar Cambios' : 'Publicar Oferta';
+            if (btnIcon) btnIcon.textContent = 'check';
+        } else {
+            if (btnText) btnText.textContent = 'Continuar';
+            if (btnIcon) btnIcon.textContent = 'arrow_forward';
+        }
+        // Populate review on step 4
+        if (step === 4) this._populateOfferReview();
+    },
+
+    selectOfferModality(value) {
+        document.getElementById('offerModality').value = value;
+        ['Remoto', 'Híbrido', 'Presencial'].forEach(m => {
+            const card = document.getElementById('offerModality' + m);
+            if (card) {
+                if (m === value) {
+                    card.style.borderColor = '#1392ec';
+                    card.style.background = '#eff9ff';
+                    card.querySelector('.material-icons').style.color = '#1392ec';
+                } else {
+                    card.style.borderColor = '#e2e8f0';
+                    card.style.background = '#ffffff';
+                    card.querySelector('.material-icons').style.color = '#64748b';
+                }
+            }
+        });
+    },
+
+    toggleSoftSkillCard(label) {
+        const cb = label.querySelector('input[type="checkbox"]');
+        if (!cb) return;
+        cb.checked = !cb.checked;
+        if (cb.checked) {
+            label.style.borderColor = '#1392ec';
+            label.style.background = '#eff9ff';
+            label.querySelector('.material-icons').style.color = '#1392ec';
+        } else {
+            label.style.borderColor = '#e2e8f0';
+            label.style.background = '#ffffff';
+            label.querySelector('.material-icons').style.color = '#94a3b8';
+        }
+    },
+
+    adjustOfferExp(delta) {
+        const input = document.getElementById('offerExperience');
+        const display = document.getElementById('offerExpDisplay');
+        let val = parseInt(input.value) || 0;
+        val = Math.max(0, Math.min(30, val + delta));
+        input.value = val;
+        if (display) display.textContent = val;
+    },
+
+    selectOfferSeniority(value, clickedLabel) {
+        document.getElementById('offerSeniority').value = value;
+        const container = document.getElementById('offerSeniorityContainer');
+        if (!container) return;
+        container.querySelectorAll('label').forEach(lbl => {
+            const radio = lbl.querySelector('input[type="radio"]');
+            if (radio && radio.value === value) {
+                radio.checked = true;
+                lbl.style.borderColor = '#1392ec';
+                lbl.style.background = '#1392ec';
+                lbl.style.color = '#ffffff';
+            } else {
+                if (radio) radio.checked = false;
+                lbl.style.borderColor = '#e5e7eb';
+                lbl.style.background = '#f9fafb';
+                lbl.style.color = '#6b7280';
+            }
+        });
+    },
+
+    _validateOfferStep(step) {
+        this.clearFormErrors();
+        if (step === 1) {
+            let ok = true;
+            const title = document.getElementById('offerTitle');
+            if (!title.value.trim()) {
+                title.style.borderColor = '#ef4444';
+                document.getElementById('offerTitleError').style.display = 'block';
+                ok = false;
+            }
+            const modality = document.getElementById('offerModality');
+            if (!modality.value) {
+                this.showToast('Selecciona una modalidad de trabajo');
+                ok = false;
+            }
+            return ok;
+        }
+        if (step === 2) {
+            let ok = true;
+            const min = document.getElementById('offerSalaryMin');
+            const max = document.getElementById('offerSalaryMax');
+            if (!min.value.trim()) {
+                min.style.borderColor = '#ef4444';
+                document.getElementById('offerSalaryMinError').style.display = 'block';
+                ok = false;
+            }
+            if (!max.value.trim()) {
+                max.style.borderColor = '#ef4444';
+                document.getElementById('offerSalaryMaxError').style.display = 'block';
+                ok = false;
+            }
+            if (ok) {
+                const minVal = parseInt(min.value.replace(/\./g, ''), 10);
+                const maxVal = parseInt(max.value.replace(/\./g, ''), 10);
+                if (isNaN(minVal) || isNaN(maxVal)) {
+                    this.showToast('El salario debe ser un número válido');
+                    ok = false;
+                } else if (minVal > maxVal) {
+                    min.style.borderColor = '#ef4444';
+                    max.style.borderColor = '#ef4444';
+                    this.showToast('El salario mínimo no puede ser mayor al máximo');
+                    ok = false;
+                }
+            }
+            return ok;
+        }
+        if (step === 3) {
+            let ok = true;
+            const skills = document.getElementById('offerSkills').value;
+            if (!skills) {
+                document.getElementById('offerSkillsDisplay').style.borderColor = '#ef4444';
+                document.getElementById('offerSkillsError').style.display = 'block';
+                ok = false;
+            }
+            const desc = document.getElementById('offerDescription');
+            if (!desc.value.trim()) {
+                desc.style.borderColor = '#ef4444';
+                this.showToast('La descripción es obligatoria');
+                ok = false;
+            }
+            return ok;
+        }
+        return true;
+    },
+
+    nextOfferStep() {
+        if (this._offerStep < 4) {
+            if (!this._validateOfferStep(this._offerStep)) return;
+            this._offerStep++;
+            this._renderOfferStep();
+        } else {
+            // Step 4: Publish
+            this.saveOffer();
+        }
+    },
+
+    prevOfferStep() {
+        if (this._offerStep > 1) {
+            this._offerStep--;
+            this._renderOfferStep();
+        } else {
+            this.cancelCreateOffer();
+        }
+    },
+
+    goToOfferStep(step) {
+        this._offerStep = step;
+        this._renderOfferStep();
+    },
+
+    _populateOfferReview() {
+        const title = document.getElementById('offerTitle').value || '-';
+        const profTitle = document.getElementById('offerProfessionalTitle').value || '-';
+        const modality = document.getElementById('offerModality').value || '-';
+        const exp = document.getElementById('offerExperience').value;
+        const seniority = document.getElementById('offerSeniority').value;
+        const currency = document.getElementById('offerCurrency').value;
+        const minStr = document.getElementById('offerSalaryMin').value;
+        const maxStr = document.getElementById('offerSalaryMax').value;
+        const skills = document.getElementById('offerSkills').value;
+        const desc = document.getElementById('offerDescription').value || '-';
+
+        document.getElementById('reviewTitle').textContent = title;
+        document.getElementById('reviewProfTitle').textContent = profTitle;
+        document.getElementById('reviewModality').textContent = modality;
+        document.getElementById('reviewExperience').textContent = exp && exp !== '0' ? exp + ' años' : 'Sin especificar';
+        document.getElementById('reviewSeniority').textContent = seniority || 'Sin especificar';
+        document.getElementById('reviewSalary').textContent = minStr && maxStr ? currency + minStr + ' - ' + currency + maxStr : 'Sin especificar';
+        document.getElementById('reviewDescription').textContent = desc;
+
+        const skillsContainer = document.getElementById('reviewSkills');
+        if (skills) {
+            skillsContainer.innerHTML = skills.split(',').map(s =>
+                '<span style="background: #eff6ff; color: #334155; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; border: 1px solid #dbeafe;">' + s + '</span>'
+            ).join('');
+        } else {
+            skillsContainer.innerHTML = '<span style="color: #94a3b8; font-size: 13px;">Ninguna seleccionada</span>';
+        }
+
+        // Soft skills in review
+        const softSection = document.getElementById('reviewSoftSkillsSection');
+        const softContainer = document.getElementById('reviewSoftSkills');
+        if (this._offerSoftSkills.length > 0) {
+            softSection.style.display = 'block';
+            softContainer.innerHTML = this._offerSoftSkills.map(s =>
+                '<span style="background: #f1f5f9; color: #475569; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; border: 1px solid #e2e8f0;">' + s + '</span>'
+            ).join('');
+        } else {
+            softSection.style.display = 'none';
         }
     },
 
@@ -7279,6 +10033,15 @@ const app = {
     clearFormErrors() {
         document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
         document.querySelectorAll('.error-text').forEach(el => el.style.display = 'none');
+        // Reset Stitch border colors on offer form inputs
+        const offerView = document.getElementById('createOfferView');
+        if (offerView) {
+            offerView.querySelectorAll('input[type="text"], input[type="number"], textarea, select').forEach(el => {
+                if (el.style.borderColor === 'rgb(239, 68, 68)' || el.style.borderColor === '#ef4444') {
+                    el.style.borderColor = '#e2e8f0';
+                }
+            });
+        }
     },
 
     cancelCreateOffer() {
@@ -7289,6 +10052,9 @@ const app = {
             }
             const skillsModal = document.getElementById('skillsModal');
             if (skillsModal) skillsModal.style.display = 'none';
+            const successScreen = document.getElementById('offerSuccessScreen');
+            if (successScreen) successScreen.style.display = 'none';
+            this._offerStep = 1;
         } catch (e) {
             console.error('Error closing modal:', e);
         }
@@ -7300,7 +10066,6 @@ const app = {
 
     openSkillsModal() {
         const modal = document.getElementById('skillsModal');
-        const grid = document.getElementById('skillsGrid');
 
         // Load current skills from hidden input
         const current = document.getElementById('offerSkills').value;
@@ -7312,12 +10077,10 @@ const app = {
 
     renderSkillsGrid(skills) {
         const grid = document.getElementById('skillsGrid');
-        grid.innerHTML = skills.map(skill => `
-            <div class="skill-tag ${this.selectedSkills.has(skill) ? 'selected' : ''}" 
-                 onclick="app.toggleSkill('${skill}')">
-                ${skill}
-            </div>
-        `).join('');
+        grid.innerHTML = skills.map(skill => {
+            const selected = this.selectedSkills.has(skill);
+            return `<div onclick="app.toggleSkill('${skill}')" style="padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: 1.5px solid ${selected ? '#1392ec' : '#e2e8f0'}; background: ${selected ? '#eff9ff' : '#ffffff'}; color: ${selected ? '#1392ec' : '#1e293b'};">${skill}</div>`;
+        }).join('');
     },
 
     filterSkills(query) {
@@ -7337,31 +10100,136 @@ const app = {
     confirmSkills() {
         const skillsArr = Array.from(this.selectedSkills);
         document.getElementById('offerSkills').value = skillsArr.join(',');
+        this._renderOfferSkillChips();
 
-        const display = document.getElementById('offerSkillsDisplay');
-        if (skillsArr.length > 0) {
-            display.innerHTML = skillsArr.map(s => `
-                <span style="background: var(--bg); padding: 4px 12px; border-radius: 12px; font-size: 12px; border: 1px solid var(--border); color: var(--primary); font-weight: 600;">${s}</span>
-            `).join('');
-        } else {
-            display.innerHTML = '<span style="color: var(--text-muted);">Seleccionar habilidades...</span>';
-        }
 
         document.getElementById('skillsModal').style.display = 'none';
+    },
+
+    _renderOfferSkillChips() {
+        const display = document.getElementById('offerSkillsDisplay');
+        const skillsArr = Array.from(this.selectedSkills);
+        if (skillsArr.length > 0) {
+            display.innerHTML = skillsArr.map(s =>
+                '<div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; background: #eff6ff; border: 1px solid #dbeafe; color: #334155; font-size: 13px; font-weight: 500;">' +
+                '<span>' + s + '</span>' +
+                '<button onclick="event.stopPropagation(); app.removeOfferSkill(\'' + s + '\')" style="background: none; border: none; cursor: pointer; padding: 0; display: flex; align-items: center; color: #94a3b8; transition: color 0.2s;" onmouseenter="this.style.color=\'#ef4444\'" onmouseleave="this.style.color=\'#94a3b8\'">' +
+                '<span class="material-icons" style="font-size: 16px;">close</span>' +
+                '</button>' +
+                '</div>'
+            ).join('');
+        } else {
+            display.innerHTML = '';
+        }
+    },
+
+    removeOfferSkill(skill) {
+        this.selectedSkills.delete(skill);
+        document.getElementById('offerSkills').value = Array.from(this.selectedSkills).join(',');
+        this._renderOfferSkillChips();
+    },
+
+    // Soft Skills Tag Input
+    _offerSoftSkills: [],
+    _softSkillOptions: ['Liderazgo', 'Trabajo en equipo', 'Comunicación', 'Resolución de problemas', 'Pensamiento crítico', 'Adaptabilidad', 'Creatividad', 'Empatía', 'Gestión del tiempo', 'Negociación', 'Inglés B2', 'Inglés C1', 'Proactividad', 'Mentoría'],
+
+    filterSoftSkillSuggestions(query) {
+        const container = document.getElementById('offerSoftSkillSuggestions');
+        if (!query.trim()) {
+            container.style.display = 'none';
+            return;
+        }
+        const q = query.toLowerCase();
+        const filtered = this._softSkillOptions.filter(s =>
+            s.toLowerCase().includes(q) && !this._offerSoftSkills.includes(s)
+        );
+        if (filtered.length === 0) {
+            // Show option to add custom
+            container.innerHTML = '<div onclick="app.addSoftSkillFromInput()" style="padding: 10px 14px; cursor: pointer; font-size: 13px; color: #1392ec; font-weight: 500; display: flex; align-items: center; gap: 6px;"><span class="material-icons" style="font-size: 18px;">add</span>Agregar "' + query.trim() + '"</div>';
+            container.style.display = 'block';
+        } else {
+            container.innerHTML = filtered.map(s =>
+                '<div onclick="app.addSoftSkill(\'' + s + '\')" style="padding: 10px 14px; cursor: pointer; font-size: 13px; color: #1e293b; transition: background 0.15s;" onmouseenter="this.style.background=\'#f8fafc\'" onmouseleave="this.style.background=\'#ffffff\'">' + s + '</div>'
+            ).join('');
+            container.style.display = 'block';
+        }
+    },
+
+    hideSoftSkillSuggestions() {
+        const container = document.getElementById('offerSoftSkillSuggestions');
+        if (container) container.style.display = 'none';
+    },
+
+    addSoftSkill(value) {
+        if (value && !this._offerSoftSkills.includes(value)) {
+            this._offerSoftSkills.push(value);
+            this._renderSoftSkillChips();
+        }
+        const input = document.getElementById('offerSoftSkillsSearch');
+        if (input) input.value = '';
+        this.hideSoftSkillSuggestions();
+    },
+
+    addSoftSkillFromInput() {
+        const input = document.getElementById('offerSoftSkillsSearch');
+        const value = input.value.trim();
+        if (value) this.addSoftSkill(value);
+    },
+
+    removeSoftSkill(value) {
+        this._offerSoftSkills = this._offerSoftSkills.filter(s => s !== value);
+        this._renderSoftSkillChips();
+    },
+
+    _renderSoftSkillChips() {
+        const display = document.getElementById('offerSoftSkillsDisplay');
+        const hidden = document.getElementById('offerSoftSkillsValue');
+        if (hidden) hidden.value = this._offerSoftSkills.join(',');
+        if (this._offerSoftSkills.length > 0) {
+            display.innerHTML = this._offerSoftSkills.map(s =>
+                '<div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; background: #f1f5f9; border: 1px solid #e2e8f0; color: #475569; font-size: 13px; font-weight: 500;">' +
+                '<span>' + s + '</span>' +
+                '<button onclick="app.removeSoftSkill(\'' + s + '\')" style="background: none; border: none; cursor: pointer; padding: 0; display: flex; align-items: center; color: #94a3b8; transition: color 0.2s;" onmouseenter="this.style.color=\'#475569\'" onmouseleave="this.style.color=\'#94a3b8\'">' +
+                '<span class="material-icons" style="font-size: 16px;">close</span>' +
+                '</button>' +
+                '</div>'
+            ).join('');
+        } else {
+            display.innerHTML = '';
+        }
+    },
+
+    // Description helpers
+    updateDescriptionCount() {
+        const textarea = document.getElementById('offerDescription');
+        const counter = document.getElementById('offerDescCount');
+        if (textarea && counter) {
+            counter.textContent = textarea.value.length + '/2500';
+        }
+    },
+
+    appendToDescription(text) {
+        const textarea = document.getElementById('offerDescription');
+        if (textarea) {
+            if (textarea.value && !textarea.value.endsWith(' ') && !textarea.value.endsWith('\n')) {
+                textarea.value += ' ';
+            }
+            textarea.value += text;
+            this.updateDescriptionCount();
+            textarea.focus();
+        }
     },
 
     async saveOffer() {
         this.clearFormErrors();
         let hasError = false;
 
-        // Fields to validate
+        // Fields to validate (core required fields only)
         const fields = [
             { id: 'offerTitle', name: 'Título del Cargo' },
-            { id: 'offerProfessionalTitle', name: 'Título Profesional' },
             { id: 'offerSalaryMin', name: 'Salario Mínimo' },
             { id: 'offerSalaryMax', name: 'Salario Máximo' },
             { id: 'offerModality', name: 'Modalidad' },
-            { id: 'offerExperience', name: 'Experiencia' },
             { id: 'offerDescription', name: 'Descripción' }
         ];
 
@@ -7425,9 +10293,9 @@ const app = {
         const description = document.getElementById('offerDescription').value;
         const modality = document.getElementById('offerModality').value;
         const experience = document.getElementById('offerExperience').value;
+        const seniority = document.getElementById('offerSeniority').value;
 
-        const softSkills = Array.from(document.querySelectorAll('input[name="offerSoftSkills"]:checked'))
-            .map(cb => cb.value);
+        const softSkills = [...this._offerSoftSkills];
 
         const newOffer = {
             id: this.editingOfferId || Date.now(),
@@ -7444,6 +10312,7 @@ const app = {
             experience_years: parseInt(experience) || 0,
             skills: skillsVal.split(','),
             softSkills,
+            seniority: seniority || '',
             status: 'active',
             candidates_count: this.editingOfferId ? (this.companyOffers.find(o => o.id === this.editingOfferId)?.candidates_count || 0) : 0,
             date: new Date().toLocaleDateString()
@@ -7462,6 +10331,7 @@ const app = {
             description: newOffer.description,
             skills: newOffer.skills,
             soft_skills: newOffer.softSkills,
+            seniority: newOffer.seniority,
             status: 'active'
         };
 
@@ -7503,9 +10373,83 @@ const app = {
         }
 
         this.renderCompanyOffers();
-        this.cancelCreateOffer();
-        // Refresh stats counter
         this._loadCompanyStats(this.companyProfile || this.currentUser);
+
+        if (this.editingOfferId) {
+            // For edits, just close and show toast
+            this.cancelCreateOffer();
+        } else {
+            // For new offers, show success screen
+            this._lastPublishedOffer = newOffer;
+            this._showOfferSuccess(newOffer);
+        }
+    },
+
+    _showOfferSuccess(offer) {
+        const screen = document.getElementById('offerSuccessScreen');
+        if (!screen) return;
+
+        // Populate card
+        const titleEl = document.getElementById('successOfferTitle');
+        if (titleEl) titleEl.textContent = offer.title || '-';
+        const modalityEl = document.getElementById('successOfferModality');
+        if (modalityEl) {
+            const mod = offer.modality || 'Remoto';
+            const icon = mod === 'Remoto' ? 'public' : mod === 'Híbrido' ? 'sync_alt' : 'business';
+            modalityEl.innerHTML = '<span class="material-icons" style="font-size: 15px;">' + icon + '</span><span>' + mod + '</span>';
+        }
+
+        // Hide wizard elements, show success
+        screen.style.display = 'flex';
+    },
+
+    editLastPublishedOffer() {
+        const screen = document.getElementById('offerSuccessScreen');
+        if (screen) screen.style.display = 'none';
+        if (this._lastPublishedOffer) {
+            this.editOffer(this._lastPublishedOffer.id);
+        }
+    },
+
+    viewPublishedOffer() {
+        // Close success screen and show offers list
+        this.closeOfferSuccess();
+        this.showCompanySection('companyOffersSection');
+    },
+
+    closeOfferSuccess() {
+        const screen = document.getElementById('offerSuccessScreen');
+        if (screen) screen.style.display = 'none';
+        this.cancelCreateOffer();
+    },
+
+    // Offers tab state
+    _offersTab: 'active',
+
+    switchOffersTab(tab) {
+        this._offersTab = tab;
+        const activeBtn = document.getElementById('offersTabActive');
+        const historyBtn = document.getElementById('offersTabHistory');
+        if (tab === 'active') {
+            activeBtn.style.background = '#1392ec';
+            activeBtn.style.color = '#ffffff';
+            activeBtn.style.fontWeight = '700';
+            activeBtn.style.boxShadow = '0 2px 8px rgba(19,146,236,0.25)';
+            historyBtn.style.background = 'transparent';
+            historyBtn.style.color = '#6b7280';
+            historyBtn.style.fontWeight = '500';
+            historyBtn.style.boxShadow = 'none';
+        } else {
+            historyBtn.style.background = '#1392ec';
+            historyBtn.style.color = '#ffffff';
+            historyBtn.style.fontWeight = '700';
+            historyBtn.style.boxShadow = '0 2px 8px rgba(19,146,236,0.25)';
+            activeBtn.style.background = 'transparent';
+            activeBtn.style.color = '#6b7280';
+            activeBtn.style.fontWeight = '500';
+            activeBtn.style.boxShadow = 'none';
+        }
+        this._renderOffersList();
     },
 
     async renderCompanyOffers() {
@@ -7526,73 +10470,135 @@ const app = {
                     modality: o.modality,
                     description: o.description,
                     skills: typeof o.skills === 'string' ? o.skills : (o.skills || []).join(','),
-                    softSkills: o.soft_skills || []
+                    softSkills: o.soft_skills || [],
+                    seniority: o.seniority || '',
+                    created_at: o.created_at
                 }));
             }
             if (error) console.error('Error fetching company offers:', error);
         }
 
-        const activeOffers = this.companyOffers.filter(o => o.status !== 'closed');
-        const closedOffers = this.companyOffers.filter(o => o.status === 'closed');
+        this._renderOffersList();
+    },
 
-        if (activeOffers.length === 0 && closedOffers.length === 0) {
-            list.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 40px;">No tienes ofertas activas.</div>';
+    _renderOffersList() {
+        const list = document.getElementById('companyOffersList');
+        if (!list) return;
+
+        const isHistory = this._offersTab === 'history';
+        const offers = isHistory
+            ? this.companyOffers.filter(o => o.status === 'closed')
+            : this.companyOffers.filter(o => o.status !== 'closed');
+
+        if (offers.length === 0) {
+            const msg = isHistory ? 'No hay ofertas en el historial.' : 'No tienes ofertas activas.';
+            const icon = isHistory ? 'history' : 'work_outline';
+            list.innerHTML = `
+                <div style="text-align: center; padding: 60px 20px;">
+                    <span class="material-icons" style="font-size: 48px; color: #d1d5db; margin-bottom: 12px;">${icon}</span>
+                    <p style="font-size: 15px; color: #9ca3af; font-weight: 500; margin: 0;">${msg}</p>
+                    ${!isHistory ? '<p style="font-size: 13px; color: #d1d5db; margin: 8px 0 0;">Toca "Crear Nueva" para publicar tu primera oferta.</p>' : ''}
+                </div>`;
             return;
         }
 
-        let html = '';
+        list.innerHTML = offers.map(offer => {
+            const isClosed = offer.status === 'closed';
+            const matchCount = offer.candidates_count || 0;
+            const timeAgo = this._offerTimeAgo(offer.created_at || offer.date);
+            const modalityIcon = offer.modality === 'Remoto' ? 'public' : offer.modality === 'Híbrido' ? 'sync_alt' : 'business';
 
-        // Active offers
-        if (activeOffers.length === 0) {
-            html += '<div style="text-align: center; color: var(--text-secondary); padding: 20px 0;">No tienes ofertas activas.</div>';
-        } else {
-            html += activeOffers.map(offer => `
-                <div class="job-offer-card" style="padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div style="flex: 1; min-width: 0;">
-                            <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">${offer.title}</h3>
-                            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 4px;">${offer.professionalTitle || 'Sin título especificado'}</div>
-                            <div style="font-size: 13px; color: var(--success); font-weight: 500;">Activa • ${offer.candidates_count || 0} candidatos</div>
-                            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">${offer.modality} • ${offer.salary || 'A convenir'}</div>
+            // Status badge
+            let badgeHtml;
+            if (isClosed) {
+                badgeHtml = '<span style="display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; background: #fef3c7; color: #d97706; border: 1px solid rgba(217,119,6,0.1);">Cerrada</span>';
+            } else {
+                badgeHtml = '<span style="display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; background: #ecfdf5; color: #059669; border: 1px solid rgba(5,150,105,0.1);">Visible</span>';
+            }
+
+            return `
+            <article style="position: relative; overflow: hidden; border-radius: 16px; background: #ffffff; padding: 20px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.05); border: 1px solid transparent; transition: all 0.2s;">
+                <!-- Header -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            ${badgeHtml}
+                            <span style="font-size: 11px; color: #9ca3af;">${timeAgo}</span>
                         </div>
-                        <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0;">
-                            <button onclick="app.editOffer('${offer.id}')" style="padding: 6px 12px; font-size: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; color: var(--primary);">Editar</button>
-                            <button onclick="app.closeOffer('${offer.id}')" style="padding: 6px 12px; font-size: 12px; background: #FFF8E1; border: 1px solid #FFD54F; border-radius: 6px; cursor: pointer; color: #F57F17;">Cerrar</button>
-                            <button onclick="app.deleteOffer('${offer.id}')" style="padding: 6px 12px; font-size: 12px; background: #fff0f0; border: 1px solid #ffcccc; border-radius: 6px; cursor: pointer; color: var(--danger);">Eliminar</button>
-                        </div>
+                        <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #111827; line-height: 1.3;">${offer.title}</h3>
+                        <p style="margin: 3px 0 0; font-size: 13px; color: #6b7280;">${offer.modality || 'Remoto'} • ${offer.salary || 'A convenir'}</p>
                     </div>
-                </div>
-            `).join('');
-        }
-
-        // Closed offers (collapsible history)
-        if (closedOffers.length > 0) {
-            html += `
-                <div style="border-top: 1px solid var(--border); padding-top: 12px;">
-                    <button onclick="var content = this.nextElementSibling; content.style.display = content.style.display === 'none' ? 'block' : 'none'; this.querySelector('.hist-arrow').textContent = content.style.display === 'none' ? '▶' : '▼';"
-                        style="display: flex; align-items: center; gap: 8px; background: none; border: none; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text-secondary); padding: 8px 0;">
-                        <span class="hist-arrow">▶</span> Historial de Ofertas (${closedOffers.length})
+                    <button onclick="app.showOfferActions('${offer.id}')" style="background: none; border: none; cursor: pointer; padding: 4px; margin: -4px -8px 0 0; color: #d1d5db; border-radius: 50%; transition: all 0.2s;"
+                        onmouseenter="this.style.color='#6b7280'; this.style.background='#f9fafb'"
+                        onmouseleave="this.style.color='#d1d5db'; this.style.background='none'">
+                        <span class="material-icons" style="font-size: 22px;">more_horiz</span>
                     </button>
-                    <div style="display: none; margin-top: 8px;">
-                        ${closedOffers.map((offer, i) => `
-                            <div class="job-offer-card" style="padding: 16px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; opacity: 0.7;${i < closedOffers.length - 1 ? ' margin-bottom: 12px;' : ''}">
-                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                                    <div style="flex: 1; min-width: 0;">
-                                        <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">${offer.title}</h3>
-                                        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 4px;">${offer.professionalTitle || ''}</div>
-                                        <div style="font-size: 13px; color: var(--text-secondary); font-weight: 500;">Cerrada</div>
-                                        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">${offer.modality} • ${offer.salary || 'A convenir'}</div>
-                                    </div>
-                                    <button onclick="app.deleteOffer('${offer.id}')" style="padding: 6px 12px; font-size: 12px; background: #fff0f0; border: 1px solid #ffcccc; border-radius: 6px; cursor: pointer; color: var(--danger); flex-shrink: 0;">Eliminar</button>
-                                </div>
-                            </div>
-                        `).join('')}
+                </div>
+
+                <!-- Stats Grid -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;${isClosed ? ' opacity: 0.6;' : ''}">
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 12px; background: #fdf2f8; padding: 12px;">
+                        <div style="display: flex; align-items: center; gap: 5px; color: #db2777; margin-bottom: 4px;">
+                            <span class="material-icons" style="font-size: 18px;">favorite</span>
+                            <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Matches</span>
+                        </div>
+                        <span style="font-size: 22px; font-weight: 800; color: #1f2937;">${matchCount}</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 12px; background: #eff6ff; padding: 12px;">
+                        <div style="display: flex; align-items: center; gap: 5px; color: #1392ec; margin-bottom: 4px;">
+                            <span class="material-icons" style="font-size: 18px;">style</span>
+                            <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Pendientes</span>
+                        </div>
+                        <span style="font-size: 22px; font-weight: 800; color: #1f2937;">0</span>
                     </div>
                 </div>
-            `;
-        }
 
-        list.innerHTML = html;
+                <!-- Footer -->
+                <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid #f3f4f6; display: flex; align-items: center; justify-content: ${isClosed ? 'center' : 'space-between'};">
+                    ${isClosed ? `
+                        <button onclick="app.deleteOffer('${offer.id}')" style="font-size: 13px; font-weight: 600; color: #9ca3af; background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                            <span class="material-icons" style="font-size: 16px;">delete_outline</span> Eliminar
+                        </button>
+                    ` : `
+                        <div style="display: flex;">
+                            ${matchCount > 0 ? `<div style="display: flex; margin-left: -4px;"><div style="width: 24px; height: 24px; border-radius: 50%; background: #e5e7eb; border: 2px solid #ffffff; display: flex; align-items: center; justify-content: center;"><span class="material-icons" style="font-size: 14px; color: #6b7280;">person</span></div></div>` : ''}
+                        </div>
+                        <button onclick="app.editOffer('${offer.id}')" style="font-size: 13px; font-weight: 600; color: #1392ec; background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: color 0.2s;"
+                            onmouseenter="this.style.color='#0b6cb3'"
+                            onmouseleave="this.style.color='#1392ec'">
+                            Ver candidatos <span class="material-icons" style="font-size: 16px;">arrow_forward</span>
+                        </button>
+                    `}
+                </div>
+            </article>`;
+        }).join('');
+    },
+
+    _offerTimeAgo(dateStr) {
+        if (!dateStr) return '';
+        const now = new Date();
+        const date = new Date(dateStr);
+        const diff = Math.floor((now - date) / 1000);
+        if (diff < 60) return 'Ahora';
+        if (diff < 3600) return 'Hace ' + Math.floor(diff / 60) + ' min';
+        if (diff < 86400) return 'Hace ' + Math.floor(diff / 3600) + ' h';
+        const days = Math.floor(diff / 86400);
+        if (days === 1) return 'Hace 1 día';
+        if (days < 30) return 'Hace ' + days + ' días';
+        return 'Hace ' + Math.floor(days / 30) + ' mes' + (Math.floor(days / 30) > 1 ? 'es' : '');
+    },
+
+    showOfferActions(offerId) {
+        const offer = this.companyOffers.find(o => o.id === offerId);
+        if (!offer) return;
+        const isClosed = offer.status === 'closed';
+        // Simple action menu via confirm dialogs
+        const action = isClosed
+            ? confirm('¿Eliminar esta oferta del historial?') ? 'delete' : null
+            : prompt('Acción:\n1 = Editar\n2 = Cerrar oferta\n3 = Eliminar', '1');
+        if (action === '1' || action === 1) this.editOffer(offerId);
+        else if (action === '2' || action === 2) this.closeOffer(offerId);
+        else if (action === '3' || action === 3 || action === 'delete') this.deleteOffer(offerId);
     },
 
     // Delete Confirmation Logic
@@ -7790,35 +10796,55 @@ const app = {
         this.createOffer(); // Open the modal (resets state first)
         this.editingOfferId = id; // Set ID AFTER opening
 
-        // Populate fields
-        document.getElementById('offerTitle').value = offer.title;
-        document.getElementById('offerProfessionalTitle').value = offer.professionalTitle;
-        document.getElementById('offerDescription').value = offer.description;
-        document.getElementById('offerModality').value = offer.modality;
-
-        if (offer.experience) {
-            const expMatch = offer.experience.match(/(\d+)/);
-            if (expMatch) document.getElementById('offerExperience').value = expMatch[0];
+        // Populate Step 1 fields
+        document.getElementById('offerTitle').value = offer.title || '';
+        document.getElementById('offerProfessionalTitle').value = offer.professionalTitle || offer.professional_title || '';
+        if (offer.modality) {
+            this.selectOfferModality(offer.modality);
         }
 
-        // Salary parsing logic
-        if (offer.salary) {
-            // Expecting format: "$800.000 - 1.200.000"
+        // Populate Step 2 fields
+        if (offer.experience_years || offer.experience) {
+            const years = offer.experience_years || (offer.experience ? parseInt(offer.experience) : 0);
+            document.getElementById('offerExperience').value = years || 0;
+            const expDisplay = document.getElementById('offerExpDisplay');
+            if (expDisplay) expDisplay.textContent = years || 0;
+        }
+        if (offer.seniority) {
+            this.selectOfferSeniority(offer.seniority);
+        }
+        if (offer.currency) {
+            document.getElementById('offerCurrency').value = offer.currency;
+        }
+        if (offer.salary_min && offer.salary_max) {
+            document.getElementById('offerSalaryMin').value = parseInt(offer.salary_min).toLocaleString('es-CL');
+            document.getElementById('offerSalaryMax').value = parseInt(offer.salary_max).toLocaleString('es-CL');
+        } else if (offer.salary) {
             const parts = offer.salary.split('-');
             if (parts.length === 2) {
                 const min = parts[0].replace(/[^0-9]/g, '');
                 const max = parts[1].replace(/[^0-9]/g, '');
-                document.getElementById('offerSalaryMin').value = parseInt(min).toLocaleString('es-CL');
-                document.getElementById('offerSalaryMax').value = parseInt(max).toLocaleString('es-CL');
+                if (min) document.getElementById('offerSalaryMin').value = parseInt(min).toLocaleString('es-CL');
+                if (max) document.getElementById('offerSalaryMax').value = parseInt(max).toLocaleString('es-CL');
             }
         }
 
-        if (offer.skills) {
-            document.getElementById('offerSkills').value = offer.skills.join(',');
-            // Re-render skills logic if separate function exists, otherwise skipping visual 'badge' update 
-            // relying on internal value
+        // Populate Step 3 fields
+        document.getElementById('offerDescription').value = offer.description || '';
+        this.updateDescriptionCount();
+        const skillsArr = Array.isArray(offer.skills) ? offer.skills : (typeof offer.skills === 'string' && offer.skills ? offer.skills.split(',') : []);
+        if (skillsArr.length > 0) {
+            document.getElementById('offerSkills').value = skillsArr.join(',');
+            this.selectedSkills = new Set(skillsArr);
+            this._renderOfferSkillChips();
         }
+        // Populate soft skills as tags
+        const softSkills = offer.softSkills || offer.soft_skills || [];
+        this._offerSoftSkills = Array.isArray(softSkills) ? [...softSkills] : [];
+        this._renderSoftSkillChips();
 
+        // Update title and button
+        this._renderOfferStep();
     },
 
     toggleNotifications() {
@@ -7866,51 +10892,6 @@ const app = {
         const companyView = document.getElementById('companyNotificationsView');
         if (companyView) {
             companyView.style.transform = 'translateY(100%)';
-        }
-    },
-
-    openSettingsModal() {
-        const type = localStorage.getItem('talently_user_type');
-
-        if (type === 'company' || this.profileType === 'company') {
-            const companySettingsView = document.getElementById('companySettingsView');
-            if (!companySettingsView) {
-                console.error('companySettingsView not found');
-                return;
-            }
-
-            // Toggle: si ya está abierto, cerrar
-            if (companySettingsView.style.transform === 'translateY(0px)' || companySettingsView.style.transform === 'translateY(0)') {
-                companySettingsView.style.transform = 'translateY(100%)';
-                return;
-            }
-
-            // Cerrar otros toggles
-            this.closeFilters();
-            this.closeNotifications();
-
-            // Sync dark mode toggle
-            const toggle = document.getElementById('companyDarkModeToggle');
-            if (toggle) toggle.checked = document.body.classList.contains('dark-mode');
-
-            companySettingsView.style.transform = 'translateY(0)';
-        } else {
-            const candidateView = document.getElementById('settingsView');
-            if (!candidateView) {
-                console.error('settingsView not found');
-                return;
-            }
-
-            if (candidateView.style.transform === 'translateY(0px)' || candidateView.style.transform === 'translateY(0)') {
-                candidateView.style.transform = 'translateY(100%)';
-                return;
-            }
-
-            // Cerrar otros toggles
-            this.closeFilters();
-            this.closeNotifications();
-
-            candidateView.style.transform = 'translateY(0)';
         }
     },
 
@@ -7963,209 +10944,55 @@ const app = {
         }
     },
 
-    renderCompanyProfile() {
-        // Render profile card functionality
-        // Smart Merge: Start with currentUser (onboarding data)
-        const data = { ...this.currentUser };
-
-        // Overlay companyProfile data ONLY if it has values
-        if (this.companyProfile) {
-            Object.keys(this.companyProfile).forEach(key => {
-                const val = this.companyProfile[key];
-                // overwrite if value exists and is not empty string/null
-                if (val !== null && val !== undefined && val !== '') {
-                    data[key] = val;
-                }
-            });
-        }
-
-        // Resolve names from IDs
-        // helper locally or from app scope
-        const getLabel = (cat, id) => this.getRefLabel ? this.getRefLabel(cat, id) : id;
-
-        const countryName = getLabel('countries', data.country);
-        const sectorName = getLabel('sectors', data.sector);
-        const stageName = getLabel('stages', data.company_stage);
-
-        // Location string
-        let locationStr = 'Ubicación no definida';
-        if (data.city_name) {
-            locationStr = `${data.city_name}, ${countryName}`;
-        } else if (countryName && countryName !== data.country) { // If resolved
-            locationStr = countryName;
-        } else if (data.location) {
-            locationStr = data.location;
-        }
-
-        const container = document.getElementById('companyProfileSection');
-        if (container) {
-            // Fix horizontal scroll: ensure max-width and box-sizing
-            container.style.maxWidth = '100%';
-            container.style.boxSizing = 'border-box';
-
-            container.innerHTML = `
-                <div style="padding: 24px; max-width: 100%; box-sizing: border-box; overflow-x: hidden;">
-                    <h2 class="section-title">Perfil de la Empresa</h2>
-                    
-                    <!-- Stats in a Box/Frame -->
-                    <div class="stats-container" style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-bottom: 24px;">
-                        <div class="stat-item" style="text-align: center;">
-                            <div class="stat-value" style="font-size: 24px; font-weight: 700; color: var(--primary);">0</div>
-                            <div class="stat-label" style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Ofertas Activas</div>
-                        </div>
-                        <div class="stat-item" style="text-align: center; border-left: 1px solid var(--border); border-right: 1px solid var(--border);">
-                            <div class="stat-value" style="font-size: 24px; font-weight: 700; color: var(--primary);">0</div>
-                            <div class="stat-label" style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Matches Totales</div>
-                        </div>
-                        <div class="stat-item" style="text-align: center;">
-                            <div class="stat-value" style="font-size: 24px; font-weight: 700; color: var(--primary);">0</div>
-                            <div class="stat-label" style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Vistas de Perfil</div>
-                        </div>
-                    </div>
-
-                    <div style="background: var(--surface); border-radius: 16px; padding: 24px; border: 1px solid var(--border);">
-                        <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 24px;">
-                             <img src="${data.logo_url || data.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || 'Company')}&background=random`}" 
-                                  style="width: 64px; height: 64px; border-radius: 12px; object-fit: cover;">
-                             <div style="flex: 1;">
-                                 <h3 style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">${data.name || 'Nombre Empresa'}</h3>
-                                 <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 4px;">${sectorName || data.industry || 'Sector'}</p>
-                                 
-                                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                     ${locationStr ? `<span class="badge badge-purple">${locationStr}</span>` : ''}
-                                     ${stageName ? `<span class="badge badge-purple">${stageName}</span>` : ''}
-                                 </div>
-                             </div>
-                             <button class="btn-secondary" onclick="app.openCompanyProfile()" style="padding: 8px 16px; gap: 6px;">
-                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
-                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                 </svg>
-                                 Editar
-                             </button>
-                        </div>
-
-                        ${data.value_proposition || data.description ? `
-                        <div style="margin-bottom: 24px;">
-                            <h4 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Sobre Nosotros</h4>
-                            <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6;">
-                                ${data.value_proposition || data.description}
-                            </p>
-                        </div>
-                        ` : ''}
-
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                            ${data.website ? `
-                            <div>
-                                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Website</div>
-                                <a href="${data.website}" target="_blank" style="color: var(--primary); font-size: 14px; text-decoration: none;">${data.website}</a>
-                            </div>
-                            ` : ''}
-                            ${data.linkedin_url || data.linkedin ? `
-                            <div>
-                                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 3px;">LinkedIn</div>
-                                <a href="${data.linkedin_url || data.linkedin}" target="_blank" style="color: var(--primary); font-size: 14px; text-decoration: none;">Ver Perfil</a>
-                            </div>
-                            ` : ''}
-                            ${data.work_model ? `
-                            <div>
-                                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Modelo de Trabajo</div>
-                                <div style="font-size: 14px; color: var(--text-primary); font-weight: 500;">${getLabel('work_modalities', data.work_model)}</div>
-                            </div>
-                            ` : ''}
-                            ${getLabel('sizes', data.company_size) ? `
-                            <div>
-                                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Tamaño</div>
-                                <div style="font-size: 14px; color: var(--text-primary); font-weight: 500;">${getLabel('sizes', data.company_size)}</div>
-                            </div>
-                            ` : ''}
-                        </div>
-
-                        <!-- Culture Values -->
-                        <div id="companyProfileCulture2" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);"></div>
-
-                        <!-- Tech Stack -->
-                        <div id="companyProfileTech2" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);"></div>
-
-                        <!-- Positions -->
-                        <div id="companyProfilePositions2" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);"></div>
-
-                        <!-- Seniority -->
-                        <div id="companyProfileSeniority2" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);"></div>
-
-                        <!-- Benefits -->
-                        <div id="companyProfileBenefits2" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);"></div>
-
-                        <!-- Selection Process -->
-                        <div id="companyProfileSelection2" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);"></div>
-
-                        <!-- Tags -->
-                        <div id="companyProfileTags2" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);"></div>
-                    </div>
-                </div>
-            `;
-
-            // Render array sections after innerHTML is set
-            this._renderProfileSection('companyProfileCulture2', 'Valores de Cultura', data.culture_values, 'culture_values', 'rgba(108,92,231,0.1)', 'var(--primary)');
-            this._renderProfileSection('companyProfileTech2', 'Tech Stack', data.tech_stack || this.companyTechStack, null, 'var(--bg)', 'var(--text-primary)', true);
-            this._renderProfileSection('companyProfilePositions2', 'Posiciones que Buscamos', data.positions_looking, 'positions', 'rgba(0,184,148,0.1)', '#00b894');
-            this._renderProfileSection('companyProfileSeniority2', 'Niveles de Seniority', data.seniority_levels, 'seniority_levels', 'rgba(253,203,110,0.2)', '#e17055');
-            this._renderProfileSection('companyProfileBenefits2', 'Beneficios', data.benefits, 'benefits', 'rgba(116,185,255,0.15)', '#0984e3');
-            this._renderProfileTags('companyProfileTags2', 'Tags', data.tags || this.companyTags);
-            this._renderProfileSelection('companyProfileSelection2', data);
-        }
-    },
-
-    _renderProfileSection(containerId, title, values, refCategory, bgColor, textColor, isRaw) {
+    // Stitch helper: render tag array into container, hide parent card if empty
+    _renderProfileSection(containerId, values, refCategory, bgColor, textColor, isRaw) {
         const container = document.getElementById(containerId);
+        const card = document.getElementById(containerId + 'Card');
         if (!container) return;
         if (!Array.isArray(values) || values.length === 0) {
-            container.style.display = 'none';
+            if (card) card.style.display = 'none';
             return;
         }
+        if (card) card.style.display = '';
         const names = isRaw ? values : this.resolveRefNames(refCategory, values);
-        container.innerHTML = `
-            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">${title}</div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                ${names.map(name => `<span style="padding: 6px 14px; background: ${bgColor}; color: ${textColor}; border-radius: 20px; font-size: 13px; font-weight: 600;">${name}</span>`).join('')}
-            </div>
-        `;
+        container.innerHTML = names.map(name =>
+            `<span style="padding: 6px 14px; background: ${bgColor}; color: ${textColor}; border-radius: 20px; font-size: 13px; font-weight: 600;">${name}</span>`
+        ).join('');
     },
 
-    _renderProfileTags(containerId, title, tags) {
+    _renderProfileTags(containerId, tags) {
         const container = document.getElementById(containerId);
+        const card = document.getElementById(containerId + 'Card');
         if (!container) return;
         if (!Array.isArray(tags) || tags.length === 0) {
-            container.style.display = 'none';
+            if (card) card.style.display = 'none';
             return;
         }
-        container.innerHTML = `
-            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">${title}</div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                ${tags.map(tag => `<span style="padding: 6px 14px; background: var(--bg); border: 1px solid var(--border); color: var(--text-primary); border-radius: 20px; font-size: 13px; font-weight: 500;">${tag}</span>`).join('')}
-            </div>
-        `;
+        if (card) card.style.display = '';
+        container.innerHTML = tags.map(tag =>
+            `<span style="padding: 6px 14px; background: #F3F4F6; border: 1px solid #E5E7EB; color: #374151; border-radius: 20px; font-size: 13px; font-weight: 500;">${tag}</span>`
+        ).join('');
     },
 
     _renderProfileSelection(containerId, data) {
         const container = document.getElementById(containerId);
+        const card = document.getElementById(containerId + 'Card');
         if (!container) return;
         const hasData = data.technical_test || data.paid_test || data.selection_stages || data.selection_duration;
         if (!hasData) {
-            container.style.display = 'none';
+            if (card) card.style.display = 'none';
             return;
         }
-        const testMap = { 'si': 'Si', 'no': 'No', 'depende': 'Depende', 'a-veces': 'A veces' };
+        if (card) card.style.display = '';
+        const testMap = { 'si': 'Sí', 'no': 'No', 'depende': 'Depende', 'a-veces': 'A veces' };
         const badges = [];
-        if (data.technical_test) badges.push(`Prueba Tecnica: ${testMap[data.technical_test] || data.technical_test}`);
+        if (data.technical_test) badges.push(`Prueba Técnica: ${testMap[data.technical_test] || data.technical_test}`);
         if (data.paid_test) badges.push(`Prueba Pagada: ${testMap[data.paid_test] || data.paid_test}`);
         if (data.selection_stages) badges.push(`${data.selection_stages} Etapas`);
-        if (data.selection_duration) badges.push(`Duracion: ${this.getRefLabel('selection_durations', data.selection_duration)}`);
-        container.innerHTML = `
-            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Proceso de Seleccion</div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                ${badges.map(b => `<span style="padding: 6px 14px; background: var(--bg); border: 1px solid var(--border); color: var(--text-secondary); border-radius: 20px; font-size: 13px; font-weight: 500;">${b}</span>`).join('')}
-            </div>
-        `;
+        if (data.selection_duration) badges.push(`Duración: ${this.getRefLabel('selection_durations', data.selection_duration)}`);
+        container.innerHTML = badges.map(b =>
+            `<span style="padding: 6px 14px; background: #F3F4F6; border: 1px solid #E5E7EB; color: #6B7280; border-radius: 20px; font-size: 13px; font-weight: 500;">${b}</span>`
+        ).join('');
     },
 
     openCompanyProfile() {
@@ -8605,46 +11432,74 @@ Object.assign(app, {
         const deck = document.getElementById('candidateSwipeDeck');
         const candidate = this.candidatesDeck[this.currentCandidateIndex];
 
-        // Clear previous card (except noMore msg)
+        // Clear previous card
         const existingCard = document.getElementById('activeCandidateCard');
         if (existingCard) existingCard.remove();
 
+        // Shadow cards
+        const s1 = document.getElementById('companyCardShadow1');
+        const s2 = document.getElementById('companyCardShadow2');
+
         if (!candidate) {
-            document.getElementById('noMoreCandidates').style.display = 'block';
+            document.getElementById('noMoreCandidates').style.display = 'flex';
             const controls = document.getElementById('swipeControls');
             if (controls) controls.style.display = 'none';
+            if (s1) s1.style.display = 'none';
+            if (s2) s2.style.display = 'none';
             return;
         }
 
         const controls = document.getElementById('swipeControls');
         if (controls) controls.style.display = 'flex';
+        if (s1) s1.style.display = 'block';
+        if (s2) s2.style.display = 'block';
 
-        const imageUrl = candidate.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(candidate.name)}&background=6c5ce7&color=fff&size=600`;
-        const skillsHtml = (candidate.skills || []).slice(0, 4).map(s => `<span class="card-skill-chip">${s}</span>`).join('');
+        const imageUrl = candidate.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(candidate.name)}&background=1392ec&color=fff&size=600`;
+        const skillsHtml = (candidate.skills || []).slice(0, 3).map(s =>
+            `<span style="padding: 6px 12px; background: #f9fafb; border: 1px solid #f3f4f6; color: #4b5563; border-radius: 8px; font-size: 12px; font-weight: 500;">${s}</span>`
+        ).join('');
 
         const card = document.createElement('div');
         card.id = 'activeCandidateCard';
-        card.className = 'profile-card';
-        card.style.cssText = 'transition: transform 0.3s ease, opacity 0.3s ease; transform-origin: bottom center;';
+        card.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 3; background: white; border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; border: 1px solid #e5e7eb; box-shadow: 0 10px 15px rgba(0,0,0,0.08), 0 4px 6px rgba(0,0,0,0.04); transition: transform 0.3s ease, opacity 0.3s ease; transform-origin: bottom center; ring: 1px solid #f3f4f6;';
+
+        const salaryText = candidate.salary ? `<span style="color: #18181b; font-weight: 700; font-size: 18px; letter-spacing: -0.025em;">${candidate.salary}</span><span style="color: #9ca3af; font-size: 12px; font-weight: 500;">/año</span>` : '';
 
         card.innerHTML = `
-            <div class="card-bg-image" style="background-image: url('${imageUrl}');"></div>
-            <div class="card-gradient-overlay"></div>
-            <div class="swipe-stamp stamp-like">LIKE</div>
-            <div class="swipe-stamp stamp-nope">NOPE</div>
-            <div class="card-info-overlay" onclick="app.openCardDetail('candidate')">
-                <h2 class="card-offer-title">${candidate.name}</h2>
-                <p class="card-company-name">${candidate.role || 'Profesional'}</p>
-                <div class="card-details-row">
-                    <span class="card-detail-item">${candidate.modality || 'Remoto'}</span>
-                    <span class="card-detail-item">${candidate.salary || ''}</span>
+            <div style="position: relative; height: 60%; width: 100%; background: #f3f4f6;">
+                <img src="${imageUrl}" alt="${candidate.name}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s ease;">
+                <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, transparent 60%, rgba(255,255,255,0.2));"></div>
+                <!-- Location badge -->
+                <div style="position: absolute; top: 16px; left: 16px; background: rgba(255,255,255,0.8); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.4); color: #18181b; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <span class="material-icons" style="font-size: 16px;">location_on</span>
+                    ${candidate.location || 'Remoto'}
                 </div>
-                <p class="card-desc">${candidate.bio ? candidate.bio.substring(0, 100) + '...' : ''}</p>
-                <div class="card-skills-row">
-                    ${skillsHtml}
+                <!-- Match badge -->
+                <div style="position: absolute; top: 16px; right: 16px; background: linear-gradient(135deg, #1392ec, #0b6cb3); color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; box-shadow: 0 4px 8px rgba(19,146,236,0.3); display: flex; align-items: center; gap: 4px;">
+                    <span class="material-icons" style="font-size: 16px;">auto_awesome</span>
+                    ${candidate.fit}% Match
                 </div>
             </div>
-            <span class="match-badge-float">${candidate.fit}%</span>
+            <div style="flex: 1; padding: 24px; display: flex; flex-direction: column; position: relative; background: white;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                    <div>
+                        <h2 style="font-size: 22px; font-weight: 700; color: #18181b; display: flex; align-items: center; gap: 8px; margin: 0;">
+                            ${candidate.name} <span style="font-size: 16px; font-weight: 400; color: #9ca3af;">${candidate.exp ? candidate.exp.replace(' años', 'a') : ''}</span>
+                        </h2>
+                        <p style="color: #1392ec; font-weight: 500; margin-top: 2px; font-size: 14px;">${candidate.role || 'Profesional'}</p>
+                    </div>
+                    ${salaryText ? `<div style="display: flex; flex-direction: column; align-items: flex-end;">${salaryText}</div>` : ''}
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; margin-bottom: 16px;">
+                    ${skillsHtml}
+                </div>
+                <p style="color: #71717a; font-size: 14px; line-clamp: 2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.6; padding-right: 32px;">
+                    ${candidate.bio || ''}
+                </p>
+                <button onclick="event.stopPropagation(); app.openCardDetail('candidate')" style="position: absolute; bottom: 16px; right: 16px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: #9ca3af; background: none; border: 1px solid transparent; border-radius: 50%; cursor: pointer; transition: all 0.2s;">
+                    <span class="material-icons">info</span>
+                </button>
+            </div>
         `;
 
         deck.appendChild(card);
@@ -8673,6 +11528,12 @@ Object.assign(app, {
             this.currentCandidateIndex++;
             this.renderCandidateCard();
         }, 300);
+    },
+
+    handleSuperSwipe() {
+        // Super like = regular right swipe with visual feedback
+        this.showToast('Super Like enviado!', 'success');
+        this.handleSwipe('right');
     },
 
     // ===== CHAT & MATCH LOGIC =====
@@ -8719,7 +11580,7 @@ Object.assign(app, {
                 document.getElementById('matchCandidateName').textContent = candidate.name;
                 const candidateImg = candidate.image || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(candidate.name);
                 document.getElementById('matchCandidateImage').src = candidateImg;
-                document.getElementById('matchCompanyLogo').src = this.companyProfile?.logo_url || this.companyProfile?.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.companyProfile?.name || 'E')}&background=6c5ce7&color=fff`;
+                document.getElementById('matchCompanyLogo').src = this.companyProfile?.logo_url || this.companyProfile?.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.companyProfile?.name || 'E')}&background=1392ec&color=fff`;
                 document.getElementById('matchModal').style.display = 'flex';
 
                 // Add to local company conversations (backed by real match)
@@ -8766,38 +11627,126 @@ Object.assign(app, {
         const list = document.getElementById('companyNotificationList');
         if (!list) return;
 
-        // Show ALL notifications (not just unread)
         const allNotifs = this.companyNotifications || [];
         if (allNotifs.length === 0) {
-            list.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-secondary);"><p>No tienes notificaciones</p></div>';
+            list.innerHTML = `
+                <div style="text-align: center; padding: 60px 24px; color: #9ca3af;">
+                    <span class="material-icons" style="font-size: 48px; color: #d1d5db; margin-bottom: 12px; display: block;">notifications_none</span>
+                    <p style="font-size: 14px; font-weight: 500;">No tienes notificaciones</p>
+                </div>`;
             return;
         }
 
-        list.innerHTML = allNotifs.map(notif => {
+        // Group notifications by date
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+        const weekAgo = new Date(today); weekAgo.setDate(weekAgo.getDate() - 7);
+
+        const groups = { today: [], yesterday: [], week: [], older: [] };
+        allNotifs.forEach(n => {
+            const d = n.matchDate ? new Date(n.matchDate) : now;
+            if (d >= today) groups.today.push(n);
+            else if (d >= yesterday) groups.yesterday.push(n);
+            else if (d >= weekAgo) groups.week.push(n);
+            else groups.older.push(n);
+        });
+
+        const sectionHeader = (label) => `
+            <div style="position: sticky; top: 0; z-index: 10; background: rgba(248,249,250,0.95); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 10px 16px; border-bottom: 1px solid #f3f4f6;">
+                <h3 style="margin: 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af;">${label}</h3>
+            </div>`;
+
+        const renderRow = (notif) => {
             const safeName = (notif.name || 'Candidato').replace(/'/g, "\\'");
-            const time = notif.matchDate ? new Date(notif.matchDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Ahora';
+            const safeId = (notif.id || '').toString().replace(/'/g, "\\'");
             const isUnread = notif.hasUnread;
-            const bgColor = isUnread ? 'rgba(108,92,231,0.08)' : 'transparent';
-            const fontWeight = isUnread ? '700' : '600';
+            const bgColor = isUnread ? '#f0f9ff' : '#ffffff';
+            const d = notif.matchDate ? new Date(notif.matchDate) : now;
+
+            // Time label
+            let timeLabel;
+            const diffMs = now - d;
+            const diffMin = Math.floor(diffMs / 60000);
+            const diffHrs = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            if (diffMin < 1) timeLabel = 'Ahora';
+            else if (diffMin < 60) timeLabel = `${diffMin}m`;
+            else if (diffHrs < 24) timeLabel = `${diffHrs}h`;
+            else timeLabel = `${diffDays}d`;
+
+            // Notification type: match (green heart badge), message (blue chat badge), offer update (indigo work badge)
+            const type = notif.type || 'match';
+            let avatarHtml, badgeHtml, titleText, bodyText;
+
+            if (type === 'message') {
+                avatarHtml = notif.image
+                    ? `<img src="${notif.image}" alt="${safeName}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 1px solid #e5e7eb;">`
+                    : `<div style="width: 48px; height: 48px; border-radius: 50%; background: #1392ec; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; font-weight: 700;">${(notif.name || 'C')[0]}</div>`;
+                badgeHtml = `<div style="position: absolute; bottom: -2px; right: -2px; width: 18px; height: 18px; border-radius: 50%; background: #3b82f6; border: 2px solid #ffffff; display: flex; align-items: center; justify-content: center;"><span class="material-icons" style="font-size: 10px; color: #ffffff;">chat_bubble</span></div>`;
+                titleText = 'Nuevo Mensaje';
+                bodyText = notif.preview || `Mensaje de <span style="font-weight: 600; color: #111827;">${safeName}</span>`;
+            } else if (type === 'offer_update') {
+                avatarHtml = `<div style="width: 48px; height: 48px; border-radius: 50%; background: #eef2ff; border: 1px solid #e0e7ff; display: flex; align-items: center; justify-content: center;"><span class="material-icons" style="font-size: 24px; color: #4f46e5;">work</span></div>`;
+                badgeHtml = `<div style="position: absolute; bottom: -2px; right: -2px; width: 18px; height: 18px; border-radius: 50%; background: #6366f1; border: 2px solid #ffffff; display: flex; align-items: center; justify-content: center;"><span class="material-icons" style="font-size: 10px; color: #ffffff;">auto_graph</span></div>`;
+                titleText = 'Actualización de Oferta';
+                bodyText = notif.preview || 'Tu oferta ha recibido nuevos interesados.';
+            } else if (type === 'offer_expiring') {
+                avatarHtml = `<div style="width: 48px; height: 48px; border-radius: 50%; background: #fff7ed; border: 1px solid #ffedd5; display: flex; align-items: center; justify-content: center;"><span class="material-icons" style="font-size: 24px; color: #ea580c;">warning</span></div>`;
+                badgeHtml = `<div style="position: absolute; bottom: -2px; right: -2px; width: 18px; height: 18px; border-radius: 50%; background: #f97316; border: 2px solid #ffffff; display: flex; align-items: center; justify-content: center;"><span class="material-icons" style="font-size: 10px; color: #ffffff;">priority_high</span></div>`;
+                titleText = 'Oferta por expirar';
+                bodyText = notif.preview || 'Una de tus ofertas expirará pronto.';
+            } else {
+                // Default: match
+                avatarHtml = notif.image
+                    ? `<img src="${notif.image}" alt="${safeName}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 1px solid #e5e7eb;">`
+                    : `<div style="width: 48px; height: 48px; border-radius: 50%; background: #1392ec; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; font-weight: 700;">${(notif.name || 'C')[0]}</div>`;
+                badgeHtml = `<div style="position: absolute; bottom: -2px; right: -2px; width: 18px; height: 18px; border-radius: 50%; background: #22c55e; border: 2px solid #ffffff; display: flex; align-items: center; justify-content: center;"><span class="material-icons" style="font-size: 10px; color: #ffffff;">favorite</span></div>`;
+                titleText = 'Nuevo Match';
+                bodyText = `Has hecho match con <span style="font-weight: 600; color: #111827;">${safeName}</span>.`;
+            }
 
             return `
-            <div style="padding: 16px; border-bottom: 1px solid var(--border); background: ${bgColor}; cursor: pointer; transition: background 0.2s;"
-                 onclick="app.markCompanyNotifRead('${notif.id}'); app.closeNotifications(); app.showCompanySection('companyMessagesSection');">
-                <div style="display: flex; gap: 12px;">
-                    <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #6C5CE7 0%, #a29bfe 100%); display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; opacity: ${isUnread ? '1' : '0.6'};">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                        </svg>
+            <div style="position: relative; display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px; border-bottom: 1px solid #e5e7eb; background: ${bgColor}; cursor: pointer; transition: background 0.15s;"
+                 onclick="app.markCompanyNotifRead('${safeId}'); app.closeNotifications(); app.showCompanySection('companyMessagesSection');"
+                 onmouseover="this.style.background='${isUnread ? '#e0f2fe' : '#f9fafb'}'"
+                 onmouseout="this.style.background='${bgColor}'">
+                ${isUnread ? `<div style="position: absolute; right: 16px; top: 16px; width: 9px; height: 9px; border-radius: 50%; background: #1392ec; box-shadow: 0 0 0 2px rgba(19,146,236,0.2);"></div>` : ''}
+                <div style="position: relative; flex-shrink: 0;">
+                    ${avatarHtml}
+                    ${badgeHtml}
+                </div>
+                <div style="flex: 1; padding-right: 20px; min-width: 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px;">
+                        <p style="margin: 0; font-size: 13px; font-weight: 700; color: #111827;">${titleText}</p>
+                        <span style="font-size: 12px; color: #9ca3af; font-weight: 500; flex-shrink: 0;">${timeLabel}</span>
                     </div>
-                    <div style="flex: 1;">
-                        <div style="font-weight: ${fontWeight}; font-size: 14px; color: var(--text-primary);">¡Match con ${safeName}!</div>
-                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Ahora pueden chatear. Envía un mensaje.</div>
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 6px;">${time}</div>
-                    </div>
-                    ${isUnread ? '<div style="width: 10px; height: 10px; background: var(--primary); border-radius: 50%; flex-shrink: 0; align-self: center;"></div>' : ''}
+                    <p style="margin: 0; font-size: 13px; color: #6b7280; line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${bodyText}</p>
                 </div>
             </div>`;
-        }).join('');
+        };
+
+        let html = '';
+        if (groups.today.length > 0) {
+            html += sectionHeader('Hoy');
+            html += groups.today.map(renderRow).join('');
+        }
+        if (groups.yesterday.length > 0) {
+            html += sectionHeader('Ayer');
+            html += groups.yesterday.map(renderRow).join('');
+        }
+        if (groups.week.length > 0) {
+            html += sectionHeader('Esta semana');
+            html += groups.week.map(renderRow).join('');
+        }
+        if (groups.older.length > 0) {
+            html += sectionHeader('Anteriores');
+            html += groups.older.map(renderRow).join('');
+        }
+
+        html += `<div style="height: 40px; display: flex; align-items: center; justify-content: center; margin-top: 16px;"><span style="font-size: 12px; color: #9ca3af; font-weight: 500;">No hay más notificaciones anteriores</span></div>`;
+
+        list.innerHTML = html;
     },
 
     updateCompanyNotifBadge() {
@@ -8856,37 +11805,143 @@ Object.assign(app, {
             await this._loadCompanyMatches();
         }
 
+        // Render new matches horizontal row
+        this._renderNewMatches();
+
         if (this.companyConversations.length === 0) {
             list.innerHTML = `
-                <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
-                    <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">💬</div>
-                    <p>No tienes mensajes aún.</p>
-                    <p style="font-size: 13px; margin-top: 8px;">Explora candidatos y cuando ambos muestren interés, se creará un Match.</p>
-                    <button class="btn-secondary" onclick="app.showCompanySection('companySearchSection')" style="margin-top: 16px;">Ir a Explorar</button>
+                <div style="text-align: center; padding: 48px 20px;">
+                    <span class="material-icons" style="font-size: 48px; color: #d1d5db; margin-bottom: 12px;">chat_bubble_outline</span>
+                    <p style="font-size: 15px; color: #6b7280; font-weight: 600; margin: 0;">No tienes mensajes aún.</p>
+                    <p style="font-size: 13px; color: #9ca3af; margin: 8px 0 20px;">Explora candidatos y cuando ambos muestren interés, se creará un Match.</p>
+                    <button onclick="app.showCompanySection('companySearchSection')"
+                        style="padding: 10px 24px; background: #1392ec; color: #ffffff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; box-shadow: 0 2px 8px rgba(19,146,236,0.25); transition: all 0.2s;"
+                        onmouseenter="this.style.background='#0b6cb3'"
+                        onmouseleave="this.style.background='#1392ec'">
+                        Ir a Explorar
+                    </button>
                 </div>
             `;
             return;
         }
 
-        list.innerHTML = this.companyConversations.map(conv => `
+        // Apply search filter
+        const query = (document.getElementById('msgSearchInput')?.value || '').trim().toLowerCase();
+        let convs = this.companyConversations;
+        if (query) {
+            convs = convs.filter(c =>
+                (c.candidateName || '').toLowerCase().includes(query) ||
+                (c.role || '').toLowerCase().includes(query) ||
+                (c.offerTitle || '').toLowerCase().includes(query)
+            );
+        }
+
+        if (convs.length === 0 && query) {
+            list.innerHTML = `
+                <div style="text-align: center; padding: 40px 20px;">
+                    <span class="material-icons" style="font-size: 40px; color: #d1d5db; margin-bottom: 8px;">search_off</span>
+                    <p style="font-size: 14px; color: #9ca3af; margin: 0;">No se encontraron resultados para "${query}"</p>
+                </div>`;
+            return;
+        }
+
+        // Tag color palette for offer badges
+        const tagColors = [
+            { bg: '#eff6ff', color: '#1d4ed8', border: 'rgba(29,78,216,0.1)' },
+            { bg: '#faf5ff', color: '#7c3aed', border: 'rgba(124,58,237,0.1)' },
+            { bg: '#ecfdf5', color: '#059669', border: 'rgba(5,150,105,0.1)' },
+            { bg: '#fff7ed', color: '#c2410c', border: 'rgba(194,65,12,0.1)' },
+            { bg: '#fdf2f8', color: '#db2777', border: 'rgba(219,39,119,0.1)' }
+        ];
+
+        list.innerHTML = convs.map((conv, idx) => {
+            const img = conv.candidateImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(conv.candidateName)}&background=e2e8f0&color=64748b`;
+            const isUnread = conv.unread > 0;
+            const hasOnline = conv.isOnline;
+            const tagColor = tagColors[idx % tagColors.length];
+            const offerLabel = conv.offerTitle || conv.role || '';
+            const timeColor = isUnread ? '#1392ec' : '#94a3b8';
+            const timeWeight = isUnread ? '500' : '400';
+
+            return `
             <div onclick="app.openCompanyChat('${conv.id}')"
-                style="padding: 16px; display: flex; gap: 12px; align-items: center; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.2s;"
-                onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='transparent'">
-                <div style="position: relative;">
-                    <img src="${conv.candidateImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(conv.candidateName)}`}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
-                    ${conv.unread > 0 ? `<div style="position: absolute; top: 0; right: 0; width: 12px; height: 12px; background: var(--primary); border: 2px solid white; border-radius: 50%;"></div>` : ''}
+                style="display: flex; align-items: flex-start; gap: 14px; padding: 14px 0; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.2s; margin: 0 -4px; padding-left: 4px; padding-right: 4px; border-radius: 8px;"
+                onmouseenter="this.style.background='#f8fafc'"
+                onmouseleave="this.style.background='transparent'">
+                <!-- Avatar -->
+                <div style="position: relative; flex-shrink: 0; padding-top: 2px;">
+                    <img src="${img}" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; background: #e2e8f0;">
+                    ${hasOnline ? '<div style="position: absolute; bottom: 1px; right: 1px; width: 13px; height: 13px; background: #22c55e; border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 0 0 1px rgba(34,197,94,0.2);"></div>' : ''}
                 </div>
+                <!-- Content -->
                 <div style="flex: 1; min-width: 0;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                        <span style="font-weight: 700; color: var(--text-primary); font-size: 15px;">${conv.candidateName}</span>
-                        <span style="font-size: 12px; color: var(--text-secondary);">${conv.timestamp || ''}</span>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px;">
+                        <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${conv.candidateName}</h3>
+                        <span style="font-size: 11px; font-weight: ${timeWeight}; color: ${timeColor}; flex-shrink: 0; margin-left: 8px;">${conv.timestamp || ''}</span>
                     </div>
-                    <div style="font-size: 14px; color: ${conv.unread > 0 ? 'var(--text-primary)' : 'var(--text-secondary)'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: ${conv.unread > 0 ? '600' : '400'};">
+                    ${conv.role ? `<div style="display: flex; align-items: center; gap: 6px; margin-bottom: 5px;">
+                        <span style="font-size: 11px; font-weight: 500; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 100px;">${conv.role}</span>
+                    </div>` : ''}
+                    <p style="margin: 0; font-size: 13px; color: ${isUnread ? '#0f172a' : '#64748b'}; font-weight: ${isUnread ? '600' : '400'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                         ${conv.lastMessage || '¡Nuevo Match! Saluda ahora.'}
-                    </div>
+                    </p>
                 </div>
-            </div>
-        `).join('');
+                <!-- Offer Tag -->
+                ${offerLabel ? `
+                <div style="flex-shrink: 0; align-self: flex-start; margin-left: 8px; margin-top: 2px;">
+                    <span style="display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; background: ${tagColor.bg}; color: ${tagColor.color}; border: 1px solid ${tagColor.border};">
+                        ${offerLabel}
+                    </span>
+                </div>` : ''}
+            </div>`;
+        }).join('');
+    },
+
+    filterCompanyConversations() {
+        this.renderConversationsList();
+    },
+
+    _renderNewMatches() {
+        const section = document.getElementById('msgNewMatchesSection');
+        const container = document.getElementById('msgNewMatchesList');
+        if (!section || !container) return;
+
+        // Show recent matches (conversations with no messages or very recent)
+        const recentMatches = this.companyConversations.filter(c =>
+            !c.lastMessage || c.lastMessage === '¡Nuevo Match! Saluda ahora.' ||
+            (c.timestamp && (c.timestamp === 'Ahora' || c.timestamp.includes('min')))
+        ).slice(0, 8);
+
+        // Also show all matches if we have any conversations
+        const allForAvatars = this.companyConversations.slice(0, 8);
+        const matchesToShow = recentMatches.length > 0 ? recentMatches : allForAvatars;
+
+        if (matchesToShow.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+
+        section.style.display = 'block';
+        container.innerHTML = matchesToShow.map(conv => {
+            const img = conv.candidateImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(conv.candidateName)}&background=e2e8f0&color=64748b`;
+            const firstName = (conv.candidateName || 'User').split(' ')[0];
+            const isNew = !conv.lastMessage || conv.lastMessage === '¡Nuevo Match! Saluda ahora.';
+            const ringStyle = isNew
+                ? 'background: linear-gradient(135deg, #1392ec, #60a5fa); padding: 2px;'
+                : 'background: #e2e8f0; padding: 2px;';
+
+            return `
+            <div onclick="app.openCompanyChat('${conv.id}')"
+                style="display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 72px; cursor: pointer;">
+                <div style="position: relative;">
+                    <div style="width: 68px; height: 68px; border-radius: 50%; ${ringStyle} box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+                        <img src="${img}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #ffffff; ${isNew ? '' : 'opacity: 0.9;'}">
+                    </div>
+                    ${isNew ? '<div style="position: absolute; bottom: 3px; right: 3px; width: 14px; height: 14px; background: #1392ec; border: 2px solid #ffffff; border-radius: 50%;"></div>' : ''}
+                </div>
+                <span style="font-size: 11px; font-weight: ${isNew ? '600' : '500'}; color: ${isNew ? '#334155' : '#94a3b8'}; text-align: center; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${firstName}</span>
+            </div>`;
+        }).join('');
     },
 
     // Load matches from DB for company conversations
@@ -9072,15 +12127,29 @@ Object.assign(app, {
         }
 
         this.activeConversationId = convId;
+        this._activeChatConv = conv;
         conv.unread = 0;
         this.renderConversationsList();
         this.updateCompanyMessagesBadge();
 
-        // Setup Chat View
+        // Setup Chat View header
         const nameEl = document.getElementById('companyChatName');
         const avatarEl = document.getElementById('companyChatAvatar');
+        const statusEl = document.getElementById('companyChatOnlineStatus');
+        const dotEl = document.getElementById('companyChatOnlineDot');
+
         if (nameEl) nameEl.textContent = conv.candidateName;
         if (avatarEl) avatarEl.src = conv.candidateImage;
+
+        // Online status
+        const isOnline = conv.isOnline;
+        if (statusEl) {
+            statusEl.textContent = isOnline ? 'Online' : 'Desconectado';
+            statusEl.style.color = isOnline ? '#16a34a' : '#94a3b8';
+        }
+        if (dotEl) {
+            dotEl.style.display = isOnline ? 'block' : 'none';
+        }
 
         document.getElementById('messagesListView').style.display = 'none';
         document.getElementById('messagesChatView').style.display = 'flex';
@@ -9092,6 +12161,55 @@ Object.assign(app, {
         this._subscribeToCompanyChat(conv.matchId);
     },
 
+    viewChatCandidateProfile() {
+        const conv = this._activeChatConv;
+        if (!conv || !conv.candidateId) return;
+        // Show candidate profile if available
+        if (typeof this.openCandidatePreview === 'function') {
+            this.openCandidatePreview(conv.candidateId);
+        }
+    },
+
+    _chatDateLabel(dateStr) {
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diffDays = Math.floor((now.setHours(0, 0, 0, 0) - new Date(date).setHours(0, 0, 0, 0)) / 86400000);
+        const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        if (diffDays === 0) return 'Hoy';
+        if (diffDays === 1) return 'Ayer ' + time;
+        return date.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' }) + ' ' + time;
+    },
+
+    _chatMsgBubble(msg, isMe, avatarUrl) {
+        const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        if (isMe) {
+            return `
+            <div style="display: flex; flex-direction: row-reverse; align-items: flex-end; gap: 10px; max-width: 85%; margin-left: auto;">
+                <div style="display: flex; flex-direction: column; gap: 3px; align-items: flex-end;">
+                    <div style="background: #1392ec; padding: 12px 16px; border-radius: 18px; border-bottom-right-radius: 4px; box-shadow: 0 2px 8px rgba(19,146,236,0.1);">
+                        <p style="margin: 0; font-size: 14px; font-weight: 400; line-height: 1.6; color: #ffffff; font-family: 'Inter', sans-serif;">${msg.content}</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 4px; margin-right: 4px;">
+                        <span style="font-size: 11px; color: #94a3b8;">${time}</span>
+                        <span class="material-icons" style="font-size: 14px; color: #1392ec;">done_all</span>
+                    </div>
+                </div>
+            </div>`;
+        } else {
+            return `
+            <div style="display: flex; align-items: flex-end; gap: 10px; max-width: 85%;">
+                <div style="width: 30px; height: 30px; border-radius: 50%; background: #e2e8f0; background-image: url('${avatarUrl}'); background-size: cover; background-position: center; flex-shrink: 0;"></div>
+                <div style="display: flex; flex-direction: column; gap: 3px;">
+                    <div style="background: #f1f3f5; padding: 12px 16px; border-radius: 18px; border-bottom-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); border: 1px solid transparent;">
+                        <p style="margin: 0; font-size: 14px; font-weight: 400; line-height: 1.6; color: #1e293b; font-family: 'Inter', sans-serif;">${msg.content}</p>
+                    </div>
+                    <span style="font-size: 11px; color: #94a3b8; margin-left: 4px;">${time}</span>
+                </div>
+            </div>`;
+        }
+    },
+
     async _loadCompanyChatMessages(conv) {
         const container = document.getElementById('companyChatMessages');
         if (!container) return;
@@ -9099,30 +12217,43 @@ Object.assign(app, {
         try {
             const { data: msgs } = await window.talentlyBackend.matches.getMessages(conv.matchId);
             const userId = (await window.supabaseClient.auth.getUser()).data.user?.id;
+            const avatarUrl = conv.candidateImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(conv.candidateName)}&background=e2e8f0&color=64748b`;
 
             let isChatBlocked = false;
             if (msgs && msgs.length > 0) {
-                container.innerHTML = msgs.map(msg => {
+                let html = '';
+                let lastDateKey = '';
+
+                msgs.forEach(msg => {
                     const isMe = msg.sender_id === userId;
-                    const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
                     // Detect system closure message
                     if (msg.content && msg.content.startsWith('[Sistema]') && msg.content.includes('cerrada')) {
                         isChatBlocked = true;
                     }
-                    return `
-                        <div style="display: flex; justify-content: ${isMe ? 'flex-end' : 'flex-start'};">
-                            <div style="max-width: 75%; padding: 10px 16px; border-radius: 18px; font-size: 14px; line-height: 1.4;
-                                ${isMe ? 'background: var(--primary); color: white; border-bottom-right-radius: 4px;' : 'background: #f1f0f0; color: var(--text-primary); border-bottom-left-radius: 4px;'}">
-                                ${msg.content}
-                                <div style="font-size: 10px; opacity: 0.7; margin-top: 4px; text-align: right;">${time}</div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
+
+                    // Date separator
+                    const msgDate = new Date(msg.created_at);
+                    const dateKey = msgDate.toDateString();
+                    if (dateKey !== lastDateKey) {
+                        lastDateKey = dateKey;
+                        const label = this._chatDateLabel(msg.created_at);
+                        html += `
+                        <div style="display: flex; justify-content: center; padding: 8px 0;">
+                            <span style="font-size: 11px; font-weight: 500; color: #64748b; background: rgba(226,232,240,0.6); padding: 4px 12px; border-radius: 100px;">${label}</span>
+                        </div>`;
+                    }
+
+                    html += this._chatMsgBubble(msg, isMe, avatarUrl);
+                });
+
+                container.innerHTML = html;
             } else {
                 container.innerHTML = `
-                    <div style="text-align: center; color: var(--text-secondary); font-size: 13px; margin: 20px 0;">
-                        ¡Match creado! Envía el primer mensaje.
+                    <div style="text-align: center; padding: 40px 24px; margin: 20px 0;">
+                        <span class="material-icons" style="font-size: 40px; color: #d1d5db; margin-bottom: 10px;">waving_hand</span>
+                        <p style="font-size: 15px; font-weight: 600; color: #64748b; margin: 0 0 4px; font-family: 'Inter', sans-serif;">¡Match creado!</p>
+                        <p style="font-size: 13px; color: #94a3b8; margin: 0; font-family: 'Inter', sans-serif;">Envía el primer mensaje para iniciar la conversación.</p>
                     </div>
                 `;
             }
@@ -9136,7 +12267,7 @@ Object.assign(app, {
             }
         } catch (e) {
             console.error('Error loading messages:', e);
-            container.innerHTML = '<div style="text-align: center; color: var(--text-secondary);">Error cargando mensajes</div>';
+            container.innerHTML = '<div style="text-align: center; color: #94a3b8; font-size: 14px; padding: 40px;">Error cargando mensajes</div>';
         }
     },
 
@@ -9159,15 +12290,9 @@ Object.assign(app, {
             if (this.activeConversationId === matchId) {
                 const container = document.getElementById('companyChatMessages');
                 if (container) {
-                    const time = new Date(newMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    const msgHtml = `
-                        <div style="display: flex; justify-content: flex-start;">
-                            <div style="max-width: 75%; padding: 10px 16px; border-radius: 18px; font-size: 14px; line-height: 1.4; background: #f1f0f0; color: var(--text-primary); border-bottom-left-radius: 4px;">
-                                ${newMsg.content}
-                                <div style="font-size: 10px; opacity: 0.7; margin-top: 4px; text-align: right;">${time}</div>
-                            </div>
-                        </div>
-                    `;
+                    const conv = this.companyConversations.find(c => c.matchId === matchId);
+                    const avatarUrl = conv ? (conv.candidateImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(conv.candidateName)}&background=e2e8f0&color=64748b`) : '';
+                    const msgHtml = this._chatMsgBubble(newMsg, false, avatarUrl);
                     container.insertAdjacentHTML('beforeend', msgHtml);
                     container.scrollTop = container.scrollHeight;
                 }
@@ -9229,15 +12354,8 @@ Object.assign(app, {
         // Add to UI optimistically
         const container = document.getElementById('companyChatMessages');
         if (container) {
-            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const msgHtml = `
-                <div style="display: flex; justify-content: flex-end;">
-                    <div style="max-width: 75%; padding: 10px 16px; border-radius: 18px; font-size: 14px; line-height: 1.4; background: var(--primary); color: white; border-bottom-right-radius: 4px;">
-                        ${text}
-                        <div style="font-size: 10px; opacity: 0.7; margin-top: 4px; text-align: right;">${time}</div>
-                    </div>
-                </div>
-            `;
+            const fakeMsg = { content: text, created_at: new Date().toISOString(), sender_id: 'me' };
+            const msgHtml = this._chatMsgBubble(fakeMsg, true, '');
             container.insertAdjacentHTML('beforeend', msgHtml);
             container.scrollTop = container.scrollHeight;
         }
@@ -9368,3 +12486,534 @@ document.addEventListener('DOMContentLoaded', () => {
         app.init();
     }
 });
+
+
+// STITCH VIEWS INTEGRATION
+Object.assign(app, {
+    initStitchViews() {
+        // swipe buttons
+        const sw = document.getElementById('companySwipeView');
+        if (sw) {
+            const btns = sw.querySelectorAll('.max-w-md.flex.justify-center.items-center.gap-8 button');
+            if (btns.length >= 3) {
+                btns[0].onclick = () => app.handleStitchSwipe('left');
+                btns[1].onclick = () => app.handleStitchSwipe('superlike');
+                btns[2].onclick = () => app.handleStitchSwipe('right');
+            }
+        }
+        // modal buttons
+        const dm = document.getElementById('candidateDetailModal');
+        if (dm) {
+            Array.from(dm.querySelectorAll('button')).forEach(b => {
+                if (b.textContent.includes('Rechazar')) {
+                    b.onclick = () => { dm.classList.add('hidden'); dm.classList.remove('flex'); app.handleStitchSwipe('left'); };
+                }
+                if (b.textContent.includes('Me Interesa')) {
+                    b.onclick = () => { dm.classList.add('hidden'); dm.classList.remove('flex'); app.handleStitchSwipe('right'); };
+                }
+            });
+        }
+        // overlay buttons
+        const ov = document.getElementById('matchSuccessOverlay');
+        if (ov) {
+            const ovb = Array.from(ov.querySelectorAll('button'));
+            const cbd = ovb.find(b => b.innerHTML.includes('close'));
+            const mbd = ovb.find(b => b.textContent.includes('Enviar mensaje'));
+            const ebd = ovb.find(b => b.textContent.includes('Seguir explorando'));
+
+            if (cbd) cbd.onclick = () => ov.style.display = 'none';
+            if (ebd) ebd.onclick = () => ov.style.display = 'none';
+            if (mbd) mbd.onclick = () => {
+                ov.style.display = 'none';
+                app.showAppSection('chatSection');
+            };
+        }
+    },
+    async handleStitchSwipe(dir) {
+        if (!window.talentlyBackend || !window.talentlyBackend.swipes) return;
+        const mockId = 'd8fbc2e0-0b61-420a-8a18-d73df4b9e28f';
+        try {
+            const { error, isMutualMatch } = await window.talentlyBackend.swipes.create(mockId, dir);
+
+            // Visual fade out
+            const cards = document.querySelectorAll('#companySwipeView .card-item');
+            const vc = Array.from(cards).filter(c => c.style.display !== 'none' && c.style.opacity !== '0');
+            if (vc.length > 0) {
+                vc[0].style.transform = dir === 'left' ? 'translateX(-100vw) rotate(-20deg)' : 'translateX(100vw) rotate(20deg)';
+                vc[0].style.opacity = '0';
+                setTimeout(() => vc[0].style.display = 'none', 300);
+            }
+
+            if (dir === 'right' || dir === 'superlike') {
+                const match = Math.random() > 0.5;
+                if (match || isMutualMatch) {
+                    setTimeout(() => app.showMatchSuccessOverlay(mockId), 500);
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    },
+    showMatchSuccessOverlay(id) {
+        const ov = document.getElementById('matchSuccessOverlay');
+        if (ov) ov.style.display = 'flex';
+    },
+    showCompanySwipe() {
+        app.showView('companySwipeView');
+        app.initStitchViews();
+    },
+
+    // ============================================
+    // GEOLOCALIZACION Y DISTANCIA (NUEVO)
+    // ============================================
+
+    filterDistance: 200,
+
+    updateDistanceFilter(value) {
+        this.filterDistance = parseInt(value, 10);
+        const display = document.getElementById('distanceFilterValue');
+        if (display) {
+            display.textContent = this.filterDistance >= 200 ? 'Cualquiera' : `Hasta ${this.filterDistance} km`;
+        }
+
+        // Mostrar advertencia si la empresa no tiene ubicación configurada y usa el filtro
+        const warning = document.getElementById('distanceFilterWarning');
+        if (warning && this.currentUser) {
+            const hasLocation = this.currentUser.latitude || this.companyProfile?.latitude;
+            warning.style.display = (!hasLocation && this.filterDistance < 200) ? 'block' : 'none';
+        }
+
+        // Re-aplicar filtros automáticamente si estamos en la vista de Explorar
+        if (typeof this.applyFilters === 'function') {
+            this.applyFilters();
+        }
+    },
+
+    requestDeviceLocation(type = 'candidate') {
+        const statusEl = document.getElementById(type === 'company' ? 'cpGeoStatus' : 'userGeoStatus');
+
+        if (!navigator.geolocation) {
+            this.showToast('La geolocalización no es soportada por este navegador.', 'error');
+            if (statusEl) statusEl.textContent = 'Error: Navegador no soportado';
+            return;
+        }
+
+        if (statusEl) statusEl.textContent = 'Solicitando permisos...';
+        this.showToast('Permite el acceso a tu ubicación...');
+
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                if (statusEl) {
+                    statusEl.innerHTML = `<span style="color: #059669;">Guardada (${lat.toFixed(4)}, ${lng.toFixed(4)})</span>`;
+                }
+
+                // Inyectar en campos ocultos si es empresa
+                if (type === 'company') {
+                    const latHidden = document.getElementById('cpLatitude');
+                    const lngHidden = document.getElementById('cpLongitude');
+                    if (latHidden) latHidden.value = lat;
+                    if (lngHidden) lngHidden.value = lng;
+                }
+
+                this.showToast('🌍 Ubicación capturada exitosamente', 'success');
+
+                // Si el usuario actual está logueado, guardarlo en la DB de Supabase
+                if (this.currentUser && this.currentUser.id && window.supabaseClient) {
+                    try {
+                        const table = type === 'company' ? 'companies' : 'profiles';
+                        const idToUpdate = type === 'company' ? (this.companyProfile?.id || this.currentUser.id) : this.currentUser.id;
+
+                        const { error } = await window.supabaseClient
+                            .from(table)
+                            .update({ latitude: lat, longitude: lng })
+                            .eq('id', idToUpdate);
+
+                        if (!error) {
+                            this.currentUser.latitude = lat;
+                            this.currentUser.longitude = lng;
+                            if (this.companyProfile) {
+                                this.companyProfile.latitude = lat;
+                                this.companyProfile.longitude = lng;
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error guardando loc:', e);
+                    }
+                }
+            },
+            (error) => {
+                console.error('Geolocation Error:', error);
+                let msg = 'Error obteniendo ubicación';
+                if (error.code === 1) msg = 'Permiso de ubicación denegado';
+                if (statusEl) statusEl.innerHTML = `<span style="color: #ef4444;">${msg}</span>`;
+                this.showToast(msg, 'error');
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    },
+
+    calculateDistance(lat1, lon1, lat2, lon2) {
+        if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+
+        const R = 6371; // Radio de la Tierra en km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // Distancia en km
+    },
+
+    // ==========================================
+    // NOTIFICATIONS & SETTINGS MODAL
+    // ==========================================
+    async openSettingsModal() {
+        if (!this.currentUser || !this.currentUser.id) {
+            this.showToast('Debes iniciar sesión para configurar tus alertas', 'error');
+            return;
+        }
+
+        const modal = document.getElementById('settingsFullScreen');
+        if (!modal) return;
+
+        // Default state fallback
+        this.currentSettings = {
+            match_alerts: false,
+            message_alerts: false,
+            marketing_alerts: false
+        };
+
+        // Fetch user settings from Supabase
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('user_settings')
+                .select('*')
+                .eq('user_id', this.currentUser.id)
+                .single();
+
+            if (error && error.code !== 'PGRST116' && error.code !== 'PGRST205') {
+                console.error('Error fetching settings:', error);
+                this.showToast('No se pudieron cargar tus preferencias. Usando por defecto.', 'error');
+            }
+
+            if (data) {
+                this.currentSettings.match_alerts = data.match_alerts || false;
+            }
+        } catch (err) {
+            console.error('Exception fetching settings:', err);
+        }
+
+        // Set visual state of toggles
+        const notifToggle = document.querySelector('#settingsFullScreen input[type="checkbox"][onchange*="toggleSetting"]');
+        if (notifToggle) {
+            notifToggle.checked = this.currentSettings.match_alerts;
+        }
+
+        const dmToggle = document.getElementById('settingsDarkModeToggle');
+        if (dmToggle) {
+            dmToggle.checked = document.body.classList.contains('dark-mode');
+        }
+
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    },
+
+    closeSettingsFullScreen() {
+        const modal = document.getElementById('settingsFullScreen');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    },
+
+    closeSettingsModal() {
+        const modal = document.getElementById('settingsModal');
+        if (modal) modal.style.display = 'none';
+    },
+
+    async toggleSetting(type) {
+        if (!this.currentUser || !this.currentUser.id) return;
+
+        if (!this.currentSettings) {
+            this.currentSettings = { match_alerts: false, message_alerts: false, marketing_alerts: false };
+        }
+
+        let field = '';
+        let toggleId = '';
+        let textId = '';
+
+        if (type === 'match') {
+            field = 'match_alerts';
+            toggleId = 'matchToggle';
+            textId = 'matchToggleText';
+        } else if (type === 'message') {
+            field = 'message_alerts';
+            toggleId = 'messageToggle';
+            textId = 'messageToggleText';
+        } else if (type === 'marketing') {
+            field = 'marketing_alerts';
+            toggleId = 'marketingToggle';
+            textId = 'marketingToggleText';
+        }
+
+        if (!field) return;
+
+        // Optimistic UI Update
+        const newValue = !this.currentSettings[field];
+        this.currentSettings[field] = newValue;
+
+        this.updateToggleVisual(toggleId, newValue);
+
+        const txtEl = document.getElementById(textId);
+        if (txtEl) txtEl.textContent = newValue ? 'Activado' : 'Desactivado';
+
+        // Upsert to Supabase
+        try {
+            const { error } = await window.supabaseClient
+                .from('user_settings')
+                .upsert({
+                    user_id: this.currentUser.id,
+                    [field]: newValue,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id' });
+
+            if (error) {
+                console.error('Error updating setting:', error);
+
+                // Revert UI on failure
+                this.currentSettings[field] = !newValue;
+                this.updateToggleVisual(toggleId, !newValue);
+                if (txtEl) txtEl.textContent = !newValue ? 'Activado' : 'Desactivado';
+
+                this.showToast('Hubo un error al guardar tu preferencia', 'error');
+            }
+        } catch (err) {
+            console.error('Exception updating setting:', err);
+        }
+    },
+
+    updateToggleVisual(toggleId, isON) {
+        const toggleEl = document.getElementById(toggleId);
+        if (!toggleEl) return;
+
+        const circle = toggleEl.querySelector('div');
+        if (!circle) return;
+
+        if (isON) {
+            toggleEl.style.background = '#1392ec'; // Blue
+            circle.style.transform = 'translateX(24px)';
+        } else {
+            toggleEl.style.background = '#e5e7eb'; // Gray
+            circle.style.transform = 'translateX(0)';
+        }
+    },
+
+    // ==========================================
+    // SECURITY MODAL & CHANGE PASSWORD
+    // ==========================================
+    openSecurityModal() {
+        if (!this.currentUser || !this.currentUser.id) {
+            this.showToast('Inicia sesión para gestionar tu seguridad', 'error');
+            return;
+        }
+
+        // Reset fields
+        const newPassInput = document.getElementById('securityNewPassword');
+        const confPassInput = document.getElementById('securityConfirmPassword');
+        if (newPassInput) {
+            newPassInput.value = '';
+            newPassInput.type = 'password';
+        }
+        if (confPassInput) {
+            confPassInput.value = '';
+            confPassInput.type = 'password';
+        }
+
+        // Reset Icons
+        const newIcon = document.getElementById('securityNewPasswordIcon');
+        const confIcon = document.getElementById('securityConfirmPasswordIcon');
+        if (newIcon) newIcon.textContent = 'visibility_off';
+        if (confIcon) confIcon.textContent = 'visibility_off';
+
+        const modal = document.getElementById('securityModal');
+        if (modal) modal.style.display = 'block';
+    },
+
+    closeSecurityModal() {
+        const modal = document.getElementById('securityModal');
+        if (modal) modal.style.display = 'none';
+    },
+
+    togglePasswordVisibility(inputId) {
+        const input = document.getElementById(inputId);
+        const icon = document.getElementById(inputId + 'Icon');
+        if (!input || !icon) return;
+
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.textContent = 'visibility';
+        } else {
+            input.type = 'password';
+            icon.textContent = 'visibility_off';
+        }
+    },
+
+    async changePassword() {
+        const btn = document.getElementById('securitySaveBtn');
+        const newPass = document.getElementById('securityNewPassword')?.value;
+        const confPass = document.getElementById('securityConfirmPassword')?.value;
+
+        if (!newPass || !confPass) {
+            this.showToast('Por favor, completa ambos campos de contraseña', 'warning');
+            return;
+        }
+
+        if (newPass !== confPass) {
+            this.showToast('Las contraseñas nuevas no coinciden', 'error');
+            return;
+        }
+
+        if (newPass.length < 6) {
+            this.showToast('La nueva contraseña debe tener al menos 6 caracteres', 'error');
+            return;
+        }
+
+        try {
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<span class="material-icons rotating" style="font-size: 20px;">sync</span> Actualizando...`;
+            }
+
+            const { data, error } = await window.supabaseClient.auth.updateUser({
+                password: newPass
+            });
+
+            if (error) {
+                console.error('Password Update Error:', error);
+                this.showToast(error.message || 'Error al actualizar tu clave', 'error');
+            } else {
+                this.showToast('Contraseña actualizada con éxito', 'success');
+                this.closeSecurityModal();
+            }
+
+        } catch (error) {
+            console.error('Exception upading password:', error);
+            this.showToast('Error inesperado al conectar con Supabase', 'error');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `<span class="material-icons" style="font-size: 20px;">lock_reset</span> Actualizar Contraseña`;
+            }
+        }
+    },
+
+    // ==========================================
+    // PREFERENCES MODAL (Language & Region)
+    // ==========================================
+    async openPreferencesModal() {
+        if (!this.currentUser || !this.currentUser.id) {
+            this.showToast('Inicia sesión para gestionar tus preferencias', 'error');
+            return;
+        }
+
+        const modal = document.getElementById('preferencesModal');
+        if (!modal) return;
+
+        // Fetch from Supabase config
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('user_settings')
+                .select('language, region')
+                .eq('user_id', this.currentUser.id)
+                .single();
+
+            const langSelect = document.getElementById('prefLanguage');
+            const regionSelect = document.getElementById('prefRegion');
+
+            if (data && !error) {
+                if (langSelect && data.language) langSelect.value = data.language;
+                if (regionSelect && data.region) regionSelect.value = data.region;
+            } else {
+                // Set default values if no row exists or error
+                if (langSelect) langSelect.value = 'es';
+                if (regionSelect) regionSelect.value = 'America/Lima';
+            }
+        } catch (e) {
+            console.error('Error fetching preferences', e);
+        }
+
+        modal.style.display = 'block';
+    },
+
+    closePreferencesModal() {
+        const modal = document.getElementById('preferencesModal');
+        if (modal) modal.style.display = 'none';
+    },
+
+    async savePreferences() {
+        if (!this.currentUser || !this.currentUser.id) return;
+
+        const langVal = document.getElementById('prefLanguage')?.value || 'es';
+        const regionVal = document.getElementById('prefRegion')?.value || 'America/Lima';
+
+        const btn = document.querySelector('#preferencesModal button:last-of-type');
+        try {
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<span class="material-icons rotating" style="font-size: 20px;">sync</span> Guardando...`;
+            }
+
+            const { error } = await window.supabaseClient
+                .from('user_settings')
+                .upsert({
+                    user_id: this.currentUser.id,
+                    language: langVal,
+                    region: regionVal,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id' });
+
+            if (error) throw error;
+
+            this.showToast('Preferencias actualizadas con éxito', 'success');
+            this.closePreferencesModal();
+        } catch (e) {
+            console.error('Error saving settings:', e);
+            this.showToast('Error al guardar. Probablemente falten las columnas correspondientes en base de datos.', 'error');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `<span class="material-icons" style="font-size: 20px;">save</span> Guardar Preferencias`;
+            }
+        }
+    },
+
+    // ==========================================
+    // APARIENCIA (Dark Mode)
+    // ==========================================
+    async toggleDarkMode() {
+        const isDark = document.body.classList.toggle('dark-mode');
+        const statusText = document.getElementById('darkModeStatusText');
+        if (statusText) {
+            statusText.textContent = isDark ? 'Modo oscuro' : 'Modo claro';
+        }
+
+        if (this.currentUser && this.currentUser.id) {
+            try {
+                // Se asume que existirá la columna is_dark_mode en user_settings
+                await window.supabaseClient.from('user_settings').upsert({
+                    user_id: this.currentUser.id,
+                    is_dark_mode: isDark,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id' });
+            } catch (e) {
+                console.error('Error saving dark mode preference:', e);
+            }
+        }
+    }
+});
+setTimeout(() => { if (typeof app !== 'undefined' && app.initStitchViews) app.initStitchViews(); }, 500);
