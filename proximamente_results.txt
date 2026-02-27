@@ -1,0 +1,10 @@
+- **index.html** (Line 2642): `<div onclick="app.showToast('Video intro disponible próximamente')"`
+- **index.html** (Line 4298): `<div onclick="app.showToast('Próximamente')"`
+- **index.html** (Line 4344): `<div onclick="app.showToast('Próximamente')"`
+- **index.html** (Line 4424): `onclick="app.showToast('Geolocalización próximamente')">`
+- **index.html** (Line 5983): `<button onclick="app.showToast('Próximamente', 'info')"`
+- **index.html** (Line 6005): `<button onclick="app.showToast('Próximamente', 'info')"`
+- **index.html** (Line 6028): `<button onclick="app.showToast('Próximamente', 'info')"`
+- **index.html** (Line 6051): `<button onclick="app.showToast('Próximamente', 'info')"`
+- **js\app_fixed.js** (Line 8462): `this.showToast('Funcionalidad de adjuntar archivos próximamente');`
+- **js\app_fixed.js** (Line 8811): `this.showToast('Vista previa próximamente', 'info');`

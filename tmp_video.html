@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Candidate Profile with Video Pitch</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1392ec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101a22",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .video-gradient-overlay {
+            background: linear-gradient(to bottom, rgba(0,0,0,0) 60%, rgba(0,0,0,0.6) 100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased">
+<!-- Main Mobile Container -->
+<div class="relative mx-auto min-h-screen max-w-[430px] bg-white dark:bg-slate-950 shadow-2xl flex flex-col pb-24">
+<!-- Header / Navigation -->
+<div class="sticky top-0 z-50 flex items-center justify-between bg-white/80 dark:bg-slate-950/80 px-4 py-4 backdrop-blur-md">
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="text-lg font-bold text-slate-900 dark:text-slate-100">Candidato</h1>
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<!-- Video Pitch Section (9:16 Aspect Ratio) -->
+<div class="px-4 pt-2">
+<div class="relative aspect-[9/16] w-full overflow-hidden rounded-xl bg-slate-900 shadow-xl group">
+<img alt="Candidate Video Pitch" class="h-full w-full object-cover opacity-90" data-alt="Professional woman presenting her pitch to camera" src="https://lh3.googleusercontent.com/aida-public/AB6AXuArUtUEqfr24Wuj8Cbn3zLhyWZQsCkDGCvU7ridW2dyOlFWvwjk1U61L0bUXtZBVQu0_J5c4Q7vuXMiW8F4Vv4h1scJ9i8lTiPoqo5PcY5Fghkk6sYB5TmO9Pxb6zgx8jLPqwfIcY7RVWBO3m7G6LmMqAAvNYDDpf4Wz1BP-RyOkNNfOiuCnz58I9H59o8yh673XKHvuq8imllb6U7Nn5Wx2Axg59ELURb8yR5AB2UV9Lej-cL9Ti9QjcBTARl03jG2qk8LkwDZ04Th"/>
+<!-- Video Controls Overlays -->
+<div class="absolute inset-0 flex flex-col justify-between p-6">
+<!-- Top Controls -->
+<div class="flex justify-end">
+<button class="flex h-12 w-12 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-md">
+<span class="material-symbols-outlined">volume_up</span>
+</button>
+</div>
+<!-- Center Play Button -->
+<div class="flex items-center justify-center">
+<button class="flex h-20 w-20 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-xl transition-transform active:scale-90 border border-white/30">
+<span class="material-symbols-outlined text-5xl fill-1">play_arrow</span>
+</button>
+</div>
+<!-- Bottom Info & Progress -->
+<div class="space-y-4">
+<div class="video-gradient-overlay absolute inset-x-0 bottom-0 h-32 pointer-events-none"></div>
+<div class="relative z-10">
+<div class="flex items-center gap-2 mb-2">
+<span class="rounded-full bg-primary px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">Live Pitch</span>
+<span class="text-white/80 text-xs font-medium">0:45 / 2:15</span>
+</div>
+<!-- Progress Bar -->
+<div class="h-1.5 w-full overflow-hidden rounded-full bg-white/30">
+<div class="h-full w-1/3 bg-primary rounded-full shadow-[0_0_10px_rgba(19,146,236,0.8)]"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Call to Action Section -->
+<div class="px-4 py-6">
+<button class="flex w-full items-center justify-center gap-3 rounded-full bg-gradient-to-r from-primary to-[#0e7cd1] px-8 py-5 text-lg font-bold text-white shadow-xl shadow-primary/30 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined text-2xl">videocam</span>
+<span>Subir tu Video de Presentación</span>
+</button>
+</div>
+<!-- Candidate Profile Info -->
+<div class="px-6 space-y-6">
+<div class="flex items-center justify-between">
+<div>
+<h2 class="text-[28px] font-bold tracking-tight text-slate-900 dark:text-white leading-none mb-1">Lorena García</h2>
+<p class="text-lg font-medium text-primary">UX Designer</p>
+</div>
+<div class="h-16 w-16 overflow-hidden rounded-full border-2 border-white dark:border-slate-800 shadow-md">
+<img alt="Lorena Garcia Profile" class="h-full w-full object-cover" data-alt="Close up portrait of Lorena Garcia" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB41MzwCh7FEfW_6i4rH-jjumerTHOZn9rOUknulFn5e7q8mCfkpUi7zlPKKpkzxOEw4mSK0FJSc8JCa5OZk1O4JuV-5PzOdD9kJ9zVzbQBKwmVWT4G7Xtjlwak81CgRB1HJPgCHwAl7UXEa8KCo3l1SzXK6HBqbej9DpvEekV1m5PRQJvNF10nfaZNHooIrCk_TV-ZgM21JYTllLVxd6BAFbsGT_cGmlduGuYzUeWl5EIDZOe-rY8pTM2aE4XBls5KFxNSFTVSKq-r"/>
+</div>
+</div>
+<!-- Stats Grid -->
+<div class="grid grid-cols-3 gap-3">
+<div class="flex flex-col items-center justify-center rounded-2xl bg-slate-50 dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-800">
+<span class="text-primary font-bold text-xl leading-none">5+</span>
+<span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-tight mt-1">Años Exp.</span>
+</div>
+<div class="flex flex-col items-center justify-center rounded-2xl bg-slate-50 dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-800">
+<span class="text-primary font-bold text-xl leading-none">12</span>
+<span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-tight mt-1">Proyectos</span>
+</div>
+<div class="flex flex-col items-center justify-center rounded-2xl bg-slate-50 dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-800">
+<span class="text-primary font-bold text-xl leading-none">95%</span>
+<span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-tight mt-1">Match</span>
+</div>
+</div>
+<!-- Tags Section -->
+<div class="flex flex-wrap gap-2">
+<div class="flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 px-4 py-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+<span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Open to Work
+                </div>
+<div class="rounded-full bg-slate-100 dark:bg-slate-800 px-4 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300">
+                    Senior
+                </div>
+<div class="rounded-full bg-slate-100 dark:bg-slate-800 px-4 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300">
+                    English C1
+                </div>
+</div>
+<!-- About Section -->
+<div class="space-y-2 pb-10">
+<h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest">Sobre mí</h3>
+<p class="text-slate-600 dark:text-slate-400 leading-relaxed">
+                    Apasionada por crear experiencias digitales intuitivas que resuelvan problemas reales. Especializada en diseño centrado en el usuario y sistemas de diseño escalables.
+                </p>
+</div>
+</div>
+<!-- Bottom Navigation Bar -->
+<div class="fixed bottom-0 left-1/2 w-full max-w-[430px] -translate-x-1/2 border-t border-slate-100 dark:border-slate-800 bg-white/90 dark:bg-slate-950/90 px-6 py-4 backdrop-blur-lg flex justify-between items-center">
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined text-2xl fill-1">home</span>
+<span class="text-[10px] font-bold">Inicio</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined text-2xl">search</span>
+<span class="text-[10px] font-bold">Buscar</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined text-2xl">work</span>
+<span class="text-[10px] font-bold">Empleos</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined text-2xl">chat_bubble</span>
+<span class="text-[10px] font-bold">Mensajes</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400" href="#">
+<div class="h-6 w-6 rounded-full bg-slate-200 overflow-hidden ring-2 ring-transparent">
+<img alt="User Avatar" class="h-full w-full object-cover" data-alt="User profile thumbnail" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1dzRWJIrN0JwoeKh1TUo-b1p3G5q4YaJcNvzofP0JUy2X6EWUfdLN0vCM4puwqkrQTqvqMeVgmZEQOEtfhieDYyZbvQwDWup6I1pq2K95PWLqUsKmy6tYzNOxGRiU5WNxGZBkdMj8MwT0MgFB-7IktvDN9LcwjrOsAO_njumwYI4qXS69sScOsBjKWs8xXHJPCb747xGfYDfubjVpd62ifKebX-4jspJ0PuDMim47FT9hXgvx5RktugWnTi3NgJ1ANbEl4mOqSeOs"/>
+</div>
+<span class="text-[10px] font-bold">Perfil</span>
+</a>
+</div>
+</div>
+</body></html>

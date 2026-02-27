@@ -1,0 +1,50 @@
+[Line 4239]             this.updateSalarySlider();
+[Line 4240]             this._loadCompanyFilterSkillSuggestions();
+[Line 4241]             this._renderFilterSkillTags();
+[Line 4242]         } else {
+[Line 4243]             this.loadFilterOptions();
+[Line 4244]         }
+[Line 4453]         this.updateSalarySlider();
+[Line 4454] 
+[Line 4455]         // Reset company location
+[Line 4456]         const cLocInput = document.getElementById('companyFilterLocation');
+[Line 4457]         if (cLocInput) cLocInput.value = '';
+[Line 4458] 
+[Line 4459]         // Reset company experience segmented control
+[Line 4460]         document.querySelectorAll('#companyFilterExperienceSegments .exp-seg').forEach(btn => {
+[Line 4461]             btn.classList.remove('active');
+[Line 4462]             btn.style.background = 'transparent';
+[Line 4463]             btn.style.color = '#64748b';
+[Line 4464]             btn.style.boxShadow = 'none';
+[Line 4465]         });
+[Line 4466]         this._selectedExpSegment = null;
+[Line 4467] 
+[Line 4468]         // Reset company skill tags
+[Line 4469]         this._filterSkills = [];
+[Line 4470]         const skillTags = document.getElementById('companyFilterSkillTags');
+[Line 4471]         if (skillTags) skillTags.innerHTML = '';
+[Line 4472]         const skillInput = document.getElementById('companyFilterSkillInput');
+[Line 4473]         if (skillInput) skillInput.value = '';
+[Line 4474]         // Re-show all suggestions
+[Line 4475]         document.querySelectorAll('#companyFilterSkillSuggestions button').forEach(b => b.style.display = '');
+[Line 4476] 
+[Line 4477]         // Reset filter state
+[Line 4478]         this.activeFilters = {};
+[Line 4479]         this.showToast('Filtros restablecidos');
+[Line 4480]     },
+[Line 4483]     updateSalarySlider() {
+[Line 4484]         const minEl = document.getElementById('companyFilterSalaryMin');
+[Line 4485]         const maxEl = document.getElementById('companyFilterSalaryMax');
+[Line 4486]         const fill = document.getElementById('companySalaryFill');
+[Line 4487]         const label = document.getElementById('companySalaryRangeLabel');
+[Line 4488]         if (!minEl || !maxEl) return;
+[Line 4489] 
+[Line 4490]         let minVal = parseInt(minEl.value);
+[Line 4491]         let maxVal = parseInt(maxEl.value);
+[Line 4492] 
+[Line 4493]         // Prevent crossing
+[Line 4494]         if (minVal > maxVal) {
+[Line 4495]             const t = minVal; minVal = maxVal; maxVal = t;
+[Line 4496]             minEl.value = minVal;
+[Line 4497]             maxEl.value = maxVal;
+[Line 4498]         }

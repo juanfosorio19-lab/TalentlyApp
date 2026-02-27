@@ -1,0 +1,20 @@
+[Line 728] const code = Array.from(inputs).map(i => i.value).join('');
+[Line 743] const code = Array.from(inputs).map(i => i.value).join('');
+[Line 4382] const { data: cities } = await supabase.from('cities').select('id, name').eq('country_id', countryId).order('name');
+[Line 4587] const { data: skills } = await supabase.from('skills').select('id, name').order('name').limit(20);
+[Line 4645] .from('avatars')
+[Line 4673] .from('avatars')
+[Line 8029] const culture = Array.from(document.querySelectorAll('.company-culture-option[data-selected="true"]')).map(el => el.dataset.value);
+[Line 8035] const positions = Array.from(document.querySelectorAll('.position-option[data-selected="true"]')).map(el => el.dataset.value);
+[Line 8038] const seniority = Array.from(document.querySelectorAll('.seniority-option[data-selected="true"]')).map(el => el.dataset.value);
+[Line 8041] const benefitsSelected = Array.from(document.querySelectorAll('.benefit-option input:checked')).map(el => el.value);
+[Line 8965] return Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+[Line 9400] const skillsArr = Array.from(this.selectedSkills);
+[Line 9410] const skillsArr = Array.from(this.selectedSkills);
+[Line 9427] document.getElementById('offerSkills').value = Array.from(this.selectedSkills).join(',');
+[Line 9991] .from('profiles')
+[Line 10060] .from('swipes')
+[Line 10534] .from('companies')
+[Line 11860] Array.from(dm.querySelectorAll('button')).forEach(b => {
+[Line 11872] const ovb = Array.from(ov.querySelectorAll('button'));
+[Line 11893] const vc = Array.from(cards).filter(c => c.style.display !== 'none' && c.style.opacity !== '0');

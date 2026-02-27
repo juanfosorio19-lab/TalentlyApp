@@ -1,0 +1,22 @@
+[Line 174] window.talentlyBackend.reference.getCountries(),
+[Line 175] window.talentlyBackend.reference.getAreas(),
+[Line 176] window.talentlyBackend.reference.getCompanySectors(),
+[Line 177] window.talentlyBackend.reference.getCompanySizes(),
+[Line 178] window.talentlyBackend.reference.getCompanyStages(),
+[Line 179] window.talentlyBackend.reference.getWorkModalities(),
+[Line 180] window.talentlyBackend.reference.getCompanyCultureValues(),
+[Line 181] window.talentlyBackend.reference.getCompanyPositions(),
+[Line 182] window.talentlyBackend.reference.getSeniorityLevels(),
+[Line 183] window.talentlyBackend.reference.getCompanyBenefits(),
+[Line 184] window.talentlyBackend.reference.getSelectionDurations()
+[Line 2021] const { data: areas, error } = await window.talentlyBackend.reference.getAreas();
+[Line 2097] const { data, error } = await window.talentlyBackend.reference.getSkills(areaSlug);
+[Line 3471] const result = await window.talentlyBackend.reference.getSkills(areaSlug);
+[Line 4268] const { data: modalities } = await window.talentlyBackend.reference.getWorkModalities();
+[Line 4294] const { data: areas } = await window.talentlyBackend.reference.getProfessionalAreas();
+[Line 5570] const { data: cities, error } = await window.talentlyBackend.reference.getCities(countryId);
+[Line 5631] const result = await window.talentlyBackend.reference.getSkills(areaSlug);
+[Line 5737] const result = await window.talentlyBackend.reference.getSkills(primaryArea.dbSlug);
+[Line 5754] const result = await window.talentlyBackend.reference.getSkills(secArea.dbSlug);
+[Line 5763] const result = await window.talentlyBackend.reference.getSkills('diseno-ux');
+[Line 8872] const { data: cities } = await window.talentlyBackend.reference.getCities(countryId);

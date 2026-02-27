@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Perfil del Candidato - Talently</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#3B82F6", 
+                        "primary-dark": "#2563EB",
+                        "background-light": "#F9FAFB", // Soft white/gray background
+                        "surface-light": "#FFFFFF",
+                        "text-heading": "#111827", // Dark gray for headings
+                        "text-body": "#4B5563",
+                        "text-muted": "#6B7280",
+                        "border-subtle": "#E5E7EB",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    boxShadow: {
+                        'soft': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03)',
+                        'nav': '0 -1px 3px 0 rgba(0, 0, 0, 0.05)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light text-text-body antialiased">
+<div class="max-w-md mx-auto min-h-screen relative flex flex-col pb-20 bg-background-light">
+<div class="px-6 pt-12 pb-4 flex justify-between items-center bg-surface-light border-b border-border-subtle sticky top-0 z-20">
+<h1 class="text-xl font-bold tracking-tight text-text-heading">Mi Perfil</h1>
+<button class="p-2 rounded-full hover:bg-gray-50 text-text-muted transition-colors">
+<span class="material-icons-round">settings</span>
+</button>
+</div>
+<main class="flex-1 overflow-y-auto no-scrollbar">
+<div class="bg-surface-light px-6 py-8 mb-4 border-b border-border-subtle">
+<div class="flex flex-col items-center text-center">
+<div class="relative mb-4">
+<img alt="Foto de perfil del candidato" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-soft" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAutaoSBOUG625xZYxg4DiobZAALibHzESXhNyU5ioRyKeDgdEGf4g48i6wOeXh2S4h1GFosSf1rVCA8H53vEffJmdHHf9w3Og3KCvsFOkEhvrEq7GSzNFbZUGLdxq-8UKomjpgY08m1kCE-UDApKiKO3XrSNoBThc5HlxEJTloDj5EfvoTwQ4QoNi2CHVGZKGF_6IyV6jLuqhJCe7-9vPpl1PMuETGFksxI2IQxHvRT8Fu8YquKf2r8bOfhX9i5M5BrTl8JsCak8Hl"/>
+<button class="absolute bottom-0 right-0 bg-primary text-white p-1.5 rounded-full shadow-md border-2 border-white flex items-center justify-center hover:bg-primary-dark transition-colors">
+<span class="material-icons-round text-sm">edit</span>
+</button>
+</div>
+<h2 class="text-2xl font-bold mb-1 text-text-heading">Alejandro Ruiz</h2>
+<p class="text-text-muted text-sm mb-4">Senior Product Designer • Madrid, España</p>
+<div class="flex space-x-3 mb-6">
+<span class="px-3 py-1 bg-blue-50 text-primary rounded-full text-xs font-medium border border-blue-100">UI/UX</span>
+<span class="px-3 py-1 bg-blue-50 text-primary rounded-full text-xs font-medium border border-blue-100">Figma</span>
+<span class="px-3 py-1 bg-blue-50 text-primary rounded-full text-xs font-medium border border-blue-100">Remote</span>
+</div>
+<div class="grid grid-cols-2 gap-3 w-full">
+<button class="flex items-center justify-center space-x-2 w-full py-2.5 bg-primary text-white font-medium rounded-xl shadow-soft hover:bg-primary-dark transition-colors">
+<span class="material-icons-round text-sm">edit</span>
+<span>Editar Perfil</span>
+</button>
+<button class="flex items-center justify-center space-x-2 w-full py-2.5 bg-white border border-border-subtle text-text-heading font-medium rounded-xl hover:bg-gray-50 transition-colors shadow-sm">
+<span class="material-icons-round text-sm">visibility</span>
+<span>Vista Previa</span>
+</button>
+</div>
+</div>
+</div>
+<div class="px-6 mb-4 sticky top-[73px] z-10 bg-background-light pt-2 pb-2">
+<div class="flex p-1 bg-white border border-border-subtle rounded-xl shadow-sm">
+<button class="flex-1 py-2 text-sm font-semibold rounded-lg bg-gray-100 text-text-heading shadow-sm transition-all">
+                        CV / Perfil
+                    </button>
+<button class="flex-1 py-2 text-sm font-medium rounded-lg text-text-muted hover:text-text-heading hover:bg-gray-50 transition-all">
+                        Actividad
+                    </button>
+</div>
+</div>
+<div class="px-6 space-y-4 pb-8">
+<div class="bg-surface-light p-5 rounded-2xl shadow-soft border border-border-subtle">
+<div class="flex justify-between items-start mb-3">
+<h3 class="font-bold text-lg text-text-heading">Sobre mí</h3>
+<button class="text-primary hover:text-primary-dark transition-colors">
+<span class="material-icons-round text-base">edit</span>
+</button>
+</div>
+<p class="text-text-body text-sm leading-relaxed">
+                        Diseñador apasionado con más de 5 años de experiencia creando productos digitales que los usuarios aman. Especializado en sistemas de diseño y prototipado rápido. Busco nuevos retos en fintech o healthtech.
+                    </p>
+</div>
+<div class="bg-surface-light p-5 rounded-2xl shadow-soft border border-border-subtle">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-bold text-lg text-text-heading">Experiencia</h3>
+<button class="text-primary hover:text-primary-dark transition-colors">
+<span class="material-icons-round text-xl">add_circle_outline</span>
+</button>
+</div>
+<div class="space-y-6">
+<div class="flex gap-4">
+<div class="flex-shrink-0 w-12 h-12 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 font-bold text-lg">
+                                G
+                            </div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h4 class="font-semibold text-base text-text-heading">Senior Product Designer</h4>
+<button class="text-gray-300 hover:text-text-muted transition-colors">
+<span class="material-icons-round text-sm">edit</span>
+</button>
+</div>
+<p class="text-sm font-medium text-gray-600">Glovo</p>
+<p class="text-xs text-text-muted mt-1">2021 - Presente • 2 años 4 meses</p>
+<p class="text-xs text-text-body mt-2 line-clamp-2 leading-relaxed">Liderando el equipo de diseño para la vertical de Q-Commerce y mejorando la experiencia de checkout.</p>
+</div>
+</div>
+<div class="h-px bg-border-subtle w-full"></div>
+<div class="flex gap-4">
+<div class="flex-shrink-0 w-12 h-12 bg-pink-50 border border-pink-100 rounded-xl flex items-center justify-center text-pink-600 font-bold text-lg">
+                                C
+                            </div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h4 class="font-semibold text-base text-text-heading">UX Designer</h4>
+<button class="text-gray-300 hover:text-text-muted transition-colors">
+<span class="material-icons-round text-sm">edit</span>
+</button>
+</div>
+<p class="text-sm font-medium text-gray-600">Cabify</p>
+<p class="text-xs text-text-muted mt-1">2018 - 2021 • 3 años</p>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-surface-light p-5 rounded-2xl shadow-soft border border-border-subtle">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-bold text-lg text-text-heading">Educación</h3>
+<button class="text-primary hover:text-primary-dark transition-colors">
+<span class="material-icons-round text-xl">add_circle_outline</span>
+</button>
+</div>
+<div class="flex gap-4">
+<div class="flex-shrink-0 w-12 h-12 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center">
+<span class="material-icons-round text-gray-400">school</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h4 class="font-semibold text-base text-text-heading">Máster en Diseño de Interacción</h4>
+<button class="text-gray-300 hover:text-text-muted transition-colors">
+<span class="material-icons-round text-sm">edit</span>
+</button>
+</div>
+<p class="text-sm font-medium text-gray-600">ELISAVA</p>
+<p class="text-xs text-text-muted mt-1">2017 - 2018</p>
+</div>
+</div>
+</div>
+<div class="bg-surface-light p-5 rounded-2xl shadow-soft border border-border-subtle">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-bold text-lg text-text-heading">Habilidades</h3>
+<button class="text-primary hover:text-primary-dark transition-colors">
+<span class="material-icons-round text-base">edit</span>
+</button>
+</div>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1.5 bg-gray-50 text-text-body rounded-lg text-sm font-medium border border-border-subtle">Figma</span>
+<span class="px-3 py-1.5 bg-gray-50 text-text-body rounded-lg text-sm font-medium border border-border-subtle">Prototyping</span>
+<span class="px-3 py-1.5 bg-gray-50 text-text-body rounded-lg text-sm font-medium border border-border-subtle">User Research</span>
+<span class="px-3 py-1.5 bg-gray-50 text-text-body rounded-lg text-sm font-medium border border-border-subtle">HTML/CSS</span>
+<span class="px-3 py-1.5 bg-gray-50 text-text-body rounded-lg text-sm font-medium border border-border-subtle">Design Systems</span>
+</div>
+</div>
+</div>
+</main>
+<nav class="fixed bottom-0 w-full max-w-md bg-white border-t border-border-subtle flex justify-around items-center h-[72px] pb-2 z-50 shadow-nav">
+<button class="flex flex-col items-center justify-center w-16 h-full text-text-muted hover:text-primary transition-colors gap-1">
+<span class="material-icons-round text-2xl">style</span>
+<span class="text-[10px] font-medium">Explorar</span>
+</button>
+<button class="flex flex-col items-center justify-center w-16 h-full text-text-muted hover:text-primary transition-colors gap-1">
+<span class="material-icons-round text-2xl">work_outline</span>
+<span class="text-[10px] font-medium">Matches</span>
+</button>
+<button class="flex flex-col items-center justify-center w-16 h-full text-text-muted hover:text-primary transition-colors gap-1">
+<span class="material-icons-round text-2xl">chat_bubble_outline</span>
+<span class="text-[10px] font-medium">Chat</span>
+</button>
+<button class="flex flex-col items-center justify-center w-16 h-full text-primary gap-1">
+<span class="material-icons-round text-2xl">person</span>
+<span class="text-[10px] font-medium">Perfil</span>
+</button>
+</nav>
+</div>
+
+</body></html>

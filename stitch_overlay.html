@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Talently - It's a Match!</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#3B82F6", // Vibrant Blue for primary actions
+                        "primary-dark": "#2563EB",
+                        "accent": "#F43F5E", // Rose/Red for the 'heart' or excitement
+                        "background-light": "#F3F4F6", // Light gray background
+                        "background-dark": "#111827", // Dark blue-gray background
+                        "surface-light": "#FFFFFF",
+                        "surface-dark": "#1F2937",
+                        "text-light": "#1F2937",
+                        "text-dark": "#F9FAFB",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "12px",
+                        "xl": "16px",
+                        "2xl": "24px",
+                        "3xl": "32px",
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 2s infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'pop-in': 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                    },
+                    keyframes: {
+                        popIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.5)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' },
+                        }
+                    }
+                },
+            },
+        };
+    </script>
+<style>.match-gradient-text {
+            background: linear-gradient(to right, #3B82F6, #F43F5E);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .avatar-glow {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+        .dark .avatar-glow {
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+        }.confetti-bg {
+            background-image: 
+                radial-gradient(#F43F5E 2px, transparent 2.5px),
+                radial-gradient(#3B82F6 2px, transparent 2.5px),
+                radial-gradient(#10B981 2px, transparent 2.5px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px, 10px 30px;
+            opacity: 0.2;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display bg-background-light dark:bg-background-dark h-screen w-screen overflow-hidden flex items-center justify-center relative">
+<div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+<div class="absolute top-[-20%] left-[-20%] w-[140%] h-[140%] bg-gradient-to-br from-blue-100/50 via-transparent to-rose-100/50 dark:hidden"></div>
+<div class="hidden dark:block absolute top-[-20%] left-[-20%] w-[140%] h-[140%] bg-gradient-to-br from-blue-900/20 via-transparent to-rose-900/20"></div>
+<div class="absolute inset-0 confetti-bg animate-pulse-slow"></div>
+</div>
+<main class="relative z-10 w-full max-w-md h-full max-h-[850px] flex flex-col justify-between p-6 bg-white/60 dark:bg-black/40 backdrop-blur-xl md:rounded-3xl shadow-2xl border border-white/20 dark:border-white/5 animate-pop-in">
+<div class="flex justify-end">
+<button class="p-2 rounded-full bg-surface-light/50 dark:bg-surface-dark/50 hover:bg-surface-light dark:hover:bg-surface-dark transition-colors text-gray-500 dark:text-gray-400">
+<span class="material-icons-round text-2xl">close</span>
+</button>
+</div>
+<div class="flex-1 flex flex-col items-center justify-center -mt-10">
+<div class="mb-12 text-center space-y-2">
+<h1 class="text-5xl font-black italic tracking-tighter match-gradient-text drop-shadow-sm">
+                    ¡Es un Match!
+                </h1>
+<p class="text-gray-600 dark:text-gray-300 text-lg font-medium">
+                    Tú y <span class="text-primary font-bold">TechSolutions Inc.</span> se gustan.
+                </p>
+</div>
+<div class="relative w-full h-48 flex items-center justify-center">
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="w-64 h-64 rounded-full border border-primary/20 dark:border-primary/10 animate-ping opacity-20"></div>
+<div class="absolute w-48 h-48 rounded-full border border-accent/20 dark:border-accent/10 animate-ping opacity-20 animation-delay-500"></div>
+</div>
+<div class="relative z-10 transform -translate-x-6 rotate-[-6deg] transition-transform hover:scale-105 hover:z-30">
+<div class="w-32 h-32 rounded-3xl overflow-hidden border-4 border-white dark:border-gray-800 shadow-xl avatar-glow bg-gray-200">
+<img alt="Portrait of a smiling man" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-uZ4SxQAtC34aPf3TZdVgpXidKkyYsGEWbKiYODn_1Fe_GwrK1J22VKTBb_XjqxWXtWD6D1ti3fLroMkBFB7-Clf6mwhtxzi1D_yG3aqVkCpkja_8-4uV_RDRtvcsrhKjxhIJxjLMmis7ZfjVGKM-qE6ZEmSo2J-jh7HR0WFMvfU8RqX9kHEhLh2bdl9jNY9tTqKHQ_KGGwDvLCBVAlCRin0TN3Tf2zJdngtsVeK9WPCRC_AI7lCwvR5WMNORt7QJGkl6VGYWdSFN"/>
+</div>
+<div class="absolute -bottom-3 -right-3 bg-white dark:bg-gray-800 p-1.5 rounded-full shadow-md">
+<span class="material-icons-round text-primary text-xl">person</span>
+</div>
+</div>
+<div class="relative z-20 transform translate-x-6 rotate-[6deg] transition-transform hover:scale-105">
+<div class="w-32 h-32 rounded-3xl overflow-hidden border-4 border-white dark:border-gray-800 shadow-xl avatar-glow bg-white flex items-center justify-center">
+<img alt="Company logo with abstract shapes" class="w-full h-full object-cover p-2" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQKcVyScdJRS4iIdSltpVw7sKIqNDjI6cvDd77eh7aUgbI0-szpPilhYORqpVU2JZVazV6egglmrQXi_yzr62mUsZzoPmR2IRVMp1ETpkIxIZEbx7k6mPSbhz1eMohCsLjwQSzH-ieDD483IWrJ0mZ3IXp3IQOMiCWMRaWzoG0w4CW7NPVD2TxXg512jzj58gc71h1fSgKDOX5omfBjc4orI6_AtSIyaPaLUQ_A9N1u7ZlR5JUaPNwo2JonhvfGC8Fzc2V3edte6My"/>
+</div>
+<div class="absolute -bottom-3 -left-3 bg-white dark:bg-gray-800 p-1.5 rounded-full shadow-md">
+<span class="material-icons-round text-accent text-xl">business</span>
+</div>
+</div>
+<div class="absolute z-30 bg-white dark:bg-gray-900 p-3 rounded-full shadow-lg border-2 border-primary transform scale-125">
+<span class="material-icons-round text-accent text-3xl animate-bounce-slow">favorite</span>
+</div>
+</div>
+<div class="mt-12 text-center max-w-xs mx-auto">
+<p class="text-sm text-gray-500 dark:text-gray-400">
+                    Ahora pueden chatear directamente y agendar una entrevista.
+                </p>
+</div>
+</div>
+<div class="flex flex-col gap-3 w-full pb-4">
+<button class="group relative w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-primary/30 transition-all transform hover:-translate-y-1 active:scale-95">
+<span class="material-icons-round group-hover:animate-pulse">chat</span>
+                Enviar mensaje
+                <div class="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-icons-round">arrow_forward</span>
+</div>
+</button>
+<button class="w-full py-4 rounded-2xl font-semibold text-gray-700 dark:text-gray-300 bg-surface-light dark:bg-surface-dark hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700">
+                Seguir explorando
+            </button>
+</div>
+</main>
+<div class="fixed bottom-10 left-10 w-4 h-4 rounded-full bg-primary/40 blur-sm animate-bounce dark:bg-primary/20"></div>
+<div class="fixed top-20 right-10 w-6 h-6 rounded-full bg-accent/40 blur-sm animate-pulse dark:bg-accent/20"></div>
+<script>
+        // Simple script to toggle dark mode for demonstration purposes
+        // In a real app, this would be handled by system preference or user settings
+        // Uncomment below to force dark mode for testing if system preference isn't enough
+        // document.documentElement.classList.add('dark');
+    </script>
+
+</body></html>

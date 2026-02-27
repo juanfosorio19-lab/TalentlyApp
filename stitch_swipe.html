@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Talently - Explorar Talentos</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#4F46E5", // Indigo 600 - A professional, trustworthy blue-purple
+                        "background-light": "#F3F4F6", // Gray 100
+                        "background-dark": "#111827", // Gray 900
+                        "card-light": "#FFFFFF",
+                        "card-dark": "#1F2937", // Gray 800
+                        "text-main-light": "#111827",
+                        "text-main-dark": "#F9FAFB",
+                        "text-sub-light": "#6B7280",
+                        "text-sub-dark": "#9CA3AF",
+                        "reject": "#EF4444", // Red 500
+                        "like": "#10B981",   // Emerald 500
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "1rem", // 16px
+                        "xl": "1.5rem", // 24px
+                        "2xl": "2rem", // 32px
+                    },
+                    boxShadow: {
+                        'card': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        'floating': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .safe-area-top {
+            padding-top: env(safe-area-inset-top, 20px);
+        }
+        .safe-area-bottom {
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+        .card-stack {
+            position: relative;
+            height: 100%;
+            width: 100%;
+        }
+        .card-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }.card-item:nth-child(1) { z-index: 3; transform: scale(1) translateY(0); }
+        .card-item:nth-child(2) { z-index: 2; transform: scale(0.95) translateY(12px); opacity: 0.8; }
+        .card-item:nth-child(3) { z-index: 1; transform: scale(0.90) translateY(24px); opacity: 0.6; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-text-main-light dark:text-text-main-dark h-screen w-screen overflow-hidden flex flex-col antialiased transition-colors duration-200">
+<header class="safe-area-top px-6 pb-2 pt-4 flex justify-between items-center z-10 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-sm sticky top-0">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold text-lg">T</div>
+<h1 class="text-xl font-bold tracking-tight">Talently</h1>
+</div>
+<div class="flex gap-4">
+<button class="p-2 rounded-full bg-white dark:bg-card-dark shadow-sm text-text-sub-light dark:text-text-sub-dark" onclick="document.documentElement.classList.toggle('dark')">
+<span class="material-icons-round text-xl">dark_mode</span>
+</button>
+<button class="p-2 rounded-full bg-white dark:bg-card-dark shadow-sm text-text-sub-light dark:text-text-sub-dark relative">
+<span class="material-icons-round text-xl">filter_list</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span>
+</button>
+</div>
+</header>
+<main class="flex-1 relative px-4 py-4 flex flex-col justify-center items-center overflow-hidden">
+<div class="absolute inset-0 flex flex-col items-center justify-center text-center p-8 opacity-0 pointer-events-none">
+<div class="w-20 h-20 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+<span class="material-icons-round text-4xl text-gray-400">search_off</span>
+</div>
+<h3 class="text-lg font-semibold mb-2">No hay más candidatos</h3>
+<p class="text-text-sub-light dark:text-text-sub-dark text-sm">Intenta ajustar tus filtros para ver más perfiles.</p>
+</div>
+<div class="card-stack max-w-md w-full h-[65vh] md:h-[70vh]">
+<div class="card-item bg-card-light dark:bg-card-dark rounded-2xl shadow-card overflow-hidden flex flex-col border border-gray-100 dark:border-gray-700">
+<div class="relative h-3/5 w-full bg-gray-300">
+<img alt="Profile of Sarah" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAawAhS76VADQLRKEed3c4ZX9DPpblarR2DDcYdf3rh1fSSODWPjc2JH15jP7FAJ0RMXhXzGUCP0AgTSi6qs3HFfiau1iWM6cqF2WRaDxKL8UOp4KnxeFBGmN5mI8R1Luzk5QcrFHTB9eat6EtucPMS6omoK9DVrbSnWzunqbTp3L6JYIT0jMhWKO7K8N2wOtS-fM32FOSohErjElDu4pwAJDvWyimj-VyQ0kRHmh0FpoBYGSxTIbsiZVdt6d_Q0yAKh-YkExQ_nB6R"/>
+</div>
+</div>
+<div class="card-item bg-card-light dark:bg-card-dark rounded-2xl shadow-card overflow-hidden flex flex-col border border-gray-100 dark:border-gray-700">
+<div class="relative h-3/5 w-full bg-gray-300">
+<img alt="Profile of Michael" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDeVehUdHEhaXsXrhvQurAlhc6gHPAcP9x6F2LpPWGmsgjhCsGGwtNgdxvEPLxnmv57Q-7HJZtdsi5Tf8yD42mSfA3_-4Pya-x0FLn6r4TtzMEIPPXsNvhewbOMqNU0cB_VQXaKPuu4m67sgUfmcCa1aakFOUY54PmHHxgVram8L50FGtFIEan0WpCwnxepkilUDjih6bGgvwiK68KUxLUvZ0MfYvi7-ySf2WbHTFAonPlDejnAF67-PkCIhitIOirdiYGBGsgorXxl"/>
+<div class="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-black/60 to-transparent"></div>
+</div>
+<div class="flex-1 p-5 flex flex-col">
+<div class="flex justify-between items-start mb-1">
+<div>
+<h2 class="text-2xl font-bold text-text-main-light dark:text-text-main-dark">Michael Chen, 29</h2>
+<p class="text-primary font-medium text-sm">Full Stack Developer</p>
+</div>
+<div class="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 px-2 py-1 rounded text-xs font-bold">
+                            5 años exp.
+                        </div>
+</div>
+<p class="text-text-sub-light dark:text-text-sub-dark text-sm line-clamp-2 mt-2">
+                        Apasionado por construir soluciones escalables. Experiencia en fintech y startups de alto crecimiento.
+                    </p>
+</div>
+</div>
+<div class="card-item bg-card-light dark:bg-card-dark rounded-2xl shadow-floating overflow-hidden flex flex-col border border-gray-100 dark:border-gray-700">
+<div class="relative h-3/5 w-full bg-gray-200">
+<img alt="Profile of Elena" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnUoxBI0-XwF17idO2b2LcsntGUTsfY5ERccW9ZhMjGde3hGtJCW39lIGW6_vE874WYvjODNJduFNGMe-y_1dsqJlIqWckm5DF1l2grnLd1hdf3TL8HDoHrS1b5guaCPlLdPgEI8nMFPRhzrTqumOk-Lu73kiEKY-2tWB0p49ilx6b579sa7T4mAP0gDZ7Bwv9pDWg-8IvsxCnyGokLZ_Q-OGKV2TAUjyE34bAfigTlPqikhJdH0WvRSMm3ekZ4oct40U6uhc6OtJK"/>
+<div class="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+<div class="absolute top-4 left-4 bg-white/20 backdrop-blur-md border border-white/30 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+<span class="material-icons-round text-sm">location_on</span>
+                        Madrid, ES
+                    </div>
+<div class="absolute top-4 right-4 bg-primary text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                        95% Match
+                    </div>
+</div>
+<div class="flex-1 p-5 flex flex-col relative">
+<div class="flex justify-between items-start mb-2">
+<div>
+<h2 class="text-2xl font-bold text-text-main-light dark:text-text-main-dark flex items-center gap-2">
+                                Elena Rodríguez <span class="text-lg font-normal opacity-70">26</span>
+</h2>
+<p class="text-primary font-medium">UX/UI Designer Senior</p>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-text-main-light dark:text-text-main-dark font-bold text-lg">$45k</span>
+<span class="text-text-sub-light dark:text-text-sub-dark text-xs">/año</span>
+</div>
+</div>
+<div class="flex flex-wrap gap-2 mt-2 mb-4">
+<span class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-text-sub-light dark:text-gray-300 rounded-lg text-xs font-medium">Figma</span>
+<span class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-text-sub-light dark:text-gray-300 rounded-lg text-xs font-medium">Prototyping</span>
+<span class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-text-sub-light dark:text-gray-300 rounded-lg text-xs font-medium">User Research</span>
+</div>
+<p class="text-text-sub-light dark:text-text-sub-dark text-sm line-clamp-2 leading-relaxed">
+                        Diseñadora centrada en el usuario con pasión por crear experiencias digitales intuitivas y hermosas. Buscando nuevos retos.
+                    </p>
+<button class="absolute bottom-4 right-4 p-2 text-text-sub-light dark:text-text-sub-dark hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+<span class="material-icons-round">info</span>
+</button>
+</div>
+</div>
+</div>
+<div class="w-full max-w-md flex justify-center items-center gap-8 mt-6">
+<button class="group w-16 h-16 rounded-full bg-white dark:bg-card-dark shadow-floating flex items-center justify-center border border-gray-100 dark:border-gray-700 transition-transform active:scale-90 hover:-translate-y-1">
+<span class="material-icons-round text-3xl text-reject group-hover:scale-110 transition-transform">close</span>
+</button>
+<button class="group w-12 h-12 rounded-full bg-white dark:bg-card-dark shadow-md flex items-center justify-center border border-gray-100 dark:border-gray-700 transition-transform active:scale-90 hover:-translate-y-1">
+<span class="material-icons-round text-xl text-blue-500 group-hover:scale-110 transition-transform">star</span>
+</button>
+<button class="group w-16 h-16 rounded-full bg-white dark:bg-card-dark shadow-floating flex items-center justify-center border border-gray-100 dark:border-gray-700 transition-transform active:scale-90 hover:-translate-y-1">
+<span class="material-icons-round text-3xl text-like group-hover:scale-110 transition-transform">favorite</span>
+</button>
+</div>
+</main>
+<nav class="bg-white dark:bg-card-dark border-t border-gray-200 dark:border-gray-800 safe-area-bottom px-6 py-2 z-20">
+<div class="flex justify-between items-center max-w-md mx-auto">
+<a class="flex flex-col items-center gap-1 p-2 text-text-sub-light dark:text-text-sub-dark hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-icons-round text-2xl">work_outline</span>
+<span class="text-[10px] font-medium">Ofertas</span>
+</a>
+<a class="flex flex-col items-center gap-1 p-2 text-primary" href="#">
+<span class="material-icons-round text-2xl">search</span>
+<span class="text-[10px] font-medium">Explorar</span>
+</a>
+<a class="flex flex-col items-center gap-1 p-2 text-text-sub-light dark:text-text-sub-dark hover:text-primary dark:hover:text-primary transition-colors relative" href="#">
+<div class="relative">
+<span class="material-icons-round text-2xl">chat_bubble_outline</span>
+<span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white dark:border-card-dark">2</span>
+</div>
+<span class="text-[10px] font-medium">Mensajes</span>
+</a>
+<a class="flex flex-col items-center gap-1 p-2 text-text-sub-light dark:text-text-sub-dark hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-icons-round text-2xl">person_outline</span>
+<span class="text-[10px] font-medium">Perfil</span>
+</a>
+</div>
+</nav>
+<div class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm items-end justify-center sm:items-center p-0 sm:p-4" id="detailModal">
+<div class="bg-background-light dark:bg-background-dark w-full max-w-md h-[90vh] sm:h-auto sm:max-h-[85vh] rounded-t-2xl sm:rounded-2xl overflow-hidden flex flex-col shadow-2xl animate-slide-up">
+<div class="relative h-48 sm:h-40 bg-gray-200 shrink-0">
+<img alt="Profile Cover" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYxRBlH8ESMlJUxIAO0e6enynALpU_T_pHApZR9jHSY7ZPgD9mkn1YTICmHcepXaev8lw6Gq8Y6_LrPWzOB74mPoMab6s-DSBIimeLmEH4_DN_hDYC1BDUyRgHQt9w00tKVwZJJ_NmIVEcYh-tuApKUxG5Sy-zm-03hOTX2YN4turtEmgBX0K98002FY-Atg40I3hYiNTpbQNhoNoUg8J-WJLMOC0owiJUEnZXFPmjf7xiGsdHtPRIdRfsXDrKay3-BLuOLzcdg1td"/>
+<button class="absolute top-4 right-4 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors" onclick="document.getElementById('detailModal').classList.add('hidden'); document.getElementById('detailModal').classList.remove('flex')">
+<span class="material-icons-round text-lg">close</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto p-6 scrollbar-hide">
+<h2 class="text-2xl font-bold text-text-main-light dark:text-text-main-dark mb-1">Elena Rodríguez</h2>
+<p class="text-primary font-medium mb-6">UX/UI Designer Senior</p>
+<div class="mb-6">
+<h3 class="text-sm font-bold text-text-sub-light dark:text-text-sub-dark uppercase tracking-wider mb-2">Sobre mí</h3>
+<p class="text-text-main-light dark:text-text-main-dark leading-relaxed text-sm">
+                        Diseñadora centrada en el usuario con más de 4 años de experiencia creando productos digitales. Especializada en sistemas de diseño, accesibilidad y micro-interacciones. Busco un equipo dinámico donde pueda liderar iniciativas de diseño.
+                    </p>
+</div>
+<div class="mb-6">
+<h3 class="text-sm font-bold text-text-sub-light dark:text-text-sub-dark uppercase tracking-wider mb-3">Experiencia</h3>
+<div class="flex gap-3 mb-4">
+<div class="w-10 h-10 bg-white dark:bg-gray-700 rounded-lg flex items-center justify-center shadow-sm text-lg font-bold text-indigo-600">G</div>
+<div>
+<h4 class="font-semibold text-text-main-light dark:text-text-main-dark">Product Designer</h4>
+<p class="text-xs text-text-sub-light dark:text-text-sub-dark">Google • 2021 - Presente</p>
+</div>
+</div>
+<div class="flex gap-3">
+<div class="w-10 h-10 bg-white dark:bg-gray-700 rounded-lg flex items-center justify-center shadow-sm text-lg font-bold text-blue-500">S</div>
+<div>
+<h4 class="font-semibold text-text-main-light dark:text-text-main-dark">UI Designer</h4>
+<p class="text-xs text-text-sub-light dark:text-text-sub-dark">Spotify • 2019 - 2021</p>
+</div>
+</div>
+</div>
+<div>
+<h3 class="text-sm font-bold text-text-sub-light dark:text-text-sub-dark uppercase tracking-wider mb-3">Habilidades</h3>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 text-text-main-light dark:text-text-main-dark rounded-full text-xs">Figma</span>
+<span class="px-3 py-1 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 text-text-main-light dark:text-text-main-dark rounded-full text-xs">Sketch</span>
+<span class="px-3 py-1 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 text-text-main-light dark:text-text-main-dark rounded-full text-xs">Adobe XD</span>
+<span class="px-3 py-1 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 text-text-main-light dark:text-text-main-dark rounded-full text-xs">HTML/CSS</span>
+<span class="px-3 py-1 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 text-text-main-light dark:text-text-main-dark rounded-full text-xs">Agile</span>
+</div>
+</div>
+</div>
+<div class="p-4 bg-white dark:bg-card-dark border-t border-gray-200 dark:border-gray-700 flex gap-4">
+<button class="flex-1 py-3 rounded-xl border border-gray-300 dark:border-gray-600 text-text-main-light dark:text-text-main-dark font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Rechazar</button>
+<button class="flex-1 py-3 rounded-xl bg-primary text-white font-semibold shadow-lg hover:bg-indigo-700 transition-colors">Me Interesa</button>
+</div>
+</div>
+</div>
+<script>
+        // Simple Interaction Logic for 'Info' button to simulate modal opening
+        const infoBtn = document.querySelector('button .material-icons-round:contains("info")').parentElement; // This selector is pseudo-code for simplicity in this context
+        // Actually, let's just grab the info button from the top card
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(btn => {
+            if(btn.innerHTML.includes('info')) {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // prevent triggering parent clicks if any
+                    const modal = document.getElementById('detailModal');
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                });
+            }
+        });
+    </script>
+
+</body></html>

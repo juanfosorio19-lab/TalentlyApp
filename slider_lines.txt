@@ -1,0 +1,9 @@
+[Line 4464] .dual-range-slider {
+[Line 4468] .dual-range-slider::-webkit-slider-thumb {
+[Line 4481] .dual-range-slider::-moz-range-thumb {
+[Line 4497] <div id="candidateSalarySliderTrack"
+[Line 4505] <input type="range" class="dual-range-slider" id="filterSalaryMinRange" min="0"
+[Line 4509] <input type="range" class="dual-range-slider" id="filterSalaryMaxRange" min="0"
+[Line 5302] <div id="companySalarySliderTrack" style="position: relative; height: 40px; padding: 0 8px;">
+[Line 5312] <input type="range" class="dual-range-slider" id="companyFilterSalaryMin" min="0"
+[Line 5316] <input type="range" class="dual-range-slider" id="companyFilterSalaryMax" min="0"

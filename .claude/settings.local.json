@@ -3,7 +3,11 @@
     "allow": [
       "Bash(node --check:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(findstr:*)",
+      "Bash(cd:*)",
+      "Bash(powershell:*)",
+      "Bash(del \"c:\\\\Users\\\\Juan Osorio\\\\Talently-Project\\\\cleanup_logs.ps1\")"
     ]
   }
 }

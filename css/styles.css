@@ -1,3 +1,23 @@
+        /* Stitch Success View Animations */
+        @keyframes stitch-float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        @keyframes stitch-pulse-glow {
+            0% { box-shadow: 0 0 0 0 rgba(19, 146, 236, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(19, 146, 236, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(19, 146, 236, 0); }
+        }
+        @keyframes stitch-scale-in {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes stitch-slide-up {
+            0% { transform: translateY(100%); }
+            100% { transform: translateY(0); }
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -1705,6 +1725,40 @@
 
         .match-card-container {
             position: relative;
+        }
+
+        /* ===== MESSAGES MATCHES SCROLL ===== */
+        #msgNewMatchesList::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* ===== MATCHES - Hide scrollbar on avatars row ===== */
+        #matchesRow::-webkit-scrollbar { display: none; }
+
+        /* ===== COMPANY FILTERS - Dual Range Slider ===== */
+        #companyFilterSalaryMin::-webkit-slider-thumb,
+        #companyFilterSalaryMax::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2.5px solid #1392ec;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+            cursor: pointer;
+            pointer-events: auto;
+        }
+        #companyFilterSalaryMin::-moz-range-thumb,
+        #companyFilterSalaryMax::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2.5px solid #1392ec;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+            cursor: pointer;
+            pointer-events: auto;
         }
 
         /* ===== ADVANCED FILTERS ===== */

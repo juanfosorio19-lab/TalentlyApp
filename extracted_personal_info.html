@@ -1,0 +1,135 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Candidate Onboarding: Personal Info</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1392ec",
+                        "background-light": "#ffffff",
+                        "text-dark": "#1f2937",
+                        "text-light": "#6b7280",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light font-display flex justify-center min-h-screen text-text-dark">
+<div class="relative flex h-full min-h-screen w-full max-w-md flex-col overflow-hidden bg-white shadow-xl">
+<div class="flex items-center justify-between p-4 pb-2 bg-white sticky top-0 z-10">
+<button class="text-text-dark flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-neutral-100 transition-colors">
+<span class="material-symbols-outlined" style="font-size: 24px;">arrow_back</span>
+</button>
+<div class="flex items-center gap-1">
+<span class="text-sm font-semibold text-text-light">Step 2 of 16</span>
+</div>
+<button class="text-text-dark flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-neutral-100 transition-colors">
+<span class="material-symbols-outlined" style="font-size: 24px;">close</span>
+</button>
+</div>
+<div class="px-6 py-2">
+<div class="h-1.5 w-full rounded-full bg-neutral-100 overflow-hidden">
+<div class="h-full bg-primary rounded-full transition-all duration-300" style="width: 12.5%;"></div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto no-scrollbar px-6 pt-4 pb-24">
+<div class="mb-8">
+<h1 class="text-neutral-900 text-[28px] font-bold leading-tight mb-2">Basic Personal Info</h1>
+<p class="text-neutral-500 text-base font-medium">Let recruiters know who you are.</p>
+</div>
+<form class="flex flex-col gap-6">
+<div class="flex flex-col gap-2">
+<label class="text-neutral-800 text-sm font-semibold leading-normal ml-1">Full Name</label>
+<div class="relative group">
+<input class="form-input w-full rounded-xl border border-neutral-200 bg-white h-14 px-4 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm" placeholder="e.g. Jane Doe" type="text"/>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 text-primary opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none">
+<span class="material-symbols-outlined filled text-[20px]">person</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-neutral-800 text-sm font-semibold leading-normal ml-1">Current Job Title</label>
+<div class="relative group">
+<input class="form-input w-full rounded-xl border border-neutral-200 bg-white h-14 px-4 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm" placeholder="e.g. Product Designer" type="text"/>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 text-primary opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none">
+<span class="material-symbols-outlined filled text-[20px]">work</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col gap-2">
+<label class="text-neutral-800 text-sm font-semibold leading-normal ml-1">Country</label>
+<div class="relative">
+<select class="form-select w-full appearance-none rounded-xl border border-neutral-200 bg-white h-14 pl-4 pr-10 text-base text-neutral-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer shadow-sm">
+<option disabled="" selected="" value="">Select</option>
+<option value="us">USA</option>
+<option value="ca">Canada</option>
+<option value="uk">UK</option>
+<option value="de">Germany</option>
+</select>
+<div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-400">
+<span class="material-symbols-outlined text-[24px]">arrow_drop_down</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-neutral-800 text-sm font-semibold leading-normal ml-1">City</label>
+<div class="relative">
+<input class="form-input w-full rounded-xl border border-neutral-200 bg-white h-14 px-4 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm" placeholder="City" type="text"/>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-neutral-800 text-sm font-semibold leading-normal ml-1">Expected Salary (Annual)</label>
+<div class="relative group">
+<div class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400">
+<span class="material-symbols-outlined text-[20px]">attach_money</span>
+</div>
+<input class="form-input w-full rounded-xl border border-neutral-200 bg-white h-14 pl-10 pr-12 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm" placeholder="0" type="number"/>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 text-sm font-medium">
+                        USD
+                    </div>
+</div>
+<p class="text-xs text-neutral-500 ml-1">This helps us match you with relevant roles.</p>
+</div>
+</form>
+</div>
+<div class="absolute bottom-0 left-0 w-full p-4 bg-white/90 backdrop-blur-md border-t border-neutral-100">
+<button class="w-full h-14 bg-primary hover:bg-blue-600 text-white rounded-xl text-lg font-bold tracking-wide shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+            Continuar
+            <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+</div>
+</div>
+
+</body></html>

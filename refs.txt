@@ -1,0 +1,13 @@
+reference.getCountries
+reference.getAreas
+reference.getCompanySectors
+reference.getCompanySizes
+reference.getCompanyStages
+reference.getWorkModalities
+reference.getCompanyCultureValues
+reference.getCompanyPositions
+reference.getSeniorityLevels
+reference.getCompanyBenefits
+reference.getSelectionDurations
+reference.getSkills
+reference.getCities
