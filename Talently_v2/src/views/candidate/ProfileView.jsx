@@ -24,7 +24,8 @@ const MODALITY_LABELS = {
     onsite: 'Presencial',
 };
 
-export default function ProfileView() {
+// isTab=true → sin header propio, height:100% (para embeber en MainApp)
+export default function ProfileView({ isTab = false }) {
     const navigate = useNavigate();
     const { state, dispatch } = useApp();
     const { userProfile, currentUser } = state;
@@ -95,7 +96,7 @@ export default function ProfileView() {
     // ── Loading state ──
     if (loading) {
         return (
-            <div className="profile-view profile-view--loading">
+            <div className={`profile-view profile-view--loading ${isTab ? 'profile-view--tab' : ''}`}>
                 <div className="profile-view__spinner" />
             </div>
         );
@@ -109,26 +110,28 @@ export default function ProfileView() {
     const interests = Array.isArray(profile.interests) ? profile.interests : [];
 
     return (
-        <div className="profile-view">
-            {/* ── Header ── */}
-            <header className="profile-view__header">
-                <button
-                    className="profile-view__header-btn"
-                    onClick={() => navigate('/app')}
-                    aria-label="Volver"
-                >
-                    <span className="material-symbols-rounded">arrow_back</span>
-                </button>
-                <span className="profile-view__header-title">Mi perfil</span>
-                <button
-                    className="profile-view__header-btn profile-view__header-btn--signout"
-                    onClick={handleSignOut}
-                    aria-label="Cerrar sesión"
-                    title="Cerrar sesión"
-                >
-                    <span className="material-symbols-rounded">logout</span>
-                </button>
-            </header>
+        <div className={`profile-view ${isTab ? 'profile-view--tab' : ''}`}>
+            {/* ── Header (solo en modo standalone) ── */}
+            {!isTab && (
+                <header className="profile-view__header">
+                    <button
+                        className="profile-view__header-btn"
+                        onClick={() => navigate('/app')}
+                        aria-label="Volver"
+                    >
+                        <span className="material-symbols-rounded">arrow_back</span>
+                    </button>
+                    <span className="profile-view__header-title">Mi perfil</span>
+                    <button
+                        className="profile-view__header-btn profile-view__header-btn--signout"
+                        onClick={handleSignOut}
+                        aria-label="Cerrar sesión"
+                        title="Cerrar sesión"
+                    >
+                        <span className="material-symbols-rounded">logout</span>
+                    </button>
+                </header>
+            )}
 
             <div className="profile-view__scroll">
                 {/* ── Hero ── */}

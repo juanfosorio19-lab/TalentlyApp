@@ -19,7 +19,8 @@ function formatMatchDate(dateStr) {
     return date.toLocaleDateString('es', { day: 'numeric', month: 'short' });
 }
 
-export default function MatchesView() {
+// isTab=true → sin header propio, height:100% (para embeber en MainApp)
+export default function MatchesView({ isTab = false }) {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [matches, setMatches] = useState([]);
@@ -68,8 +69,8 @@ export default function MatchesView() {
         loadMatches();
     }, [user]);
 
-    // ── Header compartido ──
-    const header = (
+    // ── Header (solo en modo standalone) ──
+    const header = !isTab ? (
         <div className="matches-view__header">
             <button
                 className="matches-view__back"
@@ -80,12 +81,12 @@ export default function MatchesView() {
             </button>
             <h2 className="matches-view__title">Matches</h2>
         </div>
-    );
+    ) : null;
 
     // ── Loading ──
     if (loading) {
         return (
-            <div className="matches-view">
+            <div className={`matches-view ${isTab ? 'matches-view--tab' : ''}`}>
                 {header}
                 <div className="matches-view__loading">
                     <div className="matches-view__spinner" />
@@ -97,7 +98,7 @@ export default function MatchesView() {
     // ── Sin matches ──
     if (matches.length === 0) {
         return (
-            <div className="matches-view">
+            <div className={`matches-view ${isTab ? 'matches-view--tab' : ''}`}>
                 {header}
                 <div className="matches-view__empty">
                     <span className="material-symbols-rounded matches-view__empty-icon">
@@ -121,7 +122,7 @@ export default function MatchesView() {
 
     // ── Lista de matches ──
     return (
-        <div className="matches-view">
+        <div className={`matches-view ${isTab ? 'matches-view--tab' : ''}`}>
             {header}
             <p className="matches-view__count">
                 {matches.length} match{matches.length !== 1 ? 'es' : ''}
