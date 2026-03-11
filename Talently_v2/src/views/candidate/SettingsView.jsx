@@ -1,19 +1,30 @@
 // src/views/candidate/SettingsView.jsx
 // Configuración del candidato: dark mode, links rápidos, cerrar sesión.
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useApp, Actions } from '../../context/AppContext';
 import './SettingsView.css';
 
-const APP_VERSION = '2.0.0';
+const APP_VERSION = '1.0.0';
 
 export default function SettingsView() {
     const navigate = useNavigate();
     const { state, dispatch } = useApp();
-    const { darkMode, userProfile } = state;
+    const { darkMode, userProfile, currentUser } = state;
+    const [pwMsg, setPwMsg] = useState('');
 
     const handleToggleDark = () => {
         dispatch({ type: Actions.TOGGLE_DARK_MODE });
+    };
+
+    const handleChangePassword = async () => {
+        const email = currentUser?.email;
+        if (!email) return;
+        await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/auth/callback`,
+        });
+        setPwMsg('Te enviamos un email para cambiar tu contraseña');
     };
 
     const handleSignOut = async () => {
@@ -37,14 +48,35 @@ export default function SettingsView() {
 
             <div className="settings-view__scroll">
                 {/* ── Cuenta ── */}
-                {userProfile && (
-                    <div className="settings-section">
-                        <p className="settings-section__label">Cuenta</p>
-                        <div className="settings-section__group">
-                            <button
-                                className="settings-row"
-                                onClick={() => navigate('/app/profile')}
-                            >
+                <div className="settings-section">
+                    <p className="settings-section__label">Cuenta</p>
+                    <div className="settings-section__group">
+                        {/* Email solo lectura */}
+                        <div className="settings-row settings-row--static">
+                            <div className="settings-row__icon settings-row__icon--primary">
+                                <span className="material-symbols-rounded">mail</span>
+                            </div>
+                            <div className="settings-row__info">
+                                <p className="settings-row__title">Email</p>
+                                <p className="settings-row__sub">{currentUser?.email || '—'}</p>
+                            </div>
+                        </div>
+
+                        {/* Cambiar contraseña */}
+                        <button className="settings-row" onClick={handleChangePassword}>
+                            <div className="settings-row__icon settings-row__icon--neutral">
+                                <span className="material-symbols-rounded">lock_reset</span>
+                            </div>
+                            <div className="settings-row__info">
+                                <p className="settings-row__title">Cambiar contraseña</p>
+                                {pwMsg && <p className="settings-row__sub settings-row__sub--success">{pwMsg}</p>}
+                            </div>
+                            <span className="material-symbols-rounded settings-row__chevron">chevron_right</span>
+                        </button>
+
+                        {/* Mi perfil */}
+                        {userProfile && (
+                            <button className="settings-row" onClick={() => navigate('/app/profile')}>
                                 <div className="settings-row__icon settings-row__icon--primary">
                                     <span className="material-symbols-rounded">person</span>
                                 </div>
@@ -54,15 +86,13 @@ export default function SettingsView() {
                                         {userProfile.full_name || 'Completa tu perfil'}
                                     </p>
                                 </div>
-                                <span className="material-symbols-rounded settings-row__chevron">
-                                    chevron_right
-                                </span>
+                                <span className="material-symbols-rounded settings-row__chevron">chevron_right</span>
                             </button>
+                        )}
 
-                            <button
-                                className="settings-row"
-                                onClick={() => navigate('/app/cv')}
-                            >
+                        {/* Mi CV */}
+                        {userProfile && (
+                            <button className="settings-row" onClick={() => navigate('/app/cv')}>
                                 <div className="settings-row__icon settings-row__icon--primary">
                                     <span className="material-symbols-rounded">description</span>
                                 </div>
@@ -72,13 +102,11 @@ export default function SettingsView() {
                                         {userProfile.cv_url ? 'CV subido' : 'Sin CV todavía'}
                                     </p>
                                 </div>
-                                <span className="material-symbols-rounded settings-row__chevron">
-                                    chevron_right
-                                </span>
+                                <span className="material-symbols-rounded settings-row__chevron">chevron_right</span>
                             </button>
-                        </div>
+                        )}
                     </div>
-                )}
+                </div>
 
                 {/* ── Preferencias ── */}
                 <div className="settings-section">
@@ -159,6 +187,35 @@ export default function SettingsView() {
                                 <p className="settings-row__title">Cerrar sesión</p>
                             </div>
                         </button>
+                    </div>
+                </div>
+
+                {/* ── Sobre Talently ── */}
+                <div className="settings-section">
+                    <p className="settings-section__label">Sobre Talently</p>
+                    <div className="settings-section__group">
+                        <button
+                            className="settings-row"
+                            onClick={() => alert('Próximamente')}
+                        >
+                            <div className="settings-row__icon settings-row__icon--neutral">
+                                <span className="material-symbols-rounded">policy</span>
+                            </div>
+                            <div className="settings-row__info">
+                                <p className="settings-row__title">Política de privacidad</p>
+                            </div>
+                            <span className="material-symbols-rounded settings-row__chevron">chevron_right</span>
+                        </button>
+
+                        <div className="settings-row settings-row--static">
+                            <div className="settings-row__icon settings-row__icon--neutral">
+                                <span className="material-symbols-rounded">info</span>
+                            </div>
+                            <div className="settings-row__info">
+                                <p className="settings-row__title">Versión</p>
+                                <p className="settings-row__sub">v{APP_VERSION}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

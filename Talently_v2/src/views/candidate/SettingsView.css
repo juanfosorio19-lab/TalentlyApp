@@ -219,6 +219,12 @@
     transform: translateX(20px);
 }
 
+/* Sub success */
+.settings-row__sub--success {
+    color: var(--success);
+    font-weight: 600;
+}
+
 /* ── Versión ── */
 .settings-version {
     text-align: center;

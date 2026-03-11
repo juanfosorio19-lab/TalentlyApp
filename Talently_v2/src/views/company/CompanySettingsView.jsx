@@ -1,17 +1,28 @@
 // src/views/company/CompanySettingsView.jsx
 // Configuración de empresa: dark mode, links rápidos, cerrar sesión.
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useApp, Actions } from '../../context/AppContext';
 // Reutiliza los estilos de SettingsView del candidato
 import '../candidate/SettingsView.css';
 
-const APP_VERSION = '2.0.0';
+const APP_VERSION = '1.0.0';
 
 export default function CompanySettingsView() {
     const navigate = useNavigate();
     const { state, dispatch } = useApp();
-    const { darkMode } = state;
+    const { darkMode, currentUser, userProfile } = state;
+    const [pwMsg, setPwMsg] = useState('');
+
+    const handleChangePassword = async () => {
+        const email = currentUser?.email;
+        if (!email) return;
+        await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/auth/callback`,
+        });
+        setPwMsg('Te enviamos un email para cambiar tu contraseña');
+    };
 
     const handleToggleDark = () => {
         dispatch({ type: Actions.TOGGLE_DARK_MODE });
@@ -37,40 +48,60 @@ export default function CompanySettingsView() {
             </header>
 
             <div className="settings-view__scroll">
-                {/* ── Perfil ── */}
+                {/* ── Cuenta ── */}
+                <div className="settings-section">
+                    <p className="settings-section__label">Cuenta</p>
+                    <div className="settings-section__group">
+                        {/* Email solo lectura */}
+                        <div className="settings-row settings-row--static">
+                            <div className="settings-row__icon settings-row__icon--primary">
+                                <span className="material-symbols-rounded">mail</span>
+                            </div>
+                            <div className="settings-row__info">
+                                <p className="settings-row__title">Email</p>
+                                <p className="settings-row__sub">{currentUser?.email || '—'}</p>
+                            </div>
+                        </div>
+
+                        {/* Cambiar contraseña */}
+                        <button className="settings-row" onClick={handleChangePassword}>
+                            <div className="settings-row__icon settings-row__icon--neutral">
+                                <span className="material-symbols-rounded">lock_reset</span>
+                            </div>
+                            <div className="settings-row__info">
+                                <p className="settings-row__title">Cambiar contraseña</p>
+                                {pwMsg && <p className="settings-row__sub settings-row__sub--success">{pwMsg}</p>}
+                            </div>
+                            <span className="material-symbols-rounded settings-row__chevron">chevron_right</span>
+                        </button>
+                    </div>
+                </div>
+
+                {/* ── Empresa ── */}
                 <div className="settings-section">
                     <p className="settings-section__label">Empresa</p>
                     <div className="settings-section__group">
-                        <button
-                            className="settings-row"
-                            onClick={() => navigate('/company/dashboard')}
-                        >
+                        {/* Nombre empresa solo lectura */}
+                        <div className="settings-row settings-row--static">
                             <div className="settings-row__icon settings-row__icon--primary">
                                 <span className="material-symbols-rounded">business</span>
                             </div>
                             <div className="settings-row__info">
-                                <p className="settings-row__title">Perfil de empresa</p>
-                                <p className="settings-row__sub">Ver y editar información</p>
+                                <p className="settings-row__title">Nombre de la empresa</p>
+                                <p className="settings-row__sub">{userProfile?.company_name || '—'}</p>
                             </div>
-                            <span className="material-symbols-rounded settings-row__chevron">
-                                chevron_right
-                            </span>
-                        </button>
+                        </div>
 
-                        <button
-                            className="settings-row"
-                            onClick={() => navigate('/onboarding/company')}
-                        >
+                        {/* Editar perfil */}
+                        <button className="settings-row" onClick={() => navigate('/company/dashboard')}>
                             <div className="settings-row__icon settings-row__icon--warning">
                                 <span className="material-symbols-rounded">edit_note</span>
                             </div>
                             <div className="settings-row__info">
-                                <p className="settings-row__title">Editar onboarding</p>
-                                <p className="settings-row__sub">Actualiza los datos de tu empresa</p>
+                                <p className="settings-row__title">Editar perfil de empresa</p>
+                                <p className="settings-row__sub">Actualiza la información de tu empresa</p>
                             </div>
-                            <span className="material-symbols-rounded settings-row__chevron">
-                                chevron_right
-                            </span>
+                            <span className="material-symbols-rounded settings-row__chevron">chevron_right</span>
                         </button>
                     </div>
                 </div>
@@ -138,6 +169,35 @@ export default function CompanySettingsView() {
                                 <p className="settings-row__title">Cerrar sesión</p>
                             </div>
                         </button>
+                    </div>
+                </div>
+
+                {/* ── Sobre Talently ── */}
+                <div className="settings-section">
+                    <p className="settings-section__label">Sobre Talently</p>
+                    <div className="settings-section__group">
+                        <button
+                            className="settings-row"
+                            onClick={() => alert('Próximamente')}
+                        >
+                            <div className="settings-row__icon settings-row__icon--neutral">
+                                <span className="material-symbols-rounded">policy</span>
+                            </div>
+                            <div className="settings-row__info">
+                                <p className="settings-row__title">Política de privacidad</p>
+                            </div>
+                            <span className="material-symbols-rounded settings-row__chevron">chevron_right</span>
+                        </button>
+
+                        <div className="settings-row settings-row--static">
+                            <div className="settings-row__icon settings-row__icon--neutral">
+                                <span className="material-symbols-rounded">info</span>
+                            </div>
+                            <div className="settings-row__info">
+                                <p className="settings-row__title">Versión</p>
+                                <p className="settings-row__sub">v{APP_VERSION}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
