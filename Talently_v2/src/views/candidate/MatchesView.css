@@ -1,0 +1,243 @@
+/* ============================================
+   MatchesView — Lista de matches del candidato
+   ============================================ */
+
+.matches-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    height: 100dvh;
+    background: var(--bg);
+    overflow: hidden;
+}
+
+/* ── Header ── */
+.matches-view__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.matches-view__back {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+    font-family: inherit;
+    flex-shrink: 0;
+}
+
+.matches-view__back:hover {
+    background: var(--bg);
+    color: var(--primary);
+}
+
+.matches-view__title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+/* ── Count label ── */
+.matches-view__count {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 12px 16px 8px;
+    flex-shrink: 0;
+}
+
+/* ── Loading ── */
+.matches-view__loading {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.matches-view__spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: matches-spin 0.8s linear infinite;
+}
+
+@keyframes matches-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Empty state ── */
+.matches-view__empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 24px;
+    gap: 12px;
+}
+
+.matches-view__empty-icon {
+    font-size: 60px;
+    color: var(--text-muted);
+    opacity: 0.35;
+}
+
+.matches-view__empty-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.matches-view__empty-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 260px;
+}
+
+.matches-view__explore-btn {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 24px;
+    border-radius: 14px;
+    background: var(--gradient-primary);
+    color: var(--text-inverse);
+    border: none;
+    outline: none;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: box-shadow 0.2s ease;
+}
+
+.matches-view__explore-btn:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.matches-view__explore-btn .material-symbols-rounded {
+    font-size: 20px;
+}
+
+/* ── Lista ── */
+.matches-view__list {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ── Item ── */
+.matches-view__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.matches-view__item:hover {
+    background: var(--bg);
+}
+
+.matches-view__item:active {
+    background: var(--border);
+}
+
+/* ── Avatar ── */
+.matches-view__avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid var(--border);
+}
+
+.matches-view__avatar-fallback {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-inverse);
+}
+
+.matches-view__avatar-fallback--company {
+    background: var(--gradient-success);
+}
+
+.matches-view__avatar-fallback .material-symbols-rounded {
+    font-size: 24px;
+}
+
+/* ── Info ── */
+.matches-view__info {
+    flex: 1;
+    min-width: 0;
+}
+
+.matches-view__name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.matches-view__sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+}
+
+/* ── Meta ── */
+.matches-view__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.matches-view__date {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.matches-view__arrow {
+    font-size: 20px;
+    color: var(--text-muted);
+}
