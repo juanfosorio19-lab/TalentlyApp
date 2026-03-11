@@ -1,0 +1,80 @@
+/* ============================================
+   NotificationsView — Candidato y Empresa
+   ============================================ */
+
+.notif-view {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    background: var(--bg);
+    overflow: hidden;
+}
+
+/* ── Header ── */
+.notif-view__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.notif-view__back {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+    font-family: inherit;
+}
+
+.notif-view__back:hover {
+    background: var(--bg);
+    color: var(--primary);
+}
+
+.notif-view__title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+/* ── Empty state ── */
+.notif-view__empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 12px;
+    padding: 40px 24px;
+}
+
+.notif-view__empty-icon {
+    font-size: 64px;
+    color: var(--text-muted);
+    opacity: 0.3;
+}
+
+.notif-view__empty-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.notif-view__empty-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 260px;
+}
