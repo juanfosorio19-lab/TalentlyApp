@@ -2,6 +2,7 @@
 // Estado global de la aplicación — reemplaza el objeto window.app
 // Usa useReducer para actualizaciones predecibles y trazables.
 import { createContext, useContext, useReducer, useEffect } from 'react';
+import { db } from '../lib/supabase';
 
 // ═══════════════════════════════════════════
 // Estado Inicial
@@ -20,7 +21,7 @@ const initialState = {
     // ── Matches ──
     matches: [],                 // array de matches activos
 
-    // ── Reference Data (catálogos) ──
+    // ── Reference Data (catálogos desde Supabase) ──
     referenceData: {
         countries: [],
         areas: [],
@@ -29,6 +30,9 @@ const initialState = {
         seniority_levels: [],
         benefits: [],
         selection_durations: [],
+        company_stages: [],
+        tech_stack: [],
+        interests: [],
     },
 
     // ── Company-specific ──
@@ -174,6 +178,50 @@ const AppContext = createContext(null);
 export function AppProvider({ children }) {
     const [state, dispatch] = useReducer(appReducer, initialState);
 
+    // ── Cargar reference data al montar (datos públicos, no requieren auth) ──
+    useEffect(() => {
+        const loadReferenceData = async () => {
+            try {
+                const [
+                    countries, areas, cultureValues, positions,
+                    seniorityLevels, benefits, selectionDurations,
+                    companyStages, techStack, interests,
+                ] = await Promise.all([
+                    db.reference.getCountries(),
+                    db.reference.getAreas(),
+                    db.reference.getCompanyCultureValues(),
+                    db.reference.getCompanyPositions(),
+                    db.reference.getSeniorityLevels(),
+                    db.reference.getCompanyBenefits(),
+                    db.reference.getSelectionDurations(),
+                    db.reference.getCompanyStages(),
+                    db.reference.getTechStack(),
+                    db.reference.getInterests(),
+                ]);
+
+                dispatch({
+                    type: Actions.SET_REFERENCE_DATA,
+                    payload: {
+                        countries:          countries.data        || [],
+                        areas:              areas.data            || [],
+                        culture_values:     cultureValues.data    || [],
+                        positions:          positions.data        || [],
+                        seniority_levels:   seniorityLevels.data  || [],
+                        benefits:           benefits.data         || [],
+                        selection_durations: selectionDurations.data || [],
+                        company_stages:     companyStages.data    || [],
+                        tech_stack:         techStack.data        || [],
+                        interests:          interests.data        || [],
+                    },
+                });
+            } catch (err) {
+                console.error('[AppContext] Error cargando referenceData:', err);
+            }
+        };
+
+        loadReferenceData();
+    }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+
     // ── Persistencia: dark mode → localStorage + data-theme ──
     useEffect(() => {
         localStorage.setItem('talently_dark_mode', String(state.darkMode));
@@ -199,7 +247,6 @@ export function AppProvider({ children }) {
 
     // ── Limpieza de cache obsoleto (ver ERROR_LOG.md #4) ──
     useEffect(() => {
-        // No usar localStorage para datos relacionales — limpiamos cache viejo
         localStorage.removeItem('talently_matches');
     }, []);
 

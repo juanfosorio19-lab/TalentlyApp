@@ -3,13 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
+import { MODALITY_LABELS } from '../../lib/constants';
 import './OfferDetailsView.css';
-
-const MODALITY_LABELS = {
-    remote: 'Remoto',
-    hybrid: 'Híbrido',
-    onsite: 'Presencial',
-};
 
 export default function OfferDetailsView() {
     const { offerId } = useParams();

@@ -4,9 +4,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useApp, Actions } from '../../context/AppContext';
+import { APP_VERSION } from '../../lib/constants';
 import './SettingsView.css';
-
-const APP_VERSION = '1.0.0';
 
 export default function SettingsView() {
     const navigate = useNavigate();

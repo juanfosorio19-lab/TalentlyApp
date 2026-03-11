@@ -525,6 +525,7 @@ export const db = {
         getCompanyPositions: () => supabase.from('company_positions').select('*').order('display_order'),
         getSeniorityLevels: () => supabase.from('seniority_levels').select('*').order('display_order'),
         getCompanyBenefits: () => supabase.from('company_benefits').select('*').order('display_order'),
-        getSelectionDurations: () => supabase.from('selection_durations').select('*').order('display_order')
+        getSelectionDurations: () => supabase.from('selection_durations').select('*').order('display_order'),
+        getTechStack: () => supabase.from('tech_stack').select('*').order('display_order'),
     }
 };

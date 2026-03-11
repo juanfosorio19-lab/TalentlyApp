@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, Actions } from '../../context/AppContext';
+import { WORK_MODALITIES, COMPANY_STAGES_FALLBACK } from '../../lib/constants';
 import './FiltersView.css';
 
-const MODALITIES = ['Remoto', 'Híbrido', 'Presencial'];
-const STAGES = ['Pre-seed', 'Seed', 'Serie A', 'Serie B', 'Corporativo'];
+const MODALITIES = WORK_MODALITIES.map((m) => m.value);
 
 const EMPTY_FILTERS = {
     modality: [],
@@ -24,6 +24,11 @@ export default function FiltersView() {
     const navigate = useNavigate();
     const { state, dispatch } = useApp();
     const { referenceData, candidateFilters } = state;
+
+    // Usar etapas de Supabase si están disponibles, sino constantes
+    const stages = referenceData.company_stages?.length > 0
+        ? referenceData.company_stages.map((s) => s.name || s)
+        : COMPANY_STAGES_FALLBACK;
 
     const [local, setLocal] = useState({ ...candidateFilters });
 
@@ -152,7 +157,7 @@ export default function FiltersView() {
                 <div>
                     <p className="filters-section__label">Etapa de empresa</p>
                     <div className="filters-chips">
-                        {STAGES.map((s) => (
+                        {stages.map((s) => (
                             <button
                                 key={s}
                                 className={`filters-chip ${local.stage.includes(s) ? 'filters-chip--active' : ''}`}

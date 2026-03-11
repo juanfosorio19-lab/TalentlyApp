@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, Actions } from '../../context/AppContext';
+import { WORK_MODALITIES, AVAILABILITY_OPTIONS, SENIORITY_FALLBACK } from '../../lib/constants';
 import '../candidate/FiltersView.css';
 
-const MODALITIES = ['Remoto', 'Híbrido', 'Presencial'];
-const AVAILABILITY = ['Inmediata', '15 días', '1 mes', '3 meses'];
-const SENIORITY_FALLBACK = ['Junior', 'Semi-senior', 'Senior', 'Lead'];
+const MODALITIES = WORK_MODALITIES.map((m) => m.value);
+const AVAILABILITY = AVAILABILITY_OPTIONS.map((a) => a.label);
 
 const EMPTY_FILTERS = {
     modality: [],

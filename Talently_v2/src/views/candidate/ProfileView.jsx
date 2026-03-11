@@ -5,24 +5,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, db } from '../../lib/supabase';
 import { useApp, Actions } from '../../context/AppContext';
+import { MODALITY_LABELS, AVAILABILITY_LABELS } from '../../lib/constants';
 import './ProfileView.css';
-
-const AVAILABILITY_LABELS = {
-    immediate: 'Inmediata',
-    '15_days': '15 días',
-    '1_month': '1 mes',
-    '2_months': '2 meses',
-    negotiable: 'Negociable',
-};
-
-const MODALITY_LABELS = {
-    Remoto: 'Remoto',
-    Híbrido: 'Híbrido',
-    Presencial: 'Presencial',
-    remote: 'Remoto',
-    hybrid: 'Híbrido',
-    onsite: 'Presencial',
-};
 
 // isTab=true → sin header propio, height:100% (para embeber en MainApp)
 export default function ProfileView({ isTab = false }) {
