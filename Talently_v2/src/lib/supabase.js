@@ -466,6 +466,32 @@ export const db = {
         }
     },
 
+    // ─── Notifications ───────────────────────
+    notifications: {
+        getByUser: async (userId) => {
+            return await supabase
+                .from('notifications')
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
+        },
+
+        markAsRead: async (notificationId) => {
+            return await supabase
+                .from('notifications')
+                .update({ read: true })
+                .eq('id', notificationId);
+        },
+
+        markAllAsRead: async (userId) => {
+            return await supabase
+                .from('notifications')
+                .update({ read: true })
+                .eq('user_id', userId)
+                .eq('read', false);
+        },
+    },
+
     // ─── Reference Data ──────────────────────
     reference: {
         getCountries: () => supabase.from('countries').select('*').order('name'),
