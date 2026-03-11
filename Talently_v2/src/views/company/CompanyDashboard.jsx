@@ -16,8 +16,14 @@ const TABS = [
     { id: 'profile', label: 'Perfil', icon: 'business' },
 ];
 
+function badgeLabel(n) {
+    if (n <= 0) return null;
+    return n > 9 ? '9+' : String(n);
+}
+
 export default function CompanyDashboard() {
     const [activeTab, setActiveTab] = useState('home');
+    const [unreadCount, setUnreadCount] = useState(0);
     const navigate = useNavigate();
     const { user, profile } = useAuth();
     const [metrics, setMetrics] = useState({
@@ -29,6 +35,14 @@ export default function CompanyDashboard() {
     const [offers, setOffers] = useState([]);
     const [offersLoading, setOffersLoading] = useState(false);
     const [togglingId, setTogglingId] = useState(null); // offer id siendo toggled
+
+    // ── Cargar notificaciones no leídas ──
+    useEffect(() => {
+        if (!user) return;
+        db.notifications.getByUser(user.id).then(({ data }) => {
+            setUnreadCount((data || []).filter((n) => !n.read).length);
+        });
+    }, [user]);
 
     // ── Cargar métricas + ofertas en un solo request ──
     useEffect(() => {
@@ -347,10 +361,19 @@ export default function CompanyDashboard() {
                 <div className="company-dashboard__header-actions">
                     <button
                         className="company-dashboard__header-btn"
-                        onClick={() => navigate('/company/notifications')}
+                        onClick={() => {
+                            navigate('/company/notifications');
+                            if (user) db.notifications.getByUser(user.id).then(({ data }) => {
+                                setUnreadCount((data || []).filter((n) => !n.read).length);
+                            });
+                        }}
                         aria-label="Notificaciones"
+                        style={{ position: 'relative' }}
                     >
                         <span className="material-symbols-rounded">notifications</span>
+                        {badgeLabel(unreadCount) && (
+                            <span className="notif-count-badge">{badgeLabel(unreadCount)}</span>
+                        )}
                     </button>
                     <button
                         className="company-dashboard__header-btn"

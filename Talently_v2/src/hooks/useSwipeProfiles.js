@@ -117,6 +117,36 @@ export default function useSwipeProfiles() {
                     matchId: matchData?.id,
                     matchedProfile: currentProfile,
                 });
+
+                // Notificar a ambos usuarios sin bloquear el flujo
+                try {
+                    const myName = state.userProfile?.full_name
+                        || state.userProfile?.company_name
+                        || 'Alguien';
+                    const otherName = currentProfile.full_name
+                        || currentProfile.company_name
+                        || 'Alguien';
+                    const matchId = matchData?.id || null;
+
+                    await Promise.all([
+                        db.notifications.create({
+                            user_id: user.id,
+                            type: 'match',
+                            title: '¡Nuevo Match!',
+                            message: `${otherName} también está interesado en ti.`,
+                            related_id: matchId,
+                        }),
+                        db.notifications.create({
+                            user_id: currentProfile.id,
+                            type: 'match',
+                            title: '¡Nuevo Match!',
+                            message: `${myName} también está interesado en ti.`,
+                            related_id: matchId,
+                        }),
+                    ]);
+                } catch (e) {
+                    console.warn('[Notifications] No se pudo crear notificación de match:', e);
+                }
             }
 
             // Avanzar al siguiente
@@ -127,7 +157,7 @@ export default function useSwipeProfiles() {
             advance();
             return { isMutualMatch: false };
         }
-    }, [currentProfile, advance]);
+    }, [currentProfile, state.userProfile, user, advance]);
 
     // ── Limpiar resultado de match ──
     const clearMatchResult = useCallback(() => {

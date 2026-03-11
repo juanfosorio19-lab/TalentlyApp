@@ -94,6 +94,17 @@
 
 <!-- AGREGAR NUEVOS ERRORES DEBAJO DE ESTA LÍNEA -->
 
+## Error #11 — Query cruda en OfferDetailsView en lugar de db.*
+
+- **ERROR:** `supabase.from('offers')` usado directamente en `OfferDetailsView.jsx`
+- **SÍNTOMA:** Funciona, pero rompe el patrón `db.*` del proyecto
+- **CONTEXTO:** `src/views/candidate/OfferDetailsView.jsx` — query en línea al montar
+- **CAUSA RAÍZ:** La vista fue implementada antes de que `db.offers.getById()` existiera en `supabase.js`
+- **SOLUCIÓN APLICADA:** Migrar a `db.offers.getById(offerId)` con join a companies via `select('*, companies(...)')`. El componente ahora extrae `offerData.companies` en lugar de hacer un segundo fetch.
+- **PATRÓN A EVITAR:** Nunca usar `supabase.from()` directamente en vistas/hooks. Toda query va en `src/lib/supabase.js` bajo `db.*`. Si el método no existe, agregarlo primero.
+
+---
+
 ## Error #10 — Tabla notifications no existe en Supabase
 
 - **ERROR:** Tabla `notifications` no existe en Supabase

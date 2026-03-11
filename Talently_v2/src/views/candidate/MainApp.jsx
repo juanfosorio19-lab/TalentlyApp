@@ -1,13 +1,14 @@
 // src/views/candidate/MainApp.jsx
 // Vista principal del candidato con navegación por tabs inferior
 // Tabs: Explorar (swipe), Matches, Mensajes, Perfil
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SwipeStack from '../../components/swipe/SwipeStack';
 import MessagesList from './MessagesList';
 import MatchesView from './MatchesView';
 import ProfileView from './ProfileView';
 import { useApp } from '../../context/AppContext';
+import { db } from '../../lib/supabase';
 import './MainApp.css';
 import './FiltersView.css';
 
@@ -29,11 +30,36 @@ function hasActiveFilters(f) {
     );
 }
 
+function badgeLabel(n) {
+    if (n <= 0) return null;
+    return n > 9 ? '9+' : String(n);
+}
+
 export default function MainApp() {
     const [activeTab, setActiveTab] = useState('swipe');
+    const [unreadCount, setUnreadCount] = useState(0);
     const navigate = useNavigate();
     const { state } = useApp();
     const filtersActive = hasActiveFilters(state.candidateFilters);
+    const userId = state.currentUser?.id;
+
+    // Cargar contador de notificaciones no leídas
+    useEffect(() => {
+        if (!userId) return;
+        db.notifications.getByUser(userId).then(({ data }) => {
+            setUnreadCount((data || []).filter((n) => !n.read).length);
+        });
+    }, [userId]);
+
+    const handleNotifClick = () => {
+        navigate('/app/notifications');
+        // Refrescar conteo al volver
+        if (userId) {
+            db.notifications.getByUser(userId).then(({ data }) => {
+                setUnreadCount((data || []).filter((n) => !n.read).length);
+            });
+        }
+    };
 
     const renderContent = () => {
         switch (activeTab) {
@@ -50,6 +76,8 @@ export default function MainApp() {
         }
     };
 
+    const badge = badgeLabel(unreadCount);
+
     return (
         <div className="main-app">
             {/* Header */}
@@ -58,10 +86,12 @@ export default function MainApp() {
                 <div className="main-app__header-actions">
                     <button
                         className="main-app__header-btn"
-                        onClick={() => navigate('/app/notifications')}
+                        onClick={handleNotifClick}
                         aria-label="Notificaciones"
+                        style={{ position: 'relative' }}
                     >
                         <span className="material-symbols-rounded">notifications</span>
+                        {badge && <span className="notif-count-badge">{badge}</span>}
                     </button>
                     <button
                         className="main-app__header-btn"

@@ -168,7 +168,7 @@ export const db = {
         getById: async (id) => {
             return await supabase
                 .from('offers')
-                .select('*')
+                .select('*, companies(name, logo_url, sector, city, country, website)')
                 .eq('id', id)
                 .single();
         },
@@ -489,6 +489,14 @@ export const db = {
                 .update({ read: true })
                 .eq('user_id', userId)
                 .eq('read', false);
+        },
+
+        create: async (data) => {
+            return await supabase
+                .from('notifications')
+                .insert(data)
+                .select()
+                .single();
         },
     },
 

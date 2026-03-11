@@ -2,7 +2,7 @@
 // Detalle de una oferta laboral — carga por ID desde Supabase.
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
+import { db } from '../../lib/supabase';
 import './OfferDetailsView.css';
 
 const MODALITY_LABELS = {
@@ -26,30 +26,17 @@ export default function OfferDetailsView() {
             setLoading(true);
             setError(false);
             try {
-                // Cargar oferta
-                const { data: offerData, error: offerErr } = await supabase
-                    .from('offers')
-                    .select('*')
-                    .eq('id', offerId)
-                    .single();
+                const { data: offerData, error: offerErr } = await db.offers.getById(offerId);
 
                 if (offerErr || !offerData) {
                     setError(true);
                     return;
                 }
 
-                setOffer(offerData);
-
-                // Cargar datos de la empresa (si hay user_id en la oferta)
-                if (offerData.user_id) {
-                    const { data: companyData } = await supabase
-                        .from('companies')
-                        .select('name, logo_url, sector, city, country, website')
-                        .eq('user_id', offerData.user_id)
-                        .maybeSingle();
-
-                    if (companyData) setCompany(companyData);
-                }
+                // companies viene del join en db.offers.getById
+                const { companies, ...offer } = offerData;
+                setOffer(offer);
+                if (companies) setCompany(companies);
             } catch (err) {
                 console.error('[OfferDetailsView] Error:', err);
                 setError(true);
