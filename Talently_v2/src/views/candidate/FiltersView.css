@@ -1,0 +1,242 @@
+/* ============================================
+   FiltersView — Candidato y Empresa
+   Reutilizado por CompanyFiltersView mediante import
+   ============================================ */
+
+.filters-view {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    background: var(--bg);
+    overflow: hidden;
+}
+
+/* ── Header ── */
+.filters-view__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.filters-view__back {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+    font-family: inherit;
+}
+
+.filters-view__back:hover {
+    background: var(--bg);
+    color: var(--primary);
+}
+
+.filters-view__title {
+    flex: 1;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.filters-view__clear {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease;
+    outline: none;
+}
+
+.filters-view__clear:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* ── Scroll ── */
+.filters-view__scroll {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px 16px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* ── Sección ── */
+.filters-section__label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+}
+
+/* ── Chips ── */
+.filters-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.filters-chip {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+    outline: none;
+}
+
+.filters-chip:hover {
+    border-color: var(--primary-light, var(--primary));
+}
+
+.filters-chip--active {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: var(--text-inverse);
+}
+
+/* ── Select ── */
+.filters-select {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+}
+
+.filters-select:focus {
+    border-color: var(--primary);
+}
+
+/* ── Salary range ── */
+.filters-salary-row {
+    display: flex;
+    gap: 12px;
+}
+
+.filters-salary-field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.filters-salary-field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.filters-salary-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.filters-salary-input-wrap span {
+    position: absolute;
+    left: 12px;
+    font-size: 14px;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.filters-salary-input {
+    width: 100%;
+    padding: 10px 14px 10px 26px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.filters-salary-input:focus {
+    border-color: var(--primary);
+}
+
+.filters-salary-input::placeholder {
+    color: var(--text-muted);
+}
+
+/* ── Footer ── */
+.filters-view__footer {
+    padding: 12px 16px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.filters-view__apply {
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    border: none;
+    outline: none;
+    background: var(--primary);
+    color: var(--text-inverse);
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.filters-view__apply:hover {
+    opacity: 0.9;
+}
+
+/* ── Badge activo (para header de MainApp) ── */
+.filters-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--primary);
+    border: 2px solid var(--surface);
+    pointer-events: none;
+}

@@ -7,7 +7,9 @@ import SwipeStack from '../../components/swipe/SwipeStack';
 import MessagesList from './MessagesList';
 import MatchesView from './MatchesView';
 import ProfileView from './ProfileView';
+import { useApp } from '../../context/AppContext';
 import './MainApp.css';
+import './FiltersView.css';
 
 const TABS = [
     { id: 'swipe', label: 'Explorar', icon: 'swap_horiz' },
@@ -16,9 +18,22 @@ const TABS = [
     { id: 'profile', label: 'Perfil', icon: 'person' },
 ];
 
+function hasActiveFilters(f) {
+    return (
+        f.modality?.length > 0 ||
+        f.areas?.length > 0 ||
+        f.country != null ||
+        f.salary?.min != null ||
+        f.salary?.max != null ||
+        f.stage?.length > 0
+    );
+}
+
 export default function MainApp() {
     const [activeTab, setActiveTab] = useState('swipe');
     const navigate = useNavigate();
+    const { state } = useApp();
+    const filtersActive = hasActiveFilters(state.candidateFilters);
 
     const renderContent = () => {
         switch (activeTab) {
@@ -52,8 +67,10 @@ export default function MainApp() {
                         className="main-app__header-btn"
                         onClick={() => navigate('/app/filters')}
                         aria-label="Filtros"
+                        style={{ position: 'relative' }}
                     >
                         <span className="material-symbols-rounded">tune</span>
+                        {filtersActive && <span className="filters-badge" />}
                     </button>
                 </div>
             </header>
