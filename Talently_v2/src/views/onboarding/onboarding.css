@@ -738,3 +738,44 @@
     color: var(--primary);
     cursor: pointer;
 }
+
+/* ──────────────────────────────────────────────
+   Step heading — data-entry steps (Steps 2–11)
+   More compact than ob-hero-title (Step 1)
+   ────────────────────────────────────────────── */
+
+.ob-step-heading {
+    margin-bottom: 24px;
+}
+
+.ob-step-title {
+    font-size: 1.625rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.25;
+    margin-bottom: 6px;
+}
+
+.ob-step-subtitle {
+    font-size: 0.9375rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* ── Input suffix (e.g. "USD/mes") ── */
+.ob-input-suffix {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    padding-right: 4px;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* ── Field hint text ── */
+.ob-field-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    padding-left: 2px;
+}
