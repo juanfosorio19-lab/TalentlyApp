@@ -856,3 +856,56 @@
 .register-legal-link:hover {
     text-decoration: underline;
 }
+
+/* ══════════════════════════════════════════
+   Register Step 2 — diseño Stitch (formulario)
+   ══════════════════════════════════════════ */
+
+.register-step2-wrapper {
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+    z-index: 1;
+}
+
+.register-step2-card {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+}
+
+.register-step2-header {
+    padding: 20px 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.register-step2-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    margin: 0;
+}
+
+.register-step2-subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.register-step2-form {
+    padding: 4px 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}

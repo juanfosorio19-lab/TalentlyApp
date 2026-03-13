@@ -24,9 +24,9 @@ export default function RegisterView() {
     const [step, setStep] = useState(1);
     const [userType, setUserType] = useState(null); // 'candidate' | 'company'
 
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -57,22 +57,16 @@ export default function RegisterView() {
         }
     };
 
-    const handleRegister = async (e) => {
-        e.preventDefault();
+    const handleRegister = async () => {
         setError('');
 
-        if (!email || !password || !confirmPassword) {
+        if (!name || !email || !password) {
             setError('Completa todos los campos');
             return;
         }
 
-        if (password.length < 6) {
-            setError('La contraseña debe tener al menos 6 caracteres');
-            return;
-        }
-
-        if (password !== confirmPassword) {
-            setError('Las contraseñas no coinciden');
+        if (password.length < 8) {
+            setError('La contraseña debe tener al menos 8 caracteres');
             return;
         }
 
@@ -83,7 +77,7 @@ export default function RegisterView() {
                 email,
                 password,
                 options: {
-                    data: { user_type: userType },
+                    data: { user_type: userType, full_name: name },
                 },
             });
 
@@ -276,124 +270,140 @@ export default function RegisterView() {
 
     // ─── Paso 2: Formulario de registro ───
     return (
-        <div className="auth-screen">
-            <div className="auth-header">
-                <button
-                    className="auth-back-btn"
-                    onClick={() => setStep(1)}
-                    aria-label="Volver"
-                >
-                    <span className="material-symbols-rounded">arrow_back</span>
-                </button>
-                <h2 className="auth-title">
-                    Registro {userType === 'company' ? 'Empresa' : 'Candidato'}
-                </h2>
-            </div>
+        <div className="register-screen">
+            <div className="register-bg-top" />
+            <div className="register-bg-blob" />
 
-            <form className="auth-form" onSubmit={handleRegister}>
-                {/* Email */}
-                <div className="auth-field">
-                    <label className="auth-label" htmlFor="reg-email">Email</label>
-                    <div className="auth-input-wrapper">
-                        <span className="material-symbols-rounded auth-input-icon">mail</span>
-                        <input
-                            id="reg-email"
-                            className="auth-input"
-                            type="email"
-                            placeholder="tu@email.com"
-                            autoComplete="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                        />
-                    </div>
-                </div>
+            <div className="register-step2-wrapper">
+                {/* Card principal */}
+                <div className="register-step2-card">
 
-                {/* Password */}
-                <div className="auth-field">
-                    <label className="auth-label" htmlFor="reg-password">Contraseña</label>
-                    <div className="auth-input-wrapper">
-                        <span className="material-symbols-rounded auth-input-icon">lock</span>
-                        <input
-                            id="reg-password"
-                            className="auth-input"
-                            type={showPassword ? 'text' : 'password'}
-                            placeholder="Mínimo 6 caracteres"
-                            autoComplete="new-password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                        />
+                    {/* Header: back + título + subtítulo */}
+                    <div className="register-step2-header">
                         <button
-                            type="button"
-                            className="auth-toggle-password"
-                            onClick={() => setShowPassword(!showPassword)}
-                            aria-label={showPassword ? 'Ocultar' : 'Mostrar'}
+                            className="register-nav-btn"
+                            onClick={() => setStep(1)}
+                            aria-label="Volver"
                         >
-                            <span className="material-symbols-rounded">
-                                {showPassword ? 'visibility_off' : 'visibility'}
-                            </span>
+                            <span className="material-symbols-rounded">arrow_back</span>
                         </button>
+                        <h1 className="register-step2-title">Crear cuenta</h1>
+                        <p className="register-step2-subtitle">Encuentra tu próximo reto profesional</p>
+                    </div>
+
+                    {/* Campos del formulario */}
+                    <div className="register-step2-form">
+
+                        {/* Nombre */}
+                        <div className="auth-field">
+                            <label className="auth-label" htmlFor="reg-name">Nombre completo</label>
+                            <div className="auth-input-wrapper">
+                                <span className="material-symbols-rounded auth-input-icon">person</span>
+                                <input
+                                    id="reg-name"
+                                    className="auth-input"
+                                    type="text"
+                                    placeholder="Ej. María García"
+                                    autoComplete="name"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Email */}
+                        <div className="auth-field">
+                            <label className="auth-label" htmlFor="reg-email">Correo electrónico</label>
+                            <div className="auth-input-wrapper">
+                                <span className="material-symbols-rounded auth-input-icon">mail</span>
+                                <input
+                                    id="reg-email"
+                                    className="auth-input"
+                                    type="email"
+                                    placeholder="nombre@ejemplo.com"
+                                    autoComplete="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Contraseña */}
+                        <div className="auth-field">
+                            <label className="auth-label" htmlFor="reg-password">Contraseña</label>
+                            <div className="auth-input-wrapper">
+                                <span className="material-symbols-rounded auth-input-icon">lock</span>
+                                <input
+                                    id="reg-password"
+                                    className="auth-input"
+                                    type={showPassword ? 'text' : 'password'}
+                                    placeholder="Mínimo 8 caracteres"
+                                    autoComplete="new-password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                                <button
+                                    type="button"
+                                    className="auth-toggle-password"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    aria-label={showPassword ? 'Ocultar' : 'Mostrar'}
+                                >
+                                    <span className="material-symbols-rounded">
+                                        {showPassword ? 'visibility_off' : 'visibility'}
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Error */}
+                        {error && (
+                            <div className="auth-error">
+                                <span className="material-symbols-rounded">error</span>
+                                {error}
+                            </div>
+                        )}
+
+                        {/* Submit */}
+                        <button
+                            className="auth-btn auth-btn--primary"
+                            type="button"
+                            onClick={handleRegister}
+                            disabled={loading}
+                        >
+                            {loading ? 'Creando cuenta…' : 'Continuar'}
+                        </button>
+
+                        {/* Divider */}
+                        <div className="auth-divider">
+                            <span className="auth-divider-text">o</span>
+                        </div>
+
+                        {/* Google */}
+                        <button
+                            className="auth-btn auth-btn--google"
+                            type="button"
+                            onClick={() => handleGoogleOAuth(userType)}
+                            disabled={googleLoading || loading}
+                        >
+                            <GoogleIcon />
+                            {googleLoading ? 'Redirigiendo…' : 'Continuar con Google'}
+                        </button>
+
                     </div>
                 </div>
 
-                {/* Confirm Password */}
-                <div className="auth-field">
-                    <label className="auth-label" htmlFor="reg-confirm">Confirmar contraseña</label>
-                    <div className="auth-input-wrapper">
-                        <span className="material-symbols-rounded auth-input-icon">lock</span>
-                        <input
-                            id="reg-confirm"
-                            className="auth-input"
-                            type={showPassword ? 'text' : 'password'}
-                            placeholder="Repite tu contraseña"
-                            autoComplete="new-password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                        />
-                    </div>
-                </div>
-
-                {/* Error */}
-                {error && (
-                    <div className="auth-error">
-                        <span className="material-symbols-rounded">error</span>
-                        {error}
-                    </div>
-                )}
-
-                {/* Submit */}
-                <button
-                    className="auth-btn auth-btn--primary"
-                    type="submit"
-                    disabled={loading}
-                >
-                    {loading ? 'Creando cuenta…' : 'Crear cuenta'}
-                </button>
-
-                <div className="auth-divider">
-                    <span className="auth-divider-text">o</span>
-                </div>
-
-                <button
-                    className="auth-btn auth-btn--google"
-                    type="button"
-                    onClick={() => handleGoogleOAuth(userType)}
-                    disabled={googleLoading || loading}
-                >
-                    <GoogleIcon />
-                    {googleLoading ? 'Redirigiendo…' : 'Continuar con Google'}
-                </button>
-            </form>
-
-            <p className="auth-footer-text">
-                ¿Ya tienes cuenta?{' '}
-                <button
-                    type="button"
-                    className="auth-link-btn"
-                    onClick={() => navigate('/login')}
-                >
-                    Inicia sesión
-                </button>
-            </p>
+                {/* Footer fuera de la card */}
+                <p className="auth-footer-text">
+                    ¿Ya tienes cuenta?{' '}
+                    <button
+                        type="button"
+                        className="auth-link-btn"
+                        onClick={() => navigate('/login')}
+                    >
+                        Inicia sesión
+                    </button>
+                </p>
+            </div>
         </div>
     );
 }
