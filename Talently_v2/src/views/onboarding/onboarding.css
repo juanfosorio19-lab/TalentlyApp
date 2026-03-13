@@ -779,3 +779,61 @@
     margin-top: 4px;
     padding-left: 2px;
 }
+
+/* ──────────────────────────────────────────────
+   Step 3 — Modality cards (Stitch design)
+   Horizontal cards with state-driven icon color
+   + circular check indicator
+   ────────────────────────────────────────────── */
+
+/* Align icon + body + check vertically centered */
+.ob-card--modality {
+    align-items: center;
+}
+
+/* Icon: muted by default, primary when selected */
+.ob-card--modality .ob-card-icon-wrap {
+    background: var(--border);
+    color: var(--text-secondary);
+    transition: background var(--transition-fast), color var(--transition-fast),
+                box-shadow var(--transition-fast);
+}
+
+.ob-card--modality:hover:not(.ob-card--selected) .ob-card-icon-wrap {
+    background: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary);
+}
+
+.ob-card--modality.ob-card--selected .ob-card-icon-wrap {
+    background: var(--primary);
+    color: var(--text-inverse);
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+}
+
+/* Circular check indicator */
+.ob-modality-check {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    color: transparent;
+}
+
+.ob-modality-check .material-symbols-rounded {
+    font-size: 15px !important;
+}
+
+.ob-card--modality:hover:not(.ob-card--selected) .ob-modality-check {
+    border-color: rgba(var(--primary-rgb), 0.4);
+}
+
+.ob-card--modality.ob-card--selected .ob-modality-check {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--text-inverse);
+}
