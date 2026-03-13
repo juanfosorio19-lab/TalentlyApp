@@ -399,6 +399,326 @@
     border: 3px solid var(--primary);
 }
 
+/* ── Multimedia — Step 10 ── */
+
+/* Hidden file input */
+.ob-input-hidden {
+    display: none;
+}
+
+/* Subtitle accent (bold primary inline) */
+.ob-step-subtitle-accent {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+/* Avatar section */
+.ob-avatar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+
+.ob-avatar-wrap {
+    position: relative;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.ob-avatar-circle {
+    width: 128px;
+    height: 128px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 4px solid var(--bg);
+    box-shadow: var(--shadow-lg), 0 0 0 4px var(--border);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.ob-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.ob-avatar-placeholder-icon {
+    font-size: 52px;
+    color: var(--text-muted);
+}
+
+.ob-avatar-uploading {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ob-avatar-spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: ob-spin 0.7s linear infinite;
+}
+
+@keyframes ob-spin {
+    to { transform: rotate(360deg); }
+}
+
+.ob-avatar-camera-btn {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    pointer-events: none;
+}
+
+.ob-avatar-camera-btn .material-symbols-rounded {
+    font-size: 18px;
+}
+
+.ob-avatar-change-btn {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.ob-avatar-change-btn:hover {
+    background: rgba(var(--primary-rgb), 0.07);
+}
+
+.ob-avatar-change-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* CV section */
+.ob-cv-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ob-cv-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.ob-cv-section-title .material-symbols-rounded {
+    font-size: 22px;
+    color: var(--primary);
+}
+
+/* Drop zone */
+.ob-cv-drop-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 32px 20px;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-xl);
+    background: var(--surface);
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.ob-cv-drop-zone:hover {
+    border-color: rgba(var(--primary-rgb), 0.4);
+    background: rgba(var(--primary-rgb), 0.03);
+}
+
+.ob-cv-drop-zone--loading {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.ob-cv-drop-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+    transition: box-shadow var(--transition-fast);
+}
+
+.ob-cv-drop-zone:hover .ob-cv-drop-icon {
+    box-shadow: var(--shadow-md);
+}
+
+.ob-cv-drop-icon .material-symbols-rounded {
+    font-size: 28px;
+    color: var(--primary);
+}
+
+.ob-cv-drop-text {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: center;
+}
+
+.ob-cv-drop-link {
+    color: var(--primary);
+}
+
+.ob-cv-drop-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+/* Uploaded file info row */
+.ob-cv-file-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    background: var(--surface);
+}
+
+.ob-cv-file-icon {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--danger);
+    box-shadow: var(--shadow-sm);
+}
+
+.ob-cv-file-icon .material-symbols-rounded {
+    font-size: 20px;
+}
+
+.ob-cv-file-meta {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ob-cv-file-name {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ob-cv-file-size {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.ob-cv-file-remove {
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--transition-fast), background var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.ob-cv-file-remove:hover {
+    color: var(--danger);
+    background: rgba(var(--danger-rgb), 0.08);
+}
+
+.ob-cv-file-remove .material-symbols-rounded {
+    font-size: 20px;
+}
+
+/* Privacy notice */
+.ob-privacy-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 16px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    background: var(--bg);
+    box-shadow: var(--shadow-sm);
+}
+
+.ob-privacy-notice-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    background: rgba(var(--success-rgb), 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ob-privacy-notice-icon .material-symbols-rounded {
+    font-size: 20px;
+    color: var(--success);
+}
+
+.ob-privacy-notice-title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.ob-privacy-notice-desc {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
 /* ── Navigation buttons ── */
 .ob-nav {
     display: flex;
