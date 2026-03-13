@@ -1033,3 +1033,66 @@
     cursor: pointer;
     flex-shrink: 0;
 }
+
+/* ── Radio cards — Step 7 Disponibilidad ── */
+.ob-radio-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ob-radio-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+    text-align: left;
+    width: 100%;
+}
+
+.ob-radio-card:hover {
+    border-color: rgba(var(--primary-rgb), 0.4);
+}
+
+.ob-radio-card--selected {
+    border-color: var(--primary);
+    background: rgba(var(--primary-rgb), 0.05);
+}
+
+.ob-radio-card-label {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.ob-radio-card--selected .ob-radio-card-label {
+    color: var(--text-primary);
+}
+
+.ob-radio-indicator {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.ob-radio-card--selected .ob-radio-indicator {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.ob-radio-indicator .material-symbols-rounded {
+    font-size: 14px;
+    color: #fff;
+    font-variation-settings: 'wght' 700;
+}

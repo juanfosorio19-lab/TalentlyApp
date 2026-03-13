@@ -12,30 +12,50 @@ export default function Step7_Disponibilidad({ data, onNext, saving }) {
 
     return (
         <>
-            <h2 className="ob-title">Disponibilidad</h2>
-            <p className="ob-subtitle">¿Cuándo podrías comenzar un nuevo trabajo?</p>
+            {/* Título */}
+            <div className="ob-step-heading">
+                <h1 className="ob-step-title">
+                    ¿Cuándo puedes <span className="ob-step-title-accent">empezar?</span>
+                </h1>
+                <p className="ob-step-subtitle">
+                    Selecciona tu disponibilidad para incorporarte al nuevo puesto de trabajo.
+                </p>
+            </div>
 
+            {/* Opciones radio */}
             <div className="ob-content">
-                <div className="ob-cards">
+                <div className="ob-radio-list">
                     {AVAILABILITY_OPTIONS.map((opt) => (
                         <button
                             key={opt.value}
-                            className={`ob-card ${selected === opt.value ? 'ob-card--selected' : ''}`}
+                            type="button"
+                            className={`ob-radio-card${selected === opt.value ? ' ob-radio-card--selected' : ''}`}
                             onClick={() => setSelected(opt.value)}
-                            style={{ flexDirection: 'row', gap: 14, padding: '16px 20px', alignItems: 'center' }}
                         >
-                            <div className="ob-card-icon ob-card-icon--primary" style={{ width: 40, height: 40, borderRadius: 10 }}>
-                                <span className="material-symbols-rounded" style={{ fontSize: 20 }}>{opt.icon}</span>
+                            <span className="ob-radio-card-label">{opt.label}</span>
+                            <div className="ob-radio-indicator">
+                                {selected === opt.value
+                                    ? <span className="material-symbols-rounded">check</span>
+                                    : null
+                                }
                             </div>
-                            <span className="ob-card-label">{opt.label}</span>
                         </button>
                     ))}
                 </div>
             </div>
 
+            {/* Navegación */}
             <div className="ob-nav">
-                <button className="ob-nav-btn ob-nav-btn--primary" onClick={handleNext} disabled={!selected || saving}>
-                    {saving ? 'Guardando…' : 'Siguiente'}
+                <button
+                    className="ob-nav-btn ob-nav-btn--primary ob-nav-btn--flex"
+                    type="button"
+                    onClick={handleNext}
+                    disabled={!selected || saving}
+                >
+                    {saving ? 'Guardando…' : 'Continuar'}
+                    {!saving && (
+                        <span className="material-symbols-rounded ob-nav-btn-icon">arrow_forward</span>
+                    )}
                 </button>
             </div>
         </>
