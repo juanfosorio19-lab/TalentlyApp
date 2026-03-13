@@ -904,3 +904,113 @@
     font-size: 16px !important;
     flex-shrink: 0;
 }
+
+/* ──────────────────────────────────────────────
+   Steps 5 & 6 — Education / Experience cards
+   (Stitch card design replacing dot timeline)
+   ────────────────────────────────────────────── */
+
+/* Title accent (colored word in heading) */
+.ob-step-title-accent {
+    color: var(--primary);
+}
+
+/* Entry card */
+.ob-edu-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.ob-edu-card:hover {
+    border-color: rgba(var(--primary-rgb), 0.3);
+    box-shadow: var(--shadow-md);
+}
+
+.ob-edu-card-icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    background: rgba(var(--primary-rgb), 0.08);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ob-edu-card-icon .material-symbols-rounded {
+    font-size: 24px;
+}
+
+.ob-edu-card-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ob-edu-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ob-edu-card-sub {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ob-edu-card-date {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.ob-edu-card-remove {
+    flex-shrink: 0;
+    padding: 6px;
+    border-radius: 50%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: color var(--transition-fast), background var(--transition-fast);
+    outline: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ob-edu-card-remove:hover {
+    color: var(--primary);
+    background: rgba(var(--primary-rgb), 0.08);
+}
+
+.ob-edu-card-remove .material-symbols-rounded {
+    font-size: 20px;
+}
+
+/* Inline form section label */
+.ob-inline-form-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 4px;
+}
