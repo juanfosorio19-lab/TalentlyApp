@@ -1014,3 +1014,22 @@
     letter-spacing: 0.07em;
     margin-bottom: 4px;
 }
+
+/* Checkbox label — Step 6 */
+.ob-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
+}
+
+.ob-checkbox-label input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+    cursor: pointer;
+    flex-shrink: 0;
+}
