@@ -558,3 +558,301 @@
 .login-screen .auth-footer-text {
     margin: 0;
 }
+
+/* ══════════════════════════════════════════
+   Register Step 1 — diseño Stitch (tipo de perfil)
+   ══════════════════════════════════════════ */
+
+.register-screen {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    overflow: hidden;
+    padding: 32px 20px;
+}
+
+.register-bg-top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 256px;
+    background: linear-gradient(to bottom, rgba(var(--primary-rgb), 0.08), transparent);
+    pointer-events: none;
+}
+
+.register-bg-blob {
+    position: absolute;
+    top: -80px;
+    right: -80px;
+    width: 256px;
+    height: 256px;
+    background: rgba(var(--primary-rgb), 0.05);
+    border-radius: 50%;
+    filter: blur(48px);
+    pointer-events: none;
+}
+
+.register-container {
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    position: relative;
+    z-index: 1;
+}
+
+/* ── Nav row ── */
+.register-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.register-nav-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    transition: background var(--transition-fast);
+    padding: 0;
+    outline: none;
+}
+
+.register-nav-btn:hover {
+    background: var(--surface);
+}
+
+.register-nav-btn .material-symbols-rounded {
+    font-size: 22px;
+}
+
+.register-progress {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 0 0 120px;
+    justify-content: center;
+}
+
+.register-progress-dot {
+    height: 6px;
+    flex: 1;
+    border-radius: var(--radius-full);
+    background: var(--border);
+    transition: background var(--transition-normal);
+}
+
+.register-progress-dot--active {
+    background: var(--primary);
+}
+
+.register-skip-btn {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 4px 8px;
+    outline: none;
+}
+
+.register-skip-btn:hover {
+    text-decoration: underline;
+}
+
+/* ── Heading ── */
+.register-heading {
+    text-align: center;
+}
+
+.register-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.3;
+    margin: 0 0 12px 0;
+}
+
+.register-subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.register-brand-accent {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* ── Type cards ── */
+.register-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.register-type-card {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+    background: var(--surface);
+    border: 2px solid transparent;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+    outline: none;
+    width: 100%;
+}
+
+.register-type-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.register-type-card--selected {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 1px var(--primary), 0 0 20px rgba(var(--primary-rgb), 0.15);
+}
+
+.register-card-icon {
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.register-card-icon .material-symbols-rounded {
+    font-size: 28px;
+}
+
+.register-card-icon--candidate {
+    background: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary);
+}
+
+.register-card-icon--company {
+    background: rgba(var(--secondary-rgb), 0.15);
+    color: var(--secondary);
+}
+
+.register-card-body {
+    flex: 1;
+    min-width: 0;
+    padding-right: 28px;
+}
+
+.register-card-title {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 4px 0;
+    transition: color var(--transition-fast);
+}
+
+.register-type-card:hover .register-card-title,
+.register-type-card--selected .register-card-title {
+    color: var(--primary);
+}
+
+.register-card-desc {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    margin: 0 0 10px 0;
+    line-height: 1.5;
+}
+
+.register-card-features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.register-card-feature {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.register-check-icon {
+    font-size: 14px !important;
+    color: var(--success);
+    flex-shrink: 0;
+}
+
+.register-radio-icon {
+    position: absolute;
+    top: 20px;
+    right: 16px;
+    font-size: 22px;
+    color: var(--border);
+    transition: color var(--transition-normal);
+}
+
+.register-type-card--selected .register-radio-icon {
+    color: var(--primary);
+}
+
+/* ── Footer ── */
+.register-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.register-continue-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.register-continue-btn .material-symbols-rounded {
+    font-size: 18px;
+    transition: transform var(--transition-fast);
+}
+
+.register-continue-btn:hover:not(:disabled) .material-symbols-rounded {
+    transform: translateX(4px);
+}
+
+.register-legal {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.register-legal-link {
+    color: var(--primary);
+    cursor: pointer;
+}
+
+.register-legal-link:hover {
+    text-decoration: underline;
+}
