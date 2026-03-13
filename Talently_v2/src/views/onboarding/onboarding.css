@@ -1248,3 +1248,104 @@
 .ob-chip--skill-suggest:hover .ob-chip-add {
     color: var(--primary);
 }
+
+/* ── Languages — Step 9 ── */
+
+.ob-lang-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Botón "Agregar idioma" — variante outlined */
+.ob-add-btn--outlined {
+    border: 2px solid var(--primary);
+    border-style: solid;
+    color: var(--primary);
+    background: transparent;
+    font-weight: 700;
+    font-size: 0.9375rem;
+}
+
+.ob-add-btn--outlined:hover:not(:disabled) {
+    background: rgba(var(--primary-rgb), 0.06);
+    border-color: var(--primary);
+}
+
+.ob-add-btn--outlined:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    border-color: var(--border);
+    color: var(--text-muted);
+}
+
+/* Lista de idiomas */
+.ob-lang-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.ob-lang-list-title {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+}
+
+.ob-lang-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    transition: border-color var(--transition-fast);
+}
+
+.ob-lang-item:hover {
+    border-color: rgba(var(--primary-rgb), 0.25);
+}
+
+.ob-lang-item-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ob-lang-item-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.ob-lang-item-level {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.ob-lang-item-remove {
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.ob-lang-item-remove:hover {
+    color: var(--danger);
+    background: rgba(var(--danger-rgb), 0.08);
+}
+
+.ob-lang-item-remove .material-symbols-rounded {
+    font-size: 20px;
+}
