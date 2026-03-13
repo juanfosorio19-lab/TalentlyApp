@@ -1028,3 +1028,164 @@
     text-align: center;
     padding-top: 0;
 }
+
+/* ══════════════════════════════════════════
+   New Password View — diseño Stitch
+   ══════════════════════════════════════════ */
+
+.newpassword-screen {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+}
+
+/* ── Blobs decorativos ── */
+.newpassword-blob {
+    position: absolute;
+    width: 256px;
+    height: 256px;
+    border-radius: 50%;
+    background: rgba(var(--primary-rgb), 0.05);
+    filter: blur(48px);
+    pointer-events: none;
+}
+
+.newpassword-blob--tr {
+    top: -96px;
+    right: -96px;
+}
+
+.newpassword-blob--bl {
+    bottom: -96px;
+    left: -96px;
+}
+
+/* ── Title section ── */
+.newpassword-title-section {
+    margin-bottom: 4px;
+}
+
+.newpassword-title {
+    font-size: 1.875rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    margin: 0 0 12px 0;
+}
+
+.newpassword-subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* ── Requirements box ── */
+.newpassword-requirements {
+    background: rgba(var(--primary-rgb), 0.05);
+    border: 1px solid rgba(var(--primary-rgb), 0.12);
+    border-radius: var(--radius-xl);
+    padding: 20px;
+}
+
+.newpassword-req-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 14px 0;
+}
+
+.newpassword-req-title .material-symbols-rounded {
+    font-size: 18px;
+    color: var(--primary);
+}
+
+.newpassword-req-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.newpassword-req-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    transition: color var(--transition-fast);
+}
+
+.newpassword-req-item--met {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.newpassword-req-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background var(--transition-normal);
+}
+
+.newpassword-req-dot .material-symbols-rounded {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.newpassword-req-dot--met {
+    background: var(--success);
+}
+
+.newpassword-req-dot--met .material-symbols-rounded {
+    color: var(--text-inverse);
+}
+
+/* ── Success / waiting states ── */
+.newpassword-success {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    padding: 24px 0;
+}
+
+.newpassword-success-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: rgba(var(--success-rgb), 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.newpassword-success-icon .material-symbols-rounded {
+    font-size: 36px;
+    color: var(--success);
+}
+
+.newpassword-success-icon--waiting {
+    background: rgba(var(--primary-rgb), 0.1);
+}
+
+.newpassword-success-icon--waiting .material-symbols-rounded {
+    color: var(--primary);
+}
