@@ -909,3 +909,122 @@
     flex-direction: column;
     gap: 20px;
 }
+
+/* ══════════════════════════════════════════
+   Recovery View — diseño Stitch
+   ══════════════════════════════════════════ */
+
+.recovery-screen {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: var(--bg);
+}
+
+/* ── Sticky header ── */
+.recovery-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    height: 56px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.recovery-header-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.recovery-header-spacer {
+    width: 36px;
+}
+
+/* ── Main container ── */
+.recovery-container {
+    flex: 1;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 28px 24px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ── Hero visual icons + title ── */
+.recovery-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+
+.recovery-icon-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.recovery-icon-circle {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.recovery-icon-circle .material-symbols-rounded {
+    font-size: 28px;
+}
+
+.recovery-icon-circle--email {
+    color: var(--primary);
+    position: relative;
+    z-index: 2;
+}
+
+.recovery-icon-circle--lock {
+    width: 48px;
+    height: 48px;
+    margin-left: -12px;
+    color: var(--text-muted);
+    z-index: 1;
+}
+
+.recovery-icon-circle--lock .material-symbols-rounded {
+    font-size: 22px;
+}
+
+.recovery-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.recovery-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+    max-width: 320px;
+}
+
+.recovery-footer-link {
+    text-align: center;
+    padding-top: 0;
+}
