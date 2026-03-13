@@ -837,3 +837,70 @@
     border-color: var(--primary);
     color: var(--text-inverse);
 }
+
+/* ──────────────────────────────────────────────
+   Step 4 — Campo profesional: search + area chips
+   ────────────────────────────────────────────── */
+
+.ob-field--search {
+    margin-bottom: 8px;
+}
+
+/* Clear button inside search input */
+.ob-search-clear {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    color: var(--text-muted);
+    outline: none;
+    flex-shrink: 0;
+    transition: color var(--transition-fast);
+}
+
+.ob-search-clear:hover {
+    color: var(--text-secondary);
+}
+
+.ob-search-clear .material-symbols-rounded {
+    font-size: 18px;
+}
+
+/* Area group container */
+.ob-areas-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Category label */
+.ob-areas-group-title {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding-left: 2px;
+}
+
+/* Empty / loading state */
+.ob-areas-empty {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 24px 0;
+}
+
+/* Area chip with optional check icon */
+.ob-chip--area {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ob-chip-check {
+    font-size: 16px !important;
+    flex-shrink: 0;
+}
