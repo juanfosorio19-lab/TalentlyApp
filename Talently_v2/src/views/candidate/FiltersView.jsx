@@ -1,5 +1,5 @@
 // src/views/candidate/FiltersView.jsx
-// Filtros de swipe para candidato: modalidad, área, país, salario, etapa empresa
+// Filtros de swipe para candidato — diseño Stitch
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, Actions } from '../../context/AppContext';
@@ -25,7 +25,6 @@ export default function FiltersView() {
     const { state, dispatch } = useApp();
     const { referenceData, candidateFilters } = state;
 
-    // Usar etapas de Supabase si están disponibles, sino constantes
     const stages = referenceData.company_stages?.length > 0
         ? referenceData.company_stages.map((s) => s.name || s)
         : COMPANY_STAGES_FALLBACK;
@@ -37,40 +36,48 @@ export default function FiltersView() {
         navigate(-1);
     };
 
-    const handleClear = () => {
-        setLocal({ ...EMPTY_FILTERS });
-    };
+    const handleClear = () => setLocal({ ...EMPTY_FILTERS });
 
     const setSalary = (key, val) => {
         const parsed = val === '' ? null : parseInt(val, 10);
         setLocal((prev) => ({ ...prev, salary: { ...prev.salary, [key]: isNaN(parsed) ? null : parsed } }));
     };
 
-    return (
-        <div className="filters-view">
-            <header className="filters-view__header">
-                <button
-                    className="filters-view__back"
-                    onClick={() => navigate(-1)}
-                    aria-label="Volver"
-                >
-                    <span className="material-symbols-rounded">arrow_back</span>
-                </button>
-                <h2 className="filters-view__title">Filtros</h2>
-                <button className="filters-view__clear" onClick={handleClear}>
-                    Limpiar
-                </button>
-            </header>
+    const activeCount = [
+        local.modality.length,
+        local.areas.length,
+        local.country ? 1 : 0,
+        (local.salary.min || local.salary.max) ? 1 : 0,
+        local.stage.length,
+    ].reduce((a, b) => a + b, 0);
 
-            <div className="filters-view__scroll">
+    return (
+        <div className="fv">
+            {/* Drag handle */}
+            <div className="fv__drag-handle" />
+
+            {/* ── Header ── */}
+            <div className="fv__header">
+                <button className="fv__close" onClick={() => navigate(-1)} aria-label="Cerrar">
+                    <span className="material-symbols-rounded">close</span>
+                </button>
+                <h2 className="fv__title">
+                    Filtros{activeCount > 0 && <span className="fv__title-badge">{activeCount}</span>}
+                </h2>
+                <button className="fv__reset" onClick={handleClear}>Restablecer</button>
+            </div>
+
+            {/* ── Scroll ── */}
+            <div className="fv__scroll">
+
                 {/* ── Modalidad ── */}
-                <div>
-                    <p className="filters-section__label">Modalidad</p>
-                    <div className="filters-chips">
+                <div className="fv__section">
+                    <p className="fv__section-label">Modalidad de trabajo</p>
+                    <div className="fv__chips">
                         {MODALITIES.map((m) => (
                             <button
                                 key={m}
-                                className={`filters-chip ${local.modality.includes(m) ? 'filters-chip--active' : ''}`}
+                                className={`fv__chip ${local.modality.includes(m) ? 'fv__chip--active' : ''}`}
                                 onClick={() => setLocal((prev) => ({ ...prev, modality: toggleItem(prev.modality, m) }))}
                             >
                                 {m}
@@ -81,15 +88,15 @@ export default function FiltersView() {
 
                 {/* ── Área profesional ── */}
                 {referenceData.areas?.length > 0 && (
-                    <div>
-                        <p className="filters-section__label">Área profesional</p>
-                        <div className="filters-chips">
+                    <div className="fv__section">
+                        <p className="fv__section-label">Área profesional</p>
+                        <div className="fv__chips">
                             {referenceData.areas.map((a) => {
                                 const name = a.name || a;
                                 return (
                                     <button
                                         key={name}
-                                        className={`filters-chip ${local.areas.includes(name) ? 'filters-chip--active' : ''}`}
+                                        className={`fv__chip ${local.areas.includes(name) ? 'fv__chip--active' : ''}`}
                                         onClick={() => setLocal((prev) => ({ ...prev, areas: toggleItem(prev.areas, name) }))}
                                     >
                                         {name}
@@ -102,33 +109,37 @@ export default function FiltersView() {
 
                 {/* ── País ── */}
                 {referenceData.countries?.length > 0 && (
-                    <div>
-                        <p className="filters-section__label">País</p>
-                        <select
-                            className="filters-select"
-                            value={local.country || ''}
-                            onChange={(e) => setLocal((prev) => ({ ...prev, country: e.target.value || null }))}
-                        >
-                            <option value="">Todos los países</option>
-                            {referenceData.countries.map((c) => {
-                                const name = c.name || c;
-                                return <option key={name} value={name}>{name}</option>;
-                            })}
-                        </select>
+                    <div className="fv__section">
+                        <p className="fv__section-label">País</p>
+                        <div className="fv__select-wrap">
+                            <span className="material-symbols-rounded fv__select-icon">language</span>
+                            <select
+                                className="fv__select"
+                                value={local.country || ''}
+                                onChange={(e) => setLocal((prev) => ({ ...prev, country: e.target.value || null }))}
+                            >
+                                <option value="">Todos los países</option>
+                                {referenceData.countries.map((c) => {
+                                    const name = c.name || c;
+                                    return <option key={name} value={name}>{name}</option>;
+                                })}
+                            </select>
+                            <span className="material-symbols-rounded fv__select-caret">expand_more</span>
+                        </div>
                     </div>
                 )}
 
                 {/* ── Rango salarial ── */}
-                <div>
-                    <p className="filters-section__label">Rango salarial (USD / mes)</p>
-                    <div className="filters-salary-row">
-                        <div className="filters-salary-field">
-                            <label>Desde</label>
-                            <div className="filters-salary-input-wrap">
-                                <span>$</span>
+                <div className="fv__section">
+                    <p className="fv__section-label">Rango salarial (USD / mes)</p>
+                    <div className="fv__salary-row">
+                        <div className="fv__salary-field">
+                            <label className="fv__salary-label">Mínimo</label>
+                            <div className="fv__salary-input-wrap">
+                                <span className="fv__salary-prefix">$</span>
                                 <input
                                     type="number"
-                                    className="filters-salary-input"
+                                    className="fv__salary-input"
                                     placeholder="0"
                                     min="0"
                                     value={local.salary.min ?? ''}
@@ -136,13 +147,14 @@ export default function FiltersView() {
                                 />
                             </div>
                         </div>
-                        <div className="filters-salary-field">
-                            <label>Hasta</label>
-                            <div className="filters-salary-input-wrap">
-                                <span>$</span>
+                        <div className="fv__salary-sep">—</div>
+                        <div className="fv__salary-field">
+                            <label className="fv__salary-label">Máximo</label>
+                            <div className="fv__salary-input-wrap">
+                                <span className="fv__salary-prefix">$</span>
                                 <input
                                     type="number"
-                                    className="filters-salary-input"
+                                    className="fv__salary-input"
                                     placeholder="∞"
                                     min="0"
                                     value={local.salary.max ?? ''}
@@ -154,13 +166,13 @@ export default function FiltersView() {
                 </div>
 
                 {/* ── Etapa de empresa ── */}
-                <div>
-                    <p className="filters-section__label">Etapa de empresa</p>
-                    <div className="filters-chips">
+                <div className="fv__section">
+                    <p className="fv__section-label">Etapa de empresa</p>
+                    <div className="fv__chips">
                         {stages.map((s) => (
                             <button
                                 key={s}
-                                className={`filters-chip ${local.stage.includes(s) ? 'filters-chip--active' : ''}`}
+                                className={`fv__chip ${local.stage.includes(s) ? 'fv__chip--active' : ''}`}
                                 onClick={() => setLocal((prev) => ({ ...prev, stage: toggleItem(prev.stage, s) }))}
                             >
                                 {s}
@@ -168,11 +180,15 @@ export default function FiltersView() {
                         ))}
                     </div>
                 </div>
+
+                <div style={{ height: 16 }} />
             </div>
 
-            <div className="filters-view__footer">
-                <button className="filters-view__apply" onClick={handleApply}>
-                    Aplicar filtros
+            {/* ── Footer sticky ── */}
+            <div className="fv__footer">
+                <button className="fv__btn-clear" onClick={handleClear}>Limpiar</button>
+                <button className="fv__btn-apply" onClick={handleApply}>
+                    Aplicar filtros{activeCount > 0 && ` (${activeCount})`}
                 </button>
             </div>
         </div>
