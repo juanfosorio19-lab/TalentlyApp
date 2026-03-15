@@ -1,0 +1,515 @@
+/* ============================================
+   CompanySettingsView — diseño Stitch
+   ============================================ */
+
+.csv {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    background: var(--bg);
+    overflow: hidden;
+}
+
+/* ── Header ── */
+.csv__header {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.csv__header-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+    font-family: inherit;
+    flex-shrink: 0;
+}
+
+.csv__header-btn:hover { background: var(--bg); color: var(--text-primary); }
+.csv__header-btn--primary { color: var(--primary); }
+.csv__header-btn--primary:hover { background: rgba(var(--primary-rgb), 0.08); color: var(--primary); }
+.csv__header-btn .material-symbols-rounded { font-size: 22px; }
+
+.csv__header-title {
+    flex: 1;
+    text-align: center;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* ── Scroll ── */
+.csv__scroll {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* ── Hero card ── */
+.csv__hero {
+    background: var(--surface);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    padding: 24px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+}
+
+.csv__logo {
+    width: 80px;
+    height: 80px;
+    border-radius: 18px;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+    flex-shrink: 0;
+}
+
+.csv__logo-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 18px;
+    background: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+    flex-shrink: 0;
+}
+
+.csv__logo-placeholder .material-symbols-rounded { font-size: 36px; }
+
+.csv__company-name {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-primary);
+    text-align: center;
+    margin-bottom: 10px;
+    line-height: 1.2;
+}
+
+.csv__hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.csv__sector-badge {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 99px;
+    background: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary);
+}
+
+.csv__location {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.csv__location-icon { font-size: 14px; }
+
+/* Stats row */
+.csv__stats {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+}
+
+.csv__stat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+
+.csv__stat-value {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.csv__stat-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.csv__stat-divider {
+    width: 1px;
+    height: 32px;
+    background: var(--border);
+    flex-shrink: 0;
+}
+
+/* ── Generic card ── */
+.csv__card {
+    background: var(--surface);
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    padding: 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.csv__card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.csv__card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.csv__card-caption {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.csv__description {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+}
+
+/* Meta tags */
+.csv__meta-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.csv__meta-tag {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.csv__meta-tag-icon { font-size: 14px; color: var(--text-muted); }
+
+/* Links */
+.csv__links {
+    display: flex;
+    gap: 16px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+}
+
+.csv__link {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.csv__link-icon { font-size: 16px; }
+
+/* Values chips — 4 color variants */
+.csv__chips-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.csv__value-chip {
+    padding: 6px 14px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.csv__value-chip--0 {
+    background: rgba(var(--warning-rgb), 0.12);
+    border: 1px solid rgba(var(--warning-rgb), 0.25);
+    color: var(--warning);
+}
+
+.csv__value-chip--1 {
+    background: rgba(var(--success-rgb), 0.1);
+    border: 1px solid rgba(var(--success-rgb), 0.2);
+    color: var(--success);
+}
+
+.csv__value-chip--2 {
+    background: rgba(var(--secondary-rgb), 0.1);
+    border: 1px solid rgba(var(--secondary-rgb), 0.2);
+    color: var(--secondary);
+}
+
+.csv__value-chip--3 {
+    background: rgba(var(--primary-rgb), 0.1);
+    border: 1px solid rgba(var(--primary-rgb), 0.2);
+    color: var(--primary);
+}
+
+/* Tech chips */
+.csv__tech-chip {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary);
+}
+
+/* Benefits grid */
+.csv__benefits-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.csv__benefit-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border-radius: 12px;
+}
+
+.csv__benefit-icon {
+    font-size: 20px;
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+.csv__benefit-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.3;
+}
+
+/* ── Settings sections ── */
+.csv__section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.csv__section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    padding: 0 4px;
+}
+
+.csv__group {
+    background: var(--surface);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
+/* Row */
+.csv__row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: none;
+    border-bottom: 1px solid var(--border);
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    outline: none;
+    transition: background 0.15s ease;
+}
+
+.csv__group .csv__row:last-child { border-bottom: none; }
+.csv__row:hover:not(.csv__row--static) { background: var(--bg); }
+.csv__row--static { cursor: default; }
+
+/* Row icon */
+.csv__row-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.csv__row-icon .material-symbols-rounded { font-size: 18px; }
+
+.csv__row-icon--blue   { background: rgba(var(--primary-rgb), 0.1);   color: var(--primary); }
+.csv__row-icon--green  { background: rgba(var(--success-rgb), 0.12);  color: var(--success); }
+.csv__row-icon--amber  { background: rgba(var(--warning-rgb), 0.15);  color: var(--warning); }
+.csv__row-icon--muted  { background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); }
+
+.csv__row-info { flex: 1; min-width: 0; }
+
+.csv__row-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.3;
+}
+
+.csv__row-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.csv__row-sub--ok { color: var(--success); }
+
+.csv__chevron {
+    font-size: 20px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+/* Toggle */
+.csv__toggle {
+    width: 46px;
+    height: 26px;
+    border-radius: 99px;
+    background: var(--border);
+    border: none;
+    outline: none;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.25s ease;
+    flex-shrink: 0;
+    padding: 0;
+}
+
+.csv__toggle--on { background: var(--primary); }
+
+.csv__toggle-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    transition: transform 0.25s ease;
+}
+
+.csv__toggle--on .csv__toggle-thumb { transform: translateX(20px); }
+
+/* Sign out */
+.csv__signout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px;
+    border-radius: 16px;
+    background: transparent;
+    color: var(--danger);
+    border: 1.5px solid rgba(var(--danger-rgb), 0.3);
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    outline: none;
+}
+
+.csv__signout-btn:hover {
+    background: rgba(var(--danger-rgb), 0.06);
+}
+
+.csv__signout-btn .material-symbols-rounded { font-size: 20px; }
+
+/* Version footer */
+.csv__version-footer {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 4px 0;
+}
+
+/* ── Sticky footer ── */
+.csv__footer {
+    padding: 14px 16px;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.csv__edit-btn {
+    width: 100%;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 16px;
+    background: transparent;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+    outline: none;
+}
+
+.csv__edit-btn:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+.csv__edit-btn .material-symbols-rounded { font-size: 20px; }
