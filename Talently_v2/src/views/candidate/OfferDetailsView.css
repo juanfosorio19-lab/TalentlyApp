@@ -1,8 +1,8 @@
 /* ============================================
-   OfferDetailsView — Detalle de una oferta
+   OfferDetailsView — diseño Stitch
    ============================================ */
 
-.offer-detail {
+.od {
     display: flex;
     flex-direction: column;
     height: 100dvh;
@@ -11,66 +11,81 @@
 }
 
 /* ── Header ── */
-.offer-detail__header {
+.od__header {
     display: flex;
     align-items: center;
-    gap: 12px;
     padding: 12px 16px;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 20;
 }
 
-.offer-detail__back {
+.od__back {
     width: 40px;
     height: 40px;
-    border-radius: 12px;
+    border-radius: 50%;
     border: none;
     outline: none;
     background: transparent;
-    color: var(--text-secondary);
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background 0.2s ease, color 0.2s ease;
+    transition: background 0.15s ease;
+    flex-shrink: 0;
     font-family: inherit;
 }
 
-.offer-detail__back:hover {
-    background: var(--bg);
-    color: var(--primary);
-}
+.od__back:hover { background: var(--bg); }
+.od__back .material-symbols-rounded { font-size: 24px; }
 
-.offer-detail__header-title {
+.od__header-title {
+    flex: 1;
+    text-align: center;
     font-size: 17px;
     font-weight: 700;
     color: var(--text-primary);
+    letter-spacing: -0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 8px;
 }
+
+.od__header-spacer { width: 40px; flex-shrink: 0; }
 
 /* ── Loading ── */
-.offer-detail__loading {
+.od__loading {
     flex: 1;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 14px;
 }
 
-.offer-detail__spinner {
+.od__spinner {
     width: 36px;
     height: 36px;
     border: 3px solid var(--border);
     border-top-color: var(--primary);
     border-radius: 50%;
-    animation: offer-detail-spin 0.8s linear infinite;
+    animation: od-spin 0.8s linear infinite;
 }
 
-@keyframes offer-detail-spin {
-    to { transform: rotate(360deg); }
+@keyframes od-spin { to { transform: rotate(360deg); } }
+
+.od__loading-text {
+    font-size: 14px;
+    color: var(--text-muted);
 }
 
 /* ── Error ── */
-.offer-detail__error {
+.od__error {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -81,198 +96,345 @@
     padding: 40px 24px;
 }
 
-.offer-detail__error-icon {
-    font-size: 56px;
-    color: var(--danger);
-    opacity: 0.6;
-}
+.od__error-icon { font-size: 60px; color: var(--danger); opacity: 0.7; }
 
-.offer-detail__error h3 {
-    font-size: 18px;
+.od__error-title {
+    font-size: 20px;
     font-weight: 700;
     color: var(--text-primary);
 }
 
-.offer-detail__error p {
+.od__error-text {
     font-size: 14px;
     color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 280px;
 }
 
-.offer-detail__back-btn {
+.od__error-btn {
     margin-top: 8px;
-    padding: 12px 24px;
+    padding: 12px 28px;
     border-radius: 12px;
-    background: var(--gradient-primary);
-    color: var(--text-inverse);
-    border: none;
+    border: 1.5px solid var(--border);
     outline: none;
+    background: var(--bg);
+    color: var(--text-primary);
     font-size: 15px;
     font-weight: 600;
     font-family: inherit;
     cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
 }
 
+.od__error-btn:hover { border-color: var(--primary); color: var(--primary); }
+
 /* ── Scroll ── */
-.offer-detail__scroll {
+.od__scroll {
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 32px;
 }
 
 /* ── Hero ── */
-.offer-detail__hero {
+.od__hero {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 28px 20px 20px;
+    text-align: center;
+    padding: 28px 20px 24px;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
-    gap: 8px;
-    text-align: center;
+    gap: 12px;
 }
 
-.offer-detail__logo {
-    width: 72px;
-    height: 72px;
-    border-radius: 16px;
-    object-fit: cover;
-    border: 1px solid var(--border);
-    margin-bottom: 4px;
-}
-
-.offer-detail__logo-placeholder {
-    width: 72px;
-    height: 72px;
-    border-radius: 16px;
-    background: rgba(19, 146, 236, 0.1);
+/* Logo with ring */
+.od__logo-ring {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    padding: 3px;
+    background: rgba(var(--primary-rgb), 0.1);
+    border: 2px solid rgba(var(--primary-rgb), 0.15);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 4px;
-    color: var(--primary);
+    overflow: hidden;
 }
 
-.offer-detail__logo-placeholder .material-symbols-rounded {
-    font-size: 32px;
+.od__logo {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
 }
 
-.offer-detail__title {
+.od__logo-fallback {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: 800;
+    color: #fff;
+}
+
+.od__hero-text { display: flex; flex-direction: column; gap: 4px; }
+
+.od__title {
     font-size: 22px;
     font-weight: 800;
     color: var(--text-primary);
-    line-height: 1.2;
+    line-height: 1.25;
+    letter-spacing: -0.3px;
 }
 
-.offer-detail__company {
+.od__company {
     font-size: 15px;
     font-weight: 600;
     color: var(--primary);
 }
 
-.offer-detail__area {
-    font-size: 13px;
-    color: var(--text-muted);
-}
-
-/* ── Tags ── */
-.offer-detail__tags {
+/* ── Chips ── */
+.od__chips {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 8px;
-    padding: 16px 20px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
 }
 
-.offer-detail__tag {
-    display: flex;
+.od__chip {
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 6px 12px;
-    border-radius: 20px;
+    gap: 5px;
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 8px;
     font-size: 13px;
     font-weight: 500;
+}
+
+.od__chip .material-symbols-rounded { font-size: 17px; }
+
+.od__chip--primary {
+    background: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary);
+}
+
+.od__chip--neutral {
     background: var(--bg);
     color: var(--text-secondary);
     border: 1px solid var(--border);
 }
 
-.offer-detail__tag .material-symbols-rounded {
-    font-size: 15px;
+/* ── Salary card ── */
+.od__salary-card {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 20px;
+    text-align: center;
+    margin-top: 4px;
 }
 
-.offer-detail__tag--salary {
-    background: rgba(0, 208, 132, 0.1);
-    color: var(--success);
-    border-color: rgba(0, 208, 132, 0.2);
-}
-
-/* ── Secciones ── */
-.offer-detail__section {
-    padding: 20px 20px 0;
-}
-
-.offer-detail__section:last-child {
-    padding-bottom: 20px;
-}
-
-.offer-detail__section-title {
-    font-size: 13px;
+.od__salary-label {
+    font-size: 10px;
     font-weight: 700;
-    color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 12px;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
 }
 
-.offer-detail__text {
-    font-size: 14px;
+.od__salary-value {
+    font-size: 22px;
+    font-weight: 800;
     color: var(--text-primary);
-    line-height: 1.7;
-    white-space: pre-wrap;
-    padding-bottom: 20px;
+    letter-spacing: -0.5px;
+}
+
+.od__salary-period {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* ── Section ── */
+.od__section {
+    padding: 22px 20px;
     border-bottom: 1px solid var(--border);
 }
 
-/* ── Company card ── */
-.offer-detail__company-card {
-    background: var(--surface);
-    border-radius: 14px;
-    border: 1px solid var(--border);
-    overflow: hidden;
+.od__section--last { border-bottom: none; }
+
+.od__section-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 14px;
 }
 
-.offer-detail__company-sector,
-.offer-detail__company-location,
-.offer-detail__company-web {
+/* ── Tags ── */
+.od__tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.od__tag {
+    padding: 6px 14px;
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+}
+
+/* ── Benefit tags ── */
+.od__benefit-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: rgba(var(--success-rgb), 0.08);
+    color: var(--success);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.od__benefit-tag .material-symbols-rounded { font-size: 15px; }
+
+/* ── Text ── */
+.od__text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.75;
+    white-space: pre-wrap;
+}
+
+.od__text--company { margin-bottom: 14px; }
+
+/* ── Selection process ── */
+.od__process {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: relative;
+    padding-left: 2px;
+}
+
+.od__process::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 12px;
+    bottom: 12px;
+    width: 2px;
+    background: var(--border);
+}
+
+.od__process-step {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    position: relative;
+}
+
+.od__process-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.od__process-text {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    padding-top: 2px;
+}
+
+/* ── Company meta ── */
+.od__company-meta { display: flex; flex-direction: column; gap: 6px; }
+
+.od__meta-row {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
+    padding: 10px 14px;
     font-size: 14px;
     color: var(--text-primary);
+    background: var(--bg);
+    border-radius: 10px;
     text-decoration: none;
+    border: 1px solid var(--border);
 }
 
-.offer-detail__company-sector:last-child,
-.offer-detail__company-location:last-child,
-.offer-detail__company-web:last-child {
-    border-bottom: none;
-}
-
-.offer-detail__company-web {
-    color: var(--primary);
-}
-
-.offer-detail__company-location .material-symbols-rounded,
-.offer-detail__company-web .material-symbols-rounded {
+.od__meta-row .material-symbols-rounded {
     font-size: 18px;
     color: var(--text-muted);
     flex-shrink: 0;
 }
 
-.offer-detail__company-web .material-symbols-rounded {
-    color: var(--primary);
+.od__meta-row--link { color: var(--primary); }
+.od__meta-row--link .material-symbols-rounded { color: var(--primary); }
+
+/* ── CTA bar ── */
+.od__cta-bar {
+    position: sticky;
+    bottom: 0;
+    padding: 12px 20px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
 }
+
+.od__cta-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 15px;
+    border-radius: 14px;
+    border: none;
+    outline: none;
+    background: var(--primary);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity 0.15s ease, transform 0.1s ease;
+    box-shadow: 0 4px 16px rgba(var(--primary-rgb), 0.3);
+}
+
+.od__cta-btn:hover:not(:disabled) { opacity: 0.92; }
+.od__cta-btn:active:not(:disabled) { transform: scale(0.98); }
+.od__cta-btn:disabled { cursor: default; }
+
+.od__cta-btn--applied {
+    background: rgba(var(--success-rgb), 0.1);
+    color: var(--success);
+    box-shadow: none;
+    border: 1.5px solid rgba(var(--success-rgb), 0.3);
+}
+
+.od__cta-btn .material-symbols-rounded { font-size: 20px; }
