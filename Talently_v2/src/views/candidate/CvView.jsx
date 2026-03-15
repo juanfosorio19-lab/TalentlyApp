@@ -1,6 +1,5 @@
 // src/views/candidate/CvView.jsx
-// Muestra el CV del candidato o permite subirlo.
-// Soporta visualizacion inline (PDF) y upload con validacion.
+// Visualizador / uploader de CV del candidato — diseño Stitch
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, db } from '../../lib/supabase';
@@ -15,10 +14,28 @@ const ALLOWED_TYPES = [
 ];
 const ALLOWED_EXT = ['.pdf', '.docx', '.doc'];
 
+// Extrae fecha de subida desde el timestamp en el path del Storage
+function extractUploadDate(url) {
+    if (!url) return null;
+    const segment = decodeURIComponent(url.split('/').pop() || '');
+    const ts = parseInt(segment.split('_')[0], 10);
+    if (!ts || isNaN(ts) || ts < 1_000_000_000_000) return null;
+    return new Date(ts).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+// Extrae nombre legible desde la URL
+function extractFileName(url) {
+    if (!url) return 'Mi CV';
+    const segment = decodeURIComponent(url.split('/').pop() || '');
+    // Formato: {timestamp}_{originalName}  →  quitar el prefijo
+    const parts = segment.split('_');
+    return parts.length > 1 ? parts.slice(1).join('_') : segment;
+}
+
 export default function CvView() {
     const navigate = useNavigate();
     const { state, dispatch } = useApp();
-    const cvUrl = state.userProfile?.cv_url;
+    const cvUrl   = state.userProfile?.cv_url;
     const fileInputRef = useRef(null);
 
     const [uploading, setUploading] = useState(false);
@@ -43,9 +60,9 @@ export default function CvView() {
             return;
         }
 
-        // Validar tamano
+        // Validar tamaño
         if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-            setUploadError('El archivo supera el limite de ' + MAX_SIZE_MB + ' MB.');
+            setUploadError(`El archivo supera el límite de ${MAX_SIZE_MB} MB.`);
             e.target.value = '';
             return;
         }
@@ -55,9 +72,8 @@ export default function CvView() {
 
         try {
             const publicUrl = await db.storage.uploadDocument(file, 'documents');
-            if (!publicUrl) throw new Error('Upload fallo');
+            if (!publicUrl) throw new Error('Upload falló');
 
-            // Actualizar cv_url en profiles
             const { data: { user } } = await supabase.auth.getUser();
             const { data: updated } = await supabase
                 .from('profiles')
@@ -66,12 +82,10 @@ export default function CvView() {
                 .select()
                 .single();
 
-            if (updated) {
-                dispatch({ type: Actions.SET_PROFILE, payload: updated });
-            }
+            if (updated) dispatch({ type: Actions.SET_PROFILE, payload: updated });
             setUploadSuccess(true);
         } catch (err) {
-            console.error('[CvView] Error al subir CV:', err);
+            console.error('[CvView]', err);
             setUploadError('No se pudo subir el archivo. Intenta de nuevo.');
         } finally {
             setUploading(false);
@@ -79,15 +93,13 @@ export default function CvView() {
         }
     };
 
-    // Extraer nombre legible del URL
-    const fileName = cvUrl
-        ? decodeURIComponent(cvUrl.split('/').pop()?.split('_').slice(2).join('_') || 'Mi CV')
-        : '';
-    const isPdf = cvUrl?.toLowerCase().endsWith('.pdf');
+    const isPdf      = cvUrl?.toLowerCase().includes('.pdf');
+    const fileName   = extractFileName(cvUrl);
+    const uploadDate = extractUploadDate(cvUrl);
 
     return (
-        <div className="cv-view">
-            {/* Input oculto */}
+        <div className="cvv">
+            {/* Input oculto — sin <form> */}
             <input
                 ref={fileInputRef}
                 type="file"
@@ -96,103 +108,107 @@ export default function CvView() {
                 onChange={handleFileChange}
             />
 
-            <header className="cv-view__header">
-                <button
-                    className="cv-view__back"
-                    onClick={() => navigate('/app')}
-                    aria-label="Volver"
-                >
+            {/* ── Header ── */}
+            <header className="cvv__header">
+                <button className="cvv__back" onClick={() => navigate(-1)} aria-label="Volver">
                     <span className="material-symbols-rounded">arrow_back</span>
                 </button>
-                <h2 className="cv-view__title">Mi CV</h2>
+                <h1 className="cvv__title">Mi CV</h1>
                 {cvUrl && (
                     <a
-                        className="cv-view__download"
+                        className="cvv__download"
                         href={cvUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        aria-label="Descargar CV"
+                        aria-label="Descargar"
                     >
                         <span className="material-symbols-rounded">download</span>
                     </a>
                 )}
             </header>
 
-            {/* Feedback de upload */}
-            {(uploadError || uploadSuccess) && (
-                <div className={`cv-view__feedback ${uploadSuccess ? 'cv-view__feedback--success' : 'cv-view__feedback--error'}`}>
-                    <span className="material-symbols-rounded">
-                        {uploadSuccess ? 'check_circle' : 'error'}
-                    </span>
-                    {uploadSuccess ? 'CV actualizado correctamente.' : uploadError}
-                </div>
-            )}
+            {/* ── Scroll ── */}
+            <div className="cvv__scroll">
 
-            {cvUrl ? (
-                <div className="cv-view__body">
-                    {isPdf ? (
-                        <iframe
-                            className="cv-view__iframe"
-                            src={cvUrl}
-                            title="Mi CV"
-                        />
-                    ) : (
-                        <div className="cv-view__file-card">
-                            <span className="material-symbols-rounded cv-view__file-icon">
-                                description
-                            </span>
-                            <p className="cv-view__file-name">{fileName}</p>
-                            <p className="cv-view__file-hint">
-                                Este formato no se puede previsualizar.
-                            </p>
-                            <a
-                                className="cv-view__open-btn"
-                                href={cvUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                <span className="material-symbols-rounded">open_in_new</span>
-                                Ver / Descargar
-                            </a>
+                {/* ── Feedback banner ── */}
+                {(uploadSuccess || uploadError) && (
+                    <div className={`cvv__banner ${uploadSuccess ? 'cvv__banner--success' : 'cvv__banner--error'}`}>
+                        <span className="material-symbols-rounded">
+                            {uploadSuccess ? 'check_circle' : 'error'}
+                        </span>
+                        <p>{uploadSuccess ? '¡Tu CV se ha subido con éxito!' : uploadError}</p>
+                    </div>
+                )}
+
+                {cvUrl ? (
+                    /* ── Estado: CON CV ── */
+                    <div className="cvv__card">
+                        {/* File info row */}
+                        <div className="cvv__file-row">
+                            <div className={`cvv__file-icon-wrap ${isPdf ? 'cvv__file-icon-wrap--pdf' : 'cvv__file-icon-wrap--doc'}`}>
+                                <span className="material-symbols-rounded">
+                                    {isPdf ? 'picture_as_pdf' : 'description'}
+                                </span>
+                            </div>
+                            <div className="cvv__file-info">
+                                <p className="cvv__file-name">{fileName}</p>
+                                <p className="cvv__file-meta">
+                                    {uploadDate ? `Subido el ${uploadDate}` : 'CV subido'}
+                                </p>
+                            </div>
                         </div>
-                    )}
 
-                    {/* Barra para reemplazar CV */}
-                    <div className="cv-view__replace-bar">
+                        {/* Actions */}
+                        <div className="cvv__actions">
+                            <button
+                                className="cvv__btn cvv__btn--view"
+                                onClick={() => window.open(cvUrl, '_blank', 'noopener,noreferrer')}
+                            >
+                                <span className="material-symbols-rounded">visibility</span>
+                                Ver CV
+                            </button>
+                            <button
+                                className="cvv__btn cvv__btn--replace"
+                                onClick={triggerUpload}
+                                disabled={uploading}
+                            >
+                                <span className="material-symbols-rounded">
+                                    {uploading ? 'sync' : 'autorenew'}
+                                </span>
+                                {uploading ? 'Subiendo…' : 'Reemplazar CV'}
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    /* ── Estado: SIN CV ── */
+                    <div className="cvv__card cvv__card--empty">
+                        <div className="cvv__empty-icon-wrap">
+                            <span className="material-symbols-rounded cvv__empty-icon">description</span>
+                            <div className="cvv__empty-icon-badge">
+                                <span className="material-symbols-rounded">add</span>
+                            </div>
+                        </div>
+                        <h2 className="cvv__empty-title">No has subido tu CV todavía</h2>
+                        <p className="cvv__empty-text">
+                            Sube tu currículum para que los reclutadores puedan conocer tu perfil profesional.
+                        </p>
                         <button
-                            className="cv-view__replace-btn"
+                            className="cvv__btn cvv__btn--upload"
                             onClick={triggerUpload}
                             disabled={uploading}
                         >
                             <span className="material-symbols-rounded">
-                                {uploading ? 'sync' : 'upload'}
+                                {uploading ? 'sync' : 'upload_file'}
                             </span>
-                            {uploading ? 'Subiendo...' : 'Reemplazar CV'}
+                            {uploading ? 'Subiendo…' : 'Subir CV'}
                         </button>
+                        <p className="cvv__format-hint">
+                            Formatos aceptados:&nbsp;
+                            <strong>PDF, DOCX</strong> — máx {MAX_SIZE_MB} MB
+                        </p>
                     </div>
-                </div>
-            ) : (
-                <div className="cv-view__empty">
-                    <span className="material-symbols-rounded cv-view__empty-icon">
-                        upload_file
-                    </span>
-                    <h3 className="cv-view__empty-title">Sin CV todavia</h3>
-                    <p className="cv-view__empty-text">
-                        Sube tu CV para que las empresas puedan conocer tu experiencia completa.
-                    </p>
-                    <p className="cv-view__empty-hint">PDF o DOCX · max. {MAX_SIZE_MB} MB</p>
-                    <button
-                        className="cv-view__upload-btn"
-                        onClick={triggerUpload}
-                        disabled={uploading}
-                    >
-                        <span className="material-symbols-rounded">
-                            {uploading ? 'sync' : 'upload'}
-                        </span>
-                        {uploading ? 'Subiendo...' : 'Subir CV'}
-                    </button>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }

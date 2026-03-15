@@ -1,8 +1,8 @@
 /* ============================================
-   CvView — Visualizador de CV del candidato
+   CvView — Visualizador / uploader de CV — diseño Stitch
    ============================================ */
 
-.cv-view {
+.cvv {
     display: flex;
     flex-direction: column;
     height: 100dvh;
@@ -11,20 +11,20 @@
 }
 
 /* ── Header ── */
-.cv-view__header {
+.cvv__header {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 4px;
     padding: 12px 16px;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
 }
 
-.cv-view__back {
+.cvv__back {
     width: 40px;
     height: 40px;
-    border-radius: 12px;
+    border-radius: 50%;
     border: none;
     outline: none;
     background: transparent;
@@ -33,238 +33,268 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background 0.2s ease, color 0.2s ease;
+    transition: background 0.15s ease, color 0.15s ease;
+    flex-shrink: 0;
     font-family: inherit;
 }
 
-.cv-view__back:hover {
-    background: var(--bg);
-    color: var(--primary);
-}
+.cvv__back:hover { background: var(--bg); color: var(--text-primary); }
+.cvv__back .material-symbols-rounded { font-size: 24px; }
 
-.cv-view__title {
+.cvv__title {
     flex: 1;
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--text-primary);
-}
-
-.cv-view__download {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    background: transparent;
-    color: var(--primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s ease;
-    text-decoration: none;
-}
-
-.cv-view__download:hover {
-    background: rgba(19, 146, 236, 0.1);
-}
-
-.cv-view__download .material-symbols-rounded {
-    font-size: 22px;
-}
-
-/* ── Body (PDF iframe) ── */
-.cv-view__body {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-.cv-view__iframe {
-    flex: 1;
-    width: 100%;
-    border: none;
-    background: var(--bg);
-}
-
-/* ── File card (formatos no previsualizable) ── */
-.cv-view__file-card {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 40px 24px;
-    text-align: center;
-}
-
-.cv-view__file-icon {
-    font-size: 64px;
-    color: var(--primary);
-    opacity: 0.7;
-}
-
-.cv-view__file-name {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text-primary);
-    word-break: break-all;
-}
-
-.cv-view__file-hint {
-    font-size: 13px;
-    color: var(--text-muted);
-    line-height: 1.5;
-}
-
-.cv-view__open-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
-    border-radius: 12px;
-    background: var(--gradient-primary);
-    color: var(--text-inverse);
-    text-decoration: none;
-    font-size: 15px;
-    font-weight: 600;
-    transition: box-shadow 0.2s ease;
-    margin-top: 8px;
-}
-
-.cv-view__open-btn:hover {
-    box-shadow: var(--shadow-md);
-}
-
-.cv-view__open-btn .material-symbols-rounded {
-    font-size: 20px;
-}
-
-/* ── Empty state ── */
-.cv-view__empty {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    gap: 12px;
-    padding: 40px 24px;
-}
-
-.cv-view__empty-icon {
-    font-size: 60px;
-    color: var(--text-muted);
-    opacity: 0.35;
-}
-
-.cv-view__empty-title {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--text-primary);
 }
 
-.cv-view__empty-text {
-    font-size: 14px;
-    color: var(--text-secondary);
-    line-height: 1.6;
-    max-width: 260px;
-}
-
-.cv-view__upload-btn {
+.cvv__download {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
-    border-radius: 12px;
-    background: var(--gradient-primary);
-    color: var(--text-inverse);
-    border: none;
-    outline: none;
-    font-size: 15px;
-    font-weight: 600;
-    font-family: inherit;
-    cursor: pointer;
-    transition: box-shadow 0.2s ease;
-    margin-top: 8px;
+    justify-content: center;
+    color: var(--primary);
+    text-decoration: none;
+    transition: background 0.15s ease;
+    flex-shrink: 0;
 }
 
-.cv-view__upload-btn:hover {
-    box-shadow: var(--shadow-md);
-}
+.cvv__download:hover { background: rgba(var(--primary-rgb), 0.08); }
+.cvv__download .material-symbols-rounded { font-size: 22px; }
 
-.cv-view__upload-btn .material-symbols-rounded {
-    font-size: 20px;
-}
-
-/* ── Hint formato ── */
-.cv-view__empty-hint {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: -6px;
+/* ── Scroll ── */
+.cvv__scroll {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 /* ── Feedback banner ── */
-.cv-view__feedback {
+.cvv__banner {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    font-size: 13px;
+    gap: 10px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-size: 14px;
     font-weight: 600;
     flex-shrink: 0;
+    animation: cvv-fade-in 0.25s ease;
 }
 
-.cv-view__feedback .material-symbols-rounded {
-    font-size: 18px;
+@keyframes cvv-fade-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
-.cv-view__feedback--success {
-    background: rgba(0, 208, 132, 0.12);
+.cvv__banner .material-symbols-rounded { font-size: 20px; flex-shrink: 0; }
+
+.cvv__banner--success {
+    background: rgba(var(--success-rgb), 0.1);
+    border: 1px solid rgba(var(--success-rgb), 0.25);
     color: var(--success);
 }
 
-.cv-view__feedback--error {
-    background: rgba(255, 107, 157, 0.12);
+.cvv__banner--error {
+    background: rgba(var(--danger-rgb), 0.1);
+    border: 1px solid rgba(var(--danger-rgb), 0.25);
     color: var(--danger);
 }
 
-/* ── Replace bar (debajo del iframe/card) ── */
-.cv-view__replace-bar {
-    flex-shrink: 0;
-    padding: 10px 16px;
+/* ── Card (shared) ── */
+.cvv__card {
     background: var(--surface);
-    border-top: 1px solid var(--border);
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    padding: 24px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
-.cv-view__replace-btn {
+/* ── Empty state card ── */
+.cvv__card--empty {
+    align-items: center;
+    text-align: center;
+    padding: 36px 24px 28px;
+    gap: 14px;
+}
+
+/* Empty icon */
+.cvv__empty-icon-wrap {
+    position: relative;
+    width: 88px;
+    height: 88px;
+    margin-bottom: 6px;
+}
+
+.cvv__empty-icon {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: rgba(var(--primary-rgb), 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 44px;
+    color: var(--primary);
+}
+
+.cvv__empty-icon-badge {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--primary);
+    border: 3px solid var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cvv__empty-icon-badge .material-symbols-rounded {
+    font-size: 14px;
+    color: #fff;
+}
+
+.cvv__empty-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.3;
+}
+
+.cvv__empty-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    max-width: 280px;
+}
+
+.cvv__format-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: -4px;
+}
+
+.cvv__format-hint strong {
+    color: var(--text-secondary);
+}
+
+/* ── File info row (state: with CV) ── */
+.cvv__file-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.cvv__file-icon-wrap {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.cvv__file-icon-wrap--pdf {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+}
+
+.cvv__file-icon-wrap--doc {
+    background: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary);
+}
+
+.cvv__file-icon-wrap .material-symbols-rounded { font-size: 30px; }
+
+.cvv__file-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.cvv__file-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cvv__file-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 3px;
+}
+
+/* ── Action buttons ── */
+.cvv__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.cvv__btn {
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    width: 100%;
-    padding: 12px;
-    border-radius: 12px;
-    border: 1.5px solid var(--border);
-    background: transparent;
-    color: var(--text-secondary);
-    font-size: 14px;
-    font-weight: 600;
+    padding: 14px;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 700;
     font-family: inherit;
     cursor: pointer;
-    transition: border-color 0.2s ease, color 0.2s ease;
     outline: none;
+    transition: background 0.15s ease, opacity 0.15s ease, border-color 0.15s ease;
+    text-decoration: none;
+    border: none;
 }
 
-.cv-view__replace-btn:hover:not(:disabled) {
+.cvv__btn .material-symbols-rounded { font-size: 20px; }
+
+/* Ver CV — filled primary-tint */
+.cvv__btn--view {
+    background: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary);
+    border: none;
+}
+
+.cvv__btn--view:hover { background: rgba(var(--primary-rgb), 0.18); }
+
+/* Reemplazar — outline */
+.cvv__btn--replace {
+    background: transparent;
+    border: 2px solid var(--border);
+    color: var(--text-secondary);
+}
+
+.cvv__btn--replace:hover:not(:disabled) {
     border-color: var(--primary);
     color: var(--primary);
 }
 
-.cv-view__replace-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+.cvv__btn--replace:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* Subir CV — solid primary */
+.cvv__btn--upload {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.3);
 }
 
-.cv-view__replace-btn .material-symbols-rounded {
-    font-size: 18px;
-}
+.cvv__btn--upload:hover:not(:disabled) { opacity: 0.9; }
+.cvv__btn--upload:disabled { opacity: 0.55; cursor: not-allowed; }
