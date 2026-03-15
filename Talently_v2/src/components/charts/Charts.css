@@ -1,0 +1,162 @@
+/* ============================================
+   Charts — Estilos compartidos — diseño Stitch
+   ============================================ */
+
+/* ── Shared card wrapper (BarChart, LineChart) ── */
+.chart-container {
+    background: var(--surface);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    padding: 20px;
+}
+
+.chart-container__title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.chart-container__subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+}
+
+.chart-container canvas {
+    width: 100% !important;
+    max-height: 220px;
+}
+
+/* ══════════════════════════════════════════════
+   FunnelChart — trapezoid CSS shape
+══════════════════════════════════════════════ */
+.fc {
+    background: var(--surface);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    padding: 20px;
+}
+
+.fc__title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+.fc__funnel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+}
+
+/* Each layer-wrap contains the colored trapezoid + conversion label below */
+.fc__layer-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ── Trapezoid layers ── */
+.fc__layer {
+    width: 100%;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    color: #fff;
+    font-family: inherit;
+    position: relative;
+}
+
+/* Layer 1 — widest */
+.fc__layer--views {
+    clip-path: polygon(4% 0, 96% 0, 100% 100%, 0% 100%);
+    background: var(--primary);
+    border-radius: 8px 8px 0 0;
+}
+
+/* Layer 2 — medium */
+.fc__layer--likes {
+    clip-path: polygon(0% 0, 100% 0, 96% 100%, 4% 100%);
+    background: rgba(var(--primary-rgb), 0.75);
+}
+
+/* Layer 3 — narrowest */
+.fc__layer--matches {
+    clip-path: polygon(0% 0, 100% 0, 92% 100%, 8% 100%);
+    background: rgba(var(--primary-rgb), 0.5);
+    border-radius: 0 0 6px 6px;
+}
+
+.fc__layer-label {
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 0.95;
+    letter-spacing: 0.2px;
+}
+
+.fc__layer-value {
+    font-size: 14px;
+    font-weight: 800;
+}
+
+/* Conversion rate connector between layers */
+.fc__conv {
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fc__conv-rate {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* ── Totals row ── */
+.fc__totals {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+}
+
+.fc__total-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.fc__total-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.fc__total-dot--views   { background: var(--primary); }
+.fc__total-dot--likes   { background: rgba(var(--primary-rgb), 0.65); }
+.fc__total-dot--matches { background: rgba(var(--primary-rgb), 0.4); }
+
+.fc__total-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.fc__total-value {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text-primary);
+}
