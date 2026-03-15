@@ -1,42 +1,71 @@
 /* ============================================
-   CompanyDashboard — Dashboard principal de empresa
+   CompanyDashboard — diseño Stitch
    ============================================ */
 
-.company-dashboard {
+.cd {
     display: flex;
     flex-direction: column;
-    height: 100vh;
     height: 100dvh;
     background: var(--bg);
     overflow: hidden;
 }
 
 /* ── Header ── */
-.company-dashboard__header {
+.cd__header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
+    padding: 10px 16px;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
 }
 
-.company-dashboard__logo {
-    font-size: 22px;
-    font-weight: 800;
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+.cd__header-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.company-dashboard__header-actions {
+.cd__header-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.cd__header-logo-placeholder {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.cd__header-logo-placeholder .material-symbols-rounded { font-size: 18px; }
+
+.cd__header-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+}
+
+.cd__header-actions {
     display: flex;
     gap: 4px;
 }
 
-.company-dashboard__header-btn {
+.cd__header-btn {
     width: 40px;
     height: 40px;
     border-radius: 12px;
@@ -48,17 +77,14 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: background 0.15s ease, color 0.15s ease;
     font-family: inherit;
 }
 
-.company-dashboard__header-btn:hover {
-    background: var(--bg);
-    color: var(--primary);
-}
+.cd__header-btn:hover { background: var(--bg); color: var(--primary); }
+.cd__header-btn .material-symbols-rounded { font-size: 22px; }
 
-/* ── Badge contador notificaciones ── */
-.notif-count-badge {
+.cd__notif-badge {
     position: absolute;
     top: 2px;
     right: 2px;
@@ -66,7 +92,7 @@
     height: 16px;
     border-radius: 8px;
     background: var(--danger);
-    color: #ffffff;
+    color: #fff;
     font-size: 10px;
     font-weight: 700;
     display: flex;
@@ -78,14 +104,14 @@
 }
 
 /* ── Content ── */
-.company-dashboard__content {
+.cd__content {
     flex: 1;
     min-height: 0;
     overflow: hidden;
 }
 
 /* ── Tab Bar ── */
-.company-dashboard__tabs {
+.cd__tabs {
     display: flex;
     align-items: stretch;
     background: var(--surface);
@@ -94,7 +120,7 @@
     flex-shrink: 0;
 }
 
-.company-dashboard__tab {
+.cd__tab {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -114,15 +140,11 @@
     position: relative;
 }
 
-.company-dashboard__tab .material-symbols-rounded {
-    font-size: 22px;
-}
+.cd__tab .material-symbols-rounded { font-size: 22px; }
 
-.company-dashboard__tab.is-active {
-    color: var(--primary);
-}
+.cd__tab--active { color: var(--primary); }
 
-.company-dashboard__tab.is-active::after {
+.cd__tab--active::after {
     content: '';
     position: absolute;
     top: 0;
@@ -134,8 +156,8 @@
     background: var(--primary);
 }
 
-/* ── Dashboard Home Panel ── */
-.company-home {
+/* ── Shared scroll container ── */
+.cd__tab-scroll {
     height: 100%;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -145,208 +167,301 @@
     gap: 16px;
 }
 
-/* Metrics Cards */
-.company-home__metrics {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
-.company-home__metric {
-    background: var(--surface);
-    border-radius: 14px;
-    padding: 16px;
-    box-shadow: var(--shadow-sm);
-}
-
-.company-home__metric-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 10px;
-    font-size: 20px;
-}
-
-.company-home__metric-icon--primary {
-    background: rgba(19, 146, 236, 0.12);
-    color: var(--primary);
-}
-
-.company-home__metric-icon--success {
-    background: rgba(0, 208, 132, 0.12);
-    color: var(--success);
-}
-
-.company-home__metric-icon--warning {
-    background: rgba(253, 203, 110, 0.12);
-    color: var(--warning);
-}
-
-.company-home__metric-icon--danger {
-    background: rgba(255, 107, 157, 0.12);
-    color: var(--danger);
-}
-
-.company-home__metric-value {
-    font-size: 28px;
-    font-weight: 800;
-    color: var(--text-primary);
-    line-height: 1;
-    margin-bottom: 4px;
-}
-
-.company-home__metric-label {
-    font-size: 12px;
-    color: var(--text-secondary);
-    font-weight: 500;
-}
-
-/* Quick Action */
-.company-home__action {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px;
-    background: var(--surface);
-    border-radius: 14px;
-    border: none;
-    outline: none;
-    cursor: pointer;
-    box-shadow: var(--shadow-sm);
-    width: 100%;
-    text-align: left;
-    transition: transform 0.15s ease;
-    font-family: inherit;
-}
-
-.company-home__action:active {
-    transform: scale(0.98);
-}
-
-.company-home__action-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: var(--gradient-primary);
-    color: var(--text-inverse);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.company-home__action-icon .material-symbols-rounded {
-    font-size: 22px;
-}
-
-.company-home__action-text h4 {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--text-primary);
-}
-
-.company-home__action-text p {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 2px;
-}
-
-/* ══════════════════════════════════════════════
-   TAB OFERTAS
-══════════════════════════════════════════════ */
-.company-offers {
-    height: 100%;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.company-offers__header {
+/* ── Shared tab header ── */
+.cd__tab-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
-.company-offers__title {
+.cd__tab-title {
     font-size: 18px;
     font-weight: 700;
     color: var(--text-primary);
 }
 
-.company-offers__new-btn {
+.cd__new-btn {
     display: flex;
     align-items: center;
     gap: 4px;
     padding: 8px 14px;
     border-radius: 10px;
     background: var(--gradient-primary);
-    color: var(--text-inverse);
+    color: #fff;
     border: none;
     outline: none;
     font-size: 13px;
     font-weight: 600;
     font-family: inherit;
     cursor: pointer;
-    transition: box-shadow 0.2s ease;
+    transition: opacity 0.15s ease;
 }
 
-.company-offers__new-btn:hover {
-    box-shadow: var(--shadow-md);
-}
+.cd__new-btn:hover { opacity: 0.9; }
+.cd__new-btn .material-symbols-rounded { font-size: 18px; }
 
-.company-offers__new-btn .material-symbols-rounded {
-    font-size: 18px;
-}
-
-/* ── Lista de ofertas ── */
-.company-offers__list {
+/* ──────────────────────────────────────────────
+   HOME TAB
+────────────────────────────────────────────── */
+.cd__home {
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 20px 16px;
     display: flex;
     flex-direction: column;
+    gap: 20px;
+}
+
+/* Greeting */
+.cd__greeting {}
+
+.cd__greeting-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.cd__greeting-sub {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+/* Metrics */
+.cd__metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 12px;
 }
 
-.company-offer {
+.cd__metric {
     background: var(--surface);
-    border-radius: 14px;
-    padding: 16px;
+    border-radius: 16px;
     border: 1px solid var(--border);
+    padding: 16px;
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-.company-offer__top {
+.cd__metric--half { grid-column: span 1; }
+
+.cd__metric--full {
+    grid-column: span 2;
+    flex-direction: row;
+    align-items: center;
+}
+
+.cd__metric-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.cd__metric-text {}
+
+.cd__metric-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.cd__metric-icon .material-symbols-rounded { font-size: 20px; }
+
+.cd__metric-icon--blue {
+    background: rgba(var(--primary-rgb), 0.12);
+    color: var(--primary);
+}
+
+.cd__metric-icon--green {
+    background: rgba(var(--success-rgb), 0.12);
+    color: var(--success);
+}
+
+.cd__metric-icon--purple {
+    background: rgba(var(--secondary-rgb), 0.12);
+    color: var(--secondary);
+}
+
+.cd__metric-value {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.cd__metric-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+/* CTA crear oferta */
+.cd__cta-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 15px;
+    border-radius: 16px;
+    background: var(--gradient-primary);
+    color: #fff;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.3);
+    transition: opacity 0.15s ease;
+}
+
+.cd__cta-btn:hover { opacity: 0.9; }
+.cd__cta-btn .material-symbols-rounded { font-size: 22px; }
+
+/* Offers preview section */
+.cd__offers-preview {}
+
+.cd__section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.cd__section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.cd__section-link {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary);
+    background: none;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0;
+}
+
+.cd__section-link:hover { opacity: 0.75; }
+
+.cd__offers-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.cd__offer-card {
+    background: var(--surface);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cd__offer-card__left { flex: 1; min-width: 0; }
+
+.cd__offer-card__title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cd__offer-card__area {
+    font-size: 12px;
+    color: var(--primary);
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.cd__offer-card__meta { margin-top: 6px; }
+
+.cd__offer-card__chip {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 99px;
+    background: rgba(var(--success-rgb), 0.1);
+    color: var(--success);
+}
+
+.cd__offer-card__toggle {
+    background: none;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    color: var(--success);
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    flex-shrink: 0;
+}
+
+.cd__offer-card__toggle .material-symbols-rounded { font-size: 30px; }
+
+/* ──────────────────────────────────────────────
+   OFFERS TAB
+────────────────────────────────────────────── */
+.cd__offers-full-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cd__offer-item {
+    background: var(--surface);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cd__offer-item__top {
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
-.company-offer__badge {
+.cd__badge {
     font-size: 11px;
     font-weight: 700;
     padding: 3px 10px;
-    border-radius: 20px;
+    border-radius: 99px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-.company-offer__badge--active {
-    background: rgba(0, 208, 132, 0.15);
+.cd__badge--active {
+    background: rgba(var(--success-rgb), 0.12);
     color: var(--success);
 }
 
-.company-offer__badge--inactive {
-    background: rgba(100, 100, 100, 0.1);
+.cd__badge--inactive {
+    background: var(--bg);
     color: var(--text-muted);
+    border: 1px solid var(--border);
 }
 
-.company-offer__toggle {
+.cd__toggle-btn {
     background: none;
     border: none;
     outline: none;
@@ -355,46 +470,39 @@
     display: flex;
     align-items: center;
     color: var(--text-muted);
-    transition: color 0.2s ease;
+    transition: color 0.15s ease;
 }
 
-.company-offer__toggle:hover:not(:disabled) {
-    color: var(--primary);
-}
+.cd__toggle-btn:hover:not(:disabled) { color: var(--primary); }
+.cd__toggle-btn .material-symbols-rounded { font-size: 28px; }
 
-.company-offer__toggle .material-symbols-rounded {
-    font-size: 28px;
-}
-
-.company-offer__toggle--loading .material-symbols-rounded {
-    animation: offer-spin 0.7s linear infinite;
+.cd__toggle-btn--spinning .material-symbols-rounded {
+    animation: cd-spin 0.7s linear infinite;
     color: var(--text-muted);
 }
 
-@keyframes offer-spin {
-    to { transform: rotate(360deg); }
-}
+@keyframes cd-spin { to { transform: rotate(360deg); } }
 
-.company-offer__title {
+.cd__offer-item__title {
     font-size: 16px;
     font-weight: 700;
     color: var(--text-primary);
     line-height: 1.3;
 }
 
-.company-offer__area {
+.cd__offer-item__area {
     font-size: 13px;
     color: var(--primary);
     font-weight: 500;
 }
 
-.company-offer__meta {
+.cd__offer-item__meta {
     display: flex;
-    gap: 14px;
+    gap: 12px;
     flex-wrap: wrap;
 }
 
-.company-offer__meta-item {
+.cd__meta-pill {
     display: flex;
     align-items: center;
     gap: 4px;
@@ -402,12 +510,10 @@
     color: var(--text-muted);
 }
 
-.company-offer__meta-item .material-symbols-rounded {
-    font-size: 14px;
-}
+.cd__meta-pill .material-symbols-rounded { font-size: 13px; }
 
-/* ── Estado vacío ── */
-.company-offers__empty {
+/* ── Empty state ── */
+.cd__empty {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -418,67 +524,55 @@
     padding: 40px 20px;
 }
 
-.company-offers__empty-icon {
+.cd__empty-icon {
     font-size: 52px;
     color: var(--border);
 }
 
-.company-offers__empty-title {
+.cd__empty-title {
     font-size: 18px;
     font-weight: 700;
     color: var(--text-primary);
 }
 
-.company-offers__empty-text {
+.cd__empty-text {
     font-size: 14px;
     color: var(--text-secondary);
-    line-height: 1.5;
+    line-height: 1.55;
     max-width: 260px;
 }
 
-.company-offers__empty-btn {
+.cd__empty-btn {
     margin-top: 8px;
     padding: 12px 24px;
-    border-radius: 12px;
+    border-radius: 14px;
     background: var(--gradient-primary);
-    color: var(--text-inverse);
+    color: #fff;
     border: none;
     outline: none;
     font-size: 15px;
     font-weight: 600;
     font-family: inherit;
     cursor: pointer;
-    transition: box-shadow 0.2s ease;
+    transition: opacity 0.15s ease;
 }
 
-.company-offers__empty-btn:hover {
-    box-shadow: var(--shadow-md);
-}
+.cd__empty-btn:hover { opacity: 0.9; }
 
-/* ══════════════════════════════════════════════
-   TAB PERFIL EMPRESA
-══════════════════════════════════════════════ */
-.company-profile {
-    height: 100%;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.company-profile__hero {
+/* ──────────────────────────────────────────────
+   PROFILE TAB
+────────────────────────────────────────────── */
+.cd__profile-hero {
     display: flex;
     align-items: center;
     gap: 16px;
     background: var(--surface);
-    border-radius: 16px;
-    padding: 16px;
+    border-radius: 18px;
     border: 1px solid var(--border);
+    padding: 18px 16px;
 }
 
-.company-profile__logo {
+.cd__profile-logo {
     width: 72px;
     height: 72px;
     border-radius: 16px;
@@ -487,67 +581,97 @@
     border: 1px solid var(--border);
 }
 
-.company-profile__logo-placeholder {
+.cd__profile-logo-placeholder {
     width: 72px;
     height: 72px;
     border-radius: 16px;
-    background: var(--bg);
+    background: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary);
     border: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    color: var(--text-muted);
 }
 
-.company-profile__logo-placeholder .material-symbols-rounded {
-    font-size: 32px;
-}
+.cd__profile-logo-placeholder .material-symbols-rounded { font-size: 32px; }
 
-.company-profile__name {
+.cd__profile-name {
     font-size: 18px;
     font-weight: 700;
     color: var(--text-primary);
     line-height: 1.2;
 }
 
-.company-profile__sector {
+.cd__profile-sector {
     font-size: 13px;
     color: var(--primary);
     font-weight: 500;
     margin-top: 4px;
 }
 
-/* ── Campos ── */
-.company-profile__fields {
-    display: flex;
-    flex-direction: column;
+/* Fields */
+.cd__profile-fields {
     background: var(--surface);
-    border-radius: 16px;
+    border-radius: 18px;
     border: 1px solid var(--border);
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
-.company-profile__field {
+.cd__profile-field {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
+    gap: 14px;
     padding: 14px 16px;
     border-bottom: 1px solid var(--border);
 }
 
-.company-profile__field:last-child {
-    border-bottom: none;
-}
+.cd__profile-field:last-child { border-bottom: none; }
 
-.company-profile__field-icon {
-    font-size: 20px;
-    color: var(--primary);
-    margin-top: 2px;
+.cd__profile-field--block {}
+
+.cd__profile-field-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
+    margin-top: 2px;
 }
 
-.company-profile__field-label {
+.cd__profile-field-icon .material-symbols-rounded { font-size: 18px; }
+
+.cd__profile-field-icon--blue {
+    background: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary);
+}
+
+.cd__profile-field-icon--green {
+    background: rgba(var(--success-rgb), 0.12);
+    color: var(--success);
+}
+
+.cd__profile-field-icon--purple {
+    background: rgba(var(--secondary-rgb), 0.12);
+    color: var(--secondary);
+}
+
+.cd__profile-field-icon--amber {
+    background: rgba(var(--warning-rgb), 0.15);
+    color: var(--warning);
+}
+
+.cd__profile-field-icon--muted {
+    background: var(--bg);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+.cd__profile-field-label {
     font-size: 11px;
     font-weight: 600;
     color: var(--text-muted);
@@ -556,36 +680,34 @@
     margin-bottom: 3px;
 }
 
-.company-profile__field-value {
+.cd__profile-field-value {
     font-size: 14px;
     color: var(--text-primary);
     line-height: 1.5;
 }
 
-/* ── Botón editar ── */
-.company-profile__edit-btn {
+/* Edit btn */
+.cd__profile-edit-btn {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     padding: 14px;
-    border-radius: 14px;
+    border-radius: 16px;
     background: var(--surface);
     color: var(--primary);
     border: 1.5px solid var(--primary);
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 700;
     font-family: inherit;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.15s ease, color 0.15s ease;
     outline: none;
 }
 
-.company-profile__edit-btn:hover {
+.cd__profile-edit-btn:hover {
     background: var(--primary);
-    color: var(--text-inverse);
+    color: #fff;
 }
 
-.company-profile__edit-btn .material-symbols-rounded {
-    font-size: 20px;
-}
+.cd__profile-edit-btn .material-symbols-rounded { font-size: 20px; }
