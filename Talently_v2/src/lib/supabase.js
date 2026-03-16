@@ -32,7 +32,7 @@ export const db = {
         },
         resetPassword: async (email) => {
             return await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: window.location.origin + window.location.pathname
+                redirectTo: `${window.location.origin}/auth/callback`
             });
         },
         verifyOtp: async (email, token, type = 'recovery') => {
@@ -168,7 +168,7 @@ export const db = {
         getById: async (id) => {
             return await supabase
                 .from('offers')
-                .select('*, companies(name, logo_url, sector, city, country, website)')
+                .select('*, companies(*)')
                 .eq('id', id)
                 .single();
         },
@@ -178,7 +178,8 @@ export const db = {
                 .from('offers')
                 .select('*')
                 .eq('user_id', userId)
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+                .limit(50);
         },
 
         getAllActive: async () => {
@@ -186,7 +187,8 @@ export const db = {
                 .from('offers')
                 .select('*')
                 .eq('status', 'active')
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+                .limit(50);
 
             if (error || !offers?.length) return { data: [], error };
 
@@ -255,7 +257,8 @@ export const db = {
                 .from('messages')
                 .select('*')
                 .eq('match_id', matchId)
-                .order('created_at', { ascending: true });
+                .order('created_at', { ascending: false })
+                .limit(100);
         },
 
         sendMessage: async (matchId, content) => {
@@ -473,7 +476,8 @@ export const db = {
                 .from('notifications')
                 .select('*')
                 .eq('user_id', userId)
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+                .limit(30);
         },
 
         markAsRead: async (notificationId) => {
@@ -498,6 +502,11 @@ export const db = {
                 .select()
                 .single();
         },
+    },
+
+    // ─── FAQs ────────────────────────────────
+    faqs: {
+        getAll: () => supabase.from('faqs').select('*').order('display_order'),
     },
 
     // ─── Reference Data ──────────────────────
