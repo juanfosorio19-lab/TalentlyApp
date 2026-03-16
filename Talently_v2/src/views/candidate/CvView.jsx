@@ -2,7 +2,7 @@
 // Visualizador / uploader de CV del candidato — diseño Stitch
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase, db } from '../../lib/supabase';
+import { db } from '../../lib/supabase';
 import { useApp, Actions } from '../../context/AppContext';
 import './CvView.css';
 
@@ -74,13 +74,8 @@ export default function CvView() {
             const publicUrl = await db.storage.uploadDocument(file, 'documents');
             if (!publicUrl) throw new Error('Upload falló');
 
-            const { data: { user } } = await supabase.auth.getUser();
-            const { data: updated } = await supabase
-                .from('profiles')
-                .update({ cv_url: publicUrl })
-                .eq('id', user.id)
-                .select()
-                .single();
+            const { data: { user } } = await db.auth.getUser();
+            const { data: updated } = await db.profiles.updateCv(user.id, publicUrl);
 
             if (updated) dispatch({ type: Actions.SET_PROFILE, payload: updated });
             setUploadSuccess(true);

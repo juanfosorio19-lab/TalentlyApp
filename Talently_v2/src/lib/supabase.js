@@ -46,7 +46,8 @@ export const db = {
         },
         onAuthStateChange: (callback) => {
             return supabase.auth.onAuthStateChange(callback);
-        }
+        },
+        deleteAccount: () => supabase.rpc('delete_account'),
     },
 
     // ─── Storage ─────────────────────────────
@@ -118,7 +119,15 @@ export const db = {
                 .eq('onboarding_completed', true)
                 .limit(50);
             return { data: data || [], error };
-        }
+        },
+
+        updateCv: (userId, cvUrl) =>
+            supabase
+                .from('profiles')
+                .update({ cv_url: cvUrl })
+                .eq('id', userId)
+                .select()
+                .single(),
     },
 
     // ─── Companies ───────────────────────────
@@ -502,6 +511,12 @@ export const db = {
                 .select()
                 .single();
         },
+    },
+
+    // ─── Support ─────────────────────────────
+    support: {
+        createTicket: (data) =>
+            supabase.from('support_tickets').insert(data).select().single(),
     },
 
     // ─── FAQs ────────────────────────────────
