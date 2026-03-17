@@ -93,5 +93,23 @@ export const POPULAR_TECH_FALLBACK = [
     '.NET', 'Django', 'FastAPI', 'Spring Boot', 'Rails', 'Laravel',
 ];
 
+// ── Upload limits ─────────────────────────────────────────────────────
+export const UPLOAD_LIMITS = {
+    image: {
+        types: ['image/jpeg', 'image/png', 'image/webp'],
+        maxSize: 5 * 1024 * 1024, // 5 MB
+        label: 'JPG, PNG o WebP — máx 5 MB',
+    },
+    document: {
+        types: [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ],
+        maxSize: 10 * 1024 * 1024, // 10 MB
+        label: 'PDF, DOCX — máx 10 MB',
+    },
+};
+
 // ── Versión de la app ──────────────────────────────────────────────────
 export const APP_VERSION = '1.0.0';

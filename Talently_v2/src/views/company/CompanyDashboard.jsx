@@ -35,6 +35,7 @@ export default function CompanyDashboard() {
         totalViews: 0,
         unreadMessages: 0,
     });
+    const [metricsLoading, setMetricsLoading] = useState(true);
     const [offers, setOffers] = useState([]);
     const [togglingId, setTogglingId] = useState(null);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -76,6 +77,8 @@ export default function CompanyDashboard() {
             } catch (err) {
                 if (!isMounted) return;
                 console.error('[CompanyDashboard] Error loading metrics:', err);
+            } finally {
+                if (isMounted) setMetricsLoading(false);
             }
         };
 
@@ -128,33 +131,43 @@ export default function CompanyDashboard() {
 
             {/* Metrics grid */}
             <div className="cd__metrics">
-                <div className="cd__metric cd__metric--half">
-                    <div className="cd__metric-icon cd__metric-icon--blue">
-                        <span className="material-symbols-rounded">work</span>
-                    </div>
-                    <div className="cd__metric-value">{metrics.activeOffers}</div>
-                    <div className="cd__metric-label">Ofertas activas</div>
-                </div>
-
-                <div className="cd__metric cd__metric--half">
-                    <div className="cd__metric-icon cd__metric-icon--green">
-                        <span className="material-symbols-rounded">favorite</span>
-                    </div>
-                    <div className="cd__metric-value">{metrics.totalMatches}</div>
-                    <div className="cd__metric-label">Matches totales</div>
-                </div>
-
-                <div className="cd__metric cd__metric--full">
-                    <div className="cd__metric-row">
-                        <div className="cd__metric-icon cd__metric-icon--purple">
-                            <span className="material-symbols-rounded">visibility</span>
+                {metricsLoading ? (
+                    <>
+                        <div className="cd__metric cd__metric--half cd__metric--skeleton" aria-busy="true" />
+                        <div className="cd__metric cd__metric--half cd__metric--skeleton" aria-busy="true" />
+                        <div className="cd__metric cd__metric--full cd__metric--skeleton" aria-busy="true" />
+                    </>
+                ) : (
+                    <>
+                        <div className="cd__metric cd__metric--half">
+                            <div className="cd__metric-icon cd__metric-icon--blue">
+                                <span className="material-symbols-rounded">work</span>
+                            </div>
+                            <div className="cd__metric-value">{metrics.activeOffers}</div>
+                            <div className="cd__metric-label">Ofertas activas</div>
                         </div>
-                        <div className="cd__metric-text">
-                            <div className="cd__metric-value">{metrics.totalViews}</div>
-                            <div className="cd__metric-label">Vistas de perfil</div>
+
+                        <div className="cd__metric cd__metric--half">
+                            <div className="cd__metric-icon cd__metric-icon--green">
+                                <span className="material-symbols-rounded">favorite</span>
+                            </div>
+                            <div className="cd__metric-value">{metrics.totalMatches}</div>
+                            <div className="cd__metric-label">Matches totales</div>
                         </div>
-                    </div>
-                </div>
+
+                        <div className="cd__metric cd__metric--full">
+                            <div className="cd__metric-row">
+                                <div className="cd__metric-icon cd__metric-icon--purple">
+                                    <span className="material-symbols-rounded">visibility</span>
+                                </div>
+                                <div className="cd__metric-text">
+                                    <div className="cd__metric-value">{metrics.totalViews}</div>
+                                    <div className="cd__metric-label">Vistas de perfil</div>
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* CTA crear oferta */}

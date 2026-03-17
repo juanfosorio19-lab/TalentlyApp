@@ -303,6 +303,17 @@
     margin-top: 2px;
 }
 
+/* Skeleton KPI */
+.cd__metric--skeleton {
+    min-height: 88px;
+    animation: cd-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes cd-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.35; }
+}
+
 /* CTA crear oferta */
 .cd__cta-btn {
     width: 100%;
