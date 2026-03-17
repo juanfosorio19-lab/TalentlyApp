@@ -13,10 +13,10 @@ import './MainApp.css';
 import './FiltersView.css';
 
 const TABS = [
-    { id: 'swipe', label: 'Explorar', icon: 'swap_horiz' },
-    { id: 'matches', label: 'Matches', icon: 'favorite' },
-    { id: 'messages', label: 'Mensajes', icon: 'chat_bubble' },
-    { id: 'profile', label: 'Perfil', icon: 'person' },
+    { id: 'swipe',    label: 'Explorar',  icon: 'style' },
+    { id: 'matches',  label: 'Matches',   icon: 'grid_view' },
+    { id: 'messages', label: 'Mensajes',  icon: 'chat_bubble_outline' },
+    { id: 'profile',  label: 'Perfil',    icon: 'person_outline' },
 ];
 
 function hasActiveFilters(f) {
@@ -43,17 +43,18 @@ export default function MainApp() {
     const filtersActive = hasActiveFilters(state.candidateFilters);
     const userId = state.currentUser?.id;
 
-    // Cargar contador de notificaciones no leídas
+    // Contador de notificaciones no leídas (campana del header)
     useEffect(() => {
         if (!userId) return;
+        let isMounted = true;
         db.notifications.getByUser(userId).then(({ data }) => {
-            setUnreadCount((data || []).filter((n) => !n.read).length);
+            if (isMounted) setUnreadCount((data || []).filter((n) => !n.read).length);
         });
+        return () => { isMounted = false; };
     }, [userId]);
 
     const handleNotifClick = () => {
         navigate('/app/notifications');
-        // Refrescar conteo al volver
         if (userId) {
             db.notifications.getByUser(userId).then(({ data }) => {
                 setUnreadCount((data || []).filter((n) => !n.read).length);
@@ -63,36 +64,37 @@ export default function MainApp() {
 
     const renderContent = () => {
         switch (activeTab) {
-            case 'swipe':
-                return <SwipeStack />;
-            case 'matches':
-                return <MatchesView isTab />;
-            case 'messages':
-                return <MessagesList basePath="/app/messages" />;
-            case 'profile':
-                return <ProfileView isTab />;
-            default:
-                return <SwipeStack />;
+            case 'swipe':    return <SwipeStack onCardTap={(profile) => navigate(`/app/company/${profile.id}`)} />;
+            case 'matches':  return <MatchesView isTab />;
+            case 'messages': return <MessagesList basePath="/app/messages" />;
+            case 'profile':  return <ProfileView isTab />;
+            default:         return <SwipeStack onCardTap={(profile) => navigate(`/app/company/${profile.id}`)} />;
         }
     };
 
-    const badge = badgeLabel(unreadCount);
+    const notifBadge = badgeLabel(unreadCount);
 
     return (
         <div className="main-app">
-            {/* Header */}
+            {/* ── Header ── */}
             <header className="main-app__header">
-                <span className="main-app__logo">Talently</span>
+                {/* Logo: icono T + texto */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{
+                        width: 32, height: 32,
+                        background: 'var(--gradient-primary)',
+                        borderRadius: 10,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: '0 4px 8px rgba(var(--primary-rgb), 0.25)',
+                        flexShrink: 0,
+                    }}>
+                        <span style={{ color: 'white', fontWeight: 800, fontSize: 18, lineHeight: 1 }}>T</span>
+                    </div>
+                    <span className="main-app__logo">Talently</span>
+                </div>
+
+                {/* Acciones: filtros + notificaciones */}
                 <div className="main-app__header-actions">
-                    <button
-                        className="main-app__header-btn"
-                        onClick={handleNotifClick}
-                        aria-label="Notificaciones"
-                        style={{ position: 'relative' }}
-                    >
-                        <span className="material-symbols-rounded">notifications</span>
-                        {badge && <span className="notif-count-badge">{badge}</span>}
-                    </button>
                     <button
                         className="main-app__header-btn"
                         onClick={() => navigate('/app/filters')}
@@ -102,27 +104,58 @@ export default function MainApp() {
                         <span className="material-symbols-rounded">tune</span>
                         {filtersActive && <span className="filters-badge" />}
                     </button>
+                    <button
+                        className="main-app__header-btn"
+                        onClick={handleNotifClick}
+                        aria-label="Notificaciones"
+                        style={{ position: 'relative' }}
+                    >
+                        <span className="material-symbols-rounded">notifications</span>
+                        {notifBadge && <span className="notif-count-badge">{notifBadge}</span>}
+                    </button>
                 </div>
             </header>
 
-            {/* Contenido principal */}
+            {/* ── Contenido principal ── */}
             <main className="main-app__content">
                 {renderContent()}
             </main>
 
-            {/* Tab bar inferior */}
+            {/* ── Tab bar inferior ── */}
             <nav className="main-app__tabs">
-                {TABS.map((tab) => (
-                    <button
-                        key={tab.id}
-                        className={`main-app__tab ${activeTab === tab.id ? 'is-active' : ''}`}
-                        onClick={() => setActiveTab(tab.id)}
-                        aria-label={tab.label}
-                    >
-                        <span className="material-symbols-rounded">{tab.icon}</span>
-                        <span>{tab.label}</span>
-                    </button>
-                ))}
+                {TABS.map((tab) => {
+                    const isActive = activeTab === tab.id;
+                    const badge = null;
+                    return (
+                        <button
+                            key={tab.id}
+                            className={`main-app__tab ${isActive ? 'is-active' : ''}`}
+                            onClick={() => setActiveTab(tab.id)}
+                            aria-label={tab.label}
+                        >
+                            {/* Icono con pill activo */}
+                            <div style={{ position: 'relative' }}>
+                                <div style={{
+                                    padding: 6,
+                                    borderRadius: 12,
+                                    background: isActive
+                                        ? 'rgba(var(--primary-rgb), 0.10)'
+                                        : 'transparent',
+                                    transition: 'background 0.2s ease',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}>
+                                    <span className="material-symbols-rounded">{tab.icon}</span>
+                                </div>
+                                {badge && (
+                                    <span className="main-app__tab-badge">{badge}</span>
+                                )}
+                            </div>
+                            <span>{tab.label}</span>
+                        </button>
+                    );
+                })}
             </nav>
         </div>
     );

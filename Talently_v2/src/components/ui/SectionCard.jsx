@@ -1,9 +1,9 @@
 // src/components/ui/SectionCard.jsx
 import './SectionCard.css';
 
-export default function SectionCard({ icon, title, children }) {
+export default function SectionCard({ icon, title, children, className = '' }) {
     return (
-        <div className="ui-card">
+        <div className={`ui-card${className ? ' ' + className : ''}`}>
             <div className="ui-card__header">
                 {icon && (
                     <span className="material-symbols-rounded ui-card__icon">{icon}</span>

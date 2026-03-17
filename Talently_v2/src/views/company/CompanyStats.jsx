@@ -32,6 +32,7 @@ export default function CompanyStats() {
 
     useEffect(() => {
         if (!user) return;
+        let isMounted = true;
 
         const load = async () => {
             setLoading(true);
@@ -40,6 +41,8 @@ export default function CompanyStats() {
                     db.statistics.get(),
                     db.offers.getByCompany(user.id),
                 ]);
+
+                if (!isMounted) return;
 
                 const statsData  = statsRes.data  || null;
                 const offersData = offersRes.data  || [];
@@ -51,13 +54,15 @@ export default function CompanyStats() {
                     setSelectedOfferId(offersData[0].id);
                 }
             } catch (err) {
+                if (!isMounted) return;
                 console.error('[CompanyStats] Error:', err);
             } finally {
-                setLoading(false);
+                if (isMounted) setLoading(false);
             }
         };
 
         load();
+        return () => { isMounted = false; };
     }, [user]);
 
     // ── Derived: activity data filtered by period ──

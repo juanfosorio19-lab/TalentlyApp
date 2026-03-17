@@ -4,24 +4,12 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
 import { useApp } from '../../context/AppContext';
-import { Spinner } from '../../components/ui';
+import { Spinner, SectionCard } from '../../components/ui';
 import './CompanyPublicProfileView.css';
 
 // ── Helpers ──────────────────────────────────
 function getInitials(name = '') {
     return name.split(' ').slice(0, 2).map((w) => w[0]?.toUpperCase() || '').join('');
-}
-
-function Section({ icon, title, children, className = '' }) {
-    return (
-        <section className={`cpv-section ${className}`}>
-            <div className="cpv-section-header">
-                <span className="material-symbols-outlined cpv-section-icon">{icon}</span>
-                <h2 className="cpv-section-title">{title}</h2>
-            </div>
-            {children}
-        </section>
-    );
 }
 
 // ── Vista principal ───────────────────────────
@@ -211,14 +199,14 @@ export default function CompanyPublicProfileView() {
 
                     {/* Sobre nosotros */}
                     {company_description && (
-                        <Section icon="person" title="Sobre nosotros">
+                        <SectionCard icon="person" title="Sobre nosotros">
                             <p className="cpv-text">{company_description}</p>
-                        </Section>
+                        </SectionCard>
                     )}
 
                     {/* Cultura */}
                     {cultureList.length > 0 && (
-                        <Section icon="psychology" title="Cultura">
+                        <SectionCard icon="psychology" title="Cultura">
                             <div className="cpv-tags-row">
                                 {cultureList.map((v, i) => (
                                     <span key={i} className="cpv-culture-tag">
@@ -226,12 +214,12 @@ export default function CompanyPublicProfileView() {
                                     </span>
                                 ))}
                             </div>
-                        </Section>
+                        </SectionCard>
                     )}
 
                     {/* Beneficios */}
                     {resolvedBenefits.length > 0 && (
-                        <Section icon="featured_seasonal" title="Beneficios">
+                        <SectionCard icon="featured_seasonal" title="Beneficios">
                             <div className="cpv-benefits">
                                 {resolvedBenefits.map((b, i) => (
                                     <div key={i} className="cpv-benefit-item">
@@ -240,12 +228,12 @@ export default function CompanyPublicProfileView() {
                                     </div>
                                 ))}
                             </div>
-                        </Section>
+                        </SectionCard>
                     )}
 
                     {/* Stack tecnológico */}
                     {techStack.length > 0 && (
-                        <Section icon="code" title="Stack Tecnológico">
+                        <SectionCard icon="code" title="Stack Tecnológico">
                             <div className="cpv-tags-row">
                                 {techStack.map((t, i) => (
                                     <span key={i} className="cpv-tech-tag">
@@ -253,12 +241,12 @@ export default function CompanyPublicProfileView() {
                                     </span>
                                 ))}
                             </div>
-                        </Section>
+                        </SectionCard>
                     )}
 
                     {/* Oferta activa */}
                     {offer && (
-                        <Section icon="campaign" title="Oferta Activa" className="cpv-section--offer">
+                        <SectionCard icon="campaign" title="Oferta Activa" className="cpv-section--offer">
                             <div className="cpv-offer">
                                 <h3 className="cpv-offer-title">{offer.title || offer.position || 'Oferta'}</h3>
                                 <div className="cpv-offer-meta">
@@ -284,12 +272,12 @@ export default function CompanyPublicProfileView() {
                                     </div>
                                 )}
                             </div>
-                        </Section>
+                        </SectionCard>
                     )}
 
                     {/* Galería */}
                     {photos.length > 0 && (
-                        <Section icon="photo_library" title="Galería">
+                        <SectionCard icon="photo_library" title="Galería">
                             <div className="cpv-gallery">
                                 {photos.map((url, i) => (
                                     <div key={i} className="cpv-gallery-item">
@@ -297,14 +285,14 @@ export default function CompanyPublicProfileView() {
                                     </div>
                                 ))}
                             </div>
-                        </Section>
+                        </SectionCard>
                     )}
 
                     {/* Qué nos hace únicos */}
                     {company_uniqueness && (
-                        <Section icon="tune" title="Qué nos hace únicos">
+                        <SectionCard icon="tune" title="Qué nos hace únicos">
                             <p className="cpv-text">{company_uniqueness}</p>
-                        </Section>
+                        </SectionCard>
                     )}
 
                 </div>

@@ -42,14 +42,17 @@ export default function CompanyDashboard() {
     // ── Cargar notificaciones no leídas ──
     useEffect(() => {
         if (!user) return;
+        let isMounted = true;
         db.notifications.getByUser(user.id).then(({ data }) => {
-            setUnreadCount((data || []).filter((n) => !n.read).length);
+            if (isMounted) setUnreadCount((data || []).filter((n) => !n.read).length);
         });
+        return () => { isMounted = false; };
     }, [user]);
 
     // ── Cargar métricas + ofertas ──
     useEffect(() => {
         if (!user) return;
+        let isMounted = true;
 
         const load = async () => {
             try {
@@ -58,6 +61,8 @@ export default function CompanyDashboard() {
                     db.matches.get(),
                     db.statistics.get(),
                 ]);
+
+                if (!isMounted) return;
 
                 const allOffers = offersRes.data || [];
                 setOffers(allOffers);
@@ -69,11 +74,13 @@ export default function CompanyDashboard() {
                     unreadMessages: 0,
                 });
             } catch (err) {
+                if (!isMounted) return;
                 console.error('[CompanyDashboard] Error loading metrics:', err);
             }
         };
 
         load();
+        return () => { isMounted = false; };
     }, [user]);
 
     // ── Toggle activa / inactiva ──

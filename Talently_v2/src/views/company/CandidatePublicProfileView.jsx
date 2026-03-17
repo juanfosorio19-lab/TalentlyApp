@@ -8,7 +8,7 @@ import {
     AVAILABILITY_IS_OPEN,
     WORK_MODALITY_LABELS,
 } from '../../data/constants';
-import { Spinner } from '../../components/ui';
+import { Spinner, SectionCard } from '../../components/ui';
 import './CandidatePublicProfileView.css';
 
 // ── Helpers ──────────────────────────────────
@@ -31,19 +31,6 @@ function formatSalary(min, max) {
 
 function getInitials(name = '') {
     return name.split(' ').slice(0, 2).map((w) => w[0]?.toUpperCase() || '').join('');
-}
-
-// ── Componentes internos ──────────────────────
-function Section({ icon, title, children }) {
-    return (
-        <section className="cpp-section">
-            <div className="cpp-section-header">
-                <span className="material-symbols-outlined cpp-section-icon">{icon}</span>
-                <h2 className="cpp-section-title">{title}</h2>
-            </div>
-            {children}
-        </section>
-    );
 }
 
 function TimelineItem({ logo, initials, title, subtitle, period, description }) {
@@ -238,9 +225,9 @@ export default function CandidatePublicProfileView() {
 
                     {/* Sobre mí */}
                     {bio && (
-                        <Section icon="person" title="Sobre mí">
+                        <SectionCard icon="person" title="Sobre mí">
                             <p className="cpp-bio">{bio}</p>
-                        </Section>
+                        </SectionCard>
                     )}
 
                     {/* Ver CV */}
@@ -258,7 +245,7 @@ export default function CandidatePublicProfileView() {
 
                     {/* Habilidades */}
                     {skillList.length > 0 && (
-                        <Section icon="psychology" title="Habilidades">
+                        <SectionCard icon="psychology" title="Habilidades">
                             <div className="cpp-skills">
                                 {skillList.map((skill, i) => (
                                     <span key={i} className="cpp-skill-tag">
@@ -266,12 +253,12 @@ export default function CandidatePublicProfileView() {
                                     </span>
                                 ))}
                             </div>
-                        </Section>
+                        </SectionCard>
                     )}
 
                     {/* Experiencia */}
                     {expList.length > 0 && (
-                        <Section icon="work" title="Experiencia Laboral">
+                        <SectionCard icon="work" title="Experiencia Laboral">
                             <div className="cpp-timeline">
                                 {expList.map((exp, i) => (
                                     <TimelineItem
@@ -285,12 +272,12 @@ export default function CandidatePublicProfileView() {
                                     />
                                 ))}
                             </div>
-                        </Section>
+                        </SectionCard>
                     )}
 
                     {/* Educación */}
                     {eduList.length > 0 && (
-                        <Section icon="school" title="Educación">
+                        <SectionCard icon="school" title="Educación">
                             <div className="cpp-timeline">
                                 {eduList.map((edu, i) => (
                                     <TimelineItem
@@ -302,12 +289,12 @@ export default function CandidatePublicProfileView() {
                                     />
                                 ))}
                             </div>
-                        </Section>
+                        </SectionCard>
                     )}
 
                     {/* Preferencias */}
                     {(salaryText || modalityLabel) && (
-                        <Section icon="tune" title="Preferencias">
+                        <SectionCard icon="tune" title="Preferencias">
                             <div className="cpp-prefs-grid">
                                 {salaryText && (
                                     <div className="cpp-pref-card">
@@ -329,7 +316,7 @@ export default function CandidatePublicProfileView() {
                                     </div>
                                 )}
                             </div>
-                        </Section>
+                        </SectionCard>
                     )}
 
                 </div>
