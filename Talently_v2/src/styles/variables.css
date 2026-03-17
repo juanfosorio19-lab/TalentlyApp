@@ -160,6 +160,54 @@
     /* Misc UI greens (not the success semantic color) */
     --green-4ade-10: rgba(74, 222, 128, 0.1);
     --green-4ade-20: rgba(74, 222, 128, 0.2);
+
+    /* Success opacity extras */
+    --success-08: rgba(0, 208, 132, 0.08);
+    --success-30: rgba(0, 208, 132, 0.3);
+    --success-bg-90: rgba(236, 253, 245, 0.9);
+
+    /* Shadow-black-07 */
+    --shadow-black-07: rgba(0, 0, 0, 0.07);
+
+    /* Additional white opacity */
+    --white-35: rgba(255, 255, 255, 0.35);
+    --white-40: rgba(255, 255, 255, 0.4);
+
+    /* Danger red (true red, distinct from brand --danger) */
+    --danger-red: #ef4444;
+    --red-10: rgba(239, 68, 68, 0.1);
+    --red-30: rgba(239, 68, 68, 0.3);
+
+    /* danger-alt (used in MatchModal gradient) */
+    --danger-alt: #F43F5E;
+
+    /* Indigo (used in global.css app-container shadow) */
+    --indigo-06: rgba(108, 92, 231, 0.06);
+
+    /* bg opacity tokens (dynamic — depend on --bg-rgb) */
+    --bg-85: rgba(var(--bg-rgb, 255,255,255), 0.85);
+    --bg-90: rgba(var(--bg-rgb, 255,255,255), 0.9);
+
+    /* Misc icon/badge palette */
+    --green-10: rgba(74, 222, 128, 0.1);
+    --purple-10: rgba(168, 85, 247, 0.1);
+
+    /* Pure black / pure white (for gradients/spinners) */
+    --pure-black: #000000;
+
+    /* Extended palette tokens (specific hex colors used in components) */
+    --violet: #8B5CF6;
+    --pink: #EC4899;
+    --blue-300: #93c5fd;
+    --blue-600: #2563eb;
+    --blue-700: #0e7fd4;
+    --green-200: #a7f3d0;
+    --green-400: #4ade80;
+    --green-500: #22c55e;
+    --green-700: #16a34a;
+    --green-900: #065f46;
+    --yellow-400: #facc15;
+    --violet-700: #7c3aed;
 }
 
 /* ═══════════════════════════════════════════
@@ -277,6 +325,54 @@
     /* Misc UI greens */
     --green-4ade-10: rgba(74, 222, 128, 0.1);
     --green-4ade-20: rgba(74, 222, 128, 0.2);
+
+    /* Success opacity extras */
+    --success-08: rgba(0, 208, 132, 0.08);
+    --success-30: rgba(0, 208, 132, 0.3);
+    --success-bg-90: rgba(236, 253, 245, 0.9);
+
+    /* Shadow-black-07 */
+    --shadow-black-07: rgba(0, 0, 0, 0.07);
+
+    /* Additional white opacity */
+    --white-35: rgba(255, 255, 255, 0.35);
+    --white-40: rgba(255, 255, 255, 0.4);
+
+    /* Danger red (true red, distinct from brand --danger) */
+    --danger-red: #ef4444;
+    --red-10: rgba(239, 68, 68, 0.1);
+    --red-30: rgba(239, 68, 68, 0.3);
+
+    /* danger-alt (used in MatchModal gradient) */
+    --danger-alt: #F43F5E;
+
+    /* Indigo (used in global.css app-container shadow) */
+    --indigo-06: rgba(108, 92, 231, 0.06);
+
+    /* bg opacity tokens (dynamic — depend on --bg-rgb) */
+    --bg-85: rgba(var(--bg-rgb, 255,255,255), 0.85);
+    --bg-90: rgba(var(--bg-rgb, 255,255,255), 0.9);
+
+    /* Misc icon/badge palette */
+    --green-10: rgba(74, 222, 128, 0.1);
+    --purple-10: rgba(168, 85, 247, 0.1);
+
+    /* Pure black / pure white (for gradients/spinners) */
+    --pure-black: #000000;
+
+    /* Extended palette tokens (specific hex colors used in components) */
+    --violet: #8B5CF6;
+    --pink: #EC4899;
+    --blue-300: #93c5fd;
+    --blue-600: #2563eb;
+    --blue-700: #0e7fd4;
+    --green-200: #a7f3d0;
+    --green-400: #4ade80;
+    --green-500: #22c55e;
+    --green-700: #16a34a;
+    --green-900: #065f46;
+    --yellow-400: #facc15;
+    --violet-700: #7c3aed;
 }
 
 /* ── Backward compat: .dark-mode class also triggers overrides ── */
@@ -391,4 +487,52 @@
     /* Misc UI greens */
     --green-4ade-10: rgba(74, 222, 128, 0.1);
     --green-4ade-20: rgba(74, 222, 128, 0.2);
+
+    /* Success opacity extras */
+    --success-08: rgba(0, 208, 132, 0.08);
+    --success-30: rgba(0, 208, 132, 0.3);
+    --success-bg-90: rgba(236, 253, 245, 0.9);
+
+    /* Shadow-black-07 */
+    --shadow-black-07: rgba(0, 0, 0, 0.07);
+
+    /* Additional white opacity */
+    --white-35: rgba(255, 255, 255, 0.35);
+    --white-40: rgba(255, 255, 255, 0.4);
+
+    /* Danger red (true red, distinct from brand --danger) */
+    --danger-red: #ef4444;
+    --red-10: rgba(239, 68, 68, 0.1);
+    --red-30: rgba(239, 68, 68, 0.3);
+
+    /* danger-alt (used in MatchModal gradient) */
+    --danger-alt: #F43F5E;
+
+    /* Indigo (used in global.css app-container shadow) */
+    --indigo-06: rgba(108, 92, 231, 0.06);
+
+    /* bg opacity tokens (dynamic — depend on --bg-rgb) */
+    --bg-85: rgba(var(--bg-rgb, 255,255,255), 0.85);
+    --bg-90: rgba(var(--bg-rgb, 255,255,255), 0.9);
+
+    /* Misc icon/badge palette */
+    --green-10: rgba(74, 222, 128, 0.1);
+    --purple-10: rgba(168, 85, 247, 0.1);
+
+    /* Pure black / pure white (for gradients/spinners) */
+    --pure-black: #000000;
+
+    /* Extended palette tokens (specific hex colors used in components) */
+    --violet: #8B5CF6;
+    --pink: #EC4899;
+    --blue-300: #93c5fd;
+    --blue-600: #2563eb;
+    --blue-700: #0e7fd4;
+    --green-200: #a7f3d0;
+    --green-400: #4ade80;
+    --green-500: #22c55e;
+    --green-700: #16a34a;
+    --green-900: #065f46;
+    --yellow-400: #facc15;
+    --violet-700: #7c3aed;
 }

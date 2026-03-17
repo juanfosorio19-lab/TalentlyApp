@@ -12,7 +12,7 @@
     flex-direction: column;
     overflow: hidden;
     /* Gradiente por defecto cuando no hay imagen de fondo */
-    background: linear-gradient(160deg, var(--primary-dark) 0%, var(--welcome-bg-deep) 60%, #000000 100%);
+    background: linear-gradient(160deg, var(--primary-dark) 0%, var(--welcome-bg-deep) 60%, var(--pure-black) 100%);
 }
 
 /* ── Capa de fondo ── */
@@ -79,7 +79,7 @@
 .welcome-brand {
     font-size: 1.875rem;   /* 30px */
     font-weight: 700;
-    color: #ffffff;
+    color: var(--text-inverse);
     letter-spacing: -0.5px;
     text-shadow: 0 2px 12px var(--overlay-medium);
 }
@@ -102,7 +102,7 @@
 .welcome-title {
     font-size: 2.25rem;   /* 36px */
     font-weight: 800;
-    color: #ffffff;
+    color: var(--text-inverse);
     line-height: 1.15;
     text-shadow: 0 2px 12px var(--overlay-medium);
 }
@@ -175,7 +175,7 @@
     background: var(--white-12);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    color: #ffffff;
+    color: var(--text-inverse);
     border: 1.5px solid var(--white-30);
     font-weight: 600;
 }
@@ -210,7 +210,7 @@
 }
 
 .welcome-legal-link:hover {
-    color: #ffffff;
+    color: var(--text-inverse);
 }
 
 /* ── Dark mode (no changes needed — overlay already dark) ── */

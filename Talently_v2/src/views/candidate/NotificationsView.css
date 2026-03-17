@@ -182,8 +182,8 @@
 .nv__item:hover { background: var(--bg); }
 .nv__item:active { background: var(--border); }
 
-.nv__item--unread { background: rgba(var(--primary-rgb), 0.025); }
-.nv__item--unread:hover { background: rgba(var(--primary-rgb), 0.05); }
+.nv__item--unread { background: var(--primary-03); }
+.nv__item--unread:hover { background: var(--primary-05); }
 
 /* ── Icon ── */
 .nv__item-icon {
@@ -199,17 +199,17 @@
 .nv__item-icon .material-symbols-rounded { font-size: 20px; }
 
 .nv__item-icon--blue {
-    background: rgba(var(--primary-rgb), 0.1);
+    background: var(--primary-10);
     color: var(--primary);
 }
 
 .nv__item-icon--green {
-    background: rgba(var(--success-rgb), 0.12);
+    background: var(--success-12);
     color: var(--success);
 }
 
 .nv__item-icon--purple {
-    background: rgba(var(--secondary-rgb), 0.12);
+    background: var(--secondary-12);
     color: var(--secondary);
 }
 

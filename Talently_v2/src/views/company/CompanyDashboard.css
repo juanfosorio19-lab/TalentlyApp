@@ -40,7 +40,7 @@
     width: 32px;
     height: 32px;
     border-radius: 8px;
-    background: rgba(var(--primary-rgb), 0.1);
+    background: var(--primary-10);
     color: var(--primary);
     display: flex;
     align-items: center;
@@ -92,7 +92,7 @@
     height: 16px;
     border-radius: 8px;
     background: var(--danger);
-    color: #fff;
+    color: var(--text-inverse);
     font-size: 10px;
     font-weight: 700;
     display: flex;
@@ -187,7 +187,7 @@
     padding: 8px 14px;
     border-radius: 10px;
     background: var(--gradient-primary);
-    color: #fff;
+    color: var(--text-inverse);
     border: none;
     outline: none;
     font-size: 13px;
@@ -275,17 +275,17 @@
 .cd__metric-icon .material-symbols-rounded { font-size: 20px; }
 
 .cd__metric-icon--blue {
-    background: rgba(var(--primary-rgb), 0.12);
+    background: var(--primary-12);
     color: var(--primary);
 }
 
 .cd__metric-icon--green {
-    background: rgba(var(--success-rgb), 0.12);
+    background: var(--success-12);
     color: var(--success);
 }
 
 .cd__metric-icon--purple {
-    background: rgba(var(--secondary-rgb), 0.12);
+    background: var(--secondary-12);
     color: var(--secondary);
 }
 
@@ -313,14 +313,14 @@
     padding: 15px;
     border-radius: 16px;
     background: var(--gradient-primary);
-    color: #fff;
+    color: var(--text-inverse);
     border: none;
     outline: none;
     font-size: 16px;
     font-weight: 700;
     font-family: inherit;
     cursor: pointer;
-    box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.3);
+    box-shadow: 0 4px 14px var(--primary-30);
     transition: opacity 0.15s ease;
 }
 
@@ -398,7 +398,7 @@
     font-weight: 600;
     padding: 3px 10px;
     border-radius: 99px;
-    background: rgba(var(--success-rgb), 0.1);
+    background: var(--success-subtle);
     color: var(--success);
 }
 
@@ -451,7 +451,7 @@
 }
 
 .cd__badge--active {
-    background: rgba(var(--success-rgb), 0.12);
+    background: var(--success-12);
     color: var(--success);
 }
 
@@ -547,7 +547,7 @@
     padding: 12px 24px;
     border-radius: 14px;
     background: var(--gradient-primary);
-    color: #fff;
+    color: var(--text-inverse);
     border: none;
     outline: none;
     font-size: 15px;
@@ -585,7 +585,7 @@
     width: 72px;
     height: 72px;
     border-radius: 16px;
-    background: rgba(var(--primary-rgb), 0.1);
+    background: var(--primary-10);
     color: var(--primary);
     border: 1px solid var(--border);
     display: flex;
@@ -646,22 +646,22 @@
 .cd__profile-field-icon .material-symbols-rounded { font-size: 18px; }
 
 .cd__profile-field-icon--blue {
-    background: rgba(var(--primary-rgb), 0.1);
+    background: var(--primary-10);
     color: var(--primary);
 }
 
 .cd__profile-field-icon--green {
-    background: rgba(var(--success-rgb), 0.12);
+    background: var(--success-12);
     color: var(--success);
 }
 
 .cd__profile-field-icon--purple {
-    background: rgba(var(--secondary-rgb), 0.12);
+    background: var(--secondary-12);
     color: var(--secondary);
 }
 
 .cd__profile-field-icon--amber {
-    background: rgba(var(--warning-rgb), 0.15);
+    background: var(--warning-15);
     color: var(--warning);
 }
 
@@ -707,7 +707,7 @@
 
 .cd__profile-edit-btn:hover {
     background: var(--primary);
-    color: #fff;
+    color: var(--text-inverse);
 }
 
 .cd__profile-edit-btn .material-symbols-rounded { font-size: 20px; }

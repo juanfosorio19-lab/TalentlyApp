@@ -1,0 +1,121 @@
+/* ============================================
+   Talently v2 — Base Styles & Resets
+   Normaliza botones, inputs, links y elementos
+   interactivos para consistencia cross-browser.
+   ============================================ */
+
+/* ── Button Reset ── */
+button {
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: none;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+button:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+button:disabled {
+    cursor: default;
+    opacity: 0.5;
+}
+
+/* ── Input & Textarea Reset ── */
+input,
+textarea,
+select {
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: none;
+    font: inherit;
+    color: inherit;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: -2px;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
+    /* Firefox */
+}
+
+/* ── Link Reset ── */
+a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+a:hover {
+    color: var(--primary-dark);
+}
+
+a:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* ── Image Reset ── */
+img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+/* ── List Reset ── */
+ul,
+ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* ── Scrollbar (for webkit browsers) ── */
+::-webkit-scrollbar {
+    width: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* ── Selection ── */
+::selection {
+    background: var(--primary-20);
+    color: var(--text-primary);
+}
+
+/* ── Focus trap for touch devices ── */
+@media (hover: none) {
+    *:focus {
+        outline: none;
+    }
+}

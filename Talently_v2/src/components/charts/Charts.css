@@ -68,7 +68,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 20px;
-    color: #fff;
+    color: var(--text-inverse);
     font-family: inherit;
     position: relative;
 }

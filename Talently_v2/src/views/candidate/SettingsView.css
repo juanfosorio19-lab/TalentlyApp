@@ -224,7 +224,7 @@
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: #fff;
+    background: var(--surface);
     box-shadow: 0 1px 4px var(--shadow-black-20);
     transition: transform 0.2s ease;
     display: block;
@@ -272,11 +272,11 @@
 }
 
 .sv__icon--danger .material-symbols-rounded {
-    color: var(--danger, #ef4444);
+    color: var(--danger);
 }
 
 .sv__info-title--danger {
-    color: var(--danger, #ef4444);
+    color: var(--danger);
 }
 
 /* ── Version ── */

@@ -466,7 +466,7 @@
     width: 28px;
     height: 28px;
     border: 3px solid var(--white-30);
-    border-top-color: #fff;
+    border-top-color: var(--text-inverse);
     border-radius: 50%;
     animation: ob-spin 0.7s linear infinite;
 }
@@ -1413,7 +1413,7 @@
 
 .ob-radio-indicator .material-symbols-rounded {
     font-size: 14px;
-    color: #fff;
+    color: var(--text-inverse);
     font-variation-settings: 'wght' 700;
 }
 

@@ -100,7 +100,7 @@
     padding: 12px 24px;
     border-radius: 14px;
     background: var(--primary);
-    color: #fff;
+    color: var(--text-inverse);
     border: none;
     outline: none;
     font-size: 15px;
@@ -189,7 +189,7 @@
 }
 
 .mv__story-ring--new {
-    background: linear-gradient(135deg, var(--primary), #8B5CF6, #EC4899);
+    background: linear-gradient(135deg, var(--primary), var(--violet), var(--pink));
     box-shadow: 0 4px 12px var(--primary-40);
 }
 
@@ -225,7 +225,7 @@
     background: var(--gradient-primary);
     font-size: 22px;
     font-weight: 800;
-    color: #fff;
+    color: var(--text-inverse);
 }
 
 .mv__story-name {
@@ -338,7 +338,7 @@
     background: var(--gradient-primary);
     font-size: 22px;
     font-weight: 800;
-    color: #fff;
+    color: var(--text-inverse);
 }
 
 /* Handshake badge */
@@ -358,7 +358,7 @@
 
 .mv__item-badge .material-symbols-rounded {
     font-size: 10px;
-    color: #fff;
+    color: var(--text-inverse);
 }
 
 /* Text info */

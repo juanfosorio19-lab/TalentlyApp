@@ -130,7 +130,7 @@
     height: 16px;
     border-radius: 8px;
     background: var(--danger);
-    color: #ffffff;
+    color: var(--text-inverse);
     font-size: 10px;
     font-weight: 700;
     display: flex;

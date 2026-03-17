@@ -103,7 +103,7 @@
     font-style: italic;
     letter-spacing: -1px;
     line-height: 1.1;
-    background: linear-gradient(to right, var(--primary), #F43F5E);
+    background: linear-gradient(to right, var(--primary), var(--danger-alt));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -219,7 +219,7 @@
 }
 
 .match-modal__avatar-badge--company {
-    color: #F43F5E;
+    color: var(--danger-alt);
     bottom: -4px;
     left: -4px;
     right: auto;
@@ -250,7 +250,7 @@
 
 .match-modal__heart .material-symbols-rounded {
     font-size: 24px;
-    color: #F43F5E;
+    color: var(--danger-alt);
 }
 
 /* ── Tip ── */
@@ -298,7 +298,7 @@
 
 .match-modal__btn--primary {
     background: var(--primary);
-    color: #fff;
+    color: var(--text-inverse);
     box-shadow: 0 4px 16px var(--primary-40);
 }
 

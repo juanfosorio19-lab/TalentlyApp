@@ -438,7 +438,7 @@
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: #fff;
+    background: var(--surface);
     box-shadow: 0 1px 4px var(--shadow-black-20);
     transition: transform 0.25s ease;
 }
@@ -509,7 +509,7 @@
 
 .csv__edit-btn:hover {
     background: var(--primary);
-    color: #fff;
+    color: var(--text-inverse);
 }
 
 .csv__edit-btn .material-symbols-rounded { font-size: 20px; }
@@ -524,9 +524,9 @@
 }
 
 .csv__row-icon--danger .material-symbols-rounded {
-    color: var(--danger, #ef4444);
+    color: var(--danger);
 }
 
 .csv__row-title--danger {
-    color: var(--danger, #ef4444);
+    color: var(--danger);
 }

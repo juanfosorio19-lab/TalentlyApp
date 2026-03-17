@@ -163,7 +163,7 @@
 
 .cvv__empty-icon-badge .material-symbols-rounded {
     font-size: 14px;
-    color: #fff;
+    color: var(--text-inverse);
 }
 
 .cvv__empty-title {
@@ -209,7 +209,7 @@
 
 .cvv__file-icon-wrap--pdf {
     background: var(--danger-ef-10);
-    color: #EF4444;
+    color: var(--danger-red);
 }
 
 .cvv__file-icon-wrap--doc {
@@ -292,7 +292,7 @@
 /* Subir CV — solid primary */
 .cvv__btn--upload {
     background: var(--primary);
-    color: #fff;
+    color: var(--text-inverse);
     box-shadow: 0 4px 14px var(--primary-40);
 }
 
