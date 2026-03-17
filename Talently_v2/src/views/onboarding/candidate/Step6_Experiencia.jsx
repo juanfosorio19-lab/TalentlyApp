@@ -74,10 +74,12 @@ export default function Step6_Experiencia({ data, onNext, saving }) {
                         <p className="ob-inline-form-label">Nueva experiencia</p>
 
                         <div className="ob-field">
-                            <label className="ob-label">Empresa *</label>
+                            <label className="ob-label" htmlFor="exp-company">Empresa *</label>
                             <div className="ob-input-wrapper">
                                 <span className="material-symbols-rounded ob-input-icon">business</span>
                                 <input
+                                    id="exp-company"
+                                    name="company"
                                     className="ob-input"
                                     type="text"
                                     placeholder="Ej: Google"
@@ -88,10 +90,12 @@ export default function Step6_Experiencia({ data, onNext, saving }) {
                         </div>
 
                         <div className="ob-field">
-                            <label className="ob-label">Cargo *</label>
+                            <label className="ob-label" htmlFor="exp-position">Cargo *</label>
                             <div className="ob-input-wrapper">
                                 <span className="material-symbols-rounded ob-input-icon">work</span>
                                 <input
+                                    id="exp-position"
+                                    name="position"
                                     className="ob-input"
                                     type="text"
                                     placeholder="Ej: Frontend Developer"
@@ -103,9 +107,11 @@ export default function Step6_Experiencia({ data, onNext, saving }) {
 
                         <div className="ob-inline-row">
                             <div className="ob-field">
-                                <label className="ob-label">Inicio</label>
+                                <label className="ob-label" htmlFor="exp-start">Inicio</label>
                                 <div className="ob-input-wrapper">
                                     <input
+                                        id="exp-start"
+                                        name="start"
                                         className="ob-input"
                                         type="month"
                                         value={formState.start}
@@ -114,9 +120,11 @@ export default function Step6_Experiencia({ data, onNext, saving }) {
                                 </div>
                             </div>
                             <div className="ob-field">
-                                <label className="ob-label">Fin</label>
+                                <label className="ob-label" htmlFor="exp-end">Fin</label>
                                 <div className="ob-input-wrapper">
                                     <input
+                                        id="exp-end"
+                                        name="end"
                                         className="ob-input"
                                         type="month"
                                         value={formState.end}
@@ -127,8 +135,10 @@ export default function Step6_Experiencia({ data, onNext, saving }) {
                             </div>
                         </div>
 
-                        <label className="ob-checkbox-label">
+                        <label className="ob-checkbox-label" htmlFor="exp-current">
                             <input
+                                id="exp-current"
+                                name="current"
                                 type="checkbox"
                                 checked={formState.current}
                                 onChange={(e) => setFormState({ ...formState, current: e.target.checked, end: '' })}

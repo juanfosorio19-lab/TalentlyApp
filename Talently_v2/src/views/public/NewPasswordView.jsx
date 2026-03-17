@@ -179,6 +179,7 @@ export default function NewPasswordView() {
                         <span className="material-symbols-rounded auth-input-icon">lock</span>
                         <input
                             id="new-password"
+                            name="new-password"
                             className="auth-input"
                             type={showPassword ? 'text' : 'password'}
                             placeholder="Introduce tu contraseña"
@@ -208,6 +209,7 @@ export default function NewPasswordView() {
                         <span className="material-symbols-rounded auth-input-icon">lock</span>
                         <input
                             id="confirm-new-password"
+                            name="confirm-new-password"
                             className="auth-input"
                             type={showConfirmPassword ? 'text' : 'password'}
                             placeholder="Repite tu contraseña"

@@ -123,6 +123,7 @@ export default function RecoveryView() {
                         <span className="material-symbols-rounded auth-input-icon">mail</span>
                         <input
                             id="recovery-email"
+                            name="email"
                             className="auth-input"
                             type="email"
                             placeholder="ejemplo@talently.tech"

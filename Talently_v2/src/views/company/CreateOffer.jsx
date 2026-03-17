@@ -179,8 +179,10 @@ export default function CreateOffer() {
     const renderBasic = () => (
         <>
             <div className="co__field">
-                <label className="co__label">Título del cargo</label>
+                <label className="co__label" htmlFor="co-title">Título del cargo</label>
                 <input
+                    id="co-title"
+                    name="title"
                     className="co__input"
                     type="text"
                     placeholder="Ej: Senior Fullstack Developer"
@@ -190,8 +192,10 @@ export default function CreateOffer() {
             </div>
 
             <div className="co__field">
-                <label className="co__label">Área profesional</label>
+                <label className="co__label" htmlFor="co-area">Área profesional</label>
                 <input
+                    id="co-area"
+                    name="area"
                     className="co__input"
                     type="text"
                     placeholder="Ej: Desarrollo de Software"
@@ -201,8 +205,10 @@ export default function CreateOffer() {
             </div>
 
             <div className="co__field">
-                <label className="co__label">Descripción</label>
+                <label className="co__label" htmlFor="co-description">Descripción</label>
                 <textarea
+                    id="co-description"
+                    name="description"
                     className="co__textarea"
                     placeholder="Describe las responsabilidades, requisitos y beneficios del cargo..."
                     value={form.description}
@@ -231,6 +237,8 @@ export default function CreateOffer() {
                     <div className="co__salary-wrap">
                         <span className="co__salary-sym">$</span>
                         <input
+                            id="co-salary-min"
+                            name="salary_min"
                             className="co__input co__input--salary"
                             type="number"
                             placeholder="Mínimo"
@@ -241,6 +249,8 @@ export default function CreateOffer() {
                     <div className="co__salary-wrap">
                         <span className="co__salary-sym">$</span>
                         <input
+                            id="co-salary-max"
+                            name="salary_max"
                             className="co__input co__input--salary"
                             type="number"
                             placeholder="Máximo"
@@ -259,9 +269,12 @@ export default function CreateOffer() {
             <div className="co__search-wrap">
                 <span className="material-symbols-rounded co__search-icon">search</span>
                 <input
+                    id="co-tech-search"
+                    name="tech_search"
                     className="co__search-input"
                     type="text"
                     placeholder="Buscar tecnologías (ej. React, Python...)"
+                    autoComplete="off"
                     value={techSearch}
                     onChange={(e) => setTechSearch(e.target.value)}
                 />
@@ -334,8 +347,10 @@ export default function CreateOffer() {
         <>
             {/* Ubicación */}
             <div className="co__field">
-                <label className="co__label">Ubicación <span className="co__optional">(opcional)</span></label>
+                <label className="co__label" htmlFor="co-location">Ubicación <span className="co__optional">(opcional)</span></label>
                 <input
+                    id="co-location"
+                    name="location"
                     className="co__input"
                     type="text"
                     placeholder="Ej: Santiago, Chile / Latam / Global"
@@ -367,10 +382,12 @@ export default function CreateOffer() {
 
             {/* Proceso de selección */}
             <div className="co__field">
-                <label className="co__label">
+                <label className="co__label" htmlFor="co-selection-process">
                     Proceso de selección <span className="co__optional">(opcional)</span>
                 </label>
                 <textarea
+                    id="co-selection-process"
+                    name="selection_process"
                     className="co__textarea"
                     placeholder="Describe las etapas del proceso, entrevistas, pruebas técnicas y tiempos estimados..."
                     value={form.selection_process}

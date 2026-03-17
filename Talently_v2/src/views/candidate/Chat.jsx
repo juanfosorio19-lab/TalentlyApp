@@ -205,8 +205,11 @@ export default function Chat({ backPath = '/app' }) {
             <footer className="chat-view__input-bar">
                 <div className="chat-view__input-wrap">
                     <input
+                        id="chat-message-input"
+                        name="message"
                         className="chat-view__input"
                         placeholder="Escribe un mensaje..."
+                        autoComplete="off"
                         value={inputText}
                         onChange={(e) => setInputText(e.target.value)}
                         onKeyDown={handleKeyDown}

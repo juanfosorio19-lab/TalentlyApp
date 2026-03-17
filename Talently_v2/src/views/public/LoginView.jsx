@@ -123,6 +123,7 @@ export default function LoginView() {
                             <span className="material-symbols-rounded auth-input-icon">mail</span>
                             <input
                                 id="login-email"
+                                name="email"
                                 className="auth-input"
                                 type="email"
                                 placeholder="nombre@ejemplo.com"
@@ -142,6 +143,7 @@ export default function LoginView() {
                             <span className="material-symbols-rounded auth-input-icon">lock</span>
                             <input
                                 id="login-password"
+                                name="password"
                                 className="auth-input"
                                 type={showPassword ? 'text' : 'password'}
                                 placeholder="••••••••"

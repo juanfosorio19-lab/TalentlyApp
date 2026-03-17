@@ -134,10 +134,12 @@ export default function FiltersView() {
                     <p className="fv__section-label">Rango salarial (USD / mes)</p>
                     <div className="fv__salary-row">
                         <div className="fv__salary-field">
-                            <label className="fv__salary-label">Mínimo</label>
+                            <label className="fv__salary-label" htmlFor="fv-salary-min">Mínimo</label>
                             <div className="fv__salary-input-wrap">
                                 <span className="fv__salary-prefix">$</span>
                                 <input
+                                    id="fv-salary-min"
+                                    name="salary_min"
                                     type="number"
                                     className="fv__salary-input"
                                     placeholder="0"
@@ -149,10 +151,12 @@ export default function FiltersView() {
                         </div>
                         <div className="fv__salary-sep">—</div>
                         <div className="fv__salary-field">
-                            <label className="fv__salary-label">Máximo</label>
+                            <label className="fv__salary-label" htmlFor="fv-salary-max">Máximo</label>
                             <div className="fv__salary-input-wrap">
                                 <span className="fv__salary-prefix">$</span>
                                 <input
+                                    id="fv-salary-max"
+                                    name="salary_max"
                                     type="number"
                                     className="fv__salary-input"
                                     placeholder="∞"

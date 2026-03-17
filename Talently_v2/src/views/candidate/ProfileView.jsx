@@ -329,8 +329,10 @@ export default function ProfileView({ isTab = false }) {
                                 { key: 'salary_expectation', label: 'Pretensión salarial (USD/mes)', placeholder: 'Ej: 3000',              type: 'number' },
                             ].map(({ key, label, placeholder, type }) => (
                                 <div key={key} className="pv-edit-field">
-                                    <label className="pv-edit-label">{label}</label>
+                                    <label className="pv-edit-label" htmlFor={`pv-edit-${key}`}>{label}</label>
                                     <input
+                                        id={`pv-edit-${key}`}
+                                        name={key}
                                         className="pv-edit-input"
                                         type={type}
                                         value={editData[key] || ''}
@@ -341,8 +343,10 @@ export default function ProfileView({ isTab = false }) {
                             ))}
 
                             <div className="pv-edit-field">
-                                <label className="pv-edit-label">Modalidad preferida</label>
+                                <label className="pv-edit-label" htmlFor="pv-edit-work_modality">Modalidad preferida</label>
                                 <select
+                                    id="pv-edit-work_modality"
+                                    name="work_modality"
                                     className="pv-edit-select"
                                     value={editData.work_modality || ''}
                                     onChange={(e) => setEditData({ ...editData, work_modality: e.target.value })}

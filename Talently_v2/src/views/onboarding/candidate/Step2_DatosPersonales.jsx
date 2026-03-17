@@ -52,10 +52,12 @@ export default function Step2_DatosPersonales({ data, onNext, saving }) {
 
                 {/* Nombre completo */}
                 <div className="ob-field">
-                    <label className="ob-label">Nombre completo *</label>
+                    <label className="ob-label" htmlFor="ob-full-name">Nombre completo *</label>
                     <div className="ob-input-wrapper">
                         <span className="material-symbols-rounded ob-input-icon">person</span>
                         <input
+                            id="ob-full-name"
+                            name="full_name"
                             className="ob-input"
                             type="text"
                             placeholder="Ej: María González"
@@ -68,10 +70,12 @@ export default function Step2_DatosPersonales({ data, onNext, saving }) {
 
                 {/* Cargo */}
                 <div className="ob-field">
-                    <label className="ob-label">Cargo actual / deseado</label>
+                    <label className="ob-label" htmlFor="ob-headline">Cargo actual / deseado</label>
                     <div className="ob-input-wrapper">
                         <span className="material-symbols-rounded ob-input-icon">work</span>
                         <input
+                            id="ob-headline"
+                            name="headline"
                             className="ob-input"
                             type="text"
                             placeholder="Ej: Desarrolladora Full Stack"
@@ -121,10 +125,12 @@ export default function Step2_DatosPersonales({ data, onNext, saving }) {
 
                 {/* Pretensión salarial */}
                 <div className="ob-field">
-                    <label className="ob-label">Pretensión salarial</label>
+                    <label className="ob-label" htmlFor="ob-salary">Pretensión salarial</label>
                     <div className="ob-input-wrapper">
                         <span className="material-symbols-rounded ob-input-icon">payments</span>
                         <input
+                            id="ob-salary"
+                            name="salary_expectation"
                             className="ob-input"
                             type="number"
                             placeholder="Ej: 3000"

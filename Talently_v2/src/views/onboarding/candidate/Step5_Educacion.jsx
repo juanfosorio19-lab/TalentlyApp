@@ -72,9 +72,11 @@ export default function Step5_Educacion({ data, onNext, saving }) {
                         <p className="ob-inline-form-label">Nueva entrada</p>
 
                         <div className="ob-field">
-                            <label className="ob-label">Título / Carrera *</label>
+                            <label className="ob-label" htmlFor="edu-degree">Título / Carrera *</label>
                             <div className="ob-input-wrapper">
                                 <input
+                                    id="edu-degree"
+                                    name="degree"
                                     className="ob-input"
                                     type="text"
                                     placeholder="Ej: Ingeniería Civil Informática"
@@ -85,10 +87,12 @@ export default function Step5_Educacion({ data, onNext, saving }) {
                         </div>
 
                         <div className="ob-field">
-                            <label className="ob-label">Institución *</label>
+                            <label className="ob-label" htmlFor="edu-institution">Institución *</label>
                             <div className="ob-input-wrapper">
                                 <span className="material-symbols-rounded ob-input-icon">account_balance</span>
                                 <input
+                                    id="edu-institution"
+                                    name="institution"
                                     className="ob-input"
                                     type="text"
                                     placeholder="Ej: Universidad de Chile"

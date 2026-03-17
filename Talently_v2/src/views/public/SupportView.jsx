@@ -117,10 +117,12 @@ export default function SupportView() {
 
                 {/* ── Email (read-only) ── */}
                 <div className="supp__field">
-                    <label className="supp__label">Correo electrónico</label>
+                    <label className="supp__label" htmlFor="supp-email">Correo electrónico</label>
                     <div className="supp__input-wrap supp__input-wrap--readonly">
                         <span className="material-symbols-rounded supp__input-icon">mail</span>
                         <input
+                            id="supp-email"
+                            name="email"
                             className="supp__input supp__input--readonly"
                             type="email"
                             value={currentUser?.email || ''}
@@ -148,10 +150,12 @@ export default function SupportView() {
 
                 {/* ── Asunto ── */}
                 <div className="supp__field">
-                    <label className="supp__label">
+                    <label className="supp__label" htmlFor="supp-subject">
                         Asunto <span className="supp__required">*</span>
                     </label>
                     <input
+                        id="supp-subject"
+                        name="subject"
                         className={`supp__input ${errors.subject ? 'supp__input--error' : ''}`}
                         type="text"
                         placeholder="Ej: No puedo iniciar sesión"
@@ -164,10 +168,12 @@ export default function SupportView() {
 
                 {/* ── Descripción ── */}
                 <div className="supp__field">
-                    <label className="supp__label">
+                    <label className="supp__label" htmlFor="supp-description">
                         Descripción <span className="supp__required">*</span>
                     </label>
                     <textarea
+                        id="supp-description"
+                        name="description"
                         className={`supp__textarea ${errors.description ? 'supp__input--error' : ''}`}
                         placeholder="Describe el problema con el mayor detalle posible…"
                         value={description}

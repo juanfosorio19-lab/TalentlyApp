@@ -154,9 +154,12 @@ export default function MatchesView({ isTab = false }) {
                     <div className="mv__search-inner">
                         <span className="material-symbols-rounded mv__search-icon">search</span>
                         <input
+                            id="mv-search"
+                            name="search"
                             className="mv__search"
                             type="text"
                             placeholder="Buscar empresa o puesto..."
+                            autoComplete="off"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                         />

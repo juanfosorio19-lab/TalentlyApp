@@ -117,8 +117,11 @@ export default function MessagesList({ basePath = '/app/messages' }) {
                 <div className="msg-list__search-wrap">
                     <span className="material-symbols-rounded msg-list__search-icon">search</span>
                     <input
+                        id="msg-search"
+                        name="search"
                         className="msg-list__search"
                         placeholder="Buscar candidatos o roles..."
+                        autoComplete="off"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                     />

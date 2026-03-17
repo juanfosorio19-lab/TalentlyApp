@@ -323,6 +323,7 @@ export default function RegisterView() {
                                 <span className="material-symbols-rounded auth-input-icon">person</span>
                                 <input
                                     id="reg-name"
+                                    name="name"
                                     className="auth-input"
                                     type="text"
                                     placeholder="Ej. María García"
@@ -340,6 +341,7 @@ export default function RegisterView() {
                                 <span className="material-symbols-rounded auth-input-icon">mail</span>
                                 <input
                                     id="reg-email"
+                                    name="email"
                                     className="auth-input"
                                     type="email"
                                     placeholder="nombre@ejemplo.com"
@@ -357,6 +359,7 @@ export default function RegisterView() {
                                 <span className="material-symbols-rounded auth-input-icon">lock</span>
                                 <input
                                     id="reg-password"
+                                    name="password"
                                     className="auth-input"
                                     type={showPassword ? 'text' : 'password'}
                                     placeholder="Mínimo 8 caracteres"
