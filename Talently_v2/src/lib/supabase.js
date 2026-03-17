@@ -106,18 +106,7 @@ export const db = {
             const targetType = myUserType === 'candidate' ? 'company' : 'candidate';
             return await supabase
                 .from('profiles')
-                .select(`
-                    id,
-                    full_name,
-                    professional_title,
-                    avatar_url,
-                    city,
-                    country,
-                    availability,
-                    modality,
-                    skills,
-                    experience_years
-                `)
+                .select('*')
                 .eq('user_type', targetType)
                 .limit(20);
         },
@@ -125,18 +114,7 @@ export const db = {
         getCandidatesForExplore: async () => {
             const { data, error } = await supabase
                 .from('profiles')
-                .select(`
-                    id,
-                    full_name,
-                    professional_title,
-                    avatar_url,
-                    city,
-                    country,
-                    availability,
-                    modality,
-                    skills,
-                    experience_years
-                `)
+                .select('*')
                 .eq('user_type', 'candidate')
                 .eq('onboarding_completed', true)
                 .limit(50);
@@ -284,15 +262,12 @@ export const db = {
                 .limit(50);
         },
 
-        // Trae matches con perfiles de ambos lados y último mensaje — 2 queries totales
+        // Trae matches + perfiles del otro lado + último mensaje — 3 queries totales (sin embedded join)
         getWithProfiles: async (userId) => {
+            // 1. Matches del usuario
             const { data: matches, error } = await supabase
                 .from('matches')
-                .select(`
-                    id, created_at, user_id_1, user_id_2,
-                    profile_1:profiles!user_id_1(id, full_name, avatar_url, company_name, company_logo, company_sector, headline, city),
-                    profile_2:profiles!user_id_2(id, full_name, avatar_url, company_name, company_logo, company_sector, headline, city)
-                `)
+                .select('id, created_at, user_id_1, user_id_2')
                 .or(`user_id_1.eq.${userId},user_id_2.eq.${userId}`)
                 .order('created_at', { ascending: false })
                 .limit(50);
@@ -300,6 +275,19 @@ export const db = {
             if (error) return { data: null, error };
             if (!matches?.length) return { data: [], error: null };
 
+            // 2. Perfiles del otro lado (bulk — una sola query)
+            const otherIds = [...new Set(
+                matches.map((m) => (m.user_id_1 === userId ? m.user_id_2 : m.user_id_1))
+            )];
+            const { data: profileRows } = await supabase
+                .from('profiles')
+                .select('*')
+                .in('id', otherIds);
+
+            const profilesMap = {};
+            (profileRows || []).forEach((p) => { profilesMap[p.id] = p; });
+
+            // 3. Último mensaje por match (bulk)
             const matchIds = matches.map((m) => m.id);
             const { data: msgs } = await supabase
                 .from('messages')
@@ -313,14 +301,17 @@ export const db = {
             });
 
             return {
-                data: matches.map((m) => ({
-                    id: m.id,
-                    created_at: m.created_at,
-                    user_id_1: m.user_id_1,
-                    user_id_2: m.user_id_2,
-                    otherProfile: (m.user_id_1 === userId ? m.profile_2 : m.profile_1) || { full_name: 'Usuario' },
-                    lastMsg: lastMsgMap[m.id] || null,
-                })),
+                data: matches.map((m) => {
+                    const otherId = m.user_id_1 === userId ? m.user_id_2 : m.user_id_1;
+                    return {
+                        id: m.id,
+                        created_at: m.created_at,
+                        user_id_1: m.user_id_1,
+                        user_id_2: m.user_id_2,
+                        otherProfile: profilesMap[otherId] || { full_name: 'Usuario' },
+                        lastMsg: lastMsgMap[m.id] || null,
+                    };
+                }),
                 error: null,
             };
         },
