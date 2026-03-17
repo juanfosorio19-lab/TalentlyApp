@@ -1,118 +1,114 @@
 // src/views/candidate/MatchesView.jsx
-// Lista de matches del candidato con acceso directo al chat.
-// Accesible como vista standalone en /app/matches.
-import { useState, useEffect } from 'react';
+// Lista de matches — diseño Stitch
+// isTab=true → sin header propio, height:100% (para embeber en MainApp)
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../lib/supabase';
 import './MatchesView.css';
+
+const NEW_DAYS = 3; // matches en los últimos N días se consideran "nuevos"
 
 function formatMatchDate(dateStr) {
     if (!dateStr) return '';
     const date = new Date(dateStr);
     const now = new Date();
     const diffDays = Math.floor((now - date) / 86400000);
-
     if (diffDays === 0) return 'Hoy';
     if (diffDays === 1) return 'Ayer';
-    if (diffDays < 7) return date.toLocaleDateString('es', { weekday: 'long' });
+    if (diffDays < 7) return 'hace ' + diffDays + ' días';
+    if (diffDays < 30) return 'hace 1 sem.';
     return date.toLocaleDateString('es', { day: 'numeric', month: 'short' });
 }
 
-// isTab=true → sin header propio, height:100% (para embeber en MainApp)
+function isNew(dateStr) {
+    if (!dateStr) return false;
+    return (Date.now() - new Date(dateStr)) < NEW_DAYS * 86400000;
+}
+
 export default function MatchesView({ isTab = false }) {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [matches, setMatches] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [query, setQuery] = useState('');
 
     useEffect(() => {
         if (!user) return;
-
-        const loadMatches = async () => {
+        let isMounted = true;
+        const load = async () => {
             setLoading(true);
             try {
-                const { data: rawMatches, error } = await db.matches.get();
-                if (error) {
-                    console.error('[MatchesView] Error cargando matches:', error);
-                    return;
-                }
+                const { data: raw, error } = await db.matches.get();
+                if (!isMounted) return;
+                if (error) { console.error('[MatchesView]', error); return; }
 
-                // Enriquecer con perfil del otro usuario
                 const enriched = await Promise.all(
-                    (rawMatches || []).map(async (match) => {
+                    (raw || []).map(async (match) => {
                         const otherId =
                             match.user_id_1 === user.id ? match.user_id_2 : match.user_id_1;
                         const { data: otherProfile } = await db.profiles.getById(otherId);
-
                         return {
-                            matchId: match.id,
-                            createdAt: match.created_at,
+                            matchId:      match.id,
+                            createdAt:    match.created_at,
                             otherProfile: otherProfile || { full_name: 'Usuario' },
                         };
                     })
                 );
 
-                // Ordenar por más reciente primero
-                enriched.sort(
-                    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-                );
-
+                if (!isMounted) return;
+                enriched.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                 setMatches(enriched);
             } catch (err) {
-                console.error('[MatchesView] Error:', err);
+                if (!isMounted) return;
+                console.error('[MatchesView]', err);
             } finally {
-                setLoading(false);
+                if (isMounted) setLoading(false);
             }
         };
-
-        loadMatches();
+        load();
+        return () => { isMounted = false; };
     }, [user]);
 
-    // ── Header (solo en modo standalone) ──
-    const header = !isTab ? (
-        <div className="matches-view__header">
-            <button
-                className="matches-view__back"
-                onClick={() => navigate('/app')}
-                aria-label="Volver"
-            >
-                <span className="material-symbols-rounded">arrow_back</span>
-            </button>
-            <h2 className="matches-view__title">Matches</h2>
-        </div>
-    ) : null;
+    const filtered = useMemo(() => {
+        if (!query.trim()) return matches;
+        const q = query.toLowerCase();
+        return matches.filter(({ otherProfile }) => {
+            const name = (otherProfile.company_name || otherProfile.full_name || '').toLowerCase();
+            const sub  = (otherProfile.company_sector || otherProfile.headline || '').toLowerCase();
+            return name.includes(q) || sub.includes(q);
+        });
+    }, [matches, query]);
+
+    const newMatches = matches.filter((m) => isNew(m.createdAt));
 
     // ── Loading ──
     if (loading) {
         return (
-            <div className={`matches-view ${isTab ? 'matches-view--tab' : ''}`}>
-                {header}
-                <div className="matches-view__loading">
-                    <div className="matches-view__spinner" />
+            <div className={`mv ${isTab ? 'mv--tab' : ''}`}>
+                <div className="mv__header">
+                    <h2 className="mv__title">Mis Matches</h2>
                 </div>
+                <div className="mv__loading"><div className="mv__spinner" /></div>
             </div>
         );
     }
 
-    // ── Sin matches ──
+    // ── Empty ──
     if (matches.length === 0) {
         return (
-            <div className={`matches-view ${isTab ? 'matches-view--tab' : ''}`}>
-                {header}
-                <div className="matches-view__empty">
-                    <span className="material-symbols-rounded matches-view__empty-icon">
-                        favorite_border
-                    </span>
-                    <h3 className="matches-view__empty-title">Sin matches todavía</h3>
-                    <p className="matches-view__empty-text">
+            <div className={`mv ${isTab ? 'mv--tab' : ''}`}>
+                <div className="mv__header">
+                    <h2 className="mv__title">Mis Matches</h2>
+                </div>
+                <div className="mv__empty">
+                    <span className="material-symbols-rounded mv__empty-icon">favorite_border</span>
+                    <h3 className="mv__empty-title">Sin matches todavía</h3>
+                    <p className="mv__empty-text">
                         ¡Sigue explorando! Cuando hagas match con alguien aparecerá aquí.
                     </p>
-                    <button
-                        className="matches-view__explore-btn"
-                        onClick={() => navigate('/app')}
-                    >
-                        <span className="material-symbols-rounded">swap_horiz</span>
+                    <button className="mv__explore-btn" onClick={() => navigate('/app')}>
+                        <span className="material-symbols-rounded">style</span>
                         Explorar
                     </button>
                 </div>
@@ -120,69 +116,153 @@ export default function MatchesView({ isTab = false }) {
         );
     }
 
-    // ── Lista de matches ──
     return (
-        <div className={`matches-view ${isTab ? 'matches-view--tab' : ''}`}>
-            {header}
-            <p className="matches-view__count">
-                {matches.length} match{matches.length !== 1 ? 'es' : ''}
-            </p>
-            <div className="matches-view__list">
-                {matches.map(({ matchId, createdAt, otherProfile }) => {
-                    const initial = (otherProfile.full_name || '?')[0].toUpperCase();
-                    const isCompany = otherProfile.user_type === 'company';
-                    const displayName =
-                        otherProfile.company_name || otherProfile.full_name || 'Usuario';
-                    const displaySub =
-                        otherProfile.company_sector || otherProfile.headline || null;
-                    const avatarSrc =
-                        otherProfile.company_logo || otherProfile.avatar_url || null;
+        <div className={`mv ${isTab ? 'mv--tab' : ''}`}>
+            {/* ── Header ── */}
+            <div className="mv__header">
+                <h2 className="mv__title">Mis Matches</h2>
+            </div>
 
-                    return (
-                        <div
-                            key={matchId}
-                            className="matches-view__item"
-                            onClick={() => navigate(`/app/messages/${matchId}`)}
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') navigate(`/app/messages/${matchId}`);
-                            }}
-                        >
-                            {/* Avatar */}
-                            {avatarSrc ? (
-                                <img
-                                    className="matches-view__avatar"
-                                    src={avatarSrc}
-                                    alt={displayName}
-                                />
-                            ) : (
-                                <div className={`matches-view__avatar-fallback ${isCompany ? 'matches-view__avatar-fallback--company' : ''}`}>
-                                    {isCompany
-                                        ? <span className="material-symbols-rounded">business</span>
-                                        : initial
-                                    }
-                                </div>
-                            )}
-
-                            {/* Info */}
-                            <div className="matches-view__info">
-                                <p className="matches-view__name">{displayName}</p>
-                                {displaySub && (
-                                    <p className="matches-view__sub">{displaySub}</p>
-                                )}
-                            </div>
-
-                            {/* Meta */}
-                            <div className="matches-view__meta">
-                                <span className="matches-view__date">{formatMatchDate(createdAt)}</span>
-                                <span className="material-symbols-rounded matches-view__arrow">
-                                    chevron_right
-                                </span>
-                            </div>
+            <div className="mv__scroll">
+                {/* ── Nuevos matches (story circles) ── */}
+                {newMatches.length > 0 && (
+                    <div className="mv__new-section">
+                        <div className="mv__section-row">
+                            <span className="mv__section-label">Nuevos Matches</span>
+                            <span className="mv__new-badge">{newMatches.length} Nuevos</span>
                         </div>
-                    );
-                })}
+                        <div className="mv__stories">
+                            {matches.map(({ matchId, createdAt, otherProfile }) => {
+                                const avatarSrc = otherProfile.company_logo || otherProfile.avatar_url;
+                                const name = otherProfile.company_name || otherProfile.full_name || 'Usuario';
+                                const initial = name[0].toUpperCase();
+                                const fresh = isNew(createdAt);
+                                return (
+                                    <button
+                                        key={matchId}
+                                        className="mv__story"
+                                        onClick={() => navigate(`/app/messages/${matchId}`)}
+                                        aria-label={name}
+                                    >
+                                        <div className={`mv__story-ring ${fresh ? 'mv__story-ring--new' : 'mv__story-ring--old'}`}>
+                                            <div className="mv__story-inner">
+                                                {avatarSrc ? (
+                                                    <img src={avatarSrc} alt={name} className="mv__story-img" />
+                                                ) : (
+                                                    <div className="mv__story-fallback">{initial}</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <span className="mv__story-name">{name}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Buscador ── */}
+                <div className="mv__search-wrap">
+                    <div className="mv__search-inner">
+                        <span className="material-symbols-rounded mv__search-icon">search</span>
+                        <input
+                            className="mv__search"
+                            type="text"
+                            placeholder="Buscar empresa o puesto..."
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                        />
+                    </div>
+                </div>
+
+                {/* ── Lista de todos los matches ── */}
+                <div className="mv__list-section">
+                    <span className="mv__section-label mv__section-label--list">
+                        Todos mis matches
+                    </span>
+
+                    <div className="mv__list">
+                        {filtered.length === 0 ? (
+                            <div className="mv__no-results">
+                                <span className="material-symbols-rounded">search_off</span>
+                                <p>Sin resultados para "{query}"</p>
+                            </div>
+                        ) : (
+                            filtered.map(({ matchId, createdAt, otherProfile }, idx) => {
+                                const avatarSrc    = otherProfile.company_logo || otherProfile.avatar_url;
+                                const displayName  = otherProfile.company_name || otherProfile.full_name || 'Usuario';
+                                const displaySub   = otherProfile.company_sector || otherProfile.headline || null;
+                                const displayCity  = otherProfile.city || null;
+                                const initial      = displayName[0].toUpperCase();
+                                const fresh        = isNew(createdAt);
+
+                                return (
+                                    <div key={matchId}>
+                                        {idx > 0 && <div className="mv__list-divider" />}
+                                        <div
+                                            className={`mv__item ${fresh ? 'mv__item--new' : ''}`}
+                                            onClick={() => navigate(`/app/messages/${matchId}`)}
+                                            role="button"
+                                            tabIndex={0}
+                                            onKeyDown={(e) => e.key === 'Enter' && navigate(`/app/messages/${matchId}`)}
+                                        >
+                                            {/* Avatar */}
+                                            <div className="mv__item-avatar-wrap">
+                                                {avatarSrc ? (
+                                                    <img
+                                                        src={avatarSrc}
+                                                        alt={displayName}
+                                                        className="mv__item-avatar"
+                                                    />
+                                                ) : (
+                                                    <div className="mv__item-avatar mv__item-avatar--fallback">
+                                                        {initial}
+                                                    </div>
+                                                )}
+                                                {/* Handshake badge */}
+                                                <div className="mv__item-badge">
+                                                    <span className="material-symbols-rounded">handshake</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Info */}
+                                            <div className="mv__item-info">
+                                                <div className="mv__item-row">
+                                                    <span className="mv__item-name">{displayName}</span>
+                                                    <span className={`mv__item-date ${fresh ? 'mv__item-date--new' : ''}`}>
+                                                        {formatMatchDate(createdAt)}
+                                                    </span>
+                                                </div>
+                                                {displaySub && (
+                                                    <div className="mv__item-meta">
+                                                        <span className="mv__item-sub">{displaySub}</span>
+                                                        {displayCity && (
+                                                            <>
+                                                                <span className="mv__item-dot" />
+                                                                <span className="mv__item-city">{displayCity}</span>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Chevron / pulse dot */}
+                                            {fresh ? (
+                                                <div className="mv__item-pulse" />
+                                            ) : (
+                                                <span className="material-symbols-rounded mv__item-chevron">
+                                                    chevron_right
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
+
+                <div style={{ height: 32 }} />
             </div>
         </div>
     );

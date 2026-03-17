@@ -29,17 +29,26 @@ export default function CompanySettingsView() {
     // ── Cargar contadores rápidos ──
     useEffect(() => {
         if (!currentUser?.id) return;
-        Promise.all([
-            db.offers.getByCompany(currentUser.id),
-            db.matches.get(),
-            db.statistics.get(),
-        ]).then(([offersRes, matchesRes, statsRes]) => {
-            setStats({
-                offers:  (offersRes.data || []).filter((o) => o.status === 'active').length,
-                matches: (matchesRes.data || []).length,
-                views:   statsRes.data?.profile_views || 0,
-            });
-        }).catch(() => {});
+        let isMounted = true;
+        const load = async () => {
+            try {
+                const [offersRes, matchesRes, statsRes] = await Promise.all([
+                    db.offers.getByCompany(currentUser.id),
+                    db.matches.get(),
+                    db.statistics.get(),
+                ]);
+                if (!isMounted) return;
+                setStats({
+                    offers:  (offersRes.data || []).filter((o) => o.status === 'active').length,
+                    matches: (matchesRes.data || []).length,
+                    views:   statsRes.data?.profile_views || 0,
+                });
+            } catch {
+                // silencioso
+            }
+        };
+        load();
+        return () => { isMounted = false; };
     }, [currentUser?.id]);
 
     const handleChangePassword = async () => {
@@ -309,7 +318,27 @@ export default function CompanySettingsView() {
                 <div className="csv__section">
                     <p className="csv__section-label">Sobre Talently</p>
                     <div className="csv__group">
-                        <button className="csv__row" onClick={() => alert('Próximamente')}>
+                        <button className="csv__row" onClick={() => navigate('/support')}>
+                            <div className="csv__row-icon csv__row-icon--amber">
+                                <span className="material-symbols-rounded">headset_mic</span>
+                            </div>
+                            <div className="csv__row-info">
+                                <p className="csv__row-title">Contactar soporte</p>
+                            </div>
+                            <span className="material-symbols-rounded csv__chevron">chevron_right</span>
+                        </button>
+
+                        <button className="csv__row" onClick={() => navigate('/faq')}>
+                            <div className="csv__row-icon csv__row-icon--blue">
+                                <span className="material-symbols-rounded">help_outline</span>
+                            </div>
+                            <div className="csv__row-info">
+                                <p className="csv__row-title">Preguntas frecuentes</p>
+                            </div>
+                            <span className="material-symbols-rounded csv__chevron">chevron_right</span>
+                        </button>
+
+                        <button className="csv__row" onClick={() => navigate('/privacy')}>
                             <div className="csv__row-icon csv__row-icon--muted">
                                 <span className="material-symbols-rounded">policy</span>
                             </div>
@@ -327,6 +356,23 @@ export default function CompanySettingsView() {
                                 <p className="csv__row-sub">v{APP_VERSION}</p>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {/* ── Zona de peligro ── */}
+                <div className="csv__section">
+                    <p className="csv__section-label">Zona de peligro</p>
+                    <div className="csv__group">
+                        <button className="csv__row csv__row--danger" onClick={() => navigate('/delete-account')}>
+                            <div className="csv__row-icon csv__row-icon--danger">
+                                <span className="material-symbols-rounded">delete_forever</span>
+                            </div>
+                            <div className="csv__row-info">
+                                <p className="csv__row-title csv__row-title--danger">Eliminar cuenta</p>
+                                <p className="csv__row-sub">Esta acción es irreversible</p>
+                            </div>
+                            <span className="material-symbols-rounded csv__chevron">chevron_right</span>
+                        </button>
                     </div>
                 </div>
 

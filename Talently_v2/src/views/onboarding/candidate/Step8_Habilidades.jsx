@@ -11,24 +11,29 @@ export default function Step8_Habilidades({ data, onNext, saving }) {
     useEffect(() => {
         const areas = data.professional_areas || [];
         if (areas.length === 0) return;
+        let isMounted = true;
+        const load = async () => {
+            try {
+                const { data: allAreas } = await db.reference.getAreas();
+                if (!allAreas || !isMounted) return;
 
-        db.reference.getAreas().then(({ data: allAreas }) => {
-            if (!allAreas) return;
+                const matchedAreas = allAreas.filter((a) => areas.includes(a.name));
+                if (matchedAreas.length === 0) return;
 
-            const matchedAreas = allAreas.filter((a) => areas.includes(a.name));
-            if (matchedAreas.length === 0) return;
-
-            Promise.all(
-                matchedAreas.map((area) =>
-                    db.reference.getSkills(area.slug).then(({ data: skills }) => ({
-                        areaName: area.name,
-                        skills: skills || [],
-                    }))
-                )
-            ).then((results) => {
+                const results = await Promise.all(
+                    matchedAreas.map(async (area) => {
+                        const { data: skills } = await db.reference.getSkills(area.slug);
+                        return { areaName: area.name, skills: skills || [] };
+                    })
+                );
+                if (!isMounted) return;
                 setGroups(results.filter((g) => g.skills.length > 0));
-            });
-        });
+            } catch {
+                // silencioso
+            }
+        };
+        load();
+        return () => { isMounted = false; };
     }, [data.professional_areas]);
 
     const toggleSkill = (skillName) => {
