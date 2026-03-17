@@ -3,7 +3,7 @@
 // También soporta Google OAuth — sin tipo seleccionado redirige a /onboarding
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
+import { db } from '../../lib/supabase';
 import { useApp, Actions } from '../../context/AppContext';
 import './auth.css';
 
@@ -22,7 +22,7 @@ export default function RegisterView() {
 
     // Step 1: elegir tipo, Step 2: formulario
     const [step, setStep] = useState(1);
-    const [userType, setUserType] = useState(null); // 'candidate' | 'company'
+    const [profileType, setProfileType] = useState(null); // 'candidate' | 'company'
 
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -41,7 +41,7 @@ export default function RegisterView() {
         }
         setGoogleLoading(true);
         try {
-            const { error: oauthError } = await supabase.auth.signInWithOAuth({
+            const { error: oauthError } = await db.auth.signInWithOAuth({
                 provider: 'google',
                 options: { redirectTo: window.location.origin + '/auth/callback' },
             });
@@ -73,13 +73,11 @@ export default function RegisterView() {
         setLoading(true);
 
         try {
-            const { data, error: signUpError } = await supabase.auth.signUp({
+            const { data, error: signUpError } = await db.auth.signUp(
                 email,
                 password,
-                options: {
-                    data: { user_type: userType, full_name: name },
-                },
-            });
+                { data: { user_type: profileType, full_name: name } }
+            );
 
             if (signUpError) {
                 if (signUpError.message.includes('already registered')) {
@@ -93,14 +91,14 @@ export default function RegisterView() {
             const user = data.user;
 
             // Persistir tipo en localStorage (leído por AppContext)
-            localStorage.setItem('talently_user_type', userType);
+            localStorage.setItem('talently_user_type', profileType);
 
             // Actualizar estado global
             dispatch({ type: Actions.SET_USER, payload: user });
-            dispatch({ type: Actions.SET_PROFILE_TYPE, payload: userType });
+            dispatch({ type: Actions.SET_PROFILE_TYPE, payload: profileType });
 
             // Redirigir según tipo
-            if (userType === 'company') {
+            if (profileType === 'company') {
                 navigate('/company/dashboard', { replace: true });
             } else {
                 navigate('/app/swipe', { replace: true });
@@ -114,10 +112,7 @@ export default function RegisterView() {
     };
 
     const handleContinue = () => {
-        if (!userType) {
-            setError('Selecciona un tipo de perfil para continuar');
-            return;
-        }
+        if (!profileType) return;
         setError('');
         setStep(2);
     };
@@ -126,133 +121,160 @@ export default function RegisterView() {
     if (step === 1) {
         return (
             <div className="register-screen">
-                {/* Decoraciones de fondo */}
                 <div className="register-bg-top" />
                 <div className="register-bg-blob" />
 
-                <div className="register-container">
-                    {/* Fila de navegación + progreso */}
-                    <div className="register-nav">
-                        <button
-                            className="register-nav-btn"
-                            onClick={() => navigate('/')}
-                            aria-label="Volver"
-                        >
-                            <span className="material-symbols-rounded">arrow_back</span>
-                        </button>
-                        <div className="register-progress">
-                            <div className="register-progress-dot register-progress-dot--active" />
-                            <div className="register-progress-dot" />
-                            <div className="register-progress-dot" />
+                <div className="register-step2-wrapper">
+                    {/* Card principal */}
+                    <div className="register-step2-card">
+
+                        {/* Header */}
+                        <div className="register-step2-header">
+                            <button
+                                className="register-nav-btn"
+                                onClick={() => navigate('/')}
+                                aria-label="Volver"
+                            >
+                                <span className="material-symbols-rounded">arrow_back</span>
+                            </button>
+                            <h1 className="register-step2-title">¡Hola! 👋<br />¿Quién eres?</h1>
+                            <p className="register-step2-subtitle">
+                                Selecciona tu rol para personalizar tu experiencia en{' '}
+                                <span className="register-brand-accent">Talently</span>.
+                            </p>
                         </div>
-                        <button
-                            className="register-skip-btn"
-                            type="button"
-                            onClick={() => navigate('/')}
-                        >
-                            Skip
-                        </button>
-                    </div>
 
-                    {/* Encabezado */}
-                    <div className="register-heading">
-                        <h1 className="register-title">¡Hola! 👋<br />¿Quién eres?</h1>
-                        <p className="register-subtitle">
-                            Selecciona tu rol para personalizar tu experiencia en{' '}
-                            <span className="register-brand-accent">Talently</span>.
-                        </p>
-                    </div>
+                        {/* Contenido */}
+                        <div className="register-step2-form">
 
-                    {/* Tarjetas de tipo */}
-                    <div className="register-cards">
-                        {/* Candidato */}
-                        <button
-                            className={`register-type-card${userType === 'candidate' ? ' register-type-card--selected' : ''}`}
-                            type="button"
-                            onClick={() => { setUserType('candidate'); setError(''); }}
-                        >
-                            <div className="register-card-icon register-card-icon--candidate">
-                                <span className="material-symbols-rounded">person_search</span>
+                            {/* Progress dots */}
+                            <div className="register-step1-progress">
+                                <div className="register-progress-dot register-progress-dot--active" />
+                                <div className="register-progress-dot" />
+                                <div className="register-progress-dot" />
                             </div>
-                            <div className="register-card-body">
-                                <h3 className="register-card-title">Soy Candidato</h3>
-                                <p className="register-card-desc">
-                                    Busco nuevas oportunidades laborales y quiero conectar con empresas top.
-                                </p>
-                                <ul className="register-card-features">
-                                    <li className="register-card-feature">
-                                        <span className="material-symbols-rounded register-check-icon">check_circle</span>
-                                        Encuentra ofertas relevantes
-                                    </li>
-                                    <li className="register-card-feature">
-                                        <span className="material-symbols-rounded register-check-icon">check_circle</span>
-                                        Swipe para hacer match
-                                    </li>
-                                </ul>
-                            </div>
-                            <span className="material-symbols-rounded register-radio-icon">
-                                {userType === 'candidate' ? 'radio_button_checked' : 'radio_button_unchecked'}
-                            </span>
-                        </button>
 
-                        {/* Empresa */}
-                        <button
-                            className={`register-type-card${userType === 'company' ? ' register-type-card--selected' : ''}`}
-                            type="button"
-                            onClick={() => { setUserType('company'); setError(''); }}
-                        >
-                            <div className="register-card-icon register-card-icon--company">
-                                <span className="material-symbols-rounded">business</span>
-                            </div>
-                            <div className="register-card-body">
-                                <h3 className="register-card-title">Soy Empresa</h3>
-                                <p className="register-card-desc">
-                                    Busco el mejor talento tecnológico para unirse a mi equipo.
-                                </p>
-                                <ul className="register-card-features">
-                                    <li className="register-card-feature">
-                                        <span className="material-symbols-rounded register-check-icon">check_circle</span>
-                                        Publica ofertas de empleo
-                                    </li>
-                                    <li className="register-card-feature">
-                                        <span className="material-symbols-rounded register-check-icon">check_circle</span>
-                                        Explora perfiles verificados
-                                    </li>
-                                </ul>
-                            </div>
-                            <span className="material-symbols-rounded register-radio-icon">
-                                {userType === 'company' ? 'radio_button_checked' : 'radio_button_unchecked'}
-                            </span>
-                        </button>
-                    </div>
+                            {/* Tarjetas de tipo */}
+                            <div className="register-cards">
+                                {/* Candidato */}
+                                <button
+                                    className={`register-type-card${profileType === 'candidate' ? ' register-type-card--selected' : ''}`}
+                                    type="button"
+                                    onClick={() => { setProfileType('candidate'); setError(''); }}
+                                >
+                                    <div className="register-card-icon register-card-icon--candidate">
+                                        <span className="material-symbols-rounded">person_search</span>
+                                    </div>
+                                    <div className="register-card-body">
+                                        <h3 className="register-card-title">Soy Candidato</h3>
+                                        <p className="register-card-desc">
+                                            Busco nuevas oportunidades laborales y quiero conectar con empresas top.
+                                        </p>
+                                        <ul className="register-card-features">
+                                            <li className="register-card-feature">
+                                                <span className="material-symbols-rounded register-check-icon">check_circle</span>
+                                                Encuentra ofertas relevantes
+                                            </li>
+                                            <li className="register-card-feature">
+                                                <span className="material-symbols-rounded register-check-icon">check_circle</span>
+                                                Swipe para hacer match
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <span className="material-symbols-rounded register-radio-icon">
+                                        {profileType === 'candidate' ? 'radio_button_checked' : 'radio_button_unchecked'}
+                                    </span>
+                                </button>
 
-                    {/* Error */}
-                    {error && (
-                        <div className="auth-error">
-                            <span className="material-symbols-rounded">error</span>
-                            {error}
+                                {/* Empresa */}
+                                <button
+                                    className={`register-type-card${profileType === 'company' ? ' register-type-card--selected' : ''}`}
+                                    type="button"
+                                    onClick={() => { setProfileType('company'); setError(''); }}
+                                >
+                                    <div className="register-card-icon register-card-icon--company">
+                                        <span className="material-symbols-rounded">business</span>
+                                    </div>
+                                    <div className="register-card-body">
+                                        <h3 className="register-card-title">Soy Empresa</h3>
+                                        <p className="register-card-desc">
+                                            Busco el mejor talento tecnológico para unirse a mi equipo.
+                                        </p>
+                                        <ul className="register-card-features">
+                                            <li className="register-card-feature">
+                                                <span className="material-symbols-rounded register-check-icon">check_circle</span>
+                                                Publica ofertas de empleo
+                                            </li>
+                                            <li className="register-card-feature">
+                                                <span className="material-symbols-rounded register-check-icon">check_circle</span>
+                                                Explora perfiles verificados
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <span className="material-symbols-rounded register-radio-icon">
+                                        {profileType === 'company' ? 'radio_button_checked' : 'radio_button_unchecked'}
+                                    </span>
+                                </button>
+                            </div>
+
+                            {/* Error */}
+                            {error && (
+                                <div className="auth-error">
+                                    <span className="material-symbols-rounded">error</span>
+                                    {error}
+                                </div>
+                            )}
+
+                            {/* Continuar */}
+                            <button
+                                className="auth-btn auth-btn--primary register-continue-btn"
+                                type="button"
+                                onClick={handleContinue}
+                                disabled={!profileType}
+                            >
+                                Continuar
+                                <span className="material-symbols-rounded">arrow_forward</span>
+                            </button>
+
+                            {/* Divider */}
+                            <div className="auth-divider">
+                                <span className="auth-divider-text">o</span>
+                            </div>
+
+                            {/* Google */}
+                            <button
+                                className="auth-btn auth-btn--google"
+                                type="button"
+                                onClick={() => handleGoogleOAuth(profileType)}
+                                disabled={googleLoading}
+                            >
+                                <GoogleIcon />
+                                {googleLoading ? 'Redirigiendo…' : 'Continuar con Google'}
+                            </button>
+
+                            {/* Legal */}
+                            <p className="register-legal">
+                                Al continuar, aceptas nuestros{' '}
+                                <button
+                                    type="button"
+                                    className="register-legal-link"
+                                    onClick={() => navigate('/terms')}
+                                >
+                                    Términos
+                                </button>
+                                {' '}y{' '}
+                                <button
+                                    type="button"
+                                    className="register-legal-link"
+                                    onClick={() => navigate('/privacy')}
+                                >
+                                    Privacidad
+                                </button>.
+                            </p>
                         </div>
-                    )}
-
-                    {/* Botón continuar + legal */}
-                    <div className="register-footer">
-                        <button
-                            className="auth-btn auth-btn--primary register-continue-btn"
-                            type="button"
-                            onClick={handleContinue}
-                        >
-                            Continuar
-                            <span className="material-symbols-rounded">arrow_forward</span>
-                        </button>
-                        <p className="register-legal">
-                            Al continuar, aceptas nuestros{' '}
-                            <span className="register-legal-link">Términos</span>
-                            {' '}y{' '}
-                            <span className="register-legal-link">Privacidad</span>.
-                        </p>
                     </div>
 
-                    {/* Link a login */}
+                    {/* Footer fuera de la card */}
                     <p className="auth-footer-text">
                         ¿Ya tienes cuenta?{' '}
                         <button
@@ -382,7 +404,7 @@ export default function RegisterView() {
                         <button
                             className="auth-btn auth-btn--google"
                             type="button"
-                            onClick={() => handleGoogleOAuth(userType)}
+                            onClick={() => handleGoogleOAuth(profileType)}
                             disabled={googleLoading || loading}
                         >
                             <GoogleIcon />

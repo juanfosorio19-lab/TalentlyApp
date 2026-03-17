@@ -106,7 +106,18 @@ export const db = {
             const targetType = myUserType === 'candidate' ? 'company' : 'candidate';
             return await supabase
                 .from('profiles')
-                .select('*')
+                .select(`
+                    id,
+                    full_name,
+                    professional_title,
+                    avatar_url,
+                    city,
+                    country,
+                    availability,
+                    modality,
+                    skills,
+                    experience_years
+                `)
                 .eq('user_type', targetType)
                 .limit(20);
         },
@@ -114,7 +125,18 @@ export const db = {
         getCandidatesForExplore: async () => {
             const { data, error } = await supabase
                 .from('profiles')
-                .select('*')
+                .select(`
+                    id,
+                    full_name,
+                    professional_title,
+                    avatar_url,
+                    city,
+                    country,
+                    availability,
+                    modality,
+                    skills,
+                    experience_years
+                `)
                 .eq('user_type', 'candidate')
                 .eq('onboarding_completed', true)
                 .limit(50);
@@ -258,7 +280,8 @@ export const db = {
             return await supabase
                 .from('matches')
                 .select('id, created_at, user_id_1, user_id_2')
-                .or(`user_id_1.eq.${userId},user_id_2.eq.${userId}`);
+                .or(`user_id_1.eq.${userId},user_id_2.eq.${userId}`)
+                .limit(50);
         },
 
         // Trae matches con perfiles de ambos lados y último mensaje — 2 queries totales

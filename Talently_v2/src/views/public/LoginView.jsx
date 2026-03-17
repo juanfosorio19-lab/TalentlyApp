@@ -3,7 +3,7 @@
 // También soporta Google OAuth via supabase.auth.signInWithOAuth()
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase, db } from '../../lib/supabase';
+import { db } from '../../lib/supabase';
 import { useApp, Actions } from '../../context/AppContext';
 import './auth.css';
 
@@ -31,7 +31,7 @@ export default function LoginView() {
         setError('');
         setGoogleLoading(true);
         try {
-            const { error: oauthError } = await supabase.auth.signInWithOAuth({
+            const { error: oauthError } = await db.auth.signInWithOAuth({
                 provider: 'google',
                 options: { redirectTo: window.location.origin + '/auth/callback' },
             });
@@ -58,10 +58,7 @@ export default function LoginView() {
         setLoading(true);
 
         try {
-            const { data, error: signInError } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
+            const { data, error: signInError } = await db.auth.signIn(email, password);
 
             if (signInError) {
                 setError(
