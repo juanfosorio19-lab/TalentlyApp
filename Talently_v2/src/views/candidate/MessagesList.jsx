@@ -38,33 +38,24 @@ export default function MessagesList({ basePath = '/app/messages' }) {
 
     useEffect(() => {
         if (!user) return;
+        let isMounted = true;
 
         const load = async () => {
             setLoading(true);
             try {
-                const { data: matches, error } = await db.matches.get();
+                const { data, error } = await db.matches.getWithProfiles(user.id);
+                if (!isMounted) return;
                 if (error) { console.error('[MessagesList]', error); return; }
 
-                const enriched = await Promise.all(
-                    (matches || []).map(async (match) => {
-                        const otherUserId =
-                            match.user_id_1 === user.id ? match.user_id_2 : match.user_id_1;
-
-                        const { data: otherProfile } = await db.profiles.getById(otherUserId);
-                        const { data: msgs } = await db.matches.getMessages(match.id);
-                        const lastMsg = msgs?.length ? msgs[msgs.length - 1] : null;
-
-                        return {
-                            matchId: match.id,
-                            otherProfile: otherProfile || { full_name: 'Usuario' },
-                            lastMessage: lastMsg?.content || null,
-                            lastMessageTime: lastMsg?.created_at || match.created_at,
-                            isRecent: lastMsg
-                                ? (Date.now() - new Date(lastMsg.created_at)) < 3600000
-                                : false,
-                        };
-                    })
-                );
+                const enriched = (data || []).map((m) => ({
+                    matchId:         m.id,
+                    otherProfile:    m.otherProfile,
+                    lastMessage:     m.lastMsg?.content || null,
+                    lastMessageTime: m.lastMsg?.created_at || m.created_at,
+                    isRecent:        m.lastMsg
+                        ? (Date.now() - new Date(m.lastMsg.created_at)) < 3600000
+                        : false,
+                }));
 
                 enriched.sort((a, b) =>
                     new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
@@ -72,13 +63,15 @@ export default function MessagesList({ basePath = '/app/messages' }) {
 
                 setConversations(enriched);
             } catch (err) {
+                if (!isMounted) return;
                 console.error('[MessagesList]', err);
             } finally {
-                setLoading(false);
+                if (isMounted) setLoading(false);
             }
         };
 
         load();
+        return () => { isMounted = false; };
     }, [user]);
 
     const filtered = useMemo(() => {

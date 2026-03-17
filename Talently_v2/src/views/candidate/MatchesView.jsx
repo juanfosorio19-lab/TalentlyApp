@@ -40,26 +40,17 @@ export default function MatchesView({ isTab = false }) {
         const load = async () => {
             setLoading(true);
             try {
-                const { data: raw, error } = await db.matches.get();
+                const { data, error } = await db.matches.getWithProfiles(user.id);
                 if (!isMounted) return;
                 if (error) { console.error('[MatchesView]', error); return; }
 
-                const enriched = await Promise.all(
-                    (raw || []).map(async (match) => {
-                        const otherId =
-                            match.user_id_1 === user.id ? match.user_id_2 : match.user_id_1;
-                        const { data: otherProfile } = await db.profiles.getById(otherId);
-                        return {
-                            matchId:      match.id,
-                            createdAt:    match.created_at,
-                            otherProfile: otherProfile || { full_name: 'Usuario' },
-                        };
-                    })
+                setMatches(
+                    (data || []).map((m) => ({
+                        matchId:      m.id,
+                        createdAt:    m.created_at,
+                        otherProfile: m.otherProfile,
+                    }))
                 );
-
-                if (!isMounted) return;
-                enriched.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                setMatches(enriched);
             } catch (err) {
                 if (!isMounted) return;
                 console.error('[MatchesView]', err);

@@ -261,6 +261,47 @@ export const db = {
                 .or(`user_id_1.eq.${userId},user_id_2.eq.${userId}`);
         },
 
+        // Trae matches con perfiles de ambos lados y último mensaje — 2 queries totales
+        getWithProfiles: async (userId) => {
+            const { data: matches, error } = await supabase
+                .from('matches')
+                .select(`
+                    id, created_at, user_id_1, user_id_2,
+                    profile_1:profiles!user_id_1(id, full_name, avatar_url, company_name, company_logo, company_sector, headline, city),
+                    profile_2:profiles!user_id_2(id, full_name, avatar_url, company_name, company_logo, company_sector, headline, city)
+                `)
+                .or(`user_id_1.eq.${userId},user_id_2.eq.${userId}`)
+                .order('created_at', { ascending: false })
+                .limit(50);
+
+            if (error) return { data: null, error };
+            if (!matches?.length) return { data: [], error: null };
+
+            const matchIds = matches.map((m) => m.id);
+            const { data: msgs } = await supabase
+                .from('messages')
+                .select('match_id, content, created_at')
+                .in('match_id', matchIds)
+                .order('created_at', { ascending: false });
+
+            const lastMsgMap = {};
+            (msgs || []).forEach((msg) => {
+                if (!lastMsgMap[msg.match_id]) lastMsgMap[msg.match_id] = msg;
+            });
+
+            return {
+                data: matches.map((m) => ({
+                    id: m.id,
+                    created_at: m.created_at,
+                    user_id_1: m.user_id_1,
+                    user_id_2: m.user_id_2,
+                    otherProfile: (m.user_id_1 === userId ? m.profile_2 : m.profile_1) || { full_name: 'Usuario' },
+                    lastMsg: lastMsgMap[m.id] || null,
+                })),
+                error: null,
+            };
+        },
+
         getMessages: async (matchId) => {
             return await supabase
                 .from('messages')
