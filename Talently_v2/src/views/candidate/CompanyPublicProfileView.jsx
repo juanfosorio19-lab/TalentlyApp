@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
 import { useApp } from '../../context/AppContext';
+import { Spinner } from '../../components/ui';
 import './CompanyPublicProfileView.css';
 
 // ── Helpers ──────────────────────────────────
@@ -88,7 +89,7 @@ export default function CompanyPublicProfileView() {
     if (loading) {
         return (
             <div className="cpv-center">
-                <div className="cpv-spinner" />
+                <Spinner />
                 <p className="cpv-center-text">Cargando empresa...</p>
             </div>
         );

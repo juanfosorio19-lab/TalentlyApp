@@ -1,0 +1,12 @@
+/* src/components/ui/Spinner.css */
+@keyframes ui-spin {
+    to { transform: rotate(360deg); }
+}
+
+.ui-spinner {
+    border-radius: 50%;
+    border-style: solid;
+    border-color: transparent;
+    animation: ui-spin 0.7s linear infinite;
+    flex-shrink: 0;
+}

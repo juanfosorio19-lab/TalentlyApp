@@ -6,6 +6,7 @@ import { db } from '../../lib/supabase';
 import BarChart from '../../components/charts/BarChart';
 import LineChart from '../../components/charts/LineChart';
 import FunnelChart from '../../components/charts/FunnelChart';
+import { Spinner } from '../../components/ui';
 import './CompanyStats.css';
 
 const PERIODS = [
@@ -123,9 +124,7 @@ export default function CompanyStats() {
     if (loading) {
         return (
             <div className="cs">
-                <div className="cs__loading">
-                    <div className="cs__spinner" />
-                </div>
+                <div className="cs__loading"><Spinner /></div>
             </div>
         );
     }

@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { db } from '../../lib/supabase';
 import CompanyStats from './CompanyStats';
 import MessagesList from '../candidate/MessagesList';
+import { EmptyState } from '../../components/ui';
 import './CompanyDashboard.css';
 
 const TABS = [
@@ -221,19 +222,13 @@ export default function CompanyDashboard() {
             </div>
 
             {offers.length === 0 ? (
-                <div className="cd__empty">
-                    <span className="material-symbols-rounded cd__empty-icon">work_off</span>
-                    <h3 className="cd__empty-title">Sin ofertas todavía</h3>
-                    <p className="cd__empty-text">
-                        Publica tu primera vacante y empieza a recibir candidatos.
-                    </p>
-                    <button
-                        className="cd__empty-btn"
-                        onClick={() => navigate('/company/create-offer')}
-                    >
-                        Crea tu primera oferta
-                    </button>
-                </div>
+                <EmptyState
+                    icon="work_off"
+                    title="Sin ofertas todavía"
+                    description="Publica tu primera vacante y empieza a recibir candidatos."
+                    buttonLabel="Crea tu primera oferta"
+                    onButtonClick={() => navigate('/company/create-offer')}
+                />
             ) : (
                 <div className="cd__offers-full-list">
                     {offers.map((offer) => {

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
 import { MODALITY_LABELS } from '../../lib/constants';
+import { Spinner } from '../../components/ui';
 import './OfferDetailsView.css';
 
 const MODALITY_ICONS = {
@@ -86,7 +87,7 @@ export default function OfferDetailsView() {
         <div className="od">
             {header}
             <div className="od__loading">
-                <div className="od__spinner" />
+                <Spinner />
                 <p className="od__loading-text">Cargando oferta…</p>
             </div>
         </div>

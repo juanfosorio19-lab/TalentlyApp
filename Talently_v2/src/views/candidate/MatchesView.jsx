@@ -5,6 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../lib/supabase';
+import { Spinner, EmptyState } from '../../components/ui';
 import './MatchesView.css';
 
 const NEW_DAYS = 3; // matches en los últimos N días se consideran "nuevos"
@@ -89,7 +90,7 @@ export default function MatchesView({ isTab = false }) {
                 <div className="mv__header">
                     <h2 className="mv__title">Mis Matches</h2>
                 </div>
-                <div className="mv__loading"><div className="mv__spinner" /></div>
+                <div className="mv__loading"><Spinner /></div>
             </div>
         );
     }
@@ -101,17 +102,13 @@ export default function MatchesView({ isTab = false }) {
                 <div className="mv__header">
                     <h2 className="mv__title">Mis Matches</h2>
                 </div>
-                <div className="mv__empty">
-                    <span className="material-symbols-rounded mv__empty-icon">favorite_border</span>
-                    <h3 className="mv__empty-title">Sin matches todavía</h3>
-                    <p className="mv__empty-text">
-                        ¡Sigue explorando! Cuando hagas match con alguien aparecerá aquí.
-                    </p>
-                    <button className="mv__explore-btn" onClick={() => navigate('/app')}>
-                        <span className="material-symbols-rounded">style</span>
-                        Explorar
-                    </button>
-                </div>
+                <EmptyState
+                    icon="favorite_border"
+                    title="Sin matches todavía"
+                    description="¡Sigue explorando! Cuando hagas match con alguien aparecerá aquí."
+                    buttonLabel="Explorar"
+                    onButtonClick={() => navigate('/app')}
+                />
             </div>
         );
     }

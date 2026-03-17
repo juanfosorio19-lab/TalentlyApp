@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
 import { useApp } from '../../context/AppContext';
+import { Spinner, EmptyState } from '../../components/ui';
 import './NotificationsView.css';
 
 // ── Icon + color per type ──────────────────────────────────
@@ -104,7 +105,7 @@ export default function NotificationsView() {
                     <h1 className="nv__title">Notificaciones</h1>
                     <div className="nv__header-spacer" />
                 </header>
-                <div className="nv__loading"><div className="nv__spinner" /></div>
+                <div className="nv__loading"><Spinner /></div>
             </div>
         );
     }
@@ -121,11 +122,11 @@ export default function NotificationsView() {
                     <h1 className="nv__title">Notificaciones</h1>
                     <div className="nv__header-spacer" />
                 </header>
-                <div className="nv__empty">
-                    <span className="material-symbols-rounded nv__empty-icon">notifications</span>
-                    <h3 className="nv__empty-title">Sin notificaciones</h3>
-                    <p className="nv__empty-text">No tienes notificaciones por ahora.</p>
-                </div>
+                <EmptyState
+                    icon="notifications"
+                    title="Sin notificaciones"
+                    description="No tienes notificaciones por ahora."
+                />
             </div>
         );
     }

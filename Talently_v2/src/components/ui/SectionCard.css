@@ -1,0 +1,31 @@
+/* src/components/ui/SectionCard.css */
+.ui-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.ui-card__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.ui-card__icon {
+    font-size: 20px;
+    color: var(--primary);
+}
+
+.ui-card__title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.ui-card__body {
+    /* children lay out naturally */
+}

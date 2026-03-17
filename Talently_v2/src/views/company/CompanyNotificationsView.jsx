@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
 import { useApp } from '../../context/AppContext';
+import { Spinner, EmptyState } from '../../components/ui';
 import '../candidate/NotificationsView.css';
 
 const TYPE_ICONS = {
@@ -80,15 +81,13 @@ export default function CompanyNotificationsView() {
             </header>
 
             {loading ? (
-                <div className="notif-view__loading">
-                    <div className="notif-view__spinner" />
-                </div>
+                <div className="notif-view__loading"><Spinner /></div>
             ) : notifications.length === 0 ? (
-                <div className="notif-view__empty">
-                    <span className="material-symbols-rounded notif-view__empty-icon">notifications</span>
-                    <h3 className="notif-view__empty-title">Sin notificaciones</h3>
-                    <p className="notif-view__empty-text">No tienes notificaciones por ahora.</p>
-                </div>
+                <EmptyState
+                    icon="notifications"
+                    title="Sin notificaciones"
+                    description="No tienes notificaciones por ahora."
+                />
             ) : (
                 <div className="notif-view__list">
                     {notifications.map((notif) => (
