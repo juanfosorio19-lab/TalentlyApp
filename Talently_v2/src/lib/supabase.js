@@ -148,7 +148,7 @@ export const db = {
                 .from('companies')
                 .select('*')
                 .eq('user_id', userId)
-                .single();
+                .maybeSingle();
         },
 
         update: async (userId, companyData) => {

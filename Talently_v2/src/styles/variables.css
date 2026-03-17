@@ -208,6 +208,29 @@
     --green-900: #065f46;
     --yellow-400: #facc15;
     --violet-700: #7c3aed;
+
+    /* ── Escala tipográfica semántica ── */
+    --text-h1:    2.25rem;   /* 36px — títulos principales */
+    --text-h2:    1.875rem;  /* 30px — títulos de sección */
+    --text-h3:    1.5rem;    /* 24px — subtítulos */
+    --text-h4:    1.25rem;   /* 20px — títulos de card */
+    --text-lg:    1.125rem;  /* 18px — texto destacado */
+    --text-base:  1rem;      /* 16px — texto base */
+    --text-sm:    0.875rem;  /* 14px — texto secundario */
+    --text-xs:    0.75rem;   /* 12px — labels, badges */
+    --text-micro: 0.625rem;  /* 10px — timestamps, hints */
+
+    /* ── Pesos tipográficos ── */
+    --weight-regular:   400;
+    --weight-medium:    500;
+    --weight-semibold:  600;
+    --weight-bold:      700;
+    --weight-extrabold: 800;
+
+    /* ── Line heights ── */
+    --leading-tight:   1.25;
+    --leading-normal:  1.5;
+    --leading-relaxed: 1.75;
 }
 
 /* ═══════════════════════════════════════════
@@ -373,6 +396,27 @@
     --green-900: #065f46;
     --yellow-400: #facc15;
     --violet-700: #7c3aed;
+
+    /* ── Escala tipográfica semántica (valores absolutos — no cambian con tema) ── */
+    --text-h1:    2.25rem;
+    --text-h2:    1.875rem;
+    --text-h3:    1.5rem;
+    --text-h4:    1.25rem;
+    --text-lg:    1.125rem;
+    --text-base:  1rem;
+    --text-sm:    0.875rem;
+    --text-xs:    0.75rem;
+    --text-micro: 0.625rem;
+
+    --weight-regular:   400;
+    --weight-medium:    500;
+    --weight-semibold:  600;
+    --weight-bold:      700;
+    --weight-extrabold: 800;
+
+    --leading-tight:   1.25;
+    --leading-normal:  1.5;
+    --leading-relaxed: 1.75;
 }
 
 /* ── Backward compat: .dark-mode class also triggers overrides ── */
@@ -535,4 +579,25 @@
     --green-900: #065f46;
     --yellow-400: #facc15;
     --violet-700: #7c3aed;
+
+    /* ── Escala tipográfica semántica (valores absolutos — no cambian con tema) ── */
+    --text-h1:    2.25rem;
+    --text-h2:    1.875rem;
+    --text-h3:    1.5rem;
+    --text-h4:    1.25rem;
+    --text-lg:    1.125rem;
+    --text-base:  1rem;
+    --text-sm:    0.875rem;
+    --text-xs:    0.75rem;
+    --text-micro: 0.625rem;
+
+    --weight-regular:   400;
+    --weight-medium:    500;
+    --weight-semibold:  600;
+    --weight-bold:      700;
+    --weight-extrabold: 800;
+
+    --leading-tight:   1.25;
+    --leading-normal:  1.5;
+    --leading-relaxed: 1.75;
 }
