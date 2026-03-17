@@ -1,0 +1,394 @@
+/* ============================================
+   Talently v2 — CSS Variables (Design Tokens)
+   Sistema unificado de diseño: light + dark mode
+   Dark mode se activa con [data-theme='dark'] en <html>
+   ============================================ */
+
+:root {
+    /* ── Brand Colors ── */
+    --primary: #1392EC;
+    --primary-dark: #0F7ACC;
+    --primary-light: #60BDFF;
+    --primary-rgb: 19, 146, 236;
+    --secondary: #00D9C0;
+    --secondary-rgb: 0, 217, 192;
+
+    /* ── Semantic Colors ── */
+    --success: #00D084;
+    --success-rgb: 0, 208, 132;
+    --danger: #FF6B9D;
+    --danger-rgb: 255, 107, 157;
+    --warning: #FDCB6E;
+    --warning-rgb: 253, 203, 110;
+    --info: #74B9FF;
+
+    /* ── Surfaces ── */
+    --bg: #FAFBFC;
+    --surface: #FFFFFF;
+    --surface-elevated: #FFFFFF;
+    --surface-overlay: rgba(0, 0, 0, 0.5);
+
+    /* ── Typography ── */
+    --text-primary: #2D3436;
+    --text-secondary: #636E72;
+    --text-muted: #B2BEC3;
+    --text-inverse: #FFFFFF;
+
+    /* ── Borders ── */
+    --border: #E8ECEF;
+    --border-focus: var(--primary);
+    --divider: #F0F2F5;
+
+    /* ── Shadows ── */
+    --shadow-sm: 0 2px 8px rgba(19, 146, 236, 0.08);
+    --shadow-md: 0 8px 24px rgba(19, 146, 236, 0.12);
+    --shadow-lg: 0 20px 48px rgba(19, 146, 236, 0.16);
+
+    /* ── Gradients ── */
+    --gradient-primary: linear-gradient(135deg, #1392EC 0%, #60BDFF 100%);
+    --gradient-success: linear-gradient(135deg, #00D084 0%, #00D9C0 100%);
+    --gradient-danger: linear-gradient(135deg, #FF6B9D 0%, #FF8E53 100%);
+
+    /* ── Spacing (consistent scale) ── */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-full: 9999px;
+
+    /* ── Misc ── */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.25s ease;
+    --transition-slow: 0.4s ease;
+    --max-width: 480px;
+
+    /* Overlays */
+    --overlay-light: rgba(0, 0, 0, 0.3);
+    --overlay-medium: rgba(0, 0, 0, 0.4);
+    --overlay-subtle: rgba(0, 0, 0, 0.35);
+    --overlay-dark: rgba(0, 0, 0, 0.5);
+    --overlay-dense: rgba(0, 0, 0, 0.55);
+    --overlay-darker: rgba(0, 0, 0, 0.7);
+
+    /* Shadows — neutral (override the primary-colored ones above) */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.15);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.2);
+    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.25);
+
+    /* Shadow color tokens (for use inside compound box-shadow strings) */
+    --shadow-black-04: rgba(0, 0, 0, 0.04);
+    --shadow-black-05: rgba(0, 0, 0, 0.05);
+    --shadow-black-06: rgba(0, 0, 0, 0.06);
+    --shadow-black-08: rgba(0, 0, 0, 0.08);
+    --shadow-black-10: rgba(0, 0, 0, 0.1);
+    --shadow-black-12: rgba(0, 0, 0, 0.12);
+    --shadow-black-15: rgba(0, 0, 0, 0.15);
+    --shadow-black-18: rgba(0, 0, 0, 0.18);
+    --shadow-black-20: rgba(0, 0, 0, 0.2);
+    --shadow-black-25: rgba(0, 0, 0, 0.25);
+
+    /* Colores semánticos con opacidad */
+    --primary-subtle: rgba(19, 146, 236, 0.08);
+    --primary-soft: rgba(19, 146, 236, 0.15);
+    --primary-03: rgba(19, 146, 236, 0.03);
+    --primary-04: rgba(19, 146, 236, 0.04);
+    --primary-05: rgba(19, 146, 236, 0.05);
+    --primary-06: rgba(19, 146, 236, 0.06);
+    --primary-07: rgba(19, 146, 236, 0.07);
+    --primary-08: rgba(19, 146, 236, 0.08);
+    --primary-10: rgba(19, 146, 236, 0.1);
+    --primary-12: rgba(19, 146, 236, 0.12);
+    --primary-15: rgba(19, 146, 236, 0.15);
+    --primary-18: rgba(19, 146, 236, 0.18);
+    --primary-20: rgba(19, 146, 236, 0.2);
+    --primary-25: rgba(19, 146, 236, 0.25);
+    --primary-30: rgba(19, 146, 236, 0.3);
+    --primary-35: rgba(19, 146, 236, 0.35);
+    --primary-40: rgba(19, 146, 236, 0.4);
+    --primary-50: rgba(19, 146, 236, 0.5);
+    --primary-65: rgba(19, 146, 236, 0.65);
+    --primary-75: rgba(19, 146, 236, 0.75);
+
+    --success-subtle: rgba(0, 208, 132, 0.1);
+    --success-06: rgba(0, 208, 132, 0.06);
+    --success-12: rgba(0, 208, 132, 0.12);
+    --success-40: rgba(0, 208, 132, 0.4);
+
+    --secondary-10: rgba(0, 217, 192, 0.1);
+    --secondary-12: rgba(0, 217, 192, 0.12);
+    --secondary-15: rgba(0, 217, 192, 0.15);
+    --secondary-20: rgba(0, 217, 192, 0.2);
+
+    --warning-12: rgba(253, 203, 110, 0.12);
+    --warning-15: rgba(253, 203, 110, 0.15);
+    --warning-25: rgba(253, 203, 110, 0.25);
+
+    --danger-08: rgba(255, 107, 157, 0.08);
+    --error-subtle: rgba(255, 107, 157, 0.1);
+    --error-40: rgba(255, 107, 157, 0.4);
+    --error-07: rgba(255, 107, 157, 0.07);
+
+    --danger-red-15: rgba(244, 63, 94, 0.15);
+    --danger-red-07: rgba(244, 63, 94, 0.07);
+    --danger-ef-10: rgba(239, 68, 68, 0.1);
+    --danger-ef-20: rgba(239, 68, 68, 0.2);
+    --danger-ef-06: rgba(239, 68, 68, 0.06);
+
+    /* Misc particle colors */
+    --particle-indigo-25: rgba(99, 102, 241, 0.25);
+    --particle-sky-30: rgba(56, 189, 248, 0.3);
+
+    /* Blancos con opacidad */
+    --white-10: rgba(255, 255, 255, 0.1);
+    --white-12: rgba(255, 255, 255, 0.12);
+    --white-20: rgba(255, 255, 255, 0.2);
+    --white-22: rgba(255, 255, 255, 0.22);
+    --white-30: rgba(255, 255, 255, 0.3);
+    --white-50: rgba(255, 255, 255, 0.5);
+    --white-60: rgba(255, 255, 255, 0.6);
+    --white-65: rgba(255, 255, 255, 0.65);
+    --white-75: rgba(255, 255, 255, 0.75);
+    --white-80: rgba(255, 255, 255, 0.8);
+
+    /* WelcomeView */
+    --welcome-bg-deep: #0a1628;
+    --welcome-overlay-97: rgba(10, 12, 20, 0.97);
+    --welcome-overlay-65: rgba(10, 12, 20, 0.65);
+    --welcome-overlay-25: rgba(10, 12, 20, 0.25);
+
+    /* Misc UI greens (not the success semantic color) */
+    --green-4ade-10: rgba(74, 222, 128, 0.1);
+    --green-4ade-20: rgba(74, 222, 128, 0.2);
+}
+
+/* ═══════════════════════════════════════════
+   Dark Mode — activated via data-theme="dark"
+   on <html> or <body>
+   ═══════════════════════════════════════════ */
+[data-theme='dark'] {
+    --bg: #1A1B1E;
+    --surface: #25262B;
+    --surface-elevated: #2C2D32;
+    --surface-overlay: rgba(0, 0, 0, 0.7);
+
+    --text-primary: #FFFFFF;
+    --text-secondary: #A0A0A0;
+    --text-muted: #6E6E6E;
+    --text-inverse: #1A1B1E;
+
+    --border: #2C2E33;
+    --divider: #2C2E33;
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.18);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.22);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.35);
+
+    /* Overlays */
+    --overlay-light: rgba(0, 0, 0, 0.3);
+    --overlay-medium: rgba(0, 0, 0, 0.4);
+    --overlay-subtle: rgba(0, 0, 0, 0.35);
+    --overlay-dark: rgba(0, 0, 0, 0.5);
+    --overlay-dense: rgba(0, 0, 0, 0.55);
+    --overlay-darker: rgba(0, 0, 0, 0.7);
+
+    /* Shadow color tokens */
+    --shadow-black-04: rgba(0, 0, 0, 0.04);
+    --shadow-black-05: rgba(0, 0, 0, 0.05);
+    --shadow-black-06: rgba(0, 0, 0, 0.06);
+    --shadow-black-08: rgba(0, 0, 0, 0.08);
+    --shadow-black-10: rgba(0, 0, 0, 0.1);
+    --shadow-black-12: rgba(0, 0, 0, 0.12);
+    --shadow-black-15: rgba(0, 0, 0, 0.15);
+    --shadow-black-18: rgba(0, 0, 0, 0.18);
+    --shadow-black-20: rgba(0, 0, 0, 0.2);
+    --shadow-black-25: rgba(0, 0, 0, 0.25);
+
+    /* Colores semánticos con opacidad */
+    --primary-subtle: rgba(19, 146, 236, 0.08);
+    --primary-soft: rgba(19, 146, 236, 0.15);
+    --primary-03: rgba(19, 146, 236, 0.03);
+    --primary-04: rgba(19, 146, 236, 0.04);
+    --primary-05: rgba(19, 146, 236, 0.05);
+    --primary-06: rgba(19, 146, 236, 0.06);
+    --primary-07: rgba(19, 146, 236, 0.07);
+    --primary-08: rgba(19, 146, 236, 0.08);
+    --primary-10: rgba(19, 146, 236, 0.1);
+    --primary-12: rgba(19, 146, 236, 0.12);
+    --primary-15: rgba(19, 146, 236, 0.15);
+    --primary-18: rgba(19, 146, 236, 0.18);
+    --primary-20: rgba(19, 146, 236, 0.2);
+    --primary-25: rgba(19, 146, 236, 0.25);
+    --primary-30: rgba(19, 146, 236, 0.3);
+    --primary-35: rgba(19, 146, 236, 0.35);
+    --primary-40: rgba(19, 146, 236, 0.4);
+    --primary-50: rgba(19, 146, 236, 0.5);
+    --primary-65: rgba(19, 146, 236, 0.65);
+    --primary-75: rgba(19, 146, 236, 0.75);
+
+    --success-subtle: rgba(0, 208, 132, 0.1);
+    --success-06: rgba(0, 208, 132, 0.06);
+    --success-12: rgba(0, 208, 132, 0.12);
+    --success-40: rgba(0, 208, 132, 0.4);
+
+    --secondary-10: rgba(0, 217, 192, 0.1);
+    --secondary-12: rgba(0, 217, 192, 0.12);
+    --secondary-15: rgba(0, 217, 192, 0.15);
+    --secondary-20: rgba(0, 217, 192, 0.2);
+
+    --warning-12: rgba(253, 203, 110, 0.12);
+    --warning-15: rgba(253, 203, 110, 0.15);
+    --warning-25: rgba(253, 203, 110, 0.25);
+
+    --danger-08: rgba(255, 107, 157, 0.08);
+    --error-subtle: rgba(255, 107, 157, 0.1);
+    --error-40: rgba(255, 107, 157, 0.4);
+    --error-07: rgba(255, 107, 157, 0.07);
+
+    --danger-red-15: rgba(244, 63, 94, 0.15);
+    --danger-red-07: rgba(244, 63, 94, 0.07);
+    --danger-ef-10: rgba(239, 68, 68, 0.1);
+    --danger-ef-20: rgba(239, 68, 68, 0.2);
+    --danger-ef-06: rgba(239, 68, 68, 0.06);
+
+    /* Misc particle colors */
+    --particle-indigo-25: rgba(99, 102, 241, 0.25);
+    --particle-sky-30: rgba(56, 189, 248, 0.3);
+
+    /* Blancos con opacidad */
+    --white-10: rgba(255, 255, 255, 0.1);
+    --white-12: rgba(255, 255, 255, 0.12);
+    --white-20: rgba(255, 255, 255, 0.2);
+    --white-22: rgba(255, 255, 255, 0.22);
+    --white-30: rgba(255, 255, 255, 0.3);
+    --white-50: rgba(255, 255, 255, 0.5);
+    --white-60: rgba(255, 255, 255, 0.6);
+    --white-65: rgba(255, 255, 255, 0.65);
+    --white-75: rgba(255, 255, 255, 0.75);
+    --white-80: rgba(255, 255, 255, 0.8);
+
+    /* WelcomeView */
+    --welcome-bg-deep: #0a1628;
+    --welcome-overlay-97: rgba(10, 12, 20, 0.97);
+    --welcome-overlay-65: rgba(10, 12, 20, 0.65);
+    --welcome-overlay-25: rgba(10, 12, 20, 0.25);
+
+    /* Misc UI greens */
+    --green-4ade-10: rgba(74, 222, 128, 0.1);
+    --green-4ade-20: rgba(74, 222, 128, 0.2);
+}
+
+/* ── Backward compat: .dark-mode class also triggers overrides ── */
+.dark-mode {
+    --bg: #1A1B1E;
+    --surface: #25262B;
+    --surface-elevated: #2C2D32;
+    --surface-overlay: rgba(0, 0, 0, 0.7);
+
+    --text-primary: #FFFFFF;
+    --text-secondary: #A0A0A0;
+    --text-muted: #6E6E6E;
+    --text-inverse: #1A1B1E;
+
+    --border: #2C2E33;
+    --divider: #2C2E33;
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.18);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.22);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.35);
+
+    /* Overlays */
+    --overlay-light: rgba(0, 0, 0, 0.3);
+    --overlay-medium: rgba(0, 0, 0, 0.4);
+    --overlay-subtle: rgba(0, 0, 0, 0.35);
+    --overlay-dark: rgba(0, 0, 0, 0.5);
+    --overlay-dense: rgba(0, 0, 0, 0.55);
+    --overlay-darker: rgba(0, 0, 0, 0.7);
+
+    /* Shadow color tokens */
+    --shadow-black-04: rgba(0, 0, 0, 0.04);
+    --shadow-black-05: rgba(0, 0, 0, 0.05);
+    --shadow-black-06: rgba(0, 0, 0, 0.06);
+    --shadow-black-08: rgba(0, 0, 0, 0.08);
+    --shadow-black-10: rgba(0, 0, 0, 0.1);
+    --shadow-black-12: rgba(0, 0, 0, 0.12);
+    --shadow-black-15: rgba(0, 0, 0, 0.15);
+    --shadow-black-18: rgba(0, 0, 0, 0.18);
+    --shadow-black-20: rgba(0, 0, 0, 0.2);
+    --shadow-black-25: rgba(0, 0, 0, 0.25);
+
+    /* Colores semánticos con opacidad */
+    --primary-subtle: rgba(19, 146, 236, 0.08);
+    --primary-soft: rgba(19, 146, 236, 0.15);
+    --primary-03: rgba(19, 146, 236, 0.03);
+    --primary-04: rgba(19, 146, 236, 0.04);
+    --primary-05: rgba(19, 146, 236, 0.05);
+    --primary-06: rgba(19, 146, 236, 0.06);
+    --primary-07: rgba(19, 146, 236, 0.07);
+    --primary-08: rgba(19, 146, 236, 0.08);
+    --primary-10: rgba(19, 146, 236, 0.1);
+    --primary-12: rgba(19, 146, 236, 0.12);
+    --primary-15: rgba(19, 146, 236, 0.15);
+    --primary-18: rgba(19, 146, 236, 0.18);
+    --primary-20: rgba(19, 146, 236, 0.2);
+    --primary-25: rgba(19, 146, 236, 0.25);
+    --primary-30: rgba(19, 146, 236, 0.3);
+    --primary-35: rgba(19, 146, 236, 0.35);
+    --primary-40: rgba(19, 146, 236, 0.4);
+    --primary-50: rgba(19, 146, 236, 0.5);
+    --primary-65: rgba(19, 146, 236, 0.65);
+    --primary-75: rgba(19, 146, 236, 0.75);
+
+    --success-subtle: rgba(0, 208, 132, 0.1);
+    --success-06: rgba(0, 208, 132, 0.06);
+    --success-12: rgba(0, 208, 132, 0.12);
+    --success-40: rgba(0, 208, 132, 0.4);
+
+    --secondary-10: rgba(0, 217, 192, 0.1);
+    --secondary-12: rgba(0, 217, 192, 0.12);
+    --secondary-15: rgba(0, 217, 192, 0.15);
+    --secondary-20: rgba(0, 217, 192, 0.2);
+
+    --warning-12: rgba(253, 203, 110, 0.12);
+    --warning-15: rgba(253, 203, 110, 0.15);
+    --warning-25: rgba(253, 203, 110, 0.25);
+
+    --danger-08: rgba(255, 107, 157, 0.08);
+    --error-subtle: rgba(255, 107, 157, 0.1);
+    --error-40: rgba(255, 107, 157, 0.4);
+    --error-07: rgba(255, 107, 157, 0.07);
+
+    --danger-red-15: rgba(244, 63, 94, 0.15);
+    --danger-red-07: rgba(244, 63, 94, 0.07);
+    --danger-ef-10: rgba(239, 68, 68, 0.1);
+    --danger-ef-20: rgba(239, 68, 68, 0.2);
+    --danger-ef-06: rgba(239, 68, 68, 0.06);
+
+    /* Misc particle colors */
+    --particle-indigo-25: rgba(99, 102, 241, 0.25);
+    --particle-sky-30: rgba(56, 189, 248, 0.3);
+
+    /* Blancos con opacidad */
+    --white-10: rgba(255, 255, 255, 0.1);
+    --white-12: rgba(255, 255, 255, 0.12);
+    --white-20: rgba(255, 255, 255, 0.2);
+    --white-22: rgba(255, 255, 255, 0.22);
+    --white-30: rgba(255, 255, 255, 0.3);
+    --white-50: rgba(255, 255, 255, 0.5);
+    --white-60: rgba(255, 255, 255, 0.6);
+    --white-65: rgba(255, 255, 255, 0.65);
+    --white-75: rgba(255, 255, 255, 0.75);
+    --white-80: rgba(255, 255, 255, 0.8);
+
+    /* WelcomeView */
+    --welcome-bg-deep: #0a1628;
+    --welcome-overlay-97: rgba(10, 12, 20, 0.97);
+    --welcome-overlay-65: rgba(10, 12, 20, 0.65);
+    --welcome-overlay-25: rgba(10, 12, 20, 0.25);
+
+    /* Misc UI greens */
+    --green-4ade-10: rgba(74, 222, 128, 0.1);
+    --green-4ade-20: rgba(74, 222, 128, 0.2);
+}

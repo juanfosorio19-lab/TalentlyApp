@@ -83,13 +83,13 @@
 /* Layer 2 — medium */
 .fc__layer--likes {
     clip-path: polygon(0% 0, 100% 0, 96% 100%, 4% 100%);
-    background: rgba(var(--primary-rgb), 0.75);
+    background: var(--primary-75);
 }
 
 /* Layer 3 — narrowest */
 .fc__layer--matches {
     clip-path: polygon(0% 0, 100% 0, 92% 100%, 8% 100%);
-    background: rgba(var(--primary-rgb), 0.5);
+    background: var(--primary-50);
     border-radius: 0 0 6px 6px;
 }
 
@@ -144,8 +144,8 @@
 }
 
 .fc__total-dot--views   { background: var(--primary); }
-.fc__total-dot--likes   { background: rgba(var(--primary-rgb), 0.65); }
-.fc__total-dot--matches { background: rgba(var(--primary-rgb), 0.4); }
+.fc__total-dot--likes   { background: var(--primary-65); }
+.fc__total-dot--matches { background: var(--primary-40); }
 
 .fc__total-label {
     font-size: 10px;

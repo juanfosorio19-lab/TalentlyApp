@@ -1,0 +1,266 @@
+/* ============================================
+   MessagesList — Lista de conversaciones
+   Diseño Stitch
+   ============================================ */
+
+.msg-list {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--surface);
+}
+
+/* ── Header ── */
+.msg-list__header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+    padding: 20px 16px 14px;
+    border-bottom: 1px solid var(--border);
+}
+
+.msg-list__title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.msg-list__title {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text-primary);
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    letter-spacing: -0.5px;
+}
+
+.msg-list__count {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+/* Barra de búsqueda */
+.msg-list__search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.msg-list__search-icon {
+    position: absolute;
+    left: 12px;
+    font-size: 20px;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.msg-list__search {
+    width: 100%;
+    padding: 11px 14px 11px 40px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 1px 3px var(--shadow-black-04);
+}
+
+.msg-list__search::placeholder {
+    color: var(--text-muted);
+}
+
+.msg-list__search:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-soft);
+    background: var(--bg);
+}
+
+/* ── Lista ── */
+.msg-list__items {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--surface);
+}
+
+/* Conversación */
+.msg-list__item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s ease;
+    outline: none;
+}
+
+.msg-list__item:hover,
+.msg-list__item:focus-visible {
+    background: var(--bg);
+}
+
+.msg-list__item:active {
+    background: var(--border);
+}
+
+/* Avatar */
+.msg-list__avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.msg-list__avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 1px 4px var(--shadow-black-10);
+    display: block;
+}
+
+.msg-list__avatar-placeholder {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white-65);
+}
+
+.msg-list__avatar-placeholder .material-symbols-rounded {
+    font-size: 26px;
+}
+
+/* Punto online */
+.msg-list__online-dot {
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--primary);
+    border: 2px solid var(--surface);
+}
+
+/* Texto */
+.msg-list__info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.msg-list__name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.msg-list__preview {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.msg-list__preview--muted {
+    font-weight: 400;
+    color: var(--text-muted);
+}
+
+/* Timestamp */
+.msg-list__time {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+    align-self: flex-start;
+    padding-top: 2px;
+}
+
+.msg-list__time--unread {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+/* ── Estado vacío ── */
+.msg-list__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px;
+    gap: 12px;
+    text-align: center;
+}
+
+.msg-list__empty-icon-wrap {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.msg-list__empty-icon-wrap .material-symbols-rounded {
+    font-size: 36px;
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+.msg-list__empty-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.msg-list__empty-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    max-width: 240px;
+    line-height: 1.5;
+}
+
+/* ── Loading ── */
+.msg-list__loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    padding: 60px 0;
+}
+
+.msg-list__spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: msgSpin 0.8s linear infinite;
+}
+
+@keyframes msgSpin {
+    to { transform: rotate(360deg); }
+}

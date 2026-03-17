@@ -1,0 +1,340 @@
+/* ============================================
+   MatchModal — "¡Es un Match!" — diseño Stitch
+   ============================================ */
+
+/* ── Overlay ── */
+.match-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: matchFadeIn 0.3s ease forwards;
+}
+
+.match-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: var(--overlay-dense);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* ── Panel ── */
+.match-modal__content {
+    position: relative;
+    z-index: 1;
+    width: calc(100% - 32px);
+    max-width: 380px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    box-shadow: 0 24px 48px var(--shadow-black-18);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 28px 32px;
+    gap: 0;
+    animation: matchPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    overflow: hidden;
+}
+
+/* Decoración de fondo sutil */
+.match-modal__content::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    left: -60px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, var(--primary-subtle) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.match-modal__content::after {
+    content: '';
+    position: absolute;
+    bottom: -40px;
+    right: -40px;
+    width: 160px;
+    height: 160px;
+    background: radial-gradient(circle, var(--danger-red-07) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+/* ── Botón cerrar ── */
+.match-modal__close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: background 0.2s ease, color 0.2s ease;
+    z-index: 2;
+}
+
+.match-modal__close:hover {
+    background: var(--border);
+    color: var(--text-primary);
+}
+
+.match-modal__close .material-symbols-rounded {
+    font-size: 18px;
+}
+
+/* ── Encabezado ── */
+.match-modal__heading {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.match-modal__title {
+    font-size: 40px;
+    font-weight: 900;
+    font-style: italic;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    background: linear-gradient(to right, var(--primary), #F43F5E);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+}
+
+.match-modal__subtitle {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+/* ── Avatares ── */
+.match-modal__avatars-wrap {
+    position: relative;
+    width: 220px;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+/* Anillos pulsantes */
+.match-modal__ring {
+    position: absolute;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 1px solid var(--primary-20);
+    animation: matchRingPulse 2.5s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.match-modal__ring--1 {
+    width: 180px;
+    height: 180px;
+}
+
+.match-modal__ring--2 {
+    width: 140px;
+    height: 140px;
+    border-color: var(--danger-red-15);
+    animation-delay: 0.6s;
+}
+
+/* Tarjeta de avatar */
+.match-modal__avatar-card {
+    position: absolute;
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    overflow: visible;
+    z-index: 1;
+}
+
+.match-modal__avatar-card--left {
+    left: 4px;
+    transform: rotate(-6deg);
+    z-index: 1;
+}
+
+.match-modal__avatar-card--right {
+    right: 4px;
+    transform: rotate(6deg);
+    z-index: 2;
+}
+
+.match-modal__avatar-img {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--surface);
+    box-shadow: 0 0 20px var(--primary-25), 0 4px 12px var(--shadow-black-15);
+    display: block;
+}
+
+.match-modal__avatar-placeholder {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    border: 4px solid var(--surface);
+    box-shadow: 0 0 20px var(--primary-25), 0 4px 12px var(--shadow-black-15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white-60);
+}
+
+.match-modal__avatar-placeholder .material-symbols-rounded {
+    font-size: 36px;
+}
+
+/* Badge de ícono en cada avatar */
+.match-modal__avatar-badge {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--surface);
+    box-shadow: 0 2px 6px var(--shadow-black-15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+}
+
+.match-modal__avatar-badge--company {
+    color: #F43F5E;
+    bottom: -4px;
+    left: -4px;
+    right: auto;
+}
+
+.match-modal__avatar-badge .material-symbols-rounded {
+    font-size: 14px;
+}
+
+/* ── Corazón central ── */
+.match-modal__heart {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1.1);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--surface);
+    box-shadow: 0 4px 12px var(--shadow-black-15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    animation: matchHeartBounce 2s ease infinite;
+}
+
+.match-modal__heart .material-symbols-rounded {
+    font-size: 24px;
+    color: #F43F5E;
+}
+
+/* ── Tip ── */
+.match-modal__tip {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+    max-width: 240px;
+    line-height: 1.5;
+    margin-bottom: 24px;
+}
+
+/* ── Botones ── */
+.match-modal__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.match-modal__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 15px 24px;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    font-family: inherit;
+    width: 100%;
+}
+
+.match-modal__btn:active {
+    transform: scale(0.97);
+}
+
+.match-modal__btn .material-symbols-rounded {
+    font-size: 20px;
+}
+
+.match-modal__btn--primary {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 16px var(--primary-40);
+}
+
+.match-modal__btn--primary:hover {
+    opacity: 0.92;
+    box-shadow: 0 6px 20px var(--primary-50);
+}
+
+.match-modal__btn--secondary {
+    background: transparent;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.match-modal__btn--secondary:hover {
+    color: var(--text-secondary);
+}
+
+/* ── Animaciones ── */
+@keyframes matchFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes matchPop {
+    from { opacity: 0; transform: scale(0.6); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes matchHeartBounce {
+    0%, 100% { transform: translate(-50%, -50%) scale(1.1); }
+    50%       { transform: translate(-50%, -50%) scale(1.25); }
+}
+
+@keyframes matchRingPulse {
+    0%, 100% { opacity: 0.2; transform: translate(-50%, -50%) scale(1); }
+    50%       { opacity: 0.5; transform: translate(-50%, -50%) scale(1.05); }
+}

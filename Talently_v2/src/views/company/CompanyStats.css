@@ -76,7 +76,7 @@
     font-family: inherit;
     outline: none;
     appearance: none;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 8px var(--shadow-black-06);
     cursor: pointer;
 }
 
@@ -118,7 +118,7 @@
 .cs__period-btn--active {
     background: var(--surface);
     color: var(--primary);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 4px var(--shadow-black-08);
 }
 
 /* ── Metrics grid ── */
@@ -150,10 +150,10 @@
 
 .cs__metric-icon .material-symbols-rounded { font-size: 18px; }
 
-.cs__metric-icon--blue   { background: rgba(var(--primary-rgb), 0.1);   color: var(--primary);   }
-.cs__metric-icon--red    { background: rgba(var(--danger-rgb), 0.1);    color: var(--danger);    }
-.cs__metric-icon--green  { background: rgba(var(--success-rgb), 0.12);  color: var(--success);   }
-.cs__metric-icon--purple { background: rgba(var(--secondary-rgb), 0.12); color: var(--secondary); }
+.cs__metric-icon--blue   { background: var(--primary-subtle);   color: var(--primary);   }
+.cs__metric-icon--red    { background: var(--error-subtle);    color: var(--danger);    }
+.cs__metric-icon--green  { background: var(--success-12);  color: var(--success);   }
+.cs__metric-icon--purple { background: var(--secondary-12); color: var(--secondary); }
 
 .cs__metric-value {
     font-size: 26px;

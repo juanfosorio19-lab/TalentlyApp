@@ -12,7 +12,7 @@
     flex-direction: column;
     overflow: hidden;
     /* Gradiente por defecto cuando no hay imagen de fondo */
-    background: linear-gradient(160deg, var(--primary-dark) 0%, #0a1628 60%, #000000 100%);
+    background: linear-gradient(160deg, var(--primary-dark) 0%, var(--welcome-bg-deep) 60%, #000000 100%);
 }
 
 /* ── Capa de fondo ── */
@@ -30,9 +30,9 @@
     inset: 0;
     background: linear-gradient(
         to top,
-        rgba(10, 12, 20, 0.97) 0%,
-        rgba(10, 12, 20, 0.65) 40%,
-        rgba(10, 12, 20, 0.25) 100%
+        var(--welcome-overlay-97) 0%,
+        var(--welcome-overlay-65) 40%,
+        var(--welcome-overlay-25) 100%
     );
 }
 
@@ -81,7 +81,7 @@
     font-weight: 700;
     color: #ffffff;
     letter-spacing: -0.5px;
-    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+    text-shadow: 0 2px 12px var(--overlay-medium);
 }
 
 /* ── Zona inferior (titular + botones) ── */
@@ -104,7 +104,7 @@
     font-weight: 800;
     color: #ffffff;
     line-height: 1.15;
-    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+    text-shadow: 0 2px 12px var(--overlay-medium);
 }
 
 .welcome-title__accent {
@@ -114,7 +114,7 @@
 .welcome-tagline {
     font-size: 1.0625rem;  /* 17px */
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--white-80);
     line-height: 1.6;
     max-width: 300px;
 }
@@ -153,7 +153,7 @@
 
 .welcome-btn--primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 24px 56px rgba(var(--primary-rgb), 0.45);
+    box-shadow: 0 24px 56px var(--primary-50);
 }
 
 .welcome-btn--primary:active {
@@ -172,24 +172,24 @@
 
 /* Botón secundario — Inicia sesión */
 .welcome-btn--secondary {
-    background: rgba(255, 255, 255, 0.12);
+    background: var(--white-12);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     color: #ffffff;
-    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    border: 1.5px solid var(--white-30);
     font-weight: 600;
 }
 
 .welcome-btn--secondary:hover {
-    background: rgba(255, 255, 255, 0.22);
-    border-color: rgba(255, 255, 255, 0.5);
+    background: var(--white-22);
+    border-color: var(--white-50);
 }
 
 /* ── Legal ── */
 .welcome-legal {
     font-size: 0.75rem;   /* 12px */
     text-align: center;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--white-50);
     line-height: 1.7;
     padding: 4px 8px 0;
 }
@@ -198,7 +198,7 @@
     background: none;
     border: none;
     padding: 0;
-    color: rgba(255, 255, 255, 0.75);
+    color: var(--white-75);
     font-size: inherit;
     font-family: inherit;
     cursor: pointer;

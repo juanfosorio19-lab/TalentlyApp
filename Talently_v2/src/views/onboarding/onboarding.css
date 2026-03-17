@@ -194,7 +194,7 @@
 
 .ob-card--selected {
     border-color: var(--primary);
-    background: rgba(19, 146, 236, 0.06);
+    background: var(--primary-06);
     box-shadow: var(--shadow-sm);
 }
 
@@ -348,7 +348,7 @@
 
 .ob-add-btn:hover {
     border-color: var(--primary);
-    background: rgba(19, 146, 236, 0.04);
+    background: var(--primary-04);
 }
 
 /* ── Upload zone ── */
@@ -368,12 +368,12 @@
 
 .ob-upload-zone:hover {
     border-color: var(--primary);
-    background: rgba(19, 146, 236, 0.04);
+    background: var(--primary-04);
 }
 
 .ob-upload-zone--active {
     border-color: var(--success);
-    background: rgba(0, 208, 132, 0.06);
+    background: var(--success-06);
 }
 
 .ob-upload-icon {
@@ -455,7 +455,7 @@
 .ob-avatar-uploading {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.35);
+    background: var(--overlay-subtle);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -465,7 +465,7 @@
 .ob-avatar-spinner {
     width: 28px;
     height: 28px;
-    border: 3px solid rgba(255,255,255,0.3);
+    border: 3px solid var(--white-30);
     border-top-color: #fff;
     border-radius: 50%;
     animation: ob-spin 0.7s linear infinite;
@@ -509,7 +509,7 @@
 }
 
 .ob-avatar-change-btn:hover {
-    background: rgba(var(--primary-rgb), 0.07);
+    background: var(--primary-07);
 }
 
 .ob-avatar-change-btn:disabled {
@@ -555,8 +555,8 @@
 }
 
 .ob-cv-drop-zone:hover {
-    border-color: rgba(var(--primary-rgb), 0.4);
-    background: rgba(var(--primary-rgb), 0.03);
+    border-color: var(--primary-40);
+    background: var(--primary-03);
 }
 
 .ob-cv-drop-zone--loading {
@@ -671,7 +671,7 @@
 
 .ob-cv-file-remove:hover {
     color: var(--danger);
-    background: rgba(var(--danger-rgb), 0.08);
+    background: var(--danger-08);
 }
 
 .ob-cv-file-remove .material-symbols-rounded {
@@ -695,7 +695,7 @@
     width: 36px;
     height: 36px;
     border-radius: var(--radius-md);
-    background: rgba(var(--success-rgb), 0.12);
+    background: var(--success-12);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -866,7 +866,7 @@
     gap: 8px;
     padding: 12px 14px;
     border-radius: 10px;
-    background: rgba(255, 107, 157, 0.1);
+    background: var(--error-subtle);
     color: var(--danger);
     font-size: 14px;
     font-weight: 500;
@@ -930,7 +930,7 @@
 }
 
 .ob-card--rich.ob-card--selected {
-    box-shadow: 0 0 16px rgba(var(--primary-rgb), 0.18), var(--shadow-sm);
+    box-shadow: 0 0 16px var(--primary-18), var(--shadow-sm);
 }
 
 /* Icon wrapper (replaces .ob-card-icon for rich variant) */
@@ -949,12 +949,12 @@
 }
 
 .ob-card-icon-wrap--blue {
-    background: rgba(var(--primary-rgb), 0.1);
+    background: var(--primary-10);
     color: var(--primary);
 }
 
 .ob-card-icon-wrap--purple {
-    background: rgba(var(--secondary-rgb), 0.1);
+    background: var(--secondary-10);
     color: var(--secondary);
 }
 
@@ -1120,14 +1120,14 @@
 }
 
 .ob-card--modality:hover:not(.ob-card--selected) .ob-card-icon-wrap {
-    background: rgba(var(--primary-rgb), 0.1);
+    background: var(--primary-10);
     color: var(--primary);
 }
 
 .ob-card--modality.ob-card--selected .ob-card-icon-wrap {
     background: var(--primary);
     color: var(--text-inverse);
-    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+    box-shadow: 0 4px 12px var(--primary-30);
 }
 
 /* Circular check indicator */
@@ -1149,7 +1149,7 @@
 }
 
 .ob-card--modality:hover:not(.ob-card--selected) .ob-modality-check {
-    border-color: rgba(var(--primary-rgb), 0.4);
+    border-color: var(--primary-40);
 }
 
 .ob-card--modality.ob-card--selected .ob-modality-check {
@@ -1249,7 +1249,7 @@
 }
 
 .ob-edu-card:hover {
-    border-color: rgba(var(--primary-rgb), 0.3);
+    border-color: var(--primary-30);
     box-shadow: var(--shadow-md);
 }
 
@@ -1258,7 +1258,7 @@
     width: 48px;
     height: 48px;
     border-radius: var(--radius-md);
-    background: rgba(var(--primary-rgb), 0.08);
+    background: var(--primary-08);
     color: var(--primary);
     display: flex;
     align-items: center;
@@ -1318,7 +1318,7 @@
 
 .ob-edu-card-remove:hover {
     color: var(--primary);
-    background: rgba(var(--primary-rgb), 0.08);
+    background: var(--primary-08);
 }
 
 .ob-edu-card-remove .material-symbols-rounded {
@@ -1376,12 +1376,12 @@
 }
 
 .ob-radio-card:hover {
-    border-color: rgba(var(--primary-rgb), 0.4);
+    border-color: var(--primary-40);
 }
 
 .ob-radio-card--selected {
     border-color: var(--primary);
-    background: rgba(var(--primary-rgb), 0.05);
+    background: var(--primary-05);
 }
 
 .ob-radio-card-label {
@@ -1427,8 +1427,8 @@
     margin-top: 8px;
     padding: 8px 14px;
     border-radius: var(--radius-md);
-    border: 1.5px dashed rgba(var(--primary-rgb), 0.5);
-    background: rgba(var(--primary-rgb), 0.04);
+    border: 1.5px dashed var(--primary-50);
+    background: var(--primary-04);
     color: var(--primary);
     font-size: 0.875rem;
     font-weight: 600;
@@ -1438,7 +1438,7 @@
 }
 
 .ob-skill-add-custom:hover {
-    background: rgba(var(--primary-rgb), 0.08);
+    background: var(--primary-08);
     border-color: var(--primary);
 }
 
@@ -1471,8 +1471,8 @@
     font-size: 0.75rem;
     font-weight: 700;
     color: var(--primary);
-    background: rgba(var(--primary-rgb), 0.1);
-    border: 1px solid rgba(var(--primary-rgb), 0.15);
+    background: var(--primary-10);
+    border: 1px solid var(--primary-15);
     padding: 2px 10px;
     border-radius: 999px;
 }
@@ -1484,8 +1484,8 @@
     gap: 6px;
     padding: 7px 8px 7px 14px;
     border-radius: var(--radius-md);
-    background: rgba(var(--primary-rgb), 0.1);
-    border: 1.5px solid rgba(var(--primary-rgb), 0.2);
+    background: var(--primary-10);
+    border: 1.5px solid var(--primary-20);
     color: var(--primary);
     font-size: 0.875rem;
     font-weight: 700;
@@ -1494,7 +1494,7 @@
 }
 
 .ob-chip--skill-selected:hover {
-    background: rgba(var(--primary-rgb), 0.18);
+    background: var(--primary-18);
     border-color: var(--primary);
 }
 
@@ -1555,7 +1555,7 @@
 .ob-chip--skill-suggest:hover {
     border-color: var(--primary);
     color: var(--primary);
-    background: rgba(var(--primary-rgb), 0.04);
+    background: var(--primary-04);
     box-shadow: var(--shadow-md);
 }
 
@@ -1588,7 +1588,7 @@
 }
 
 .ob-add-btn--outlined:hover:not(:disabled) {
-    background: rgba(var(--primary-rgb), 0.06);
+    background: var(--primary-06);
     border-color: var(--primary);
 }
 
@@ -1628,7 +1628,7 @@
 }
 
 .ob-lang-item:hover {
-    border-color: rgba(var(--primary-rgb), 0.25);
+    border-color: var(--primary-25);
 }
 
 .ob-lang-item-body {
@@ -1663,9 +1663,337 @@
 
 .ob-lang-item-remove:hover {
     color: var(--danger);
-    background: rgba(var(--danger-rgb), 0.08);
+    background: var(--danger-08);
 }
 
 .ob-lang-item-remove .material-symbols-rounded {
     font-size: 20px;
+}
+
+/* ── Interests — Step 11 ── */
+
+/* "Campo opcional" badge */
+.ob-optional-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin: 6px 0 10px;
+}
+
+/* Custom input row: input + add button side by side */
+.ob-interest-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.ob-interest-input {
+    flex: 1;
+    height: 48px;
+    padding: 0 16px;
+    border-radius: var(--radius-xl);
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    font-size: 0.9375rem;
+    font-family: inherit;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+}
+
+.ob-interest-input::placeholder {
+    color: var(--text-muted);
+}
+
+.ob-interest-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-10);
+}
+
+.ob-interest-add-btn {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-xl);
+    background: var(--primary);
+    border: none;
+    color: var(--text-inverse);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-md);
+    transition: background var(--transition-fast), transform var(--transition-fast);
+    outline: none;
+}
+
+.ob-interest-add-btn:hover {
+    background: var(--primary-dark, var(--primary));
+    filter: brightness(1.08);
+}
+
+.ob-interest-add-btn:active {
+    transform: scale(0.95);
+}
+
+.ob-interest-add-btn .material-symbols-rounded {
+    font-size: 22px;
+}
+
+/* ── Final Screen — Step 12 ── */
+
+@keyframes ob-float {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-10px); }
+}
+
+@keyframes ob-pulse-glow {
+    0%   { box-shadow: 0 0 0 0 var(--primary-40); }
+    70%  { box-shadow: 0 0 0 20px var(--primary-subtle); }
+    100% { box-shadow: 0 0 0 0 var(--primary-subtle); }
+}
+
+@keyframes ob-scale-in {
+    0%   { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Full-screen layout inside ob-screen */
+.ob-final-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+    padding: 16px 0 8px;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+}
+
+/* Decorative bg blob */
+.ob-final-bg-blob {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 288px;
+    height: 288px;
+    background: var(--primary-05);
+    border-radius: 50%;
+    filter: blur(60px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Hero section */
+.ob-final-hero {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 8px;
+    animation: ob-scale-in 0.6s ease-out forwards;
+}
+
+/* Floating particles */
+.ob-final-particle {
+    position: absolute;
+    border-radius: 50%;
+    animation: ob-float 4s ease-in-out infinite;
+}
+
+.ob-final-particle--1 {
+    width: 12px; height: 12px;
+    top: -32px; left: -40px;
+    background: var(--primary-30);
+    animation-delay: 0.1s;
+}
+
+.ob-final-particle--2 {
+    width: 8px; height: 8px;
+    top: -4px; right: -48px;
+    background: var(--particle-indigo-25);
+    animation-delay: 0.5s;
+}
+
+.ob-final-particle--3 {
+    width: 16px; height: 16px;
+    bottom: 40px; left: -56px;
+    background: var(--primary-18);
+    animation-delay: 0.9s;
+}
+
+.ob-final-particle--4 {
+    width: 8px; height: 8px;
+    bottom: -16px; right: -32px;
+    background: var(--particle-sky-30);
+    animation-delay: 1.2s;
+}
+
+/* Check circle container */
+.ob-final-check-wrap {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ob-final-check-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1px solid var(--primary-12);
+}
+
+.ob-final-check-ring--outer {
+    transform: scale(1.25);
+}
+
+.ob-final-check-ring--inner {
+    transform: scale(1.5);
+    border-color: var(--primary-06);
+}
+
+.ob-final-check-circle {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 20px 50px -12px var(--primary-35);
+    animation: ob-pulse-glow 2s ease-in-out infinite;
+    z-index: 1;
+}
+
+.ob-final-check-icon {
+    font-size: 80px !important;
+    color: var(--text-inverse);
+    font-variation-settings: 'wght' 700;
+}
+
+/* User badge */
+.ob-final-user-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    z-index: 1;
+    animation: ob-scale-in 0.6s ease-out 0.3s both;
+}
+
+.ob-final-user-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 2px solid var(--bg);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    background: var(--primary-10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ob-final-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ob-final-avatar-placeholder {
+    font-size: 32px !important;
+    color: var(--primary);
+}
+
+.ob-final-user-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.ob-final-user-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.ob-final-user-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ob-final-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    flex-shrink: 0;
+}
+
+.ob-final-status-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+}
+
+/* Text block */
+.ob-final-text {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 320px;
+    z-index: 1;
+    animation: ob-scale-in 0.6s ease-out 0.3s both;
+}
+
+.ob-final-title-stitch {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    margin: 0;
+}
+
+.ob-final-desc-stitch {
+    font-size: 1.0625rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* CTA section */
+.ob-final-cta {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    z-index: 1;
+    padding-top: 8px;
+}
+
+.ob-final-legal {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin: 0;
 }
