@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Talently Help &amp; Support Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1392ec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101a22",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased text-[#111518]">
+<div class="relative flex h-full min-h-screen w-full flex-col bg-white overflow-x-hidden max-w-md mx-auto shadow-2xl">
+<!-- Header -->
+<div class="sticky top-0 z-10 flex items-center bg-white p-4 pb-2 justify-between border-b border-[#f0f3f4]">
+<button class="text-[#111518] hover:bg-[#f0f3f4] rounded-full p-2 flex shrink-0 items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+</button>
+<h2 class="text-[#111518] text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-10">Ayuda y Soporte</h2>
+</div>
+<!-- Search Section -->
+<div class="px-5 py-6 bg-white">
+<h1 class="text-2xl font-bold text-[#111518] mb-4">Hola, ¿cómo podemos ayudarte hoy?</h1>
+<label class="flex flex-col h-14 w-full shadow-sm">
+<div class="flex w-full flex-1 items-stretch rounded-xl h-full bg-[#f6f8fa] focus-within:ring-2 focus-within:ring-primary/50 transition-all">
+<div class="text-[#617989] flex items-center justify-center pl-4 pr-2">
+<span class="material-symbols-outlined text-2xl">search</span>
+</div>
+<input class="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#111518] bg-transparent focus:outline-none border-none h-full placeholder:text-[#93aebf] px-2 text-base font-normal leading-normal" placeholder="Buscar ayuda, artículos, temas..." value=""/>
+</div>
+</label>
+</div>
+<!-- Popular Categories Grid -->
+<div class="px-5 pb-6 bg-white">
+<h3 class="text-[#111518] text-lg font-bold leading-tight tracking-[-0.015em] pb-4">Categorías Populares</h3>
+<div class="grid grid-cols-2 gap-4">
+<!-- Card 1: Mi Perfil -->
+<button class="group flex flex-col items-center justify-center gap-3 p-4 bg-white border border-[#edf1f3] rounded-2xl hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+<div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-3xl">person</span>
+</div>
+<div class="text-center">
+<p class="text-[#111518] text-base font-bold leading-normal">Mi Perfil</p>
+<p class="text-[#617989] text-xs font-medium mt-1">Datos y CV</p>
+</div>
+</button>
+<!-- Card 2: Privacidad -->
+<button class="group flex flex-col items-center justify-center gap-3 p-4 bg-white border border-[#edf1f3] rounded-2xl hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+<div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-3xl">lock</span>
+</div>
+<div class="text-center">
+<p class="text-[#111518] text-base font-bold leading-normal">Privacidad</p>
+<p class="text-[#617989] text-xs font-medium mt-1">Seguridad</p>
+</div>
+</button>
+<!-- Card 3: Matches -->
+<button class="group flex flex-col items-center justify-center gap-3 p-4 bg-white border border-[#edf1f3] rounded-2xl hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+<div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-3xl">chat_bubble</span>
+</div>
+<div class="text-center">
+<p class="text-[#111518] text-base font-bold leading-normal">Mensajes</p>
+<p class="text-[#617989] text-xs font-medium mt-1">Matches</p>
+</div>
+</button>
+<!-- Card 4: Empresas -->
+<button class="group flex flex-col items-center justify-center gap-3 p-4 bg-white border border-[#edf1f3] rounded-2xl hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+<div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-3xl">apartment</span>
+</div>
+<div class="text-center">
+<p class="text-[#111518] text-base font-bold leading-normal">Empresas</p>
+<p class="text-[#617989] text-xs font-medium mt-1">Info general</p>
+</div>
+</button>
+</div>
+</div>
+<!-- FAQ Section -->
+<div class="px-5 pb-24 bg-white flex-1">
+<h3 class="text-[#111518] text-lg font-bold leading-tight tracking-[-0.015em] py-4">Preguntas Frecuentes</h3>
+<div class="flex flex-col gap-3">
+<!-- FAQ Item 1 (Expanded) -->
+<div class="rounded-xl border border-[#edf1f3] bg-[#fcfdfe] overflow-hidden">
+<button class="flex w-full items-center justify-between p-4 text-left">
+<span class="text-[#111518] text-base font-semibold leading-normal">¿Cómo edito mi experiencia laboral?</span>
+<span class="material-symbols-outlined text-[#617989]">keyboard_arrow_up</span>
+</button>
+<div class="px-4 pb-4 text-sm text-[#617989] leading-relaxed">
+                        Ve a tu perfil tocando el ícono en la esquina inferior derecha. Luego selecciona "Editar Perfil" y baja hasta la sección de Experiencia para agregar o modificar tus trabajos anteriores.
+                    </div>
+</div>
+<!-- FAQ Item 2 -->
+<div class="rounded-xl border border-[#edf1f3] bg-white hover:bg-[#fcfdfe] transition-colors">
+<button class="flex w-full items-center justify-between p-4 text-left">
+<span class="text-[#111518] text-base font-medium leading-normal">No recibo notificaciones de matches</span>
+<span class="material-symbols-outlined text-[#617989]">keyboard_arrow_down</span>
+</button>
+</div>
+<!-- FAQ Item 3 -->
+<div class="rounded-xl border border-[#edf1f3] bg-white hover:bg-[#fcfdfe] transition-colors">
+<button class="flex w-full items-center justify-between p-4 text-left">
+<span class="text-[#111518] text-base font-medium leading-normal">¿Cómo ocultar mi perfil?</span>
+<span class="material-symbols-outlined text-[#617989]">keyboard_arrow_down</span>
+</button>
+</div>
+<!-- FAQ Item 4 -->
+<div class="rounded-xl border border-[#edf1f3] bg-white hover:bg-[#fcfdfe] transition-colors">
+<button class="flex w-full items-center justify-between p-4 text-left">
+<span class="text-[#111518] text-base font-medium leading-normal">Reportar un comportamiento inapropiado</span>
+<span class="material-symbols-outlined text-[#617989]">keyboard_arrow_down</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Bottom Action Bar -->
+<div class="fixed bottom-0 w-full max-w-md bg-white border-t border-[#f0f3f4] p-4 flex flex-col gap-3 z-20">
+<button class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 transition-all hover:bg-primary/90 active:scale-[0.98]">
+<span class="material-symbols-outlined text-white text-xl">support_agent</span>
+<span class="text-white text-base font-bold tracking-tight">Contactar Soporte</span>
+</button>
+<a class="text-center text-sm font-semibold text-primary/80 hover:text-primary transition-colors pb-1" href="#">
+                Visitar Centro de Ayuda Web
+            </a>
+</div>
+</div>
+</body></html>

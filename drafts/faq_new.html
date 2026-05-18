@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FAQ - Mi Perfil</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1392ec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101a22",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<!-- Header Section -->
+<header class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900/50 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+<div class="flex items-center justify-between px-4 py-4">
+<button class="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm text-slate-700 dark:text-slate-200">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Mi Perfil</h1>
+<div class="w-10"></div> <!-- Spacer for centering -->
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto px-4 pb-32">
+<div class="py-6">
+<h2 class="text-xl font-bold leading-tight text-slate-900 dark:text-white mb-6">
+                Todo lo que necesitas saber sobre tu información profesional
+            </h2>
+<div class="space-y-4">
+<!-- Item 1: Closed -->
+<details class="group bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-transparent overflow-hidden">
+<summary class="flex items-center justify-between p-4 cursor-pointer list-none">
+<span class="text-sm font-semibold text-slate-800 dark:text-slate-200">¿Cómo puedo cambiar mi foto de perfil?</span>
+<span class="material-symbols-outlined text-slate-400 group-open:rotate-180 transition-transform">keyboard_arrow_down</span>
+</summary>
+<div class="px-4 pb-4">
+<p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                            Para cambiar tu foto, ve a la sección de Ajustes y selecciona 'Editar Perfil'. Toca sobre tu foto actual para subir una nueva imagen desde tu galería o cámara.
+                        </p>
+</div>
+</details>
+<!-- Item 2: Open State -->
+<details class="group bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-transparent overflow-hidden" open="">
+<summary class="flex items-center justify-between p-4 cursor-pointer list-none">
+<span class="text-sm font-semibold text-slate-800 dark:text-slate-200">¿Mi perfil es visible para todas las empresas?</span>
+<span class="material-symbols-outlined text-slate-400 group-open:rotate-180 transition-transform">keyboard_arrow_down</span>
+</summary>
+<div class="px-4 pb-4 space-y-3">
+<p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                            Puedes configurar la visibilidad de tu perfil desde los ajustes de privacidad. De manera predeterminada, solo las empresas registradas en nuestra plataforma que coincidan con tu stack tecnológico pueden ver tu información profesional.
+                        </p>
+<p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                            Si deseas que tu perfil sea completamente privado o solo visible para ofertas a las que apliques activamente, puedes ajustar esta opción en cualquier momento en la pestaña de Privacidad.
+                        </p>
+</div>
+</details>
+<!-- Item 3 -->
+<details class="group bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-transparent overflow-hidden">
+<summary class="flex items-center justify-between p-4 cursor-pointer list-none">
+<span class="text-sm font-semibold text-slate-800 dark:text-slate-200">¿Cómo agrego una nueva experiencia laboral?</span>
+<span class="material-symbols-outlined text-slate-400 group-open:rotate-180 transition-transform">keyboard_arrow_down</span>
+</summary>
+<div class="px-4 pb-4">
+<p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                            Dentro de tu perfil, busca la sección 'Experiencia' y pulsa el botón (+). Asegúrate de incluir logros específicos y las tecnologías utilizadas en cada rol.
+                        </p>
+</div>
+</details>
+<!-- Item 4 -->
+<details class="group bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-transparent overflow-hidden">
+<summary class="flex items-center justify-between p-4 cursor-pointer list-none">
+<span class="text-sm font-semibold text-slate-800 dark:text-slate-200">¿Cómo puedo descargar mi CV?</span>
+<span class="material-symbols-outlined text-slate-400 group-open:rotate-180 transition-transform">keyboard_arrow_down</span>
+</summary>
+<div class="px-4 pb-4">
+<p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                            En la parte superior derecha de tu perfil verás un icono de descarga. Al pulsarlo, generaremos un PDF optimizado con toda tu información profesional actualizada.
+                        </p>
+</div>
+</details>
+<!-- Item 5 -->
+<details class="group bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-transparent overflow-hidden">
+<summary class="flex items-center justify-between p-4 cursor-pointer list-none">
+<span class="text-sm font-semibold text-slate-800 dark:text-slate-200">¿Es posible ocultar mi perfil de mi empresa actual?</span>
+<span class="material-symbols-outlined text-slate-400 group-open:rotate-180 transition-transform">keyboard_arrow_down</span>
+</summary>
+<div class="px-4 pb-4">
+<p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                            Sí, contamos con una función de 'Bloqueo de Empresas'. Puedes ingresar el nombre o dominio de tu empleador actual para asegurarte de que tu perfil no sea visible para sus reclutadores.
+                        </p>
+</div>
+</details>
+</div>
+</div>
+</main>
+<!-- Sticky Footer -->
+<footer class="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 px-4 py-6">
+<div class="max-w-md mx-auto flex items-center justify-between gap-4">
+<div class="flex-1">
+<p class="text-slate-900 dark:text-white font-bold text-base leading-tight">¿Sigues con dudas?</p>
+<p class="text-slate-500 dark:text-slate-400 text-xs">Estamos aquí para ayudarte</p>
+</div>
+<button class="bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-base">support_agent</span>
+                Contactar a un Agente
+            </button>
+</div>
+</footer>
+<!-- Bottom Navigation Mockup (for iOS feel) -->
+<nav class="fixed bottom-0 w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 hidden">
+<!-- This is a placeholder for the actual navigation bar if needed -->
+</nav>
+</body></html>

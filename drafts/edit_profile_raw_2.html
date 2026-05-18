@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1392ec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101a22",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased text-slate-900 dark:text-slate-100 min-h-screen pb-24">
+<!-- Sticky Header -->
+<header class="sticky top-0 z-50 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md px-4 py-3 flex items-center justify-between">
+<button class="flex items-center justify-center size-10 rounded-full bg-white dark:bg-slate-800 shadow-sm transition-colors">
+<span class="material-symbols-outlined text-slate-900 dark:text-white">arrow_back</span>
+</button>
+<h1 class="text-lg font-bold text-slate-900 dark:text-white absolute left-1/2 -translate-x-1/2">Editar Perfil</h1>
+<div class="size-10"></div> <!-- Spacer for centering -->
+</header>
+<main class="p-4 space-y-4 max-w-md mx-auto">
+<!-- Profile Photo Section -->
+<section class="flex flex-col items-center py-6">
+<div class="relative group">
+<div class="size-28 rounded-full shadow-lg border-4 border-white dark:border-slate-800 overflow-hidden bg-slate-200 dark:bg-slate-700 bg-cover bg-center" data-alt="User professional profile portrait photo" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuADQazG7S6ZiGguMVe81YswoRMmTbItJWWWFEKPAanZFBkJUO18OSLz6aP7JFN7F2-BG46w-7kXQHnsRBvYC2H4062HFPYeVV77wyXIe9IfdpPdiBwbk83LRIG6kghP_UdUueV3cVBWwM_epD1pupwg8tf7weSNplzfTnu_rQwNVDZlzV1Z6iTv2O7O1UUediOVJJscPKHcpzVDJ6SygwXozS3h-RWT_D9RTRHiQu8NnQB1XyCkjxTarwBDW3tGeJRl3I2Nlovv826I');">
+</div>
+<button class="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full shadow-lg border-2 border-white dark:border-slate-800">
+<span class="material-symbols-outlined text-sm">edit</span>
+</button>
+</div>
+<h2 class="mt-4 text-xl font-bold">Alex Johnson</h2>
+<p class="text-slate-500 dark:text-slate-400 text-sm">Senior Product Designer</p>
+</section>
+<!-- Sobre Mí Card -->
+<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border-0 p-5">
+<h3 class="text-base font-bold mb-4">Sobre Mí</h3>
+<div class="bg-slate-50 dark:bg-slate-900 rounded-lg p-3">
+<label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Resumen Profesional</label>
+<textarea class="w-full bg-transparent border-0 focus:ring-0 p-0 text-slate-700 dark:text-slate-200 text-sm min-h-[120px] resize-none" placeholder="Cuéntanos sobre tu trayectoria y objetivos...">Diseñador de producto con más de 8 años de experiencia creando interfaces centradas en el usuario y sistemas de diseño escalables para startups tecnológicas.</textarea>
+</div>
+</div>
+<!-- Experiencia Profesional Card -->
+<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border-0 p-5">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-base font-bold">Experiencia Profesional</h3>
+<button class="text-primary text-sm font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">add</span>
+                    Añadir
+                </button>
+</div>
+<div class="space-y-6">
+<!-- Timeline Item 1 -->
+<div class="flex gap-4">
+<div class="flex flex-col items-center">
+<div class="size-10 bg-primary rounded-full flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-white text-xl">work</span>
+</div>
+<div class="w-px h-full bg-slate-100 dark:bg-slate-700 my-2"></div>
+</div>
+<div class="flex-1 pb-4 border-b border-slate-100 dark:border-slate-700">
+<h4 class="font-bold text-slate-900 dark:text-white">Senior UX Designer</h4>
+<p class="text-slate-500 dark:text-slate-400 text-sm mb-1">TechCorp Global</p>
+<p class="text-xs text-slate-400 dark:text-slate-500">Ene 2021 — Actualidad</p>
+</div>
+</div>
+<!-- Timeline Item 2 -->
+<div class="flex gap-4">
+<div class="flex flex-col items-center">
+<div class="size-10 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-slate-400 dark:text-slate-500 text-xl">work</span>
+</div>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-slate-900 dark:text-white">Product Designer</h4>
+<p class="text-slate-500 dark:text-slate-400 text-sm mb-1">Creative Studio Inc.</p>
+<p class="text-xs text-slate-400 dark:text-slate-500">Mar 2018 — Dic 2020</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Educación Card -->
+<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border-0 p-5">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-base font-bold">Educación</h3>
+<button class="text-primary text-sm font-semibold">
+                    Añadir
+                </button>
+</div>
+<div class="flex gap-4 items-start">
+<div class="size-10 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-slate-400 dark:text-slate-500">school</span>
+</div>
+<div>
+<h4 class="font-bold text-slate-900 dark:text-white">Maestría en Diseño Digital</h4>
+<p class="text-slate-500 dark:text-slate-400 text-sm">Universidad de Artes y Diseño</p>
+</div>
+</div>
+</div>
+<!-- Habilidades Card -->
+<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border-0 p-5">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-base font-bold">Habilidades</h3>
+<button class="text-primary text-sm font-semibold">Editar Todo</button>
+</div>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1.5 bg-primary/10 dark:bg-primary/20 text-primary text-sm font-medium rounded-full">Figma</span>
+<span class="px-3 py-1.5 bg-primary/10 dark:bg-primary/20 text-primary text-sm font-medium rounded-full">UI Design</span>
+<span class="px-3 py-1.5 bg-primary/10 dark:bg-primary/20 text-primary text-sm font-medium rounded-full">Prototyping</span>
+<span class="px-3 py-1.5 bg-primary/10 dark:bg-primary/20 text-primary text-sm font-medium rounded-full">User Research</span>
+<span class="px-3 py-1.5 bg-primary/10 dark:bg-primary/20 text-primary text-sm font-medium rounded-full">Design Systems</span>
+</div>
+</div>
+</main>
+<!-- Sticky Footer Button -->
+<footer class="fixed bottom-0 left-0 right-0 p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-t border-slate-100 dark:border-slate-800">
+<div class="max-w-md mx-auto">
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg transition-all active:scale-[0.98]">
+                Guardar Cambios
+            </button>
+</div>
+</footer>
+</body></html>

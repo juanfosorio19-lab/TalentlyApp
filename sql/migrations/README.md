@@ -1,0 +1,31 @@
+# Talently — Migraciones SQL
+
+## Estado de migraciones en Supabase (actualizar manualmente)
+
+| Archivo | Descripción | Aplicado en Supabase |
+|---------|-------------|----------------------|
+| 001_reference_tables.sql | Países, ciudades, áreas, skills, idiomas | ✅ Sí |
+| 002_filter_tables.sql | Modalidades, educación, experiencia | ✅ Sí |
+| 003_company_tables.sql | Tabla companies + 7 tablas satélite | ✅ Sí |
+| 004_company_reference_tables.sql | Catálogos de empresa | ✅ Sí |
+| 005_user_statistics.sql | Métricas de usuario + función increment_stat | ✅ Sí |
+| 006_profile_columns.sql | Columnas adicionales de profiles | ✅ Sí |
+| 007_missing_tables.sql | interviews, job_types, support_tickets, user_settings | ✅ Sí |
+
+## Cómo aplicar una migración nueva
+1. Ejecutar el script en Supabase SQL Editor (app.supabase.com > SQL Editor)
+2. Marcar como ✅ en esta tabla
+3. Hacer commit con mensaje: `sql: apply migration 00X_nombre`
+
+## Reglas
+- Cada script debe ser idempotente (usar IF NOT EXISTS, ON CONFLICT DO NOTHING)
+- Nunca modificar migraciones ya aplicadas — siempre crear una nueva
+- Numeración continua: siguiente sería 008_...
+
+## Archivos legacy (eliminados del directorio sql/)
+Los siguientes archivos fueron consolidados en las migraciones numeradas:
+- `create_companies_table.sql` → incluido en 003
+- `create_company_reference_tables.sql` → incluido en 004
+- `create_company_relational_tables.sql` → incluido en 003
+- `update_companies_table.sql` → incluido en 003
+- `verify_profiles_structure.sql` → incluido en 006

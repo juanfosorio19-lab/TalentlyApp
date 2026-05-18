@@ -1,0 +1,22 @@
+{
+  "name": "Talently",
+  "short_name": "Talently",
+  "description": "Encuentra tu match profesional.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6C5CE7",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://ui-avatars.com/api/?name=Talently&background=6c5ce7&color=fff&size=192&rounded=true",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://ui-avatars.com/api/?name=Talently&background=6c5ce7&color=fff&size=512&rounded=true",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
