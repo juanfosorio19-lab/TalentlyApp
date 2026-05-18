@@ -70,6 +70,11 @@ export default function RegisterView() {
             return;
         }
 
+        if (!/[A-Z]/.test(password) || !/[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+            setError('La contraseña debe incluir al menos una mayúscula y un número o símbolo');
+            return;
+        }
+
         setLoading(true);
 
         try {

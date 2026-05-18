@@ -167,9 +167,18 @@ export const db = {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return { error: { message: 'No authenticated user' } };
 
+            const title = (offerData?.title || '').trim();
+            const description = (offerData?.description || '').trim();
+            if (!title || title.length > 120) {
+                return { error: { message: 'El título es obligatorio y debe tener máximo 120 caracteres' } };
+            }
+            if (!description || description.length > 5000) {
+                return { error: { message: 'La descripción es obligatoria y debe tener máximo 5000 caracteres' } };
+            }
+
             return await supabase
                 .from('offers')
-                .insert([{ ...offerData, user_id: user.id }])
+                .insert([{ ...offerData, title, description, user_id: user.id }])
                 .select()
                 .single();
         },
@@ -326,10 +335,20 @@ export const db = {
         },
 
         sendMessage: async (matchId, content) => {
-            const senderId = (await supabase.auth.getUser()).data.user.id;
+            const senderId = (await supabase.auth.getUser()).data.user?.id;
+            if (!senderId) return { error: { message: 'No authenticated user' } };
+
+            const trimmed = (content || '').trim();
+            if (!trimmed) {
+                return { error: { message: 'El mensaje no puede estar vacío' } };
+            }
+            if (trimmed.length > 2000) {
+                return { error: { message: 'El mensaje no puede superar 2000 caracteres' } };
+            }
+
             return await supabase
                 .from('messages')
-                .insert([{ match_id: matchId, sender_id: senderId, content }]);
+                .insert([{ match_id: matchId, sender_id: senderId, content: trimmed }]);
         },
 
         subscribe: (matchId, onNewMessage) => {
@@ -494,7 +513,7 @@ export const db = {
                 .from('user_statistics')
                 .select('daily_activity')
                 .eq('user_id', userId)
-                .single();
+                .maybeSingle();
 
             if (!data) return;
 
@@ -570,8 +589,17 @@ export const db = {
 
     // ─── Support ─────────────────────────────
     support: {
-        createTicket: (data) =>
-            supabase.from('support_tickets').insert(data).select().single(),
+        createTicket: async (data) => {
+            const subject = (data?.subject || '').trim();
+            const message = (data?.message || '').trim();
+            if (!subject || subject.length > 200) {
+                return { error: { message: 'El asunto es obligatorio y debe tener máximo 200 caracteres' } };
+            }
+            if (!message || message.length > 5000) {
+                return { error: { message: 'El mensaje es obligatorio y debe tener máximo 5000 caracteres' } };
+            }
+            return supabase.from('support_tickets').insert({ ...data, subject, message }).select().single();
+        },
     },
 
     // ─── FAQs ────────────────────────────────
@@ -585,7 +613,7 @@ export const db = {
         getCities: (countryId) => supabase.from('cities').select('*').eq('country_id', countryId).order('name'),
         getAreas: () => supabase.from('professional_areas').select('*').order('name'),
         getSkills: async (areaSlug) => {
-            const { data: area } = await supabase.from('professional_areas').select('id').eq('slug', areaSlug).single();
+            const { data: area } = await supabase.from('professional_areas').select('id').eq('slug', areaSlug).maybeSingle();
             if (!area) return { data: [] };
             return supabase.from('skills').select('*').eq('area_id', area.id).order('name');
         },
