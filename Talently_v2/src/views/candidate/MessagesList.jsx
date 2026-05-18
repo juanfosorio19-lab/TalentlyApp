@@ -34,6 +34,7 @@ export default function MessagesList({ basePath = '/app/messages' }) {
     const { user } = useAuth();
     const [conversations, setConversations] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [query, setQuery] = useState('');
 
     useEffect(() => {
@@ -42,10 +43,15 @@ export default function MessagesList({ basePath = '/app/messages' }) {
 
         const load = async () => {
             setLoading(true);
+            setError(null);
             try {
-                const { data, error } = await db.matches.getWithProfiles(user.id);
+                const { data, error: fetchError } = await db.matches.getWithProfiles(user.id);
                 if (!isMounted) return;
-                if (error) { console.error('[MessagesList]', error); return; }
+                if (fetchError) {
+                    console.error('[MessagesList]', fetchError);
+                    setError('No se pudieron cargar las conversaciones. Intenta de nuevo.');
+                    return;
+                }
 
                 const enriched = (data || []).map((m) => ({
                     matchId:         m.id,
@@ -65,6 +71,7 @@ export default function MessagesList({ basePath = '/app/messages' }) {
             } catch (err) {
                 if (!isMounted) return;
                 console.error('[MessagesList]', err);
+                setError('No se pudieron cargar las conversaciones. Intenta de nuevo.');
             } finally {
                 if (isMounted) setLoading(false);
             }
@@ -130,7 +137,13 @@ export default function MessagesList({ basePath = '/app/messages' }) {
 
             {/* ── Lista ── */}
             <div className="msg-list__items">
-                {filtered.length === 0 ? (
+                {error ? (
+                    <EmptyState
+                        icon="error_outline"
+                        title="Error al cargar"
+                        description={error}
+                    />
+                ) : filtered.length === 0 ? (
                     <EmptyState
                         icon="chat_bubble"
                         title={query ? 'Sin resultados' : 'Aún no tienes mensajes'}
@@ -165,6 +178,7 @@ export default function MessagesList({ basePath = '/app/messages' }) {
                                         <img
                                             src={avatar}
                                             alt={name}
+                                            loading="lazy"
                                             className="msg-list__avatar"
                                         />
                                     ) : (

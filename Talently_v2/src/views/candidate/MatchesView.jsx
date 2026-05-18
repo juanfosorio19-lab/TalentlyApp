@@ -135,7 +135,7 @@ export default function MatchesView({ isTab = false }) {
                                         <div className={`mv__story-ring ${fresh ? 'mv__story-ring--new' : 'mv__story-ring--old'}`}>
                                             <div className="mv__story-inner">
                                                 {avatarSrc ? (
-                                                    <img src={avatarSrc} alt={name} className="mv__story-img" />
+                                                    <img src={avatarSrc} alt={name} loading="lazy" className="mv__story-img" />
                                                 ) : (
                                                     <div className="mv__story-fallback">{initial}</div>
                                                 )}
@@ -203,6 +203,7 @@ export default function MatchesView({ isTab = false }) {
                                                     <img
                                                         src={avatarSrc}
                                                         alt={displayName}
+                                                        loading="lazy"
                                                         className="mv__item-avatar"
                                                     />
                                                 ) : (

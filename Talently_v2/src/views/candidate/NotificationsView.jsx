@@ -62,12 +62,19 @@ export default function NotificationsView() {
 
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const load = useCallback(async () => {
         if (!userId) return;
         setLoading(true);
-        const { data } = await db.notifications.getByUser(userId);
-        setNotifications(data || []);
+        setError(null);
+        const { data, error: fetchError } = await db.notifications.getByUser(userId);
+        if (fetchError) {
+            console.error('[NotificationsView]', fetchError);
+            setError('No se pudieron cargar las notificaciones. Intenta de nuevo.');
+        } else {
+            setNotifications(data || []);
+        }
         setLoading(false);
     }, [userId]);
 
@@ -106,6 +113,29 @@ export default function NotificationsView() {
                     <div className="nv__header-spacer" />
                 </header>
                 <div className="nv__loading"><Spinner /></div>
+            </div>
+        );
+    }
+
+    // ── Error ──
+    if (error) {
+        return (
+            <div className="nv">
+                <div className="nv__drag-handle" />
+                <header className="nv__header">
+                    <button className="nv__back" onClick={() => navigate(-1)} aria-label="Volver">
+                        <span className="material-symbols-rounded">arrow_back</span>
+                    </button>
+                    <h1 className="nv__title">Notificaciones</h1>
+                    <div className="nv__header-spacer" />
+                </header>
+                <EmptyState
+                    icon="error_outline"
+                    title="Error al cargar"
+                    description={error}
+                    buttonLabel="Reintentar"
+                    onButtonClick={load}
+                />
             </div>
         );
     }
