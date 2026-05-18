@@ -15,17 +15,17 @@ NO modifiques ningún archivo. Solo reporta.
 
 Usa la herramienta Task para delegar a cada subagent y recibir sus reportes:
 
-  - bug-detector
-  - supabase-expert
-  - vistas-consistency
-  - anti-hardcode
+  - bug-hunter (reemplaza al antiguo bug-detector)
+  - supabase-talently-expert (reemplaza al antiguo supabase-expert)
+  - talently-visual-consistency (reemplaza al antiguo vistas-consistency)
+  - hardcode-eliminator (modo audit-only, equivalente al antiguo anti-hardcode)
 
 Espera a que cada uno termine antes de invocar el siguiente.
 
 ### 2. Si el usuario lo pide, incluye también:
 
   - schema-guardian (para validar schema real vs código)
-  - runtime-validator (para validar con Chrome en vivo)
+  - runtime-validator (para validar con Chrome en vivo, si está versionado localmente)
 
 Estos son opcionales y suman tiempo — solo ejecutar si el usuario los menciona.
 

@@ -22,8 +22,9 @@ export default function useSwipeProfiles() {
         const loadProfiles = async () => {
             setLoading(true);
             try {
-                // 1. Obtener IDs ya swipeados
+                // 1. Obtener IDs ya swipeados (defensivo: si la query falla, lista vacía)
                 const { data: swipedIds } = await db.swipes.getSwipedUserIds();
+                const swipedSet = new Set(swipedIds || []);
 
                 // 2. Obtener perfiles del tipo opuesto
                 const { data: allProfiles, error } = await db.profiles.getDiscovery(userType);
@@ -34,7 +35,7 @@ export default function useSwipeProfiles() {
 
                 // 3. Filtrar los ya swipeados
                 let filtered = (allProfiles || []).filter(
-                    (p) => !swipedIds.includes(p.id) && p.id !== user.id
+                    (p) => !swipedSet.has(p.id) && p.id !== user.id
                 );
 
                 // 4. Aplicar filtros del candidato (cliente-side)

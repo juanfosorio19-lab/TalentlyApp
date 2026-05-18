@@ -42,30 +42,31 @@ export default function CompanyFiltersView() {
     };
 
     return (
-        <div className="filters-view">
-            <header className="filters-view__header">
+        <div className="fv">
+            <div className="fv__drag-handle" />
+            <header className="fv__header">
                 <button
-                    className="filters-view__back"
+                    className="fv__close"
                     onClick={() => navigate(-1)}
                     aria-label="Volver"
                 >
                     <span className="material-symbols-rounded">arrow_back</span>
                 </button>
-                <h2 className="filters-view__title">Filtros</h2>
-                <button className="filters-view__clear" onClick={handleClear}>
+                <h2 className="fv__title">Filtros</h2>
+                <button className="fv__reset" onClick={handleClear}>
                     Limpiar
                 </button>
             </header>
 
-            <div className="filters-view__scroll">
+            <div className="fv__scroll">
                 {/* ── Modalidad ── */}
-                <div>
-                    <p className="filters-section__label">Modalidad</p>
-                    <div className="filters-chips">
+                <div className="fv__section">
+                    <p className="fv__section-label">Modalidad</p>
+                    <div className="fv__chips">
                         {MODALITIES.map((m) => (
                             <button
                                 key={m}
-                                className={`filters-chip ${local.modality.includes(m) ? 'filters-chip--active' : ''}`}
+                                className={`fv__chip ${local.modality.includes(m) ? 'fv__chip--active' : ''}`}
                                 onClick={() => setLocal((prev) => ({ ...prev, modality: toggleItem(prev.modality, m) }))}
                             >
                                 {m}
@@ -76,15 +77,15 @@ export default function CompanyFiltersView() {
 
                 {/* ── Área profesional ── */}
                 {referenceData.areas?.length > 0 && (
-                    <div>
-                        <p className="filters-section__label">Área profesional</p>
-                        <div className="filters-chips">
+                    <div className="fv__section">
+                        <p className="fv__section-label">Área profesional</p>
+                        <div className="fv__chips">
                             {referenceData.areas.map((a) => {
                                 const name = a.name || a;
                                 return (
                                     <button
                                         key={name}
-                                        className={`filters-chip ${local.areas.includes(name) ? 'filters-chip--active' : ''}`}
+                                        className={`fv__chip ${local.areas.includes(name) ? 'fv__chip--active' : ''}`}
                                         onClick={() => setLocal((prev) => ({ ...prev, areas: toggleItem(prev.areas, name) }))}
                                     >
                                         {name}
@@ -96,13 +97,13 @@ export default function CompanyFiltersView() {
                 )}
 
                 {/* ── Disponibilidad ── */}
-                <div>
-                    <p className="filters-section__label">Disponibilidad</p>
-                    <div className="filters-chips">
+                <div className="fv__section">
+                    <p className="fv__section-label">Disponibilidad</p>
+                    <div className="fv__chips">
                         {AVAILABILITY.map((a) => (
                             <button
                                 key={a}
-                                className={`filters-chip ${local.availability.includes(a) ? 'filters-chip--active' : ''}`}
+                                className={`fv__chip ${local.availability.includes(a) ? 'fv__chip--active' : ''}`}
                                 onClick={() => setLocal((prev) => ({ ...prev, availability: toggleItem(prev.availability, a) }))}
                             >
                                 {a}
@@ -112,13 +113,13 @@ export default function CompanyFiltersView() {
                 </div>
 
                 {/* ── Seniority ── */}
-                <div>
-                    <p className="filters-section__label">Nivel de seniority</p>
-                    <div className="filters-chips">
+                <div className="fv__section">
+                    <p className="fv__section-label">Nivel de seniority</p>
+                    <div className="fv__chips">
                         {seniorityList.map((s) => (
                             <button
                                 key={s}
-                                className={`filters-chip ${local.seniority.includes(s) ? 'filters-chip--active' : ''}`}
+                                className={`fv__chip ${local.seniority.includes(s) ? 'fv__chip--active' : ''}`}
                                 onClick={() => setLocal((prev) => ({ ...prev, seniority: toggleItem(prev.seniority, s) }))}
                             >
                                 {s}
@@ -129,10 +130,10 @@ export default function CompanyFiltersView() {
 
                 {/* ── País ── */}
                 {referenceData.countries?.length > 0 && (
-                    <div>
-                        <p className="filters-section__label">País</p>
+                    <div className="fv__section">
+                        <p className="fv__section-label">País</p>
                         <select
-                            className="filters-select"
+                            className="fv__select"
                             value={local.country || ''}
                             onChange={(e) => setLocal((prev) => ({ ...prev, country: e.target.value || null }))}
                         >
@@ -146,8 +147,9 @@ export default function CompanyFiltersView() {
                 )}
             </div>
 
-            <div className="filters-view__footer">
-                <button className="filters-view__apply" onClick={handleApply}>
+            <div className="fv__footer">
+                <button className="fv__btn-clear" onClick={handleClear}>Limpiar</button>
+                <button className="fv__btn-apply" onClick={handleApply}>
                     Aplicar filtros
                 </button>
             </div>

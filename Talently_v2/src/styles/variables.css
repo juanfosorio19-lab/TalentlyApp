@@ -231,6 +231,11 @@
     --leading-tight:   1.25;
     --leading-normal:  1.5;
     --leading-relaxed: 1.75;
+
+    /* ── Chart tokens ── */
+    --chart-tooltip-bg: #1A1A1A;
+    --chart-tooltip-text: #FFFFFF;
+    --chart-point-border: #FFFFFF;
 }
 
 /* ═══════════════════════════════════════════
@@ -247,6 +252,11 @@
     --text-secondary: #A0A0A0;
     --text-muted: #6E6E6E;
     --text-inverse: #1A1B1E;
+
+    /* Chart tokens — invertidos en dark */
+    --chart-tooltip-bg: #FFFFFF;
+    --chart-tooltip-text: #1A1B1E;
+    --chart-point-border: #25262B;
 
     --border: #2C2E33;
     --divider: #2C2E33;

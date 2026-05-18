@@ -23,6 +23,9 @@ export default function LineChart({ labels = [], data = [], title, subtitle }) {
         const primaryLight = styles.getPropertyValue('--primary-light').trim() || '#60BDFF';
         const textSecondary = styles.getPropertyValue('--text-secondary').trim() || '#636E72';
         const border = styles.getPropertyValue('--border').trim() || '#E8ECEF';
+        const tooltipBg = styles.getPropertyValue('--chart-tooltip-bg').trim() || '#1A1A1A';
+        const tooltipText = styles.getPropertyValue('--chart-tooltip-text').trim() || '#FFFFFF';
+        const pointBorder = styles.getPropertyValue('--chart-point-border').trim() || '#FFFFFF';
 
         // Gradiente de fondo
         const gradient = ctx.createLinearGradient(0, 0, 0, 200);
@@ -42,7 +45,7 @@ export default function LineChart({ labels = [], data = [], title, subtitle }) {
                     fill: true,
                     tension: 0.4,
                     pointBackgroundColor: primary,
-                    pointBorderColor: '#fff',
+                    pointBorderColor: pointBorder,
                     pointBorderWidth: 2,
                     pointRadius: 4,
                     pointHoverRadius: 6,
@@ -54,7 +57,9 @@ export default function LineChart({ labels = [], data = [], title, subtitle }) {
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: '#1a1a1a',
+                        backgroundColor: tooltipBg,
+                        titleColor: tooltipText,
+                        bodyColor: tooltipText,
                         titleFont: { family: 'Inter', weight: '600' },
                         bodyFont: { family: 'Inter' },
                         cornerRadius: 8,

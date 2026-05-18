@@ -26,6 +26,8 @@ export default function BarChart({ labels = [], data = [], title, subtitle }) {
         const primaryLight = styles.getPropertyValue('--primary-light').trim() || '#60BDFF';
         const textSecondary = styles.getPropertyValue('--text-secondary').trim() || '#636E72';
         const border = styles.getPropertyValue('--border').trim() || '#E8ECEF';
+        const tooltipBg = styles.getPropertyValue('--chart-tooltip-bg').trim() || '#1A1A1A';
+        const tooltipText = styles.getPropertyValue('--chart-tooltip-text').trim() || '#FFFFFF';
 
         chartRef.current = new Chart(ctx, {
             type: 'bar',
@@ -47,7 +49,9 @@ export default function BarChart({ labels = [], data = [], title, subtitle }) {
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: '#1a1a1a',
+                        backgroundColor: tooltipBg,
+                        titleColor: tooltipText,
+                        bodyColor: tooltipText,
                         titleFont: { family: 'Inter', weight: '600' },
                         bodyFont: { family: 'Inter' },
                         cornerRadius: 8,

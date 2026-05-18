@@ -40,11 +40,20 @@ export default function Chat({ backPath = '/app' }) {
     useEffect(() => {
         if (!matchId || !user) return;
         const load = async () => {
-            const { data: matches } = await db.matches.get();
-            const match = matches?.find((m) => m.id === matchId);
-            if (!match) return;
+            const { data: matches, error: matchesError } = await db.matches.get();
+            if (matchesError) {
+                console.error('[Chat] Error cargando matches:', matchesError);
+                setOtherProfile({ full_name: 'Usuario' });
+                return;
+            }
+            const match = (matches || []).find((m) => m.id === matchId);
+            if (!match) {
+                setOtherProfile({ full_name: 'Usuario' });
+                return;
+            }
             const otherId = match.user_id_1 === user.id ? match.user_id_2 : match.user_id_1;
-            const { data: profile } = await db.profiles.getById(otherId);
+            const { data: profile, error: profileError } = await db.profiles.getById(otherId);
+            if (profileError) console.error('[Chat] Error cargando perfil:', profileError);
             setOtherProfile(profile || { full_name: 'Usuario' });
         };
         load();
