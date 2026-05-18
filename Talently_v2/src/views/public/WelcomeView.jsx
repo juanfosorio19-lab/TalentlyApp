@@ -7,8 +7,8 @@ import './WelcomeView.css';
 export default function WelcomeView() {
     const navigate = useNavigate();
 
-    const handleTerms = () => alert('Próximamente');
-    const handlePrivacy = () => alert('Próximamente');
+    const handleTerms = () => navigate('/terms');
+    const handlePrivacy = () => navigate('/privacy');
 
     return (
         <div className="welcome-screen">

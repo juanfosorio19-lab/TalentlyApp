@@ -94,6 +94,27 @@
 
 <!-- AGREGAR NUEVOS ERRORES DEBAJO DE ESTA LÍNEA -->
 
+## Error #12 — RPC `delete_account` no existe en Supabase
+
+- **ERROR:** `supabase.rpc('delete_account')` retorna error porque la función no está creada
+- **SÍNTOMA:** Al intentar eliminar cuenta en `DeleteAccountView`, el RPC falla con `function delete_account does not exist`
+- **CONTEXTO:** `src/views/public/DeleteAccountView.jsx` — flujo de eliminación de cuenta
+- **CAUSA RAÍZ:** La función PostgreSQL `delete_account` no fue incluida en el schema inicial del proyecto
+- **SOLUCIÓN APLICADA:** `DeleteAccountView` captura el error del RPC, hace `signOut()` de todas formas, y muestra un estado alternativo con instrucciones para contactar `soporte@talently.app`
+- **PATRÓN A EVITAR:** Antes de usar `supabase.rpc('nombre_funcion')`, verificar que la función existe en Supabase → Database → Functions. SQL para crear la función cuando esté lista:
+  ```sql
+  CREATE OR REPLACE FUNCTION delete_account()
+  RETURNS void
+  LANGUAGE plpgsql
+  SECURITY DEFINER
+  AS $$
+  BEGIN
+    DELETE FROM profiles WHERE user_id = auth.uid();
+    DELETE FROM auth.users WHERE id = auth.uid();
+  END;
+  $$;
+  ```
+
 ## Error #11 — Query cruda en OfferDetailsView en lugar de db.*
 
 - **ERROR:** `supabase.from('offers')` usado directamente en `OfferDetailsView.jsx`

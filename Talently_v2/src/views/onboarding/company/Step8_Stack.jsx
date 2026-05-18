@@ -5,6 +5,30 @@ import { POPULAR_TECH_FALLBACK } from '../../../lib/constants';
 
 const MAX_TECH = 20;
 
+// Abreviatura por tecnología conocida; fallback: primeras 2 letras uppercase
+const TECH_ABBREV = {
+    'React':        'RE', 'React Native': 'RN', 'Next.js':    'NX',
+    'Vue.js':       'VU', 'Angular':      'NG', 'Svelte':     'SV',
+    'Node.js':      'NO', 'TypeScript':   'TS', 'JavaScript': 'JS',
+    'Python':       'PY', 'Django':       'DJ', 'FastAPI':    'FA',
+    'Java':         'JV', 'Spring Boot':  'SP', 'Kotlin':     'KT',
+    'Go':           'GO', 'Rust':         'RS', 'Ruby':       'RB',
+    'Rails':        'RL', 'PHP':          'PP', 'Laravel':    'LV',
+    'C#':           'C#', '.NET':         'NT', 'C++':        'C+',
+    'Swift':        'SW', 'Flutter':      'FL', 'Dart':       'DT',
+    'AWS':          'AW', 'GCP':          'GC', 'Azure':      'AZ',
+    'Docker':       'DK', 'Kubernetes':   'K8', 'Terraform':  'TF',
+    'PostgreSQL':   'PG', 'MongoDB':      'MG', 'Redis':      'RD',
+    'MySQL':        'MY', 'SQLite':       'SQ', 'GraphQL':    'GQ',
+    'SQL':          'SQ', 'Firebase':     'FB', 'Supabase':   'SB',
+};
+
+const getAbbrev = (name) => {
+    if (TECH_ABBREV[name]) return TECH_ABBREV[name];
+    const clean = name.replace(/[^a-zA-Z0-9]/g, '');
+    return clean.slice(0, 2).toUpperCase() || '??';
+};
+
 export default function Step8_Stack({ data, onNext, saving }) {
     const { state } = useApp();
     const popularTech = state.referenceData.tech_stack?.length > 0
@@ -13,6 +37,11 @@ export default function Step8_Stack({ data, onNext, saving }) {
 
     const [selected, setSelected] = useState(data.company_tech_stack || []);
     const [customTech, setCustomTech] = useState('');
+
+    // Items custom = seleccionados que no están en la lista popular
+    const customItems = selected.filter((t) => !popularTech.includes(t));
+    const atMax = selected.length >= MAX_TECH;
+    const progress = Math.min((selected.length / MAX_TECH) * 100, 100);
 
     const toggleTech = (name) => {
         setSelected((prev) => {
@@ -25,7 +54,7 @@ export default function Step8_Stack({ data, onNext, saving }) {
     const addCustom = () => {
         const trimmed = customTech.trim();
         if (trimmed && !selected.includes(trimmed) && selected.length < MAX_TECH) {
-            setSelected([...selected, trimmed]);
+            setSelected((prev) => [...prev, trimmed]);
         }
         setCustomTech('');
     };
@@ -40,61 +69,170 @@ export default function Step8_Stack({ data, onNext, saving }) {
 
     return (
         <>
-            <h2 className="ob-title">Stack tecnológico</h2>
+            <h2 className="ob-title">¿Qué tecnologías usa tu empresa?</h2>
             <p className="ob-subtitle">
-                Selecciona las tecnologías que usa tu equipo (máx. {MAX_TECH}).
+                Selecciona las herramientas y lenguajes de tu stack principal (máx. {MAX_TECH}).
             </p>
 
             <div className="ob-content">
-                {/* Selected */}
-                {selected.length > 0 && (
+                {/* ── Grid de tecnologías ── */}
+                <div className="ob-field">
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                        <label className="ob-label" style={{ marginBottom: 0 }}>Tecnologías populares</label>
+                        {atMax && (
+                            <span style={{
+                                fontSize: 11, fontWeight: 600,
+                                color: 'var(--danger)',
+                                background: 'rgba(var(--danger-rgb), 0.1)',
+                                padding: '3px 8px', borderRadius: 6,
+                            }}>
+                                Máximo alcanzado
+                            </span>
+                        )}
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                        {popularTech.map((name) => {
+                            const isSelected = selected.includes(name);
+                            const canSelect = isSelected || !atMax;
+                            return (
+                                <button
+                                    key={name}
+                                    onClick={() => toggleTech(name)}
+                                    disabled={!canSelect}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 10,
+                                        padding: 12,
+                                        borderRadius: 12,
+                                        background: isSelected ? 'rgba(var(--primary-rgb), 0.05)' : 'var(--surface)',
+                                        border: `1.5px solid ${isSelected ? 'var(--primary)' : 'var(--border)'}`,
+                                        cursor: canSelect ? 'pointer' : 'not-allowed',
+                                        opacity: !canSelect ? 0.4 : 1,
+                                        outline: 'none',
+                                        fontFamily: 'inherit',
+                                        textAlign: 'left',
+                                        transition: 'all 0.2s ease',
+                                        boxShadow: isSelected ? 'var(--shadow-sm)' : 'none',
+                                    }}
+                                >
+                                    {/* Badge abreviatura */}
+                                    <div style={{
+                                        width: 32, height: 32,
+                                        borderRadius: 8,
+                                        background: isSelected ? 'var(--surface)' : 'var(--bg)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        fontWeight: 700, fontSize: 11,
+                                        color: isSelected ? 'var(--primary)' : 'var(--text-secondary)',
+                                        flexShrink: 0,
+                                        boxShadow: isSelected ? 'var(--shadow-sm)' : 'none',
+                                        letterSpacing: 0.5,
+                                    }}>
+                                        {getAbbrev(name)}
+                                    </div>
+
+                                    <span style={{
+                                        fontSize: 13,
+                                        fontWeight: isSelected ? 700 : 500,
+                                        color: isSelected ? 'var(--primary)' : 'var(--text-primary)',
+                                        flex: 1,
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
+                                    }}>
+                                        {name}
+                                    </span>
+
+                                    {isSelected && (
+                                        <span
+                                            className="material-symbols-rounded"
+                                            style={{ fontSize: 16, color: 'var(--primary)', flexShrink: 0 }}
+                                        >
+                                            check_circle
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* ── Chips custom (tecnologías añadidas manualmente) ── */}
+                {customItems.length > 0 && (
                     <div className="ob-chips">
-                        {selected.map((t) => (
-                            <button key={t} className="ob-chip ob-chip--selected" onClick={() => toggleTech(t)}>
-                                {t} ✕
+                        {customItems.map((t) => (
+                            <button
+                                key={t}
+                                className="ob-chip ob-chip--area ob-chip--selected"
+                                onClick={() => toggleTech(t)}
+                            >
+                                {t}
+                                <span className="material-symbols-rounded" style={{ fontSize: 14 }}>close</span>
                             </button>
                         ))}
                     </div>
                 )}
 
-                <span style={{ fontSize: 12, color: selected.length >= MAX_TECH ? 'var(--danger)' : 'var(--text-muted)' }}>
-                    {selected.length} / {MAX_TECH}
-                </span>
-
-                {/* Custom input */}
+                {/* ── Input custom ── */}
                 <div className="ob-field">
-                    <div className="ob-input-wrapper">
-                        <span className="material-symbols-rounded ob-input-icon">add</span>
+                    <label className="ob-label">¿No encuentras una?</label>
+                    <div className="ob-input-wrapper" style={{ paddingRight: 6 }}>
+                        <span className="material-symbols-rounded ob-input-icon">search</span>
                         <input
                             className="ob-input"
-                            placeholder="Escribe una tecnología y presiona Enter"
+                            placeholder="Agregar tecnología personalizada"
                             value={customTech}
                             onChange={(e) => setCustomTech(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            disabled={selected.length >= MAX_TECH}
+                            disabled={atMax}
                         />
+                        {customTech.trim() && (
+                            <button
+                                onClick={addCustom}
+                                disabled={atMax}
+                                style={{
+                                    width: 32, height: 32, flexShrink: 0,
+                                    borderRadius: 8,
+                                    background: atMax ? 'var(--border)' : 'var(--primary)',
+                                    color: 'white',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    border: 'none', cursor: atMax ? 'not-allowed' : 'pointer',
+                                    transition: 'background 0.2s ease',
+                                }}
+                            >
+                                <span className="material-symbols-rounded" style={{ fontSize: 18 }}>add</span>
+                            </button>
+                        )}
                     </div>
                 </div>
 
-                {/* Popular */}
-                <p className="ob-label" style={{ textTransform: 'none', fontSize: 14 }}>Populares:</p>
-                <div className="ob-chips">
-                    {popularTech.filter((t) => !selected.includes(t)).map((t) => (
-                        <button
-                            key={t}
-                            className="ob-chip"
-                            onClick={() => toggleTech(t)}
-                            disabled={selected.length >= MAX_TECH}
-                        >
-                            {t}
-                        </button>
-                    ))}
+                {/* ── Contador + barra de progreso ── */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                    <p style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 500 }}>
+                        <span style={{ color: atMax ? 'var(--danger)' : 'var(--primary)', fontWeight: 700 }}>
+                            {selected.length}
+                        </span>
+                        {' / '}{MAX_TECH} seleccionadas
+                    </p>
+                    <div style={{
+                        width: 120, height: 6, borderRadius: 3,
+                        background: 'var(--border)', overflow: 'hidden', flexShrink: 0,
+                    }}>
+                        <div style={{
+                            width: `${progress}%`, height: '100%',
+                            background: atMax ? 'var(--danger)' : 'var(--gradient-primary)',
+                            borderRadius: 3,
+                            transition: 'width 0.3s ease',
+                        }} />
+                    </div>
                 </div>
             </div>
 
             <div className="ob-nav">
-                <button className="ob-nav-btn ob-nav-btn--primary" onClick={handleNext} disabled={saving}>
-                    {saving ? 'Guardando…' : selected.length > 0 ? 'Siguiente' : 'Omitir'}
+                <button className="ob-nav-btn ob-nav-btn--primary ob-nav-btn--flex" onClick={handleNext} disabled={saving}>
+                    {saving ? 'Guardando…' : 'Continuar'}
+                    <span className="material-symbols-rounded ob-nav-btn-icon">arrow_forward</span>
                 </button>
             </div>
         </>

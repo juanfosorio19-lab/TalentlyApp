@@ -167,6 +167,23 @@ export default function SettingsView() {
                     </div>
                 </section>
 
+                {/* ── Zona de peligro ── */}
+                <section className="sv__section">
+                    <h3 className="sv__section-label">Zona de peligro</h3>
+                    <div className="sv__group">
+                        <button className="sv__row sv__row--danger" onClick={() => navigate('/delete-account')}>
+                            <div className="sv__icon sv__icon--danger">
+                                <span className="material-symbols-rounded">delete_forever</span>
+                            </div>
+                            <div className="sv__info">
+                                <p className="sv__info-title sv__info-title--danger">Eliminar cuenta</p>
+                                <p className="sv__info-sub">Esta acción es irreversible</p>
+                            </div>
+                            <span className="material-symbols-rounded sv__chevron">chevron_right</span>
+                        </button>
+                    </div>
+                </section>
+
                 {/* ── Cerrar sesión ── */}
                 <div className="sv__section sv__section--no-label">
                     <button className="sv__signout-btn" onClick={handleSignOut}>
@@ -179,14 +196,34 @@ export default function SettingsView() {
                 <section className="sv__section">
                     <h3 className="sv__section-label">Acerca de Talently</h3>
                     <div className="sv__group">
-                        <button className="sv__row" onClick={() => alert('Próximamente')}>
+                        <button className="sv__row" onClick={() => navigate('/support')}>
+                            <div className="sv__icon sv__icon--amber">
+                                <span className="material-symbols-rounded">headset_mic</span>
+                            </div>
+                            <div className="sv__info">
+                                <p className="sv__info-title">Contactar soporte</p>
+                            </div>
+                            <span className="material-symbols-rounded sv__chevron">chevron_right</span>
+                        </button>
+
+                        <button className="sv__row" onClick={() => navigate('/faq')}>
+                            <div className="sv__icon sv__icon--blue">
+                                <span className="material-symbols-rounded">help_outline</span>
+                            </div>
+                            <div className="sv__info">
+                                <p className="sv__info-title">Preguntas frecuentes</p>
+                            </div>
+                            <span className="material-symbols-rounded sv__chevron">chevron_right</span>
+                        </button>
+
+                        <button className="sv__row" onClick={() => navigate('/privacy')}>
                             <div className="sv__icon sv__icon--muted">
                                 <span className="material-symbols-rounded">policy</span>
                             </div>
                             <div className="sv__info">
                                 <p className="sv__info-title">Política de privacidad</p>
                             </div>
-                            <span className="material-symbols-rounded sv__chevron">open_in_new</span>
+                            <span className="material-symbols-rounded sv__chevron">chevron_right</span>
                         </button>
                     </div>
                 </section>
