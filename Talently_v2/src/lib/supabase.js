@@ -506,41 +506,7 @@ export const db = {
         logDailyActivity: async (type) => {
             const userId = (await supabase.auth.getUser()).data.user?.id;
             if (!userId) return;
-
-            const today = new Date().toISOString().split('T')[0];
-
-            const { data } = await supabase
-                .from('user_statistics')
-                .select('daily_activity')
-                .eq('user_id', userId)
-                .maybeSingle();
-
-            if (!data) return;
-
-            let activity = data.daily_activity || [];
-            let todayEntry = activity.find(d => d.date === today);
-            if (!todayEntry) {
-                todayEntry = { date: today, views: 0, matches: 0, swipes: 0, messages: 0 };
-                activity.push(todayEntry);
-            }
-
-            const fieldMap = {
-                'profile_views': 'views',
-                'matches_count': 'matches',
-                'swipes_given': 'swipes',
-                'messages_sent': 'messages'
-            };
-
-            const key = fieldMap[type];
-            if (key) todayEntry[key] = (todayEntry[key] || 0) + 1;
-
-            activity.sort((a, b) => a.date.localeCompare(b.date));
-            if (activity.length > 7) activity = activity.slice(-7);
-
-            await supabase
-                .from('user_statistics')
-                .update({ daily_activity: activity })
-                .eq('user_id', userId);
+            return await supabase.rpc('log_daily_activity', { p_user_id: userId, p_type: type });
         },
 
         initialize: async (userId) => {

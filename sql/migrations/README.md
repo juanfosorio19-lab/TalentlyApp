@@ -14,6 +14,7 @@
 | 008_faqs.sql | faq_categories y faqs | ✅ Sí |
 | 009_secure_agent_tables_and_storage.sql | RLS en agent_memory/agent_user_context + storage policies path-based para documents y videos | ✅ Sí (2026-05-18) |
 | 010_fix_permissive_insert_policies.sql | Drop policies permisivas en support_tickets y notifications | ✅ Sí (2026-05-18) |
+| 011_dedupe_rls_policies.sql | Eliminar ~35 políticas RLS duplicadas en companies/matches/messages/offers/profiles/swipes/notifications/support_tickets y tablas de referencia | ✅ Sí (2026-05-18) |
 
 ## Cómo aplicar una migración nueva
 1. Ejecutar el script en Supabase SQL Editor (app.supabase.com > SQL Editor)
@@ -23,7 +24,7 @@
 ## Reglas
 - Cada script debe ser idempotente (usar IF NOT EXISTS, ON CONFLICT DO NOTHING)
 - Nunca modificar migraciones ya aplicadas — siempre crear una nueva
-- Numeración continua: siguiente sería 011_...
+- Numeración continua: siguiente sería 012_...
 
 ## Archivos legacy (eliminados del directorio sql/)
 Los siguientes archivos fueron consolidados en las migraciones numeradas:
