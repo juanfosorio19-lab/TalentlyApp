@@ -23,6 +23,20 @@ dist-ssr
 *.sln
 *.sw?
 
-# Claude Code / agentes (memoria y worktrees locales)
-.claude/
+# Claude Code (configs locales no versionables)
+.claude/worktrees/
+.claude/settings.local.json
+.claude/agent-memory/
+
+# Solo versionar los agentes utiles confirmados;
+# ignorar el resto (locales o experimentales).
+.claude/agents/*
+!.claude/agents/bug-hunter.md
+!.claude/agents/docs-writer.md
+!.claude/agents/hardcode-eliminator.md
+!.claude/agents/master-auditor.md
+!.claude/agents/schema-guardian.md
+!.claude/agents/supabase-talently-expert.md
+!.claude/agents/talently-visual-consistency.md
+
 .agents/
