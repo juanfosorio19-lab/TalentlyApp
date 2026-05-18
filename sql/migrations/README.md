@@ -11,6 +11,9 @@
 | 005_user_statistics.sql | Métricas de usuario + función increment_stat | ✅ Sí |
 | 006_profile_columns.sql | Columnas adicionales de profiles | ✅ Sí |
 | 007_missing_tables.sql | interviews, job_types, support_tickets, user_settings | ✅ Sí |
+| 008_faqs.sql | faq_categories y faqs | ✅ Sí |
+| 009_secure_agent_tables_and_storage.sql | RLS en agent_memory/agent_user_context + storage policies path-based para documents y videos | ✅ Sí (2026-05-18) |
+| 010_fix_permissive_insert_policies.sql | Drop policies permisivas en support_tickets y notifications | ✅ Sí (2026-05-18) |
 
 ## Cómo aplicar una migración nueva
 1. Ejecutar el script en Supabase SQL Editor (app.supabase.com > SQL Editor)
@@ -20,7 +23,7 @@
 ## Reglas
 - Cada script debe ser idempotente (usar IF NOT EXISTS, ON CONFLICT DO NOTHING)
 - Nunca modificar migraciones ya aplicadas — siempre crear una nueva
-- Numeración continua: siguiente sería 008_...
+- Numeración continua: siguiente sería 011_...
 
 ## Archivos legacy (eliminados del directorio sql/)
 Los siguientes archivos fueron consolidados en las migraciones numeradas:

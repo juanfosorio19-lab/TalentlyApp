@@ -94,26 +94,11 @@
 
 <!-- AGREGAR NUEVOS ERRORES DEBAJO DE ESTA LÍNEA -->
 
-## Error #12 — RPC `delete_account` no existe en Supabase
+## Error #12 — RPC `delete_account` (resuelto: la función SÍ existe)
 
-- **ERROR:** `supabase.rpc('delete_account')` retorna error porque la función no está creada
-- **SÍNTOMA:** Al intentar eliminar cuenta en `DeleteAccountView`, el RPC falla con `function delete_account does not exist`
-- **CONTEXTO:** `src/views/public/DeleteAccountView.jsx` — flujo de eliminación de cuenta
-- **CAUSA RAÍZ:** La función PostgreSQL `delete_account` no fue incluida en el schema inicial del proyecto
-- **SOLUCIÓN APLICADA:** `DeleteAccountView` captura el error del RPC, hace `signOut()` de todas formas, y muestra un estado alternativo con instrucciones para contactar `soporte@talently.app`
-- **PATRÓN A EVITAR:** Antes de usar `supabase.rpc('nombre_funcion')`, verificar que la función existe en Supabase → Database → Functions. SQL para crear la función cuando esté lista:
-  ```sql
-  CREATE OR REPLACE FUNCTION delete_account()
-  RETURNS void
-  LANGUAGE plpgsql
-  SECURITY DEFINER
-  AS $$
-  BEGIN
-    DELETE FROM profiles WHERE user_id = auth.uid();
-    DELETE FROM auth.users WHERE id = auth.uid();
-  END;
-  $$;
-  ```
+- **ESTADO:** Falsa alarma documentada durante auditoría. La función `public.delete_account()` SÍ está creada en Supabase con `SECURITY DEFINER`. Hace `DELETE FROM auth.users WHERE id = auth.uid()` y el CASCADE en `profiles_id_fkey` / `companies_user_id_fkey` limpia los registros relacionados.
+- **CONTEXTO:** Auditoría de mayo 2026 reveló que la función está versionada en el dashboard pero no en `sql/migrations/` local — se mantiene en Supabase, no requiere acción.
+- **PATRÓN A EVITAR:** Antes de documentar un "bug" de RPC faltante, verificar primero con `SELECT proname FROM pg_proc WHERE pronamespace = 'public'::regnamespace`. Las funciones del dashboard no siempre aparecen en `sql/migrations/` local.
 
 ## Error #11 — Query cruda en OfferDetailsView en lugar de db.*
 
