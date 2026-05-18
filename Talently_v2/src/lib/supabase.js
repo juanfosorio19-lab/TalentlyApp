@@ -11,6 +11,38 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJ
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ============================================
+// Column selections (privacidad)
+// ============================================
+// Columnas seguras de profiles para exposición a OTROS usuarios.
+// Excluye: email, birthday, birth_date, latitude, longitude, notification_prefs.
+// Mantiene todo lo necesario para SwipeCard, ProfileView, matches, etc.
+const PROFILE_PUBLIC_COLS = `
+    id, user_type, full_name, name, headline, bio, role, title,
+    avatar_url, video_url, image,
+    current_position, professional_area, experience_years, experience_level,
+    education_level, education, experience,
+    skills, soft_skills, languages, interests,
+    modality, work_modality, availability, relocation,
+    country, city,
+    currency, salary_min, salary_max, expected_salary, salary_expectation, salary_range,
+    company_name, company_sector, company_size, company_stage, company_description,
+    company_logo, company_logo_url, company_tech_stack, company_benefits, company_values,
+    culture_values, work_modalities, website, industry, size, description, benefits,
+    onboarding_completed, gender, created_at, updated_at
+`.replace(/\s+/g, ' ').trim();
+
+// Columnas seguras de companies para exposición a OTROS usuarios.
+// Excluye: tax_id, latitude, longitude, notification_prefs.
+const COMPANY_PUBLIC_COLS = `
+    id, user_id, name, website, linkedin_url, sector, company_size, company_stage,
+    work_model, value_proposition, logo_url, banner_url,
+    country, city, fully_remote, multiple_locations,
+    selection_stages, selection_duration, technical_test, paid_test,
+    benefits, culture_values, positions_looking, seniority_levels, tech_stack, tags,
+    gallery, size, stage, description, created_at, updated_at
+`.replace(/\s+/g, ' ').trim();
+
+// ============================================
 // db — Wrapper con helpers organizados por dominio
 // Migrado desde js/supabase-client.js
 // ============================================
@@ -102,11 +134,21 @@ export const db = {
                 .maybeSingle();
         },
 
+        // Igual que getById pero sin exponer email/birthday/birth_date/coords.
+        // Usar SIEMPRE que se consulte el perfil de OTRO usuario (chat, public profiles).
+        getPublicById: async (id) => {
+            return await supabase
+                .from('profiles')
+                .select(PROFILE_PUBLIC_COLS)
+                .eq('id', id)
+                .maybeSingle();
+        },
+
         getDiscovery: async (myUserType) => {
             const targetType = myUserType === 'candidate' ? 'company' : 'candidate';
             return await supabase
                 .from('profiles')
-                .select('*')
+                .select(PROFILE_PUBLIC_COLS)
                 .eq('user_type', targetType)
                 .limit(20);
         },
@@ -114,7 +156,7 @@ export const db = {
         getCandidatesForExplore: async () => {
             const { data, error } = await supabase
                 .from('profiles')
-                .select('*')
+                .select(PROFILE_PUBLIC_COLS)
                 .eq('user_type', 'candidate')
                 .eq('onboarding_completed', true)
                 .limit(50);
@@ -186,9 +228,9 @@ export const db = {
         getById: async (id) => {
             return await supabase
                 .from('offers')
-                .select('*, companies(*)')
+                .select(`*, companies(${COMPANY_PUBLIC_COLS})`)
                 .eq('id', id)
-                .single();
+                .maybeSingle();
         },
 
         getByCompany: async (userId) => {
@@ -290,7 +332,7 @@ export const db = {
             )];
             const { data: profileRows } = await supabase
                 .from('profiles')
-                .select('*')
+                .select(PROFILE_PUBLIC_COLS)
                 .in('id', otherIds);
 
             const profilesMap = {};

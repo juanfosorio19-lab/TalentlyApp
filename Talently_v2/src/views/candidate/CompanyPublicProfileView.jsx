@@ -34,7 +34,7 @@ export default function CompanyPublicProfileView() {
             try {
                 // Cargar perfil de empresa y ofertas en paralelo
                 const [profileRes, offersRes] = await Promise.all([
-                    db.profiles.getById(companyUserId),
+                    db.profiles.getPublicById(companyUserId),
                     db.offers.getByCompany(companyUserId),
                 ]);
 

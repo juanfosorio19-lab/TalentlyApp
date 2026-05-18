@@ -1,56 +1,11 @@
 // Company Step 7 — Posiciones / Departamentos + Seniority
+// Los iconos y years_range vienen de Supabase (migracion 012):
+//   company_positions.icon   → Material Symbol Rounded
+//   seniority_levels.years_range → string display ("3-5 años", "Estratégico", ...)
 import { useState, useEffect } from 'react';
 import { db } from '../../../lib/supabase';
 
-// Icono por departamento conocido
-const POSITION_ICONS = {
-    'Ingeniería':        'engineering',
-    'Engineering':       'engineering',
-    'Tecnología':        'computer',
-    'Tech':              'computer',
-    'Diseño':            'design_services',
-    'Diseño de Producto':'design_services',
-    'Product Design':    'design_services',
-    'Producto':          'inventory',
-    'Product':           'inventory',
-    'Marketing':         'campaign',
-    'Ventas':            'payments',
-    'Sales':             'payments',
-    'RRHH':              'hr_resting',
-    'Recursos Humanos':  'hr_resting',
-    'HR':                'hr_resting',
-    'Personas':          'group',
-    'Finanzas':          'finance_chip',
-    'Finance':           'finance_chip',
-    'Operaciones':       'settings',
-    'Operations':        'settings',
-    'Legal':             'gavel',
-    'Datos':             'database',
-    'Data':              'database',
-    'Customer Success':  'support_agent',
-    'Soporte':           'support_agent',
-    'Comunicación':      'chat',
-    'Contenido':         'edit_note',
-};
-const FALLBACK_POSITION_ICONS = ['engineering', 'design_services', 'campaign', 'payments', 'group', 'computer', 'settings', 'gavel'];
-
-// Años de experiencia por nivel conocido
-const SENIORITY_YEARS = {
-    'Practicante':  '0-1 años',
-    'Intern':       '0-1 años',
-    'Junior':       '1-3 años',
-    'Semi-Senior':  '3-5 años',
-    'Mid-Level':    '3-5 años',
-    'Senior':       '5-8 años',
-    'Lead':         '8+ años',
-    'Manager':      '8+ años',
-    'Staff':        '8+ años',
-    'Principal':    '10+ años',
-    'Director':     'Estratégico',
-    'Exec':         'Estratégico',
-    'C-Level':      'Estratégico',
-    'VP':           'Estratégico',
-};
+const FALLBACK_POSITION_ICON = 'work';
 
 export default function Step7_PosicionesSeniority({ data, onNext, saving }) {
     const [positions, setPositions] = useState(data.company_positions || []);
@@ -116,8 +71,8 @@ export default function Step7_PosicionesSeniority({ data, onNext, saving }) {
                     </div>
 
                     <div className="ob-chips">
-                        {positionOptions.map((p, i) => {
-                            const icon = POSITION_ICONS[p.name] || FALLBACK_POSITION_ICONS[i % FALLBACK_POSITION_ICONS.length];
+                        {positionOptions.map((p) => {
+                            const icon = p.icon || FALLBACK_POSITION_ICON;
                             const isSelected = positions.includes(p.name);
                             return (
                                 <button
@@ -158,7 +113,7 @@ export default function Step7_PosicionesSeniority({ data, onNext, saving }) {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                         {seniorityOptions.map((s) => {
                             const isSelected = seniority.includes(s.name);
-                            const years = SENIORITY_YEARS[s.name] || '';
+                            const years = s.years_range || '';
                             return (
                                 <button
                                     key={s.id}

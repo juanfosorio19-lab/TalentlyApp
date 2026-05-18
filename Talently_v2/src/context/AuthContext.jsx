@@ -11,20 +11,24 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);     // initial session check
 
     useEffect(() => {
+        let isMounted = true;
+
         // 1. Check existing session on mount
         const initSession = async () => {
             try {
                 const { data: { user: currentUser } } = await supabase.auth.getUser();
+                if (!isMounted) return;
                 setUser(currentUser);
 
                 if (currentUser) {
                     const { data: profileData } = await db.profiles.getById(currentUser.id);
+                    if (!isMounted) return;
                     setProfile(profileData);
                 }
             } catch (err) {
-                console.error('[AuthContext] Session init error:', err);
+                if (isMounted) console.error('[AuthContext] Session init error:', err);
             } finally {
-                setLoading(false);
+                if (isMounted) setLoading(false);
             }
         };
 
@@ -33,11 +37,13 @@ export function AuthProvider({ children }) {
         // 2. Listen for auth state changes (login, logout, token refresh)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
+                if (!isMounted) return;
                 const newUser = session?.user ?? null;
                 setUser(newUser);
 
                 if (newUser) {
                     const { data: profileData } = await db.profiles.getById(newUser.id);
+                    if (!isMounted) return;
                     setProfile(profileData);
                 } else {
                     setProfile(null);
@@ -45,7 +51,10 @@ export function AuthProvider({ children }) {
             }
         );
 
-        return () => subscription.unsubscribe();
+        return () => {
+            isMounted = false;
+            subscription.unsubscribe();
+        };
     }, []);
 
     // Derived state

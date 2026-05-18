@@ -68,7 +68,7 @@ export default function CandidatePublicProfileView() {
         const load = async () => {
             setLoading(true);
             setError(null);
-            const { data, error: err } = await db.profiles.getById(profileId);
+            const { data, error: err } = await db.profiles.getPublicById(profileId);
             if (err || !data) {
                 setError('No se pudo cargar el perfil.');
             } else {

@@ -52,7 +52,7 @@ export default function Chat({ backPath = '/app' }) {
                 return;
             }
             const otherId = match.user_id_1 === user.id ? match.user_id_2 : match.user_id_1;
-            const { data: profile, error: profileError } = await db.profiles.getById(otherId);
+            const { data: profile, error: profileError } = await db.profiles.getPublicById(otherId);
             if (profileError) console.error('[Chat] Error cargando perfil:', profileError);
             setOtherProfile(profile || { full_name: 'Usuario' });
         };

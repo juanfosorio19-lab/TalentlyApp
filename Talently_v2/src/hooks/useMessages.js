@@ -73,10 +73,15 @@ export default function useMessages(matchId) {
             console.error('[useMessages] Error enviando mensaje:', error);
             // Revertir optimistic update
             setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
+            return; // no incrementar stats si el mensaje no se envio
         }
 
-        // Incrementar estadísticas
-        await db.statistics.increment('messages_sent');
+        // Incrementar estadisticas (no critico — silenciar errores para no romper UX)
+        try {
+            await db.statistics.increment('messages_sent');
+        } catch (statsErr) {
+            console.warn('[useMessages] No se pudo incrementar stats:', statsErr);
+        }
     }, [matchId, user?.id]);
 
     return {
