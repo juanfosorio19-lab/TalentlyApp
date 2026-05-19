@@ -86,6 +86,7 @@ Si Claude Preview no está disponible localmente, alternativa: usar el MCP de Cl
 | 2026-05-18 (v2 con seed) | — | 8/10 suites ejecutables, 5/10 verde | 4 bugs críticos: #3 WelcomeView dark, #4 mensajes duplicados, #6 NotifsView infinite loading, #7 AuthContext lock |
 | 2026-05-18 (v3 post-fixes) | — | 10/10 ✅ | 5 fixes verificados en runtime: noopLock + onAuthStateChange + useAuth + reconciliación realtime + error UI + --text-on-dark |
 | 2026-05-19 (v2 con 13 secciones) | 11/13 + 2 ⚠️ | — | Inaugurar Sections 12 (Routing Guards) y 13 (Business Rules estáticas). Sin críticos. 2 warns menores: drift de migración 012b + hooks con early return sin setLoading(false). |
+| 2026-05-19 (qa-e2e v2 refactor) | — | 17/18 + 1 🔴 + 1 🟡 | Suite 0 parcial (Supabase bloquea emails sintéticos). Suite 1 Business Rules 10/10 PASS. Suite 2 Path Matrix descubrió **bug nuevo**: candidato puede acceder /company/dashboard — falta RoleGate. |
 
 ## Tips para interpretar los reportes
 
