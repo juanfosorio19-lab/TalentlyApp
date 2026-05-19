@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
-import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import { Spinner, EmptyState } from '../../components/ui';
 import '../candidate/NotificationsView.css';
 
@@ -31,8 +31,8 @@ function formatDate(dateStr) {
 
 export default function CompanyNotificationsView() {
     const navigate = useNavigate();
-    const { state } = useApp();
-    const userId = state.currentUser?.id;
+    const { user } = useAuth();
+    const userId = user?.id;
 
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);

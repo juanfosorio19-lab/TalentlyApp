@@ -74,6 +74,7 @@ Si Claude Preview no está disponible localmente, alternativa: usar el MCP de Cl
 |---|---|---|---|
 | 2026-05-18 | — | 4/4 suites ejecutadas (4 skip por seed) | 1 bug real: `material-symbols-outlined` en 9 archivos |
 | 2026-05-18 (v2 con seed) | — | 8/10 suites ejecutables, 5/10 verde | 4 bugs críticos: #3 WelcomeView dark, #4 mensajes duplicados, #6 NotifsView infinite loading, #7 AuthContext lock |
+| 2026-05-18 (v3 post-fixes) | — | 10/10 ✅ | 5 fixes verificados en runtime: noopLock + onAuthStateChange + useAuth + reconciliación realtime + error UI + --text-on-dark |
 
 ## Tips para interpretar los reportes
 

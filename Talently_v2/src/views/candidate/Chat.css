@@ -377,3 +377,23 @@
     from { opacity: 0; transform: translateY(6px); }
     to   { opacity: 1; transform: translateY(0); }
 }
+
+/* Error inline al enviar mensaje (validacion local o backend) */
+.chat-view__send-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 16px 8px;
+    padding: 8px 12px;
+    background: rgba(var(--danger-rgb), 0.1);
+    color: var(--danger);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    animation: chatFadeIn 0.2s ease;
+}
+
+.chat-view__send-error .material-symbols-rounded {
+    font-size: 18px;
+    flex-shrink: 0;
+}

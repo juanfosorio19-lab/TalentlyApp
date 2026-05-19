@@ -34,6 +34,7 @@ export default function Chat({ backPath = '/app' }) {
 
     const [inputText, setInputText] = useState('');
     const [otherProfile, setOtherProfile] = useState(null);
+    const [sendError, setSendError] = useState(null);
     const messagesEndRef = useRef(null);
 
     // ── Cargar perfil del otro usuario ──
@@ -69,7 +70,15 @@ export default function Chat({ backPath = '/app' }) {
         if (!inputText.trim()) return;
         const text = inputText;
         setInputText('');
-        await sendMessage(text);
+        setSendError(null);
+        const result = await sendMessage(text);
+        if (result?.error) {
+            // Mostrar feedback visible al usuario (mensaje > 2000 chars, etc).
+            setSendError(result.error.message || 'No se pudo enviar el mensaje. Intenta de nuevo.');
+            setInputText(text); // restaurar el texto para que el usuario pueda corregirlo
+            // Auto-clear despues de 5s
+            setTimeout(() => setSendError(null), 5000);
+        }
     };
 
     const handleKeyDown = (e) => {
@@ -210,6 +219,14 @@ export default function Chat({ backPath = '/app' }) {
                 )}
             </div>
 
+            {/* ── Error inline ── */}
+            {sendError && (
+                <div className="chat-view__send-error" role="alert" aria-live="polite">
+                    <span className="material-symbols-rounded">error</span>
+                    {sendError}
+                </div>
+            )}
+
             {/* ── Input bar ── */}
             <footer className="chat-view__input-bar">
                 <div className="chat-view__input-wrap">
@@ -222,6 +239,7 @@ export default function Chat({ backPath = '/app' }) {
                         value={inputText}
                         onChange={(e) => setInputText(e.target.value)}
                         onKeyDown={handleKeyDown}
+                        maxLength={2000}
                     />
                 </div>
                 <button

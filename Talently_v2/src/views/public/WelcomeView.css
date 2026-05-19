@@ -73,13 +73,13 @@
 
 .welcome-logo-icon .material-symbols-rounded {
     font-size: 36px;
-    color: var(--text-inverse);
+    color: var(--text-on-dark);
 }
 
 .welcome-brand {
     font-size: 1.875rem;   /* 30px */
     font-weight: 700;
-    color: var(--text-inverse);
+    color: var(--text-on-dark);
     letter-spacing: -0.5px;
     text-shadow: 0 2px 12px var(--overlay-medium);
 }
@@ -102,7 +102,7 @@
 .welcome-title {
     font-size: 2.25rem;   /* 36px */
     font-weight: 800;
-    color: var(--text-inverse);
+    color: var(--text-on-dark);
     line-height: 1.15;
     text-shadow: 0 2px 12px var(--overlay-medium);
 }
@@ -147,7 +147,7 @@
 /* Botón primario — Regístrate */
 .welcome-btn--primary {
     background: var(--primary);
-    color: var(--text-inverse);
+    color: var(--text-on-dark);
     box-shadow: var(--shadow-lg);
 }
 
@@ -175,7 +175,7 @@
     background: var(--white-12);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    color: var(--text-inverse);
+    color: var(--text-on-dark);
     border: 1.5px solid var(--white-30);
     font-weight: 600;
 }
@@ -210,7 +210,7 @@
 }
 
 .welcome-legal-link:hover {
-    color: var(--text-inverse);
+    color: var(--text-on-dark);
 }
 
 /* ── Dark mode (no changes needed — overlay already dark) ── */

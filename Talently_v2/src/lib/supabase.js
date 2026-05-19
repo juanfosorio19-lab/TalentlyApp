@@ -8,8 +8,23 @@ import { UPLOAD_LIMITS } from './constants';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://femlqgaqqmkeqtjeruqn.supabase.co';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZlbWxxZ2FxcW1rZXF0amVydXFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcwMTc2MTEsImV4cCI6MjA4MjU5MzYxMX0.7KuB9qQqv-cUaXKi2b6zV8I99dbmp8CNwlEN5uElJRQ';
 
+// Lock no-op para Supabase auth.
+// Supabase JS usa Web Locks API internamente para sincronizar refreshes entre tabs.
+// En dev con React StrictMode + HMR, los dobles mounts producen orphan locks que
+// causan "AbortError: Lock broken" y dejan la sesión en loading=true forever.
+// Como Talently no usa multi-tab sync agresivo, deshabilitar el lock es seguro.
+const noopLock = async (_name, _acquireTimeout, fn) => await fn();
+
 // Raw Supabase client — para uso directo donde se necesite
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        lock: noopLock,
+    },
+});
 
 // ============================================
 // Column selections (privacidad)

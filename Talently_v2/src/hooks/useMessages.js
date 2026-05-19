@@ -34,8 +34,21 @@ export default function useMessages(matchId) {
 
         const channel = db.matches.subscribe(matchId, (newMessage) => {
             setMessages((prev) => {
-                // Evitar duplicados (puede llegar el que acabamos de enviar)
+                // Si ya existe (mismo UUID), evitar duplicado.
                 if (prev.some((m) => m.id === newMessage.id)) return prev;
+
+                // Si es el echo del propio mensaje optimistic, reemplazar
+                // en lugar de agregar (evita el bug de mensaje duplicado).
+                const optimisticIdx = prev.findIndex((m) =>
+                    m._optimistic &&
+                    m.sender_id === newMessage.sender_id &&
+                    m.content === newMessage.content
+                );
+                if (optimisticIdx >= 0) {
+                    const copy = [...prev];
+                    copy[optimisticIdx] = newMessage;
+                    return copy;
+                }
                 return [...prev, newMessage];
             });
         });
@@ -53,9 +66,9 @@ export default function useMessages(matchId) {
 
     // ── Enviar mensaje ──
     const sendMessage = useCallback(async (content) => {
-        if (!matchId || !content.trim()) return;
-
-        const trimmed = content.trim();
+        if (!matchId) return { error: { message: 'Match no disponible' } };
+        const trimmed = (content || '').trim();
+        if (!trimmed) return { error: { message: 'El mensaje está vacío' } };
 
         // Optimistic update: agregar inmediatamente
         const optimistic = {
@@ -70,10 +83,10 @@ export default function useMessages(matchId) {
 
         const { error } = await db.matches.sendMessage(matchId, trimmed);
         if (error) {
-            console.error('[useMessages] Error enviando mensaje:', error);
+            console.error('[useMessages] Error enviando mensaje:', error?.message || error);
             // Revertir optimistic update
             setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
-            return; // no incrementar stats si el mensaje no se envio
+            return { error };  // permite a la vista mostrar feedback al usuario
         }
 
         // Incrementar estadisticas (no critico — silenciar errores para no romper UX)
@@ -82,6 +95,7 @@ export default function useMessages(matchId) {
         } catch (statsErr) {
             console.warn('[useMessages] No se pudo incrementar stats:', statsErr);
         }
+        return { error: null };
     }, [matchId, user?.id]);
 
     return {

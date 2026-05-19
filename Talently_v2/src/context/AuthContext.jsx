@@ -13,28 +13,10 @@ export function AuthProvider({ children }) {
     useEffect(() => {
         let isMounted = true;
 
-        // 1. Check existing session on mount
-        const initSession = async () => {
-            try {
-                const { data: { user: currentUser } } = await supabase.auth.getUser();
-                if (!isMounted) return;
-                setUser(currentUser);
-
-                if (currentUser) {
-                    const { data: profileData } = await db.profiles.getById(currentUser.id);
-                    if (!isMounted) return;
-                    setProfile(profileData);
-                }
-            } catch (err) {
-                if (isMounted) console.error('[AuthContext] Session init error:', err);
-            } finally {
-                if (isMounted) setLoading(false);
-            }
-        };
-
-        initSession();
-
-        // 2. Listen for auth state changes (login, logout, token refresh)
+        // Patrón idiomático de Supabase JS: NO llamar getSession()/getUser()
+        // explícitamente — onAuthStateChange dispara INITIAL_SESSION al subscribir
+        // (después de hidratar storage). Evita el LockManager y el AbortError
+        // que causa StrictMode con dobles mounts.
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
                 if (!isMounted) return;
@@ -48,6 +30,9 @@ export function AuthProvider({ children }) {
                 } else {
                     setProfile(null);
                 }
+                // Loading se setea false en el primer evento (INITIAL_SESSION
+                // o el primer SIGNED_IN/SIGNED_OUT que llegue).
+                if (isMounted) setLoading(false);
             }
         );
 

@@ -236,6 +236,11 @@
     --chart-tooltip-bg: #1A1A1A;
     --chart-tooltip-text: #FFFFFF;
     --chart-point-border: #FFFFFF;
+
+    /* Texto SIEMPRE blanco sobre fondos siempre oscuros (Welcome, overlays).
+       NO se sobreescribe en [data-theme='dark'] — diferencia clave con
+       --text-inverse que sí se invierte. */
+    --text-on-dark: #FFFFFF;
 }
 
 /* ═══════════════════════════════════════════
