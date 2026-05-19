@@ -1,27 +1,10 @@
 // Company Step 4 — Valores de cultura (chips con icono, máx 5)
+// El icono viene de company_culture_values.icon (Material Symbol). Ver migración 013.
 import { useState, useEffect } from 'react';
 import { db } from '../../../lib/supabase';
 
 const MAX_VALUES = 5;
-
-// Iconos por nombre de valor conocido + rotación de fallback
-const VALUE_ICONS = {
-    'Innovación': 'lightbulb',
-    'Colaboración': 'group',
-    'Diversidad': 'diversity_3',
-    'Sostenibilidad': 'eco',
-    'Trabajo Remoto': 'laptop_chromebook',
-    'Mentoría': 'school',
-    'Agilidad': 'bolt',
-    'Transparencia': 'handshake',
-    'Bienestar': 'favorite',
-    'Liderazgo': 'stars',
-    'Impacto': 'public',
-    'Aprendizaje': 'auto_stories',
-    'Excelencia': 'workspace_premium',
-    'Inclusión': 'accessibility',
-};
-const FALLBACK_ICONS = ['lightbulb', 'star', 'bolt', 'eco', 'group', 'favorite', 'handshake', 'school'];
+const FALLBACK_VALUE_ICON = 'star';
 
 export default function Step4_Cultura({ data, onNext, saving }) {
     const [selected, setSelected] = useState(data.culture_values || []);
@@ -77,10 +60,10 @@ export default function Step4_Cultura({ data, onNext, saving }) {
 
                     {/* Chips */}
                     <div className="ob-chips">
-                        {values.map((v, i) => {
+                        {values.map((v) => {
                             const isSelected = selected.includes(v.name);
                             const isDisabled = !isSelected && atMax;
-                            const icon = VALUE_ICONS[v.name] || FALLBACK_ICONS[i % FALLBACK_ICONS.length];
+                            const icon = v.icon || FALLBACK_VALUE_ICON;
                             return (
                                 <button
                                     key={v.id}

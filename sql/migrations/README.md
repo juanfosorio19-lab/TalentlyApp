@@ -16,6 +16,7 @@
 | 010_fix_permissive_insert_policies.sql | Drop policies permisivas en support_tickets y notifications | ✅ Sí (2026-05-18) |
 | 011_dedupe_rls_policies.sql | Eliminar ~35 políticas RLS duplicadas en companies/matches/messages/offers/profiles/swipes/notifications/support_tickets y tablas de referencia | ✅ Sí (2026-05-18) |
 | 012_company_positions_seniority_metadata.sql | Agregar columnas `icon` a company_positions y `years_range` a seniority_levels + populación | ✅ Sí (2026-05-18) |
+| 013_culture_benefits_tech_metadata.sql | Popular `icon` en company_culture_values y company_benefits + nueva columna `abbreviation` en tech_stack | ✅ Sí (2026-05-18) |
 
 ## Cómo aplicar una migración nueva
 1. Ejecutar el script en Supabase SQL Editor (app.supabase.com > SQL Editor)
@@ -25,7 +26,7 @@
 ## Reglas
 - Cada script debe ser idempotente (usar IF NOT EXISTS, ON CONFLICT DO NOTHING)
 - Nunca modificar migraciones ya aplicadas — siempre crear una nueva
-- Numeración continua: siguiente sería 013_...
+- Numeración continua: siguiente sería 014_...
 
 ## Archivos legacy (eliminados del directorio sql/)
 Los siguientes archivos fueron consolidados en las migraciones numeradas:

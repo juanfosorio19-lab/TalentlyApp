@@ -1,39 +1,25 @@
 // Company Step 8 — Stack tecnológico (máx. 20 tecnologías)
-import { useState } from 'react';
+// Las abreviaturas vienen de tech_stack.abbreviation (ver migración 013).
+import { useState, useMemo } from 'react';
 import { useApp } from '../../../context/AppContext';
 import { POPULAR_TECH_FALLBACK } from '../../../lib/constants';
+import { getTechAbbrev } from '../../../lib/techAbbrev';
 
 const MAX_TECH = 20;
 
-// Abreviatura por tecnología conocida; fallback: primeras 2 letras uppercase
-const TECH_ABBREV = {
-    'React':        'RE', 'React Native': 'RN', 'Next.js':    'NX',
-    'Vue.js':       'VU', 'Angular':      'NG', 'Svelte':     'SV',
-    'Node.js':      'NO', 'TypeScript':   'TS', 'JavaScript': 'JS',
-    'Python':       'PY', 'Django':       'DJ', 'FastAPI':    'FA',
-    'Java':         'JV', 'Spring Boot':  'SP', 'Kotlin':     'KT',
-    'Go':           'GO', 'Rust':         'RS', 'Ruby':       'RB',
-    'Rails':        'RL', 'PHP':          'PP', 'Laravel':    'LV',
-    'C#':           'C#', '.NET':         'NT', 'C++':        'C+',
-    'Swift':        'SW', 'Flutter':      'FL', 'Dart':       'DT',
-    'AWS':          'AW', 'GCP':          'GC', 'Azure':      'AZ',
-    'Docker':       'DK', 'Kubernetes':   'K8', 'Terraform':  'TF',
-    'PostgreSQL':   'PG', 'MongoDB':      'MG', 'Redis':      'RD',
-    'MySQL':        'MY', 'SQLite':       'SQ', 'GraphQL':    'GQ',
-    'SQL':          'SQ', 'Firebase':     'FB', 'Supabase':   'SB',
-};
-
-const getAbbrev = (name) => {
-    if (TECH_ABBREV[name]) return TECH_ABBREV[name];
-    const clean = name.replace(/[^a-zA-Z0-9]/g, '');
-    return clean.slice(0, 2).toUpperCase() || '??';
-};
-
 export default function Step8_Stack({ data, onNext, saving }) {
     const { state } = useApp();
-    const popularTech = state.referenceData.tech_stack?.length > 0
-        ? state.referenceData.tech_stack.map((t) => t.name)
+    const techList = state.referenceData.tech_stack || [];
+    const popularTech = techList.length > 0
+        ? techList.map((t) => t.name)
         : POPULAR_TECH_FALLBACK;
+    // Map name → abbreviation desde referenceData (para custom techs cae al fallback)
+    const abbrevMap = useMemo(() => {
+        const m = {};
+        techList.forEach((t) => { if (t.abbreviation) m[t.name] = t.abbreviation; });
+        return m;
+    }, [techList]);
+    const getAbbrev = (name) => getTechAbbrev(name, abbrevMap);
 
     const [selected, setSelected] = useState(data.company_tech_stack || []);
     const [customTech, setCustomTech] = useState('');

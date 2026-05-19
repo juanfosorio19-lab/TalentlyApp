@@ -1,10 +1,13 @@
 // src/views/company/CreateOffer.jsx
 // Wizard 4 pasos para crear ofertas — diseño Stitch
+// Abreviaturas de tech vienen de tech_stack.abbreviation y los iconos de
+// beneficios de company_benefits.icon (ver migración 013).
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
 import { useApp } from '../../context/AppContext';
 import { POPULAR_TECH_FALLBACK } from '../../lib/constants';
+import { getTechAbbrev } from '../../lib/techAbbrev';
 import './CreateOffer.css';
 
 // ── Constantes ─────────────────────────────────────────────────────────
@@ -21,36 +24,11 @@ const MODALITIES = [
     { value: 'onsite',  label: 'Presencial' },
 ];
 
-const TECH_ABBREV = {
-    'React': 'RE', 'React Native': 'RN', 'Next.js': 'NX', 'Vue.js': 'VU',
-    'Angular': 'NG', 'Svelte': 'SV', 'Node.js': 'NO', 'TypeScript': 'TS',
-    'JavaScript': 'JS', 'Python': 'PY', 'Django': 'DJ', 'FastAPI': 'FA',
-    'Java': 'JV', 'Spring Boot': 'SP', 'Kotlin': 'KT', 'Go': 'GO',
-    'Rust': 'RS', 'Ruby': 'RB', 'Rails': 'RL', 'PHP': 'PP', 'Laravel': 'LV',
-    'C#': 'C#', '.NET': 'NT', 'C++': 'C+', 'Swift': 'SW', 'Flutter': 'FL',
-    'Dart': 'DT', 'AWS': 'AW', 'GCP': 'GC', 'Azure': 'AZ', 'Docker': 'DK',
-    'Kubernetes': 'K8', 'Terraform': 'TF', 'PostgreSQL': 'PG', 'MongoDB': 'MG',
-    'Redis': 'RD', 'MySQL': 'MY', 'GraphQL': 'GQ', 'Firebase': 'FB',
-    'Supabase': 'SB',
-};
-
-const BENEFIT_ICONS = {
-    'Seguro médico': 'medical_services', 'Seguro de salud': 'medical_services',
-    'Dental': 'volunteer_activism', 'Stock Options': 'trending_up',
-    'Opciones de compra': 'trending_up', 'Plan de pensiones': 'savings',
-    'Horario flexible': 'schedule', 'Horas flexibles': 'schedule',
-    'Presupuesto formación': 'school', 'Formación': 'school',
-    'Comida gratis': 'restaurant', 'Almuerzo gratis': 'restaurant',
-    'Pet friendly': 'pets', 'Gimnasio': 'fitness_center',
-    'Seguro de vida': 'shield', 'Bonus': 'monetization_on',
-    'Vacaciones extra': 'beach_access', 'Trabajo remoto': 'laptop_chromebook',
-    'Teletrabajo': 'laptop_chromebook', 'Home Office': 'home_work',
-};
-const FALLBACK_BENEFIT_ICONS = ['star', 'check_circle', 'favorite', 'bolt', 'eco', 'handshake'];
-
-const BENEFITS_FALLBACK = [
-    'Seguro médico', 'Horario flexible', 'Home Office', 'Bonus',
-    'Formación', 'Vacaciones extra', 'Gimnasio', 'Pet friendly',
+const FALLBACK_BENEFIT_ICON = 'check_circle';
+const BENEFITS_FALLBACK_NAMES = [
+    'Seguro médico privado', 'Flexibilidad horaria', 'Setup para home office',
+    'Bonos por desempeño', 'Presupuesto para cursos', 'Vacaciones sobre lo legal',
+    'Gimnasio / Wellness', 'Día libre en cumpleaños',
 ];
 
 const INITIAL_FORM = {
@@ -66,12 +44,6 @@ const INITIAL_FORM = {
     selection_process: '',
 };
 
-function getAbbrev(name) {
-    if (TECH_ABBREV[name]) return TECH_ABBREV[name];
-    const clean = name.replace(/[^a-zA-Z0-9]/g, '');
-    return clean.slice(0, 2).toUpperCase() || '??';
-}
-
 function fmtSalary(min, max) {
     if (!min && !max) return null;
     const fmt = (v) => `$${Number(v).toLocaleString()}`;
@@ -85,13 +57,23 @@ export default function CreateOffer() {
     const navigate = useNavigate();
     const { state } = useApp();
 
-    const techOptions = state.referenceData?.tech_stack?.length > 0
-        ? state.referenceData.tech_stack.map((t) => t.name)
+    const techList = state.referenceData?.tech_stack || [];
+    const techOptions = techList.length > 0
+        ? techList.map((t) => t.name)
         : POPULAR_TECH_FALLBACK;
+    // Map name → abbreviation derivado del referenceData
+    const techAbbrevMap = useMemo(() => {
+        const m = {};
+        techList.forEach((t) => { if (t.abbreviation) m[t.name] = t.abbreviation; });
+        return m;
+    }, [techList]);
+    const getAbbrev = (name) => getTechAbbrev(name, techAbbrevMap);
 
-    const benefitOptions = state.referenceData?.benefits?.length > 0
-        ? state.referenceData.benefits.map((b) => b.name)
-        : BENEFITS_FALLBACK;
+    // Beneficios: usar objetos completos (con .icon) si vienen de Supabase
+    const benefitList = state.referenceData?.benefits || [];
+    const benefitOptions = benefitList.length > 0
+        ? benefitList.map((b) => ({ name: b.name, icon: b.icon }))
+        : BENEFITS_FALLBACK_NAMES.map((name) => ({ name, icon: null }));
 
     const [step, setStep]       = useState(0);
     const [form, setForm]       = useState(INITIAL_FORM);
@@ -363,8 +345,7 @@ export default function CreateOffer() {
             <div className="co__field">
                 <label className="co__label">Beneficios</label>
                 <div className="co__chips co__chips--wrap">
-                    {benefitOptions.map((name, i) => {
-                        const icon = BENEFIT_ICONS[name] || FALLBACK_BENEFIT_ICONS[i % FALLBACK_BENEFIT_ICONS.length];
+                    {benefitOptions.map(({ name, icon }) => {
                         const isSelected = form.benefits.includes(name);
                         return (
                             <button
@@ -372,7 +353,7 @@ export default function CreateOffer() {
                                 className={`co__chip co__chip--icon ${isSelected ? 'co__chip--selected' : ''}`}
                                 onClick={() => toggleBenefit(name)}
                             >
-                                <span className="material-symbols-rounded co__chip-ico">{icon}</span>
+                                <span className="material-symbols-rounded co__chip-ico">{icon || FALLBACK_BENEFIT_ICON}</span>
                                 {name}
                             </button>
                         );
