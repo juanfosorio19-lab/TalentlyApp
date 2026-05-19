@@ -1,10 +1,11 @@
 // src/views/public/LoginView.jsx
 // Login con email + password — usa supabase.auth.signInWithPassword()
 // También soporta Google OAuth via supabase.auth.signInWithOAuth()
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
 import { useApp, Actions } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import './auth.css';
 
 const GoogleIcon = () => (
@@ -19,6 +20,7 @@ const GoogleIcon = () => (
 export default function LoginView() {
     const navigate = useNavigate();
     const { dispatch } = useApp();
+    const { isAuthenticated, loading: authLoading } = useAuth();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -26,6 +28,14 @@ export default function LoginView() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
+
+    // Si el user ya está autenticado, redirigir a /dashboard (RoleRedirect lo
+    // manda al destino correcto según rol + estado de onboarding).
+    useEffect(() => {
+        if (!authLoading && isAuthenticated) {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [authLoading, isAuthenticated, navigate]);
 
     const handleGoogleLogin = async () => {
         setError('');

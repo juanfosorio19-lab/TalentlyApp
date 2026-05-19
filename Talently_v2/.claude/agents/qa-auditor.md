@@ -221,6 +221,8 @@ Verificar en código que ciertos invariantes del producto se respetan:
 | BR-S08 | `.single()` NO se usa con SELECT donde 0 rows es válido | grep `.single()` y excluir post-INSERT/UPDATE/upsert |
 | BR-S09 | Realtime con cleanup | grep `supabase.channel(` y verificar return cleanup en useEffect |
 | BR-S10 | Modalidades capitalizado en español | grep `'remote'`, `'hybrid'`, `'onsite'` (lowercase) — flag (post-migración 014 deben ser `'Remoto'`/`'Híbrido'`/`'Presencial'`) |
+| BR-S11 | Autorización por rol: RoleGate envolviendo `/app/*` y `/company/*` | En `App.jsx`, buscar `<RoleGate type="candidate"` y `<RoleGate type="company"` envolviendo las rutas correspondientes. Sin esto, un candidato puede acceder a /company/dashboard (bug detectado 2026-05-19). |
+| BR-S12 | LoginView y RegisterView redirigen si ya hay sesión | grep en `LoginView.jsx` y `RegisterView.jsx` un `useEffect` que verifique `isAuthenticated` y haga `navigate('/dashboard')`. Sin esto, user logueado puede ver el form de login (UX confusa). |
 
 Cada BR-S## se reporta como PASS/FAIL con archivo:línea del violator si falla.
 

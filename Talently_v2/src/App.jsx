@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import PrivateRoute from './components/PrivateRoute';
 import RoleRedirect from './components/RoleRedirect';
 import OnboardingGate from './components/OnboardingGate';
+import RoleGate from './components/RoleGate';
 
 // ─── Public Views ──────────────────────────
 import {
@@ -83,31 +84,37 @@ function App() {
 
             {/* ── Rutas que REQUIEREN onboarding completo ── */}
             <Route element={<OnboardingGate />}>
-              {/* Candidato */}
-              <Route path="/app" element={<MainApp />} />
-              <Route path="/app/swipe" element={<SwipeView />} />
-              <Route path="/app/matches" element={<MatchesView />} />
-              <Route path="/app/messages" element={<MessagesListView />} />
-              <Route path="/app/messages/:matchId" element={<MessagesChatView />} />
-              <Route path="/app/profile" element={<ProfileView />} />
-              <Route path="/app/filters" element={<FiltersView />} />
-              <Route path="/app/cv" element={<CvView />} />
-              <Route path="/app/notifications" element={<NotificationsView />} />
-              <Route path="/app/settings" element={<SettingsView />} />
-              <Route path="/app/offer/:offerId" element={<OfferDetailsView />} />
-              <Route path="/app/company/:companyUserId" element={<CompanyPublicProfileView />} />
+              {/* Candidato (RoleGate filtra: solo candidate puede acceder) */}
+              <Route element={<RoleGate type="candidate" />}>
+                <Route path="/app" element={<MainApp />} />
+                <Route path="/app/swipe" element={<SwipeView />} />
+                <Route path="/app/matches" element={<MatchesView />} />
+                <Route path="/app/messages" element={<MessagesListView />} />
+                <Route path="/app/messages/:matchId" element={<MessagesChatView />} />
+                <Route path="/app/profile" element={<ProfileView />} />
+                <Route path="/app/filters" element={<FiltersView />} />
+                <Route path="/app/cv" element={<CvView />} />
+                <Route path="/app/notifications" element={<NotificationsView />} />
+                <Route path="/app/settings" element={<SettingsView />} />
+                <Route path="/app/offer/:offerId" element={<OfferDetailsView />} />
+                <Route path="/app/company/:companyUserId" element={<CompanyPublicProfileView />} />
+              </Route>
 
-              {/* Empresa */}
-              <Route path="/company/dashboard" element={<CompanyDashboardView />} />
-              <Route path="/company/create-offer" element={<CreateOfferView />} />
-              <Route path="/company/swipe" element={<CompanySwipeView />} />
-              <Route path="/company/filters" element={<CompanyFiltersView />} />
-              <Route path="/company/chat/:matchId" element={<CompanyChatView />} />
-              <Route path="/company/stats" element={<CompanyStatsView />} />
-              <Route path="/company/notifications" element={<CompanyNotificationsView />} />
-              <Route path="/company/settings" element={<CompanySettingsView />} />
-              <Route path="/company/profile-created" element={<CompanyProfileCreatedView />} />
-              <Route path="/company/candidate/:profileId" element={<CandidatePublicProfileView />} />
+              {/* Empresa (RoleGate filtra: solo company puede acceder) */}
+              <Route element={<RoleGate type="company" />}>
+                <Route path="/company/dashboard" element={<CompanyDashboardView />} />
+                <Route path="/company/create-offer" element={<CreateOfferView />} />
+                <Route path="/company/swipe" element={<CompanySwipeView />} />
+                <Route path="/company/filters" element={<CompanyFiltersView />} />
+                <Route path="/company/chat/:matchId" element={<CompanyChatView />} />
+                <Route path="/company/stats" element={<CompanyStatsView />} />
+                <Route path="/company/notifications" element={<CompanyNotificationsView />} />
+                <Route path="/company/settings" element={<CompanySettingsView />} />
+                <Route path="/company/profile-created" element={<CompanyProfileCreatedView />} />
+                <Route path="/company/candidate/:profileId" element={<CandidatePublicProfileView />} />
+              </Route>
+
+              {/* Compartido (cualquier rol autenticado con onboarding completo) */}
               <Route path="/delete-account" element={<DeleteAccountView />} />
             </Route>
           </Route>

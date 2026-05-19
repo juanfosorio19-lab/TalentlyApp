@@ -1,10 +1,11 @@
 // src/views/public/RegisterView.jsx
 // Registro: selección tipo (candidato/empresa) + email + password
 // También soporta Google OAuth — sin tipo seleccionado redirige a /onboarding
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
 import { useApp, Actions } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import './auth.css';
 
 const GoogleIcon = () => (
@@ -19,6 +20,7 @@ const GoogleIcon = () => (
 export default function RegisterView() {
     const navigate = useNavigate();
     const { dispatch } = useApp();
+    const { isAuthenticated, loading: authLoading } = useAuth();
 
     // Step 1: elegir tipo, Step 2: formulario
     const [step, setStep] = useState(1);
@@ -31,6 +33,13 @@ export default function RegisterView() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
+
+    // Si el user ya tiene sesión activa, redirigir (RoleRedirect decide).
+    useEffect(() => {
+        if (!authLoading && isAuthenticated) {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [authLoading, isAuthenticated, navigate]);
 
     // pendingType: el tipo elegido antes de hacer OAuth (guardado en localStorage
     // para que AuthCallbackView lo lea si user_metadata.user_type está vacío)
