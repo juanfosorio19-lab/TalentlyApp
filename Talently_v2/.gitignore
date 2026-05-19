@@ -38,5 +38,7 @@ dist-ssr
 !.claude/agents/schema-guardian.md
 !.claude/agents/supabase-talently-expert.md
 !.claude/agents/talently-visual-consistency.md
+!.claude/agents/qa-auditor.md
+!.claude/agents/qa-e2e.md
 
 .agents/
