@@ -32,6 +32,7 @@ pnpm-debug.log*
 .claude/worktrees/
 .claude/settings.local.json
 .claude/agent-memory/
+.claude/launch.json
 
 # Artefactos de Windows
 nul

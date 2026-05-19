@@ -44,9 +44,27 @@ O en lenguaje natural: "corre el qa-auditor". Claude lo despachará vía la tool
 
 ### Setup para qa-e2e
 
-1. Conectar el MCP de Claude Preview desde el menú de Claude Code (Settings → MCP servers)
-2. En otra terminal: `cd Talently_v2 && npm run dev`
-3. Invocar el agente: "corre qa-e2e"
+1. **Conectar el MCP de Claude Preview** desde el menú de Claude Code (Settings → MCP servers).
+
+2. **Crear `.claude/launch.json`** (local, está en `.gitignore`). El preview lo busca relativo al cwd actual de Claude Code, así que ponlo donde corras la sesión. Template para Windows:
+
+```json
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "talently-dev",
+      "runtimeExecutable": "npm.cmd",
+      "runtimeArgs": ["--prefix", "Talently_v2", "run", "dev"],
+      "port": 5173
+    }
+  ]
+}
+```
+
+En Mac/Linux usar `"npm"` en lugar de `"npm.cmd"`. Si corres desde un worktree, ajustar `--prefix` con la ruta absoluta al `Talently_v2/` del proyecto principal (los worktrees no tienen `node_modules`).
+
+3. **Invocar el agente**: "corre qa-e2e"
 
 Si Claude Preview no está disponible localmente, alternativa: usar el MCP de Claude in Chrome o Playwright manualmente. Ambos requieren ajustes al agente.
 
@@ -54,7 +72,7 @@ Si Claude Preview no está disponible localmente, alternativa: usar el MCP de Cl
 
 | Fecha | qa-auditor | qa-e2e | Notas |
 |---|---|---|---|
-| 2026-05-18 | — | — | Primera corrida pendiente |
+| 2026-05-18 | — | 4/4 suites ejecutadas (4 skip por seed) | 1 bug real: `material-symbols-outlined` en 9 archivos |
 
 ## Tips para interpretar los reportes
 
