@@ -16,11 +16,21 @@ docs/qa/
 
 | Capa | Agente | % checklist | Setup |
 |---|---|---|---|
-| Estática + DB | `qa-auditor` | ~35% | Solo necesita Supabase MCP conectado |
-| Browser E2E | `qa-e2e` | +30% | Requiere Claude Preview MCP conectado + `npm run dev` corriendo |
-| Visual/UX manual | tú | ~35% | `2026-05-18-checklist.md` |
+| Estática + DB + Routing guards + Business rules | `qa-auditor` | ~50% | Solo necesita Supabase MCP conectado |
+| Browser E2E (Fresh Journey + Business Rules + Path Coverage Matrix) | `qa-e2e` | +35% | Requiere Claude Preview MCP + `npm run dev` |
+| Visual/UX manual | tú | ~15% | `2026-05-18-checklist.md` |
 
-**Total**: ~65% automatizado, ~35% manual.
+**Total**: ~85% automatizado, ~15% manual.
+
+## Lección aprendida (2026-05-18)
+
+En las primeras corridas el agente no detectó el bug del onboarding redirect (user nuevo quedaba en /app sin profile). Causa: el protocolo testeaba estados conocidos (con seed) pero **nunca el journey desde cero**. Refactor aplicado:
+
+1. **Suite 0 Fresh User Journey** en qa-e2e: crear user nuevo con email único, recorrer signup → onboarding → app verificando cada redirect. Cleanup automático con `delete_account()`.
+2. **Section 12 Routing Guards + 13 Business Rules** en qa-auditor: detección estática de patrones rotos (rutas sin gate, redirects sin chequeo de onboarding, hooks sin setLoading(false)).
+3. **Path Coverage Matrix** en qa-e2e: cada URL × cada estado auth (anon / sin profile / incompleto / completo) verifica el redirect esperado.
+
+Estos cambios se diseñaron para PILLAR este tipo específico de bug en próximas corridas.
 
 ## Cuándo invocar cada agente
 

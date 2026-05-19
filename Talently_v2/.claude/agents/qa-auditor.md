@@ -162,6 +162,68 @@ Excepciones legítimas (NO flaggear):
 - Cada archivo `sql/migrations/00X_*.sql` debería tener una migración correspondiente aplicada
 - Migraciones aplicadas sin SQL versionado → flag (riesgo de no reproducibilidad)
 
+### 12. Routing Guards (CRÍTICO)
+
+Verifica estáticamente que las rutas privadas chequean estado de auth Y onboarding. Sin esto, usuarios nuevos llegan a vistas que esperan datos y se rompen (bug real detectado 2026-05-18).
+
+#### 12.1 App.jsx — rutas privadas envueltas en gates
+
+En `Talently_v2/src/App.jsx`, verificar:
+
+- Existe `<Route element={<PrivateRoute />}>` envolviendo TODAS las rutas no públicas
+- Existe `<Route element={<OnboardingGate />}>` (o equivalente) envolviendo `/app/*` y `/company/*`
+- Las rutas `/onboarding/*` están DENTRO de `<PrivateRoute />` pero FUERA del `<OnboardingGate />` (de lo contrario, redirect loop)
+- Las rutas `/login`, `/register`, `/recovery`, `/auth/callback`, `/terms`, `/privacy`, `/faq`, `/support` están FUERA de `<PrivateRoute />`
+
+#### 12.2 PrivateRoute.jsx
+
+- Chequea `loading` y muestra spinner mientras
+- Chequea `isAuthenticated` y redirige a `/login` si no
+- NO chequea onboarding (eso es trabajo del OnboardingGate)
+
+#### 12.3 OnboardingGate.jsx
+
+- Chequea `loading`, `user`, `profile`
+- Si `!profile || !profile.onboarding_completed` → redirige a `/onboarding/<tipo>`
+- Tipo viene de `profile?.user_type || user?.user_metadata?.user_type || 'candidate'`
+
+#### 12.4 RoleRedirect.jsx
+
+- Caso `!user` → `/login`
+- Caso onboarding incompleto → `/onboarding/<tipo>`
+- Caso onboarding completo → dashboard del rol
+
+#### 12.5 LoginView.jsx y RegisterView.jsx
+
+En `handleLogin`/`handleRegister`:
+- Tras success, NO debe ir directo a `/app` o `/company/dashboard` sin chequear `onboarding_completed`
+- `RegisterView` específicamente debe ir SIEMPRE a `/onboarding/<tipo>` post-signup (el profile no existe aún)
+- `LoginView` debe chequear `profileData?.onboarding_completed` y enrutar al wizard si false
+
+#### 12.6 Hooks que cargan datos
+
+En `Talently_v2/src/hooks/*.js`:
+- Hooks que hacen `if (!user) return` o `if (!userType) return` deben ALSO setear `setLoading(false)` antes del return, o de lo contrario quedan en spinner infinito.
+
+### 13. Business Rules estáticas
+
+Verificar en código que ciertos invariantes del producto se respetan:
+
+| ID | Regla | Cómo detectar estáticamente |
+|---|---|---|
+| BR-S01 | Mensajes validan length ≤ 2000 | grep `db.matches.sendMessage` impl, debe tener `trimmed.length > 2000` check |
+| BR-S02 | Offers validan title/description | `db.offers.create` impl tiene checks |
+| BR-S03 | Privacy: queries a profiles ajenos NO usan `select('*')` | grep en `views/` para `db.profiles.getById` — solo válido para el propio user. Para otros, debe usar `getPublicById` |
+| BR-S04 | Password complejidad | RegisterView regex mayúscula + número/símbolo |
+| BR-S05 | Storage upload valida tipo+size | `db.storage.upload*` revisa `UPLOAD_LIMITS` antes del upload |
+| BR-S06 | RPC `delete_account` existe en BD y se usa | grep `supabase.rpc('delete_account')` |
+| BR-S07 | NotificationsView no usa `state.currentUser` (siempre `useAuth().user`) | grep en notificaciones views — el patrón viejo `useApp().state.currentUser` puede causar infinite loading |
+| BR-S08 | `.single()` NO se usa con SELECT donde 0 rows es válido | grep `.single()` y excluir post-INSERT/UPDATE/upsert |
+| BR-S09 | Realtime con cleanup | grep `supabase.channel(` y verificar return cleanup en useEffect |
+| BR-S10 | Modalidades capitalizado en español | grep `'remote'`, `'hybrid'`, `'onsite'` (lowercase) — flag (post-migración 014 deben ser `'Remoto'`/`'Híbrido'`/`'Presencial'`) |
+
+Cada BR-S## se reporta como PASS/FAIL con archivo:línea del violator si falla.
+
 ## Output
 
 Generar archivo en `docs/qa/YYYY-MM-DD-report.md` con esta estructura:
@@ -187,8 +249,10 @@ Generar archivo en `docs/qa/YYYY-MM-DD-report.md` con esta estructura:
 | 9. Patrones bug-prone | ✅/⚠️/❌ | <n> |
 | 10. Hex hardcoded | ✅/⚠️/❌ | <n> |
 | 11. Migraciones sync | ✅/⚠️/❌ | <n> |
+| 12. Routing Guards | ✅/⚠️/❌ | <n> |
+| 13. Business Rules estáticas | ✅/⚠️/❌ | <n> |
 
-**Score**: X/11
+**Score**: X/13
 
 ## Hallazgos por severidad
 
