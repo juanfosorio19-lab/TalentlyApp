@@ -304,7 +304,7 @@
 }
 
 .chat-view__input-wrap:focus-within {
-    border-color: var(--primary);
+    border-color: var(--text-muted);
 }
 
 .chat-view__input {

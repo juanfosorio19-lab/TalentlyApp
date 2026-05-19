@@ -11,8 +11,8 @@
 -- =============================================
 
 -- ⬇️ REEMPLAZAR ESTOS UUIDs CON LOS DE TUS USUARIOS DE TEST ⬇️
-\set candidate_id  '11111111-1111-1111-1111-111111111111'
-\set company_id    '22222222-2222-2222-2222-222222222222'
+\set candidate_id  'e4c2d401-663e-410c-8d70-028ce5c2bc63'
+\set company_id    'd8bfe862-f4fb-4ce4-a1a9-cd849f81be5f'
 
 -- Si tu cliente SQL no soporta \set, copia los UUIDs y reemplaza
 -- :candidate_id y :company_id en el resto del archivo manualmente.

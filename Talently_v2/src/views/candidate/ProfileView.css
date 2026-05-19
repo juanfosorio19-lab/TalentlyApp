@@ -501,7 +501,7 @@
 }
 
 .pv-edit-input:focus,
-.pv-edit-select:focus { border-color: var(--primary); }
+.pv-edit-select:focus { border-color: var(--text-muted); }
 
 .pv-edit-modal__footer {
     display: flex;

@@ -44,11 +44,13 @@ select {
     appearance: none;
 }
 
+/* Focus en inputs: sin outline azul. El border del wrapper y el caret marcan
+   donde escribe el usuario. Para accesibilidad de teclado, el cambio sutil
+   de border-color (definido en cada vista) es suficiente. */
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: -2px;
+    outline: none;
 }
 
 input::placeholder,

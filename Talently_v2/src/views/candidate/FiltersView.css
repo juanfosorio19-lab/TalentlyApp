@@ -192,7 +192,7 @@
     transition: border-color 0.15s ease;
 }
 
-.fv__select:focus { border-color: var(--primary); }
+.fv__select:focus { border-color: var(--text-muted); }
 
 .fv__select-caret {
     position: absolute;
@@ -251,7 +251,7 @@
     box-sizing: border-box;
 }
 
-.fv__salary-input:focus { border-color: var(--primary); }
+.fv__salary-input:focus { border-color: var(--text-muted); }
 .fv__salary-input::placeholder { color: var(--text-muted); }
 
 /* Remove number input arrows */

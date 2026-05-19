@@ -275,8 +275,8 @@
 .mv__search::placeholder { color: var(--text-muted); }
 
 .mv__search:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px var(--primary-subtle);
+    border-color: var(--text-muted);
+    box-shadow: none;
     background: var(--bg);
 }
 

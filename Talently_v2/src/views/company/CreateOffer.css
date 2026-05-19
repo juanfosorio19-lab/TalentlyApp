@@ -156,7 +156,7 @@
     box-sizing: border-box;
 }
 
-.co__input:focus { border-color: var(--primary); }
+.co__input:focus { border-color: var(--text-muted); }
 .co__input::placeholder { color: var(--text-muted); }
 
 .co__textarea {
@@ -176,7 +176,7 @@
     line-height: 1.55;
 }
 
-.co__textarea:focus { border-color: var(--primary); }
+.co__textarea:focus { border-color: var(--text-muted); }
 .co__textarea::placeholder { color: var(--text-muted); }
 
 /* ── Salary row ── */
@@ -303,7 +303,7 @@
 }
 
 .co__search-input:focus {
-    border-color: var(--primary);
+    border-color: var(--text-muted);
 }
 
 .co__search-input:focus + .co__search-icon,

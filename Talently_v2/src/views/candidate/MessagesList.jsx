@@ -101,7 +101,13 @@ export default function MessagesList({ basePath = '/app/messages' }) {
                     </div>
                     <div className="msg-list__search-wrap">
                         <span className="material-symbols-rounded msg-list__search-icon">search</span>
-                        <input className="msg-list__search" placeholder="Buscar…" disabled />
+                        <input
+                            className="msg-list__search"
+                            placeholder="Buscar…"
+                            value=""
+                            onChange={() => {}}
+                            disabled
+                        />
                     </div>
                 </div>
                 <div className="msg-list__loading"><Spinner /></div>

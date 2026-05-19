@@ -202,8 +202,10 @@
     transition: border-color 0.2s ease;
 }
 
+/* Focus minimal: el cursor (caret) ya marca dónde está escribiendo el usuario.
+   El border se mantiene neutro para no abrumar visualmente. */
 .auth-input-wrapper:focus-within {
-    border-color: var(--primary);
+    border-color: var(--text-muted);
 }
 
 .auth-input-icon {
