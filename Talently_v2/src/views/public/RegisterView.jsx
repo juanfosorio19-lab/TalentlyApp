@@ -102,11 +102,11 @@ export default function RegisterView() {
             dispatch({ type: Actions.SET_USER, payload: user });
             dispatch({ type: Actions.SET_PROFILE_TYPE, payload: profileType });
 
-            // Redirigir según tipo
+            // Usuario recién creado → SIEMPRE va al onboarding (no tiene profile aún)
             if (profileType === 'company') {
-                navigate('/company/dashboard', { replace: true });
+                navigate('/onboarding/company', { replace: true });
             } else {
-                navigate('/app/swipe', { replace: true });
+                navigate('/onboarding/candidate', { replace: true });
             }
         } catch (err) {
             console.error('[RegisterView] Error inesperado:', err);

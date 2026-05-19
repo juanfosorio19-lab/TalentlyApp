@@ -77,18 +77,27 @@ export default function LoginView() {
             // Obtener perfil para determinar tipo (candidate / company)
             const { data: profileData } = await db.profiles.getById(user.id);
 
+            // Determinar tipo: profile (si existe) o user_metadata (signup pendiente de onboarding)
+            const userType = profileData?.user_type || user?.user_metadata?.user_type || 'candidate';
+
             if (profileData) {
                 dispatch({ type: Actions.SET_PROFILE, payload: profileData });
+            }
 
-                // Redirigir según tipo de perfil
-                if (profileData.user_type === 'company') {
-                    navigate('/company/dashboard', { replace: true });
-                } else {
-                    navigate('/app/swipe', { replace: true });
-                }
+            // Si NO hay profile o el onboarding no se completó → wizard
+            if (!profileData || !profileData.onboarding_completed) {
+                navigate(
+                    userType === 'company' ? '/onboarding/company' : '/onboarding/candidate',
+                    { replace: true }
+                );
+                return;
+            }
+
+            // Onboarding completo → dashboard del rol
+            if (userType === 'company') {
+                navigate('/company/dashboard', { replace: true });
             } else {
-                // Sin perfil todavía → redirige a onboarding (por ahora swipe)
-                navigate('/app/swipe', { replace: true });
+                navigate('/app', { replace: true });
             }
         } catch (err) {
             console.error('[LoginView] Error inesperado:', err);

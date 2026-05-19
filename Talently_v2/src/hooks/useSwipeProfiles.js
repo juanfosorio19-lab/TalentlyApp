@@ -17,7 +17,12 @@ export default function useSwipeProfiles() {
 
     // ── Carga inicial de perfiles ──
     useEffect(() => {
-        if (!user || !userType) return;
+        // Sin user o sin userType (profile aún no existe) — no spinear infinito.
+        // El RoleRedirect / OnboardingGate ya debe haber redirigido al onboarding.
+        if (!user || !userType) {
+            setLoading(false);
+            return;
+        }
 
         const loadProfiles = async () => {
             setLoading(true);
