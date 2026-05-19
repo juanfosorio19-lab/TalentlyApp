@@ -3,6 +3,7 @@
 // Importa con: import { supabase, db } from '@/lib/supabase'
 
 import { createClient } from '@supabase/supabase-js';
+import { UPLOAD_LIMITS } from './constants';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://femlqgaqqmkeqtjeruqn.supabase.co';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZlbWxxZ2FxcW1rZXF0amVydXFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcwMTc2MTEsImV4cCI6MjA4MjU5MzYxMX0.7KuB9qQqv-cUaXKi2b6zV8I99dbmp8CNwlEN5uElJRQ';
@@ -88,6 +89,18 @@ export const db = {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) { console.error('Upload: no user'); return null; }
 
+            // Defense-in-depth: validar tipo y tamaño aunque el caller ya lo haga.
+            const limits = UPLOAD_LIMITS.image;
+            if (!file || !file.name) { console.error('Upload: archivo inválido'); return null; }
+            if (!limits.types.includes(file.type)) {
+                console.error('Upload: tipo no permitido', file.type, '— esperado:', limits.types.join(', '));
+                return null;
+            }
+            if (file.size > limits.maxSize) {
+                console.error('Upload: archivo supera', limits.maxSize, 'bytes — tamaño actual:', file.size);
+                return null;
+            }
+
             const fileExt = file.name.split('.').pop();
             const fileName = `${user.id}/${Date.now()}_logo.${fileExt}`;
 
@@ -101,6 +114,18 @@ export const db = {
         uploadDocument: async (file, bucket = 'documents') => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) { console.error('Upload: no user'); return null; }
+
+            // Defense-in-depth: validar tipo y tamaño aunque el caller ya lo haga.
+            const limits = UPLOAD_LIMITS.document;
+            if (!file || !file.name) { console.error('Upload: archivo inválido'); return null; }
+            if (!limits.types.includes(file.type)) {
+                console.error('Upload: tipo no permitido', file.type, '— esperado:', limits.types.join(', '));
+                return null;
+            }
+            if (file.size > limits.maxSize) {
+                console.error('Upload: archivo supera', limits.maxSize, 'bytes — tamaño actual:', file.size);
+                return null;
+            }
 
             const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const fileName = `${user.id}/${Date.now()}_${safeName}`;

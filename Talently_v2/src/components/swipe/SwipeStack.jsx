@@ -1,6 +1,6 @@
 // src/components/swipe/SwipeStack.jsx
 // Stack de tarjetas con gestos de swipe y botones de acción
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import SwipeCard from './SwipeCard';
 import MatchModal from './MatchModal';
 import useSwipe from '../../hooks/useSwipe';
@@ -20,6 +20,17 @@ export default function SwipeStack({ onCardTap }) {
 
     const [isAnimatingOut, setIsAnimatingOut] = useState(false);
     const [exitDirection, setExitDirection] = useState(null);
+    const exitTimerRef = useRef(null);
+
+    // Limpiar el timer de animación si el componente se desmonta
+    useEffect(() => {
+        return () => {
+            if (exitTimerRef.current) {
+                clearTimeout(exitTimerRef.current);
+                exitTimerRef.current = null;
+            }
+        };
+    }, []);
 
     // Callback cuando se confirma un swipe (gesto o botón)
     const onSwipeConfirmed = useCallback(async (direction) => {
@@ -31,10 +42,12 @@ export default function SwipeStack({ onCardTap }) {
         // Registrar el swipe en backend
         await handleSwipe(direction);
 
-        // Pequeño delay para la animación de salida
-        setTimeout(() => {
+        // Pequeño delay para la animación de salida (con cleanup en unmount)
+        if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+        exitTimerRef.current = setTimeout(() => {
             setIsAnimatingOut(false);
             setExitDirection(null);
+            exitTimerRef.current = null;
         }, 100);
     }, [handleSwipe, isAnimatingOut]);
 

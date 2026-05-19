@@ -18,6 +18,11 @@ const STEPS = [
     { id: 'review',     title: 'Vista previa',             desc: 'Revisa los detalles antes de publicar' },
 ];
 
+// MODALITIES local: usa values lowercase ('remote'/'hybrid'/'onsite') porque eso
+// es lo que la tabla `offers.modality` guarda hoy. WORK_MODALITIES en constants.js
+// usa values capitalizados ('Remoto'/'Híbrido'/'Presencial') para perfiles —
+// reemplazarlos aquí rompería ofertas existentes y la búsqueda. Unificar requiere
+// migración de datos coordinada.
 const MODALITIES = [
     { value: 'remote',  label: 'Remoto' },
     { value: 'hybrid',  label: 'Híbrido' },
