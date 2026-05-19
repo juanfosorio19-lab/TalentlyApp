@@ -13,7 +13,12 @@ export default function useMessages(matchId) {
 
     // ── Cargar historial de mensajes ──
     useEffect(() => {
-        if (!matchId) return;
+        // Sin matchId no spinear infinito (defensive — en practica el guard
+        // de routing garantiza que matchId existe en /app/messages/:matchId).
+        if (!matchId) {
+            setLoading(false);
+            return;
+        }
 
         const loadMessages = async () => {
             setLoading(true);
