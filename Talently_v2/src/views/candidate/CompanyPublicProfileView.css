@@ -426,7 +426,7 @@
     height: 4rem;
 }
 
-.cpv-action-btn--nope .material-symbols-outlined {
+.cpv-action-btn--nope .material-symbols-rounded {
     font-size: 30px;
     color: var(--danger-red);
 }
@@ -439,7 +439,7 @@
     box-shadow: 0 8px 24px var(--primary-30);
 }
 
-.cpv-action-btn--like .material-symbols-outlined {
+.cpv-action-btn--like .material-symbols-rounded {
     font-size: 36px;
     color: var(--text-inverse);
 }

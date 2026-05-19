@@ -375,7 +375,7 @@
     margin-bottom: 0.25rem;
 }
 
-.cpp-pref-icon .material-symbols-outlined {
+.cpp-pref-icon .material-symbols-rounded {
     font-size: 18px;
 }
 
@@ -464,12 +464,12 @@
     pointer-events: none;
 }
 
-.cpp-action-btn--nope .material-symbols-outlined {
+.cpp-action-btn--nope .material-symbols-rounded {
     font-size: 32px;
     color: var(--danger-red);
 }
 
-.cpp-action-btn--like .material-symbols-outlined {
+.cpp-action-btn--like .material-symbols-rounded {
     font-size: 32px;
     color: var(--primary);
 }

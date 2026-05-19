@@ -19,7 +19,7 @@ function FAQItem({ faq, isOpen, onToggle }) {
                 aria-expanded={isOpen}
             >
                 <p className="faq-item__question">{faq.question}</p>
-                <span className="material-symbols-outlined faq-item__chevron">
+                <span className="material-symbols-rounded faq-item__chevron">
                     expand_more
                 </span>
             </button>
@@ -104,7 +104,7 @@ export default function FAQView() {
                     onClick={() => navigate(-1)}
                     aria-label="Volver"
                 >
-                    <span className="material-symbols-outlined">arrow_back</span>
+                    <span className="material-symbols-rounded">arrow_back</span>
                 </button>
                 <h1 className="faqv-header-title">Preguntas frecuentes</h1>
             </header>
@@ -113,7 +113,7 @@ export default function FAQView() {
                 {/* ── Buscador ── */}
                 <div className="faqv-search-row">
                     <div className="faqv-search-wrap">
-                        <span className="material-symbols-outlined faqv-search-icon">search</span>
+                        <span className="material-symbols-rounded faqv-search-icon">search</span>
                         <input
                             className="faqv-search-input"
                             type="text"
@@ -123,7 +123,7 @@ export default function FAQView() {
                         />
                         {search && (
                             <button className="faqv-search-clear" onClick={handleClearSearch} aria-label="Limpiar">
-                                <span className="material-symbols-outlined">close</span>
+                                <span className="material-symbols-rounded">close</span>
                             </button>
                         )}
                     </div>
@@ -162,7 +162,7 @@ export default function FAQView() {
                     /* ── Estado vacío ── */
                     <div className="faqv-empty">
                         <div className="faqv-empty-icon-wrap">
-                            <span className="material-symbols-outlined faqv-empty-icon">search_off</span>
+                            <span className="material-symbols-rounded faqv-empty-icon">search_off</span>
                         </div>
                         <h3 className="faqv-empty-title">No se encontraron resultados</h3>
                         <p className="faqv-empty-sub">Intenta con otras palabras clave o explora las categorías.</p>
@@ -181,7 +181,7 @@ export default function FAQView() {
                         href="mailto:soporte@talently.app"
                         className="faqv-contact-btn"
                     >
-                        <span className="material-symbols-outlined">mail</span>
+                        <span className="material-symbols-rounded">mail</span>
                         Contáctanos
                     </a>
                 </div>

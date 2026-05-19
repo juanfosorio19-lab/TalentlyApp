@@ -25,7 +25,7 @@ export default function CompanyProfileCreatedView() {
             <header className="cpv-header">
                 <div className="cpv-header-spacer" />
                 <div className="cpv-logo-row">
-                    <span className="material-symbols-outlined cpv-bolt">bolt</span>
+                    <span className="material-symbols-rounded cpv-bolt">bolt</span>
                     <span className="cpv-brand">Talently</span>
                 </div>
                 <div className="cpv-header-spacer" />
@@ -40,15 +40,15 @@ export default function CompanyProfileCreatedView() {
                         <div className="cpv-icon-ring cpv-icon-ring--1" />
                         <div className="cpv-icon-ring cpv-icon-ring--2" />
                         <div className="cpv-icon-card">
-                            <span className="material-symbols-outlined cpv-verified-icon">verified</span>
+                            <span className="material-symbols-rounded cpv-verified-icon">verified</span>
                         </div>
                         <div className="cpv-dot cpv-dot--yellow" />
                         <div className="cpv-dot cpv-dot--green" />
                         <div className="cpv-star">
-                            <span className="material-symbols-outlined">star</span>
+                            <span className="material-symbols-rounded">star</span>
                         </div>
                         <div className="cpv-circle-sm">
-                            <span className="material-symbols-outlined">circle</span>
+                            <span className="material-symbols-rounded">circle</span>
                         </div>
                     </div>
                 </div>
@@ -84,7 +84,7 @@ export default function CompanyProfileCreatedView() {
                         </span>
                     </div>
                     <div className="cpv-check-badge">
-                        <span className="material-symbols-outlined cpv-check-icon">check</span>
+                        <span className="material-symbols-rounded cpv-check-icon">check</span>
                     </div>
                 </div>
             </main>
@@ -94,7 +94,7 @@ export default function CompanyProfileCreatedView() {
                     className="cpv-btn-primary"
                     onClick={() => navigate('/company/create-offer')}
                 >
-                    <span className="material-symbols-outlined">add_circle</span>
+                    <span className="material-symbols-rounded">add_circle</span>
                     <span>Crear mi primera oferta</span>
                 </button>
                 <button

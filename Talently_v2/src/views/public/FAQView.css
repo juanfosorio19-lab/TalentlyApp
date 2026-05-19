@@ -115,7 +115,7 @@
     cursor: pointer;
 }
 
-.faqv-search-clear .material-symbols-outlined {
+.faqv-search-clear .material-symbols-rounded {
     font-size: 16px;
 }
 
@@ -342,6 +342,6 @@
     transform: scale(0.97);
 }
 
-.faqv-contact-btn .material-symbols-outlined {
+.faqv-contact-btn .material-symbols-rounded {
     font-size: 20px;
 }

@@ -87,7 +87,7 @@ export default function CompanyPublicProfileView() {
     if (error || !companyProfile) {
         return (
             <div className="cpv-center">
-                <span className="material-symbols-outlined cpv-center-icon">error_outline</span>
+                <span className="material-symbols-rounded cpv-center-icon">error_outline</span>
                 <p className="cpv-center-text">{error || 'Empresa no encontrada.'}</p>
                 <button className="cpv-back-plain" onClick={() => navigate(-1)}>Volver</button>
             </div>
@@ -145,7 +145,7 @@ export default function CompanyPublicProfileView() {
                     onClick={() => navigate(-1)}
                     aria-label="Volver"
                 >
-                    <span className="material-symbols-outlined">arrow_back</span>
+                    <span className="material-symbols-rounded">arrow_back</span>
                 </button>
                 <h1 className="cpv-nav-title">{name}</h1>
             </nav>
@@ -167,13 +167,13 @@ export default function CompanyPublicProfileView() {
                     <div className="cpv-meta">
                         {location && (
                             <span className="cpv-meta-item">
-                                <span className="material-symbols-outlined cpv-meta-icon">location_on</span>
+                                <span className="material-symbols-rounded cpv-meta-icon">location_on</span>
                                 {location}
                             </span>
                         )}
                         {website && (
                             <span className="cpv-meta-item">
-                                <span className="material-symbols-outlined cpv-meta-icon">link</span>
+                                <span className="material-symbols-rounded cpv-meta-icon">link</span>
                                 <a
                                     href={website.startsWith('http') ? website : `https://${website}`}
                                     target="_blank"
@@ -223,7 +223,7 @@ export default function CompanyPublicProfileView() {
                             <div className="cpv-benefits">
                                 {resolvedBenefits.map((b, i) => (
                                     <div key={i} className="cpv-benefit-item">
-                                        <span className="material-symbols-outlined cpv-benefit-icon">{b.icon}</span>
+                                        <span className="material-symbols-rounded cpv-benefit-icon">{b.icon}</span>
                                         <span className="cpv-benefit-label">{b.label}</span>
                                     </div>
                                 ))}
@@ -309,7 +309,7 @@ export default function CompanyPublicProfileView() {
                     disabled={swipeLoading}
                     aria-label="No me interesa"
                 >
-                    <span className="material-symbols-outlined">close</span>
+                    <span className="material-symbols-rounded">close</span>
                 </button>
                 <button
                     className="cpv-action-btn cpv-action-btn--like"
@@ -317,7 +317,7 @@ export default function CompanyPublicProfileView() {
                     disabled={swipeLoading}
                     aria-label="Me interesa"
                 >
-                    <span className="material-symbols-outlined">favorite</span>
+                    <span className="material-symbols-rounded">favorite</span>
                 </button>
             </div>
         </div>

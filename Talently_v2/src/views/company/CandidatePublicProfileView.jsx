@@ -108,7 +108,7 @@ export default function CandidatePublicProfileView() {
     if (error || !profile) {
         return (
             <div className="cpp-center">
-                <span className="material-symbols-outlined cpp-error-icon">error_outline</span>
+                <span className="material-symbols-rounded cpp-error-icon">error_outline</span>
                 <p className="cpp-error-text">{error || 'Perfil no encontrado.'}</p>
                 <button className="cpp-back-btn-plain" onClick={() => navigate(-1)}>
                     Volver
@@ -170,7 +170,7 @@ export default function CandidatePublicProfileView() {
                 onClick={() => navigate(-1)}
                 aria-label="Cerrar"
             >
-                <span className="material-symbols-outlined">close</span>
+                <span className="material-symbols-rounded">close</span>
             </button>
 
             {/* ── Scroll principal ── */}
@@ -199,7 +199,7 @@ export default function CandidatePublicProfileView() {
                                 </span>
                             )}
                             <span className="cpp-badge cpp-badge--verified">
-                                <span className="material-symbols-outlined cpp-badge-icon">verified</span>
+                                <span className="material-symbols-rounded cpp-badge-icon">verified</span>
                                 Verificado
                             </span>
                         </div>
@@ -210,7 +210,7 @@ export default function CandidatePublicProfileView() {
                         {title && <p className="cpp-hero-title">{title}</p>}
                         {location && (
                             <div className="cpp-hero-location">
-                                <span className="material-symbols-outlined cpp-location-icon">location_on</span>
+                                <span className="material-symbols-rounded cpp-location-icon">location_on</span>
                                 <span>
                                     {location}
                                     {openToReloc && ' (Abierto a reubicación)'}
@@ -237,7 +237,7 @@ export default function CandidatePublicProfileView() {
                                 className="cpp-cv-btn"
                                 onClick={() => window.open(cv_url, '_blank')}
                             >
-                                <span className="material-symbols-outlined">description</span>
+                                <span className="material-symbols-rounded">description</span>
                                 Ver CV
                             </button>
                         </div>
@@ -299,7 +299,7 @@ export default function CandidatePublicProfileView() {
                                 {salaryText && (
                                     <div className="cpp-pref-card">
                                         <div className="cpp-pref-icon cpp-pref-icon--green">
-                                            <span className="material-symbols-outlined">attach_money</span>
+                                            <span className="material-symbols-rounded">attach_money</span>
                                         </div>
                                         <span className="cpp-pref-label">Salario Esperado</span>
                                         <p className="cpp-pref-value">{salaryText}</p>
@@ -309,7 +309,7 @@ export default function CandidatePublicProfileView() {
                                 {modalityLabel && (
                                     <div className="cpp-pref-card">
                                         <div className="cpp-pref-icon cpp-pref-icon--purple">
-                                            <span className="material-symbols-outlined">cottage</span>
+                                            <span className="material-symbols-rounded">cottage</span>
                                         </div>
                                         <span className="cpp-pref-label">Modalidad</span>
                                         <p className="cpp-pref-value">{modalityLabel}</p>
@@ -333,7 +333,7 @@ export default function CandidatePublicProfileView() {
                     disabled={swipeLoading}
                     aria-label="No me interesa"
                 >
-                    <span className="material-symbols-outlined">close</span>
+                    <span className="material-symbols-rounded">close</span>
                 </button>
                 <button
                     className="cpp-action-btn cpp-action-btn--like"
@@ -341,7 +341,7 @@ export default function CandidatePublicProfileView() {
                     disabled={swipeLoading}
                     aria-label="Me interesa"
                 >
-                    <span className="material-symbols-outlined">favorite</span>
+                    <span className="material-symbols-rounded">favorite</span>
                 </button>
             </div>
         </div>

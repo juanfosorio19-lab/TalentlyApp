@@ -166,7 +166,7 @@
     opacity: 0.6;
 }
 
-.cpv-star .material-symbols-outlined {
+.cpv-star .material-symbols-rounded {
     font-size: 20px;
 }
 
@@ -178,7 +178,7 @@
     opacity: 0.6;
 }
 
-.cpv-circle-sm .material-symbols-outlined {
+.cpv-circle-sm .material-symbols-rounded {
     font-size: 16px;
 }
 

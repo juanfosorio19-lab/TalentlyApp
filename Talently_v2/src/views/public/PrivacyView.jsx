@@ -69,7 +69,7 @@ export default function PrivacyView() {
                     onClick={() => navigate(-1)}
                     aria-label="Volver"
                 >
-                    <span className="material-symbols-outlined">arrow_back</span>
+                    <span className="material-symbols-rounded">arrow_back</span>
                 </button>
                 <h1 className="prv-header-title">Política de privacidad</h1>
             </header>
