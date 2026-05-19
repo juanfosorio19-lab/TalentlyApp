@@ -9,10 +9,10 @@ export const WORK_MODALITIES = [
     { value: 'Presencial', label: 'Presencial', icon: 'business' },
 ];
 
-// Mapa valor → label (para mostrar en ProfileView, OfferDetailsView, etc.)
+// Mapa valor → label (para mostrar en ProfileView, OfferDetailsView, etc.).
+// Tras migración 014 los values en BD están normalizados a capitalizado.
 export const MODALITY_LABELS = {
     Remoto: 'Remoto', Híbrido: 'Híbrido', Presencial: 'Presencial',
-    remote: 'Remoto', hybrid: 'Híbrido', onsite: 'Presencial',
 };
 
 // ── Disponibilidad ─────────────────────────────────────────────────────

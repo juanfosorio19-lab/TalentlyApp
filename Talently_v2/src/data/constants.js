@@ -8,15 +8,14 @@ export const AVAILABILITY_LABELS = {
     actively_looking: 'Buscando activamente',
 };
 
+// Map de values (BD) → label visible. Tras migración 014 los values se
+// normalizaron a 'Remoto'/'Híbrido'/'Presencial', pero el lookup en código
+// usa .toLowerCase() defensivamente, así que mantenemos claves lowercase.
 export const WORK_MODALITY_LABELS = {
-    remote:     'Remoto',
-    hybrid:     'Híbrido',
-    onsite:     'Presencial',
-    in_person:  'Presencial',
-    'in-person': 'Presencial',
-    presencial: 'Presencial',
     remoto:     'Remoto',
     híbrido:    'Híbrido',
+    hibrido:    'Híbrido',
+    presencial: 'Presencial',
 };
 
 export const AVAILABILITY_IS_OPEN = (val) =>

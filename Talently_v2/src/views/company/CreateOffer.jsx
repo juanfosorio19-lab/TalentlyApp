@@ -6,7 +6,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
 import { useApp } from '../../context/AppContext';
-import { POPULAR_TECH_FALLBACK } from '../../lib/constants';
+import { POPULAR_TECH_FALLBACK, WORK_MODALITIES } from '../../lib/constants';
 import { getTechAbbrev } from '../../lib/techAbbrev';
 import './CreateOffer.css';
 
@@ -18,16 +18,10 @@ const STEPS = [
     { id: 'review',     title: 'Vista previa',             desc: 'Revisa los detalles antes de publicar' },
 ];
 
-// MODALITIES local: usa values lowercase ('remote'/'hybrid'/'onsite') porque eso
-// es lo que la tabla `offers.modality` guarda hoy. WORK_MODALITIES en constants.js
-// usa values capitalizados ('Remoto'/'Híbrido'/'Presencial') para perfiles —
-// reemplazarlos aquí rompería ofertas existentes y la búsqueda. Unificar requiere
-// migración de datos coordinada.
-const MODALITIES = [
-    { value: 'remote',  label: 'Remoto' },
-    { value: 'hybrid',  label: 'Híbrido' },
-    { value: 'onsite',  label: 'Presencial' },
-];
+// Reusa WORK_MODALITIES de constants.js — el formato canónico en BD es
+// 'Remoto'/'Híbrido'/'Presencial' (sin i18n por ahora). Migración 014
+// normaliza valores legacy ('remote', 'presencial', etc.) si quedaban.
+const MODALITIES = WORK_MODALITIES;
 
 const FALLBACK_BENEFIT_ICON = 'check_circle';
 const BENEFITS_FALLBACK_NAMES = [
@@ -40,7 +34,7 @@ const INITIAL_FORM = {
     title: '',
     area: '',
     description: '',
-    modality: 'remote',
+    modality: 'Remoto',
     location: '',
     salary_min: '',
     salary_max: '',
