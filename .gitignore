@@ -40,3 +40,19 @@ Thumbs.db
 
 # Scripts locales de inspeccion
 test.ps1
+
+# ── Capacitor / Android ──
+# Claves de firma — NUNCA versionar (perderlas = no poder actualizar la app en Play)
+*.keystore
+*.jks
+keystore.properties
+# Artefactos de build Android (por si el android/.gitignore no aplica)
+Talently_v2/android/.gradle/
+Talently_v2/android/build/
+Talently_v2/android/app/build/
+Talently_v2/android/local.properties
+Talently_v2/android/app/release/
+# Capacitor copia el build aquí en cada sync
+Talently_v2/android/app/src/main/assets/public/
+# Recursos fuente de iconos (opcional versionar — pesados)
+Talently_v2/resources/

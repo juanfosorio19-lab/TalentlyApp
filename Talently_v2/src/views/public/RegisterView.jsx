@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
+import { signInWithGoogle } from '../../lib/oauth';
 import { useApp, Actions } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import './auth.css';
@@ -41,24 +42,19 @@ export default function RegisterView() {
         }
     }, [authLoading, isAuthenticated, navigate]);
 
-    // pendingType: el tipo elegido antes de hacer OAuth (guardado en localStorage
-    // para que AuthCallbackView lo lea si user_metadata.user_type está vacío)
+    // pendingType: el tipo elegido antes de hacer OAuth. signInWithGoogle lo
+    // guarda en localStorage para que AuthCallbackView (web) o el listener de
+    // deep link (nativo) lo lea si user_metadata.user_type está vacío.
     const handleGoogleOAuth = async (pendingType = null) => {
         setError('');
-        if (pendingType) {
-            localStorage.setItem('talently_pending_user_type', pendingType);
-        }
         setGoogleLoading(true);
         try {
-            const { error: oauthError } = await db.auth.signInWithOAuth({
-                provider: 'google',
-                options: { redirectTo: window.location.origin + '/auth/callback' },
-            });
+            // Detecta plataforma: web (redirect) vs nativo (in-app browser + deep link)
+            const { error: oauthError } = await signInWithGoogle(pendingType);
             if (oauthError) {
                 setError(oauthError.message);
                 setGoogleLoading(false);
             }
-            // Si no hay error, el browser redirige a Google — no se ejecuta más código aquí
         } catch (err) {
             console.error('[RegisterView] Error Google OAuth:', err);
             setError('No se pudo continuar con Google. Intenta nuevamente.');

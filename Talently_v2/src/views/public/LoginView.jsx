@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
+import { signInWithGoogle } from '../../lib/oauth';
 import { useApp, Actions } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import './auth.css';
@@ -41,15 +42,14 @@ export default function LoginView() {
         setError('');
         setGoogleLoading(true);
         try {
-            const { error: oauthError } = await db.auth.signInWithOAuth({
-                provider: 'google',
-                options: { redirectTo: window.location.origin + '/auth/callback' },
-            });
+            // signInWithGoogle detecta plataforma: web (redirect) vs nativo (in-app browser)
+            const { error: oauthError } = await signInWithGoogle();
             if (oauthError) {
                 setError(oauthError.message);
                 setGoogleLoading(false);
             }
-            // Si no hay error, el browser redirige a Google — no se ejecuta más código aquí
+            // Web: el browser redirige a Google. Nativo: el deep link de retorno
+            // lo captura AuthContext y onAuthStateChange dispara el redirect.
         } catch (err) {
             console.error('[LoginView] Error Google OAuth:', err);
             setError('No se pudo iniciar sesión con Google. Intenta nuevamente.');

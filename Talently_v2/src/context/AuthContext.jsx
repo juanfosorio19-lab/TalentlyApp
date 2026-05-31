@@ -1,6 +1,7 @@
 // src/context/AuthContext.jsx
 // Estado global de autenticación — reemplaza las verificaciones con window.supabaseClient
 import { createContext, useContext, useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { supabase, db } from '../lib/supabase';
 
 const AuthContext = createContext(null);
@@ -39,6 +40,42 @@ export function AuthProvider({ children }) {
         return () => {
             isMounted = false;
             subscription.unsubscribe();
+        };
+    }, []);
+
+    // ── Deep link OAuth (solo nativo / APK) ──
+    // Cuando Google redirige a com.talently.app://auth/callback?code=...,
+    // Android dispara appUrlOpen. Intercambiamos el code por sesión (PKCE).
+    // onAuthStateChange (arriba) detecta SIGNED_IN → setUser → LoginView/
+    // RegisterView navegan a /dashboard via su useEffect de isAuthenticated.
+    useEffect(() => {
+        if (!Capacitor.isNativePlatform()) return;
+
+        let listenerHandle;
+        (async () => {
+            const { App } = await import('@capacitor/app');
+            listenerHandle = await App.addListener('appUrlOpen', async ({ url }) => {
+                if (!url || !url.includes('auth/callback')) return;
+                try {
+                    const parsed = new URL(url);
+                    const code = parsed.searchParams.get('code');
+                    if (code) {
+                        await supabase.auth.exchangeCodeForSession(code);
+                    }
+                } catch (err) {
+                    console.error('[AuthContext] Error en deep link OAuth:', err);
+                } finally {
+                    // Cerrar el in-app browser tras volver
+                    try {
+                        const { Browser } = await import('@capacitor/browser');
+                        await Browser.close();
+                    } catch { /* noop */ }
+                }
+            });
+        })();
+
+        return () => {
+            listenerHandle?.remove?.();
         };
     }, []);
 
