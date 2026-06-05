@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
 import { signInWithGoogle } from '../../lib/oauth';
+import { logError } from '../../lib/errorLogger';
 import { useApp, Actions } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import './auth.css';
@@ -71,6 +72,13 @@ export default function LoginView() {
             const { data, error: signInError } = await db.auth.signIn(email, password);
 
             if (signInError) {
+                // Log detallado para diagnosticar (status, code, name) — ver client_logs
+                logError('AUTH_LOGIN', signInError.message, {
+                    name: signInError.name,
+                    status: signInError.status,
+                    code: signInError.code,
+                    stack: signInError.stack,
+                }, { userEmail: email });
                 setError(
                     signInError.message === 'Invalid login credentials'
                         ? 'Credenciales incorrectas. Verifica tu email y contraseña.'
@@ -110,7 +118,11 @@ export default function LoginView() {
                 navigate('/app', { replace: true });
             }
         } catch (err) {
-            console.error('[LoginView] Error inesperado:', err);
+            // Esto captura "Failed to fetch", errores de red/TLS del WebView, etc.
+            logError('AUTH_LOGIN_THROW', err?.message || String(err), {
+                name: err?.name,
+                stack: err?.stack,
+            }, { userEmail: email });
             setError('Ocurrió un error. Intenta nuevamente.');
         } finally {
             setLoading(false);

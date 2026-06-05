@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
 import { signInWithGoogle } from '../../lib/oauth';
+import { logError } from '../../lib/errorLogger';
 import { useApp, Actions } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import './auth.css';
@@ -90,6 +91,12 @@ export default function RegisterView() {
             );
 
             if (signUpError) {
+                logError('AUTH_REGISTER', signUpError.message, {
+                    name: signUpError.name,
+                    status: signUpError.status,
+                    code: signUpError.code,
+                    stack: signUpError.stack,
+                }, { userEmail: email });
                 if (signUpError.message.includes('already registered')) {
                     setError('Este email ya está registrado. Intenta iniciar sesión.');
                 } else {
@@ -114,7 +121,11 @@ export default function RegisterView() {
                 navigate('/onboarding/candidate', { replace: true });
             }
         } catch (err) {
-            console.error('[RegisterView] Error inesperado:', err);
+            // Captura "Failed to fetch", errores de red/TLS del WebView, etc.
+            logError('AUTH_REGISTER_THROW', err?.message || String(err), {
+                name: err?.name,
+                stack: err?.stack,
+            }, { userEmail: email });
             setError('Ocurrió un error. Intenta nuevamente.');
         } finally {
             setLoading(false);
