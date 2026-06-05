@@ -127,7 +127,7 @@
 }
 
 .cpv-verified-icon {
-    color: var(--text-inverse);
+    color: var(--text-on-primary);
     font-size: 72px;
     display: block;
 }
@@ -336,7 +336,7 @@
     justify-content: center;
     gap: 0.5rem;
     background: var(--primary);
-    color: var(--text-inverse);
+    color: var(--text-on-primary);
     font-weight: 700;
     font-size: 1.125rem;
     height: 3.5rem;

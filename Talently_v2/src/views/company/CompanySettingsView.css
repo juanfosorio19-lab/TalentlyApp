@@ -509,7 +509,7 @@
 
 .csv__edit-btn:hover {
     background: var(--primary);
-    color: var(--text-inverse);
+    color: var(--text-on-primary);
 }
 
 .csv__edit-btn .material-symbols-rounded { font-size: 20px; }

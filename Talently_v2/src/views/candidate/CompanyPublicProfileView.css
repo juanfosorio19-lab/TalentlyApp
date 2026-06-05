@@ -441,7 +441,7 @@
 
 .cpv-action-btn--like .material-symbols-rounded {
     font-size: 36px;
-    color: var(--text-inverse);
+    color: var(--text-on-primary);
 }
 
 /* ── Loading / Error ── */

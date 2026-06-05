@@ -38,7 +38,7 @@
     padding: 10px 20px;
     border-radius: var(--radius-full);
     background: var(--primary);
-    color: var(--text-inverse);
+    color: var(--text-on-primary);
     font-size: 14px;
     font-weight: 600;
     border: none;

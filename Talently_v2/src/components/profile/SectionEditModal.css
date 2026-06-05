@@ -1,0 +1,196 @@
+/* SectionEditModal — editor de secciones de lista del perfil */
+
+.sem-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: var(--surface-overlay);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: semFade 0.2s ease;
+}
+
+@keyframes semFade { from { opacity: 0; } to { opacity: 1; } }
+
+.sem-modal {
+    width: 100%;
+    max-width: var(--max-width);
+    max-height: 88vh;
+    background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    display: flex;
+    flex-direction: column;
+    animation: semSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes semSlide { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.sem-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.sem-modal__title { font-size: 17px; font-weight: 700; color: var(--text-primary); }
+
+.sem-modal__close {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: none; background: var(--bg);
+    color: var(--text-secondary);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+}
+.sem-modal__close .material-symbols-rounded { font-size: 20px; }
+
+.sem-modal__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* ── Tags ── */
+.sem-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.sem-empty { font-size: 14px; color: var(--text-muted); }
+
+.sem-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 8px 6px 12px;
+    border-radius: 99px;
+    background: var(--primary-subtle, var(--bg));
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.sem-tag__x {
+    display: flex; align-items: center;
+    border: none; background: none; cursor: pointer;
+    color: var(--primary); padding: 0;
+}
+.sem-tag__x .material-symbols-rounded { font-size: 16px; }
+
+.sem-tag-add { display: flex; gap: 8px; align-items: center; }
+
+.sem-add-inline {
+    width: 44px; height: 44px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    border: none;
+    background: var(--primary);
+    color: var(--text-on-primary);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+}
+.sem-add-inline:disabled { opacity: 0.5; cursor: default; }
+
+/* ── Object cards ── */
+.sem-card {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--bg);
+}
+
+.sem-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sem-card__summary {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.sem-card__remove {
+    border: none; background: none; cursor: pointer;
+    color: var(--danger); padding: 2px; display: flex;
+}
+.sem-card__remove .material-symbols-rounded { font-size: 20px; }
+
+.sem-field { display: flex; flex-direction: column; gap: 5px; }
+
+.sem-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.sem-input {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease;
+}
+.sem-input:focus { border-color: var(--text-muted); }
+.sem-input::placeholder { color: var(--text-muted); }
+
+.sem-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1.5px dashed var(--primary);
+    background: transparent;
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+/* ── Footer ── */
+.sem-modal__footer {
+    display: flex;
+    gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+}
+
+.sem-cancel, .sem-save {
+    flex: 1;
+    padding: 13px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+}
+
+.sem-cancel {
+    background: var(--bg);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+.sem-save {
+    background: var(--primary);
+    color: var(--text-on-primary);
+}
+.sem-save:disabled, .sem-cancel:disabled { opacity: 0.6; cursor: default; }

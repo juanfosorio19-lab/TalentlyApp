@@ -8,6 +8,7 @@ import { logError } from '../../lib/errorLogger';
 import { useApp, Actions } from '../../context/AppContext';
 import { MODALITY_LABELS, AVAILABILITY_LABELS, AVAILABILITY_OPTIONS } from '../../lib/constants';
 import { Spinner } from '../../components/ui';
+import SectionEditModal from '../../components/profile/SectionEditModal';
 import './ProfileView.css';
 
 // Formatea un número con separador de miles (3000000 → "3.000.000").
@@ -28,6 +29,7 @@ export default function ProfileView({ isTab = false }) {
     const [saving, setSaving] = useState(false);
     const [editData, setEditData] = useState({});
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const [editSection, setEditSection] = useState(null); // 'skills'|'education'|...
     const avatarInputRef = useRef(null);
 
     // ── Cargar perfil si no está en AppContext ──
@@ -80,6 +82,26 @@ export default function ProfileView({ isTab = false }) {
             setShowEdit(false);
         } catch (err) {
             logError('PROFILE_SAVE_THROW', err?.message || String(err), { stack: err?.stack });
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    // ── Guardar una sección de lista (educación, habilidades, etc.) ──
+    const handleSaveSection = async (items) => {
+        setSaving(true);
+        try {
+            const { data: updated, error } = await db.profiles.create({
+                ...userProfile, [editSection]: items,
+            });
+            if (error) {
+                logError('SECTION_SAVE', error.message, { section: editSection, code: error.code });
+                return;
+            }
+            if (updated) dispatch({ type: Actions.SET_PROFILE, payload: updated });
+            setEditSection(null);
+        } catch (err) {
+            logError('SECTION_SAVE_THROW', err?.message || String(err), { section: editSection });
         } finally {
             setSaving(false);
         }
@@ -215,28 +237,28 @@ export default function ProfileView({ isTab = false }) {
                 {/* ── Secciones ── */}
                 <div className="pv__sections">
 
-                    {/* Sobre mí */}
-                    {bio && (
-                        <div className="pv__card">
-                            <div className="pv__card-header">
-                                <h3 className="pv__card-title">Sobre mí</h3>
-                                <button className="pv__card-edit" onClick={openEdit} aria-label="Editar">
-                                    <span className="material-symbols-rounded">edit</span>
-                                </button>
-                            </div>
-                            <p className="pv__bio">{bio}</p>
+                    {/* Sobre mí (siempre visible; se edita en el modal general) */}
+                    <div className="pv__card">
+                        <div className="pv__card-header">
+                            <h3 className="pv__card-title">Sobre mí</h3>
+                            <button className="pv__card-edit" onClick={openEdit} aria-label="Editar">
+                                <span className="material-symbols-rounded">edit</span>
+                            </button>
                         </div>
-                    )}
+                        {bio
+                            ? <p className="pv__bio">{bio}</p>
+                            : <p className="pv__section-empty" onClick={openEdit}>+ Cuéntale a las empresas quién eres</p>}
+                    </div>
 
-                    {/* Experiencia */}
-                    {experience.length > 0 && (
-                        <div className="pv__card">
-                            <div className="pv__card-header">
-                                <h3 className="pv__card-title">Experiencia</h3>
-                                <button className="pv__card-edit" onClick={openEdit} aria-label="Agregar experiencia">
-                                    <span className="material-symbols-rounded">add_circle_outline</span>
-                                </button>
-                            </div>
+                    {/* Experiencia (siempre visible para poder agregar) */}
+                    <div className="pv__card">
+                        <div className="pv__card-header">
+                            <h3 className="pv__card-title">Experiencia</h3>
+                            <button className="pv__card-edit" onClick={() => setEditSection('experience')} aria-label="Editar experiencia">
+                                <span className="material-symbols-rounded">add_circle_outline</span>
+                            </button>
+                        </div>
+                        {experience.length > 0 ? (
                             <div className="pv__exp-list">
                                 {experience.map((e, i) => (
                                     <div key={i} className="pv__exp-item">
@@ -261,18 +283,22 @@ export default function ProfileView({ isTab = false }) {
                                     </div>
                                 ))}
                             </div>
-                        </div>
-                    )}
+                        ) : (
+                            <p className="pv__section-empty" onClick={() => setEditSection('experience')}>
+                                + Agrega tu experiencia laboral
+                            </p>
+                        )}
+                    </div>
 
                     {/* Educación */}
-                    {education.length > 0 && (
-                        <div className="pv__card">
-                            <div className="pv__card-header">
-                                <h3 className="pv__card-title">Educación</h3>
-                                <button className="pv__card-edit" onClick={openEdit} aria-label="Agregar educación">
-                                    <span className="material-symbols-rounded">add_circle_outline</span>
-                                </button>
-                            </div>
+                    <div className="pv__card">
+                        <div className="pv__card-header">
+                            <h3 className="pv__card-title">Educación</h3>
+                            <button className="pv__card-edit" onClick={() => setEditSection('education')} aria-label="Editar educación">
+                                <span className="material-symbols-rounded">add_circle_outline</span>
+                            </button>
+                        </div>
+                        {education.length > 0 ? (
                             <div className="pv__exp-list">
                                 {education.map((e, i) => (
                                     <div key={i} className="pv__exp-item">
@@ -290,18 +316,22 @@ export default function ProfileView({ isTab = false }) {
                                     </div>
                                 ))}
                             </div>
-                        </div>
-                    )}
+                        ) : (
+                            <p className="pv__section-empty" onClick={() => setEditSection('education')}>
+                                + Agrega tu formación académica
+                            </p>
+                        )}
+                    </div>
 
                     {/* Habilidades */}
-                    {skills.length > 0 && (
-                        <div className="pv__card">
-                            <div className="pv__card-header">
-                                <h3 className="pv__card-title">Habilidades</h3>
-                                <button className="pv__card-edit" onClick={openEdit} aria-label="Editar">
-                                    <span className="material-symbols-rounded">edit</span>
-                                </button>
-                            </div>
+                    <div className="pv__card">
+                        <div className="pv__card-header">
+                            <h3 className="pv__card-title">Habilidades</h3>
+                            <button className="pv__card-edit" onClick={() => setEditSection('skills')} aria-label="Editar habilidades">
+                                <span className="material-symbols-rounded">edit</span>
+                            </button>
+                        </div>
+                        {skills.length > 0 ? (
                             <div className="pv__chips">
                                 {skills.map((s, i) => (
                                     <span key={i} className="pv__chip">
@@ -309,18 +339,22 @@ export default function ProfileView({ isTab = false }) {
                                     </span>
                                 ))}
                             </div>
-                        </div>
-                    )}
+                        ) : (
+                            <p className="pv__section-empty" onClick={() => setEditSection('skills')}>
+                                + Agrega tus habilidades
+                            </p>
+                        )}
+                    </div>
 
                     {/* Idiomas */}
-                    {languages.length > 0 && (
-                        <div className="pv__card">
-                            <div className="pv__card-header">
-                                <h3 className="pv__card-title">Idiomas</h3>
-                                <button className="pv__card-edit" onClick={openEdit} aria-label="Editar">
-                                    <span className="material-symbols-rounded">edit</span>
-                                </button>
-                            </div>
+                    <div className="pv__card">
+                        <div className="pv__card-header">
+                            <h3 className="pv__card-title">Idiomas</h3>
+                            <button className="pv__card-edit" onClick={() => setEditSection('languages')} aria-label="Editar idiomas">
+                                <span className="material-symbols-rounded">edit</span>
+                            </button>
+                        </div>
+                        {languages.length > 0 ? (
                             <div className="pv__lang-list">
                                 {languages.map((l, i) => (
                                     <div key={i} className="pv__lang-row">
@@ -329,18 +363,22 @@ export default function ProfileView({ isTab = false }) {
                                     </div>
                                 ))}
                             </div>
-                        </div>
-                    )}
+                        ) : (
+                            <p className="pv__section-empty" onClick={() => setEditSection('languages')}>
+                                + Agrega los idiomas que hablas
+                            </p>
+                        )}
+                    </div>
 
                     {/* Intereses */}
-                    {interests.length > 0 && (
-                        <div className="pv__card">
-                            <div className="pv__card-header">
-                                <h3 className="pv__card-title">Intereses</h3>
-                                <button className="pv__card-edit" onClick={openEdit} aria-label="Editar">
-                                    <span className="material-symbols-rounded">edit</span>
-                                </button>
-                            </div>
+                    <div className="pv__card">
+                        <div className="pv__card-header">
+                            <h3 className="pv__card-title">Intereses</h3>
+                            <button className="pv__card-edit" onClick={() => setEditSection('interests')} aria-label="Editar intereses">
+                                <span className="material-symbols-rounded">edit</span>
+                            </button>
+                        </div>
+                        {interests.length > 0 ? (
                             <div className="pv__chips">
                                 {interests.map((t, i) => (
                                     <span key={i} className="pv__chip pv__chip--muted">
@@ -348,8 +386,12 @@ export default function ProfileView({ isTab = false }) {
                                     </span>
                                 ))}
                             </div>
-                        </div>
-                    )}
+                        ) : (
+                            <p className="pv__section-empty" onClick={() => setEditSection('interests')}>
+                                + Agrega tus intereses
+                            </p>
+                        )}
+                    </div>
 
                     {/* Acciones inferiores */}
                     <div className="pv__actions">
@@ -496,6 +538,17 @@ export default function ProfileView({ isTab = false }) {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* ══════ EDITOR DE SECCIONES DE LISTA ══════ */}
+            {editSection && (
+                <SectionEditModal
+                    type={editSection}
+                    initialItems={userProfile?.[editSection]}
+                    onSave={handleSaveSection}
+                    onClose={() => setEditSection(null)}
+                    saving={saving}
+                />
             )}
         </div>
     );

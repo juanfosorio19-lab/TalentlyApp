@@ -72,7 +72,7 @@
 
 .swipe-stack__btn--nope:hover {
     background: var(--danger);
-    color: var(--text-inverse);
+    color: var(--text-on-primary);
     box-shadow: 0 4px 16px var(--error-40);
 }
 
@@ -80,7 +80,7 @@
     width: 64px;
     height: 64px;
     background: var(--gradient-success);
-    color: var(--text-inverse);
+    color: var(--text-on-primary);
     border: none;
 }
 
@@ -97,7 +97,7 @@
 
 .swipe-stack__btn--info:hover {
     background: var(--primary);
-    color: var(--text-inverse);
+    color: var(--text-on-primary);
     box-shadow: 0 4px 16px var(--primary-40);
 }
 

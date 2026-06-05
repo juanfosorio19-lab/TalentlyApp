@@ -92,7 +92,7 @@
     height: 16px;
     border-radius: 8px;
     background: var(--danger);
-    color: var(--text-inverse);
+    color: var(--text-on-primary);
     font-size: 10px;
     font-weight: 700;
     display: flex;
@@ -187,7 +187,7 @@
     padding: 8px 14px;
     border-radius: 10px;
     background: var(--gradient-primary);
-    color: var(--text-inverse);
+    color: var(--text-on-primary);
     border: none;
     outline: none;
     font-size: 13px;
@@ -324,7 +324,7 @@
     padding: 15px;
     border-radius: 16px;
     background: var(--gradient-primary);
-    color: var(--text-inverse);
+    color: var(--text-on-primary);
     border: none;
     outline: none;
     font-size: 16px;
@@ -558,7 +558,7 @@
     padding: 12px 24px;
     border-radius: 14px;
     background: var(--gradient-primary);
-    color: var(--text-inverse);
+    color: var(--text-on-primary);
     border: none;
     outline: none;
     font-size: 15px;
@@ -718,7 +718,7 @@
 
 .cd__profile-edit-btn:hover {
     background: var(--primary);
-    color: var(--text-inverse);
+    color: var(--text-on-primary);
 }
 
 .cd__profile-edit-btn .material-symbols-rounded { font-size: 20px; }

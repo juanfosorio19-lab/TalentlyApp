@@ -298,7 +298,7 @@
 
 .match-modal__btn--primary {
     background: var(--primary);
-    color: var(--text-inverse);
+    color: var(--text-on-primary);
     box-shadow: 0 4px 16px var(--primary-40);
 }
 
