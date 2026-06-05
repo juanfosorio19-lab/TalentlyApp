@@ -530,3 +530,52 @@
 .csv__row-title--danger {
     color: var(--danger);
 }
+
+/* Edición de perfil de empresa (paridad con candidato) */
+.csv__logo-wrap { position: relative; display: inline-block; }
+.csv__logo-edit {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid var(--surface);
+    background: var(--primary);
+    color: var(--text-on-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    padding: 0;
+}
+.csv__logo-edit .material-symbols-rounded { font-size: 16px; }
+.csv__logo-edit:disabled { opacity: 0.6; cursor: default; }
+
+.csv__card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+.csv__card-edit {
+    border: none;
+    background: none;
+    color: var(--primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+    font-family: inherit;
+}
+.csv__card-edit .material-symbols-rounded { font-size: 20px; }
+
+.csv__section-empty {
+    font-size: 14px;
+    color: var(--primary);
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 0;
+    margin: 0;
+}

@@ -40,5 +40,6 @@ dist-ssr
 !.claude/agents/talently-visual-consistency.md
 !.claude/agents/qa-auditor.md
 !.claude/agents/qa-e2e.md
+!.claude/agents/talently-parity-guardian.md
 
 .agents/

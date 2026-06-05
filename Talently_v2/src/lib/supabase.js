@@ -43,7 +43,8 @@ const PROFILE_PUBLIC_COLS = `
     currency, salary_min, salary_max, expected_salary, salary_expectation, salary_range,
     company_name, company_sector, company_size, company_stage, company_description,
     company_logo, company_logo_url, company_tech_stack, company_benefits, company_values,
-    culture_values, work_modalities, website, industry, size, description, benefits,
+    culture_values, work_modalities, website, linkedin_url, industry, size, description, benefits,
+    company_uniqueness, company_photos, company_positions, seniority_levels, company_tags,
     onboarding_completed, gender, created_at, updated_at
 `.replace(/\s+/g, ' ').trim();
 

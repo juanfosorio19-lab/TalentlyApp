@@ -1,10 +1,12 @@
 // src/views/company/CompanySettingsView.jsx
 // Configuración + perfil de empresa — diseño Stitch
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, db } from '../../lib/supabase';
+import { logError } from '../../lib/errorLogger';
 import { useApp, Actions } from '../../context/AppContext';
 import { APP_VERSION } from '../../lib/constants';
+import SectionEditModal from '../../components/profile/SectionEditModal';
 import './CompanySettingsView.css';
 
 const BENEFIT_ICONS = {
@@ -25,6 +27,74 @@ export default function CompanySettingsView() {
 
     const [pwMsg, setPwMsg] = useState('');
     const [stats, setStats] = useState({ offers: 0, matches: 0, views: 0 });
+
+    // ── Edición de perfil ──
+    const [showEdit, setShowEdit] = useState(false);
+    const [editData, setEditData] = useState({});
+    const [saving, setSaving] = useState(false);
+    const [editSection, setEditSection] = useState(null);
+    const [uploadingLogo, setUploadingLogo] = useState(false);
+    const logoInputRef = useRef(null);
+
+    const openEdit = () => {
+        setEditData({
+            company_name:        userProfile?.company_name || '',
+            company_description: userProfile?.company_description || '',
+            company_sector:      userProfile?.company_sector || '',
+            website:             userProfile?.website || '',
+            city:                userProfile?.city || '',
+            country:             userProfile?.country || '',
+            company_stage:       userProfile?.company_stage || '',
+            company_size:        userProfile?.company_size || '',
+        });
+        setShowEdit(true);
+    };
+
+    const handleSaveProfile = async () => {
+        setSaving(true);
+        try {
+            const { data: updated, error } = await db.profiles.create({ ...userProfile, ...editData });
+            if (error) { logError('COMPANY_PROFILE_SAVE', error.message, { code: error.code }); return; }
+            if (updated) dispatch({ type: Actions.SET_PROFILE, payload: updated });
+            setShowEdit(false);
+        } catch (err) {
+            logError('COMPANY_PROFILE_SAVE_THROW', err?.message || String(err), { stack: err?.stack });
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleSaveSection = async (items) => {
+        setSaving(true);
+        try {
+            const { data: updated, error } = await db.profiles.create({ ...userProfile, [editSection]: items });
+            if (error) { logError('COMPANY_SECTION_SAVE', error.message, { section: editSection }); return; }
+            if (updated) dispatch({ type: Actions.SET_PROFILE, payload: updated });
+            setEditSection(null);
+        } catch (err) {
+            logError('COMPANY_SECTION_SAVE_THROW', err?.message || String(err), { section: editSection });
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleLogoChange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploadingLogo(true);
+        try {
+            const publicUrl = await db.storage.uploadImage(file, 'images');
+            if (!publicUrl) { logError('COMPANY_LOGO_UPLOAD', 'uploadImage devolvió null'); return; }
+            const { data: updated, error } = await db.profiles.create({ ...userProfile, company_logo: publicUrl });
+            if (error) { logError('COMPANY_LOGO_SAVE', error.message); return; }
+            if (updated) dispatch({ type: Actions.SET_PROFILE, payload: updated });
+        } catch (err) {
+            logError('COMPANY_LOGO_THROW', err?.message || String(err));
+        } finally {
+            setUploadingLogo(false);
+            if (logoInputRef.current) logoInputRef.current.value = '';
+        }
+    };
 
     // ── Cargar contadores rápidos ──
     useEffect(() => {
@@ -90,7 +160,7 @@ export default function CompanySettingsView() {
                 <h1 className="csv__header-title">Configuración</h1>
                 <button
                     className="csv__header-btn csv__header-btn--primary"
-                    onClick={() => navigate('/company/dashboard')}
+                    onClick={openEdit}
                     aria-label="Editar perfil"
                 >
                     <span className="material-symbols-rounded">edit_square</span>
@@ -102,13 +172,33 @@ export default function CompanySettingsView() {
 
                 {/* ── Hero card ── */}
                 <div className="csv__hero">
-                    {logo ? (
-                        <img className="csv__logo" src={logo} alt={companyName} />
-                    ) : (
-                        <div className="csv__logo-placeholder">
-                            <span className="material-symbols-rounded">business</span>
-                        </div>
-                    )}
+                    <div className="csv__logo-wrap">
+                        {logo ? (
+                            <img className="csv__logo" src={logo} alt={companyName} />
+                        ) : (
+                            <div className="csv__logo-placeholder">
+                                <span className="material-symbols-rounded">business</span>
+                            </div>
+                        )}
+                        <button
+                            type="button"
+                            className="csv__logo-edit"
+                            onClick={() => logoInputRef.current?.click()}
+                            disabled={uploadingLogo}
+                            aria-label="Cambiar logo"
+                        >
+                            <span className="material-symbols-rounded">
+                                {uploadingLogo ? 'hourglass_top' : 'photo_camera'}
+                            </span>
+                        </button>
+                        <input
+                            ref={logoInputRef}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={handleLogoChange}
+                            style={{ display: 'none' }}
+                        />
+                    </div>
                     <h2 className="csv__company-name">{companyName}</h2>
 
                     <div className="csv__hero-meta">
@@ -188,36 +278,52 @@ export default function CompanySettingsView() {
                 )}
 
                 {/* ── Valores de cultura ── */}
-                {values.length > 0 && (
-                    <div className="csv__card">
+                <div className="csv__card">
+                    <div className="csv__card-header">
                         <h3 className="csv__card-title">Valores de Cultura</h3>
+                        <button className="csv__card-edit" onClick={() => setEditSection('culture_values')} aria-label="Editar valores">
+                            <span className="material-symbols-rounded">edit</span>
+                        </button>
+                    </div>
+                    {values.length > 0 ? (
                         <div className="csv__chips-wrap">
                             {values.map((v, i) => (
                                 <span key={i} className={`csv__value-chip csv__value-chip--${i % 4}`}>{v}</span>
                             ))}
                         </div>
-                    </div>
-                )}
+                    ) : (
+                        <p className="csv__section-empty" onClick={() => setEditSection('culture_values')}>+ Agrega los valores de tu empresa</p>
+                    )}
+                </div>
 
                 {/* ── Tech stack ── */}
-                {techStack.length > 0 && (
-                    <div className="csv__card">
-                        <div className="csv__card-header">
-                            <h3 className="csv__card-title">Tech Stack</h3>
-                            <span className="csv__card-caption">Tecnologías principales</span>
-                        </div>
+                <div className="csv__card">
+                    <div className="csv__card-header">
+                        <h3 className="csv__card-title">Tech Stack</h3>
+                        <button className="csv__card-edit" onClick={() => setEditSection('company_tech_stack')} aria-label="Editar tech stack">
+                            <span className="material-symbols-rounded">edit</span>
+                        </button>
+                    </div>
+                    {techStack.length > 0 ? (
                         <div className="csv__chips-wrap">
                             {techStack.map((t) => (
                                 <span key={t} className="csv__tech-chip">{t}</span>
                             ))}
                         </div>
-                    </div>
-                )}
+                    ) : (
+                        <p className="csv__section-empty" onClick={() => setEditSection('company_tech_stack')}>+ Agrega tu stack tecnológico</p>
+                    )}
+                </div>
 
                 {/* ── Beneficios ── */}
-                {benefits.length > 0 && (
-                    <div className="csv__card">
+                <div className="csv__card">
+                    <div className="csv__card-header">
                         <h3 className="csv__card-title">Beneficios</h3>
+                        <button className="csv__card-edit" onClick={() => setEditSection('company_benefits')} aria-label="Editar beneficios">
+                            <span className="material-symbols-rounded">edit</span>
+                        </button>
+                    </div>
+                    {benefits.length > 0 ? (
                         <div className="csv__benefits-grid">
                             {benefits.slice(0, 6).map((b, i) => {
                                 const icon = BENEFIT_ICONS[b] || 'star';
@@ -229,8 +335,10 @@ export default function CompanySettingsView() {
                                 );
                             })}
                         </div>
-                    </div>
-                )}
+                    ) : (
+                        <p className="csv__section-empty" onClick={() => setEditSection('company_benefits')}>+ Agrega los beneficios que ofreces</p>
+                    )}
+                </div>
 
                 {/* ────────── SETTINGS ────────── */}
 
@@ -390,12 +498,76 @@ export default function CompanySettingsView() {
             <div className="csv__footer">
                 <button
                     className="csv__edit-btn"
-                    onClick={() => navigate('/company/dashboard')}
+                    onClick={openEdit}
                 >
                     <span className="material-symbols-rounded">edit</span>
                     Editar Perfil
                 </button>
             </div>
+
+            {/* ══════ MODAL EDICIÓN DE TEXTO (reusa estilos sem-*) ══════ */}
+            {showEdit && (
+                <div className="sem-overlay" onClick={(e) => { if (e.target === e.currentTarget) setShowEdit(false); }}>
+                    <div className="sem-modal">
+                        <div className="sem-modal__header">
+                            <h3 className="sem-modal__title">Editar perfil de empresa</h3>
+                            <button className="sem-modal__close" onClick={() => setShowEdit(false)} aria-label="Cerrar">
+                                <span className="material-symbols-rounded">close</span>
+                            </button>
+                        </div>
+                        <div className="sem-modal__body">
+                            {[
+                                { key: 'company_name',   label: 'Nombre de la empresa', placeholder: 'Ej: Talently' },
+                                { key: 'company_sector', label: 'Sector',               placeholder: 'Ej: Tecnología' },
+                                { key: 'website',        label: 'Sitio web',            placeholder: 'https://…' },
+                                { key: 'city',           label: 'Ciudad',               placeholder: 'Ej: Santiago' },
+                                { key: 'country',        label: 'País',                 placeholder: 'Ej: Chile' },
+                                { key: 'company_stage',  label: 'Etapa',                placeholder: 'Ej: Serie A' },
+                                { key: 'company_size',   label: 'Tamaño',               placeholder: 'Ej: 11-50' },
+                            ].map(({ key, label, placeholder }) => (
+                                <div key={key} className="sem-field">
+                                    <label className="sem-label">{label}</label>
+                                    <input
+                                        className="sem-input"
+                                        type="text"
+                                        value={editData[key] || ''}
+                                        onChange={(e) => setEditData({ ...editData, [key]: e.target.value })}
+                                        placeholder={placeholder}
+                                    />
+                                </div>
+                            ))}
+                            <div className="sem-field">
+                                <label className="sem-label">Descripción</label>
+                                <textarea
+                                    className="sem-input"
+                                    rows={3}
+                                    value={editData.company_description || ''}
+                                    onChange={(e) => setEditData({ ...editData, company_description: e.target.value })}
+                                    placeholder="Cuéntale a los candidatos sobre tu empresa…"
+                                    style={{ resize: 'vertical', fontFamily: 'inherit' }}
+                                />
+                            </div>
+                        </div>
+                        <div className="sem-modal__footer">
+                            <button className="sem-cancel" onClick={() => setShowEdit(false)} disabled={saving}>Cancelar</button>
+                            <button className="sem-save" onClick={handleSaveProfile} disabled={saving}>
+                                {saving ? 'Guardando…' : 'Guardar'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ══════ EDITOR DE SECCIONES DE LISTA ══════ */}
+            {editSection && (
+                <SectionEditModal
+                    type={editSection}
+                    initialItems={userProfile?.[editSection]}
+                    onSave={handleSaveSection}
+                    onClose={() => setEditSection(null)}
+                    saving={saving}
+                />
+            )}
         </div>
     );
 }

@@ -55,6 +55,38 @@ const SECTION_CONFIG = {
             { key: 'description', label: 'Descripción', type: 'textarea', placeholder: 'Qué hiciste en el rol…' },
         ],
     },
+
+    // ── Secciones de EMPRESA (todas listas de strings) ──
+    culture_values: {
+        title: 'Valores de Cultura',
+        kind: 'tags',
+        placeholder: 'Ej: Innovación, Trabajo en equipo…',
+    },
+    company_benefits: {
+        title: 'Beneficios',
+        kind: 'tags',
+        placeholder: 'Ej: Seguro médico, Home office…',
+    },
+    company_tech_stack: {
+        title: 'Tech Stack',
+        kind: 'tags',
+        placeholder: 'Ej: React, Node.js, AWS…',
+    },
+    company_positions: {
+        title: 'Posiciones que buscas',
+        kind: 'tags',
+        placeholder: 'Ej: Desarrollo, Diseño UX/UI…',
+    },
+    seniority_levels: {
+        title: 'Niveles de Seniority',
+        kind: 'tags',
+        placeholder: 'Ej: Senior, Semi-Senior…',
+    },
+    company_tags: {
+        title: 'Tags',
+        kind: 'tags',
+        placeholder: 'Ej: Remote-first, Startup…',
+    },
 };
 
 // Normaliza items entrantes a la forma que el editor espera.
