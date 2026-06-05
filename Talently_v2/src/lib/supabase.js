@@ -378,6 +378,15 @@ export const db = {
             const profilesMap = {};
             (profileRows || []).forEach((p) => { profilesMap[p.id] = p; });
 
+            // 2b. Empresas: sus datos viven en la tabla `companies`, NO en profiles.
+            // Sin esto, un match con una empresa se mostraba como "Usuario".
+            const { data: companyRows } = await supabase
+                .from('companies')
+                .select('user_id, name, logo_url, sector')
+                .in('user_id', otherIds);
+            const companiesMap = {};
+            (companyRows || []).forEach((c) => { companiesMap[c.user_id] = c; });
+
             // 3. Último mensaje por match (bulk)
             const matchIds = matches.map((m) => m.id);
             const { data: msgs } = await supabase
@@ -391,6 +400,25 @@ export const db = {
                 if (!lastMsgMap[msg.match_id]) lastMsgMap[msg.match_id] = msg;
             });
 
+            // Resuelve el perfil del otro lado: profile (candidato) o company (empresa).
+            const resolveOther = (otherId) => {
+                const prof = profilesMap[otherId];
+                const comp = companiesMap[otherId];
+                // Si hay company y (no hay profile O el profile es de empresa), usar datos de company.
+                if (comp && (!prof || prof.user_type === 'company')) {
+                    return {
+                        ...(prof || {}),
+                        id: otherId,
+                        user_type: 'company',
+                        company_name: comp.name || prof?.company_name,
+                        full_name: comp.name || prof?.full_name,
+                        company_logo: comp.logo_url || prof?.company_logo,
+                        company_sector: comp.sector || prof?.company_sector,
+                    };
+                }
+                return prof || { full_name: 'Usuario' };
+            };
+
             return {
                 data: matches.map((m) => {
                     const otherId = m.user_id_1 === userId ? m.user_id_2 : m.user_id_1;
@@ -399,7 +427,7 @@ export const db = {
                         created_at: m.created_at,
                         user_id_1: m.user_id_1,
                         user_id_2: m.user_id_2,
-                        otherProfile: profilesMap[otherId] || { full_name: 'Usuario' },
+                        otherProfile: resolveOther(otherId),
                         lastMsg: lastMsgMap[m.id] || null,
                     };
                 }),

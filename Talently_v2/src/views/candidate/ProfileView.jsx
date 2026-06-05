@@ -1,13 +1,22 @@
 // src/views/candidate/ProfileView.jsx
 // Perfil del candidato — diseño Stitch
 // isTab=true → sin header propio, height:100% (para embeber en MainApp)
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, db } from '../../lib/supabase';
+import { logError } from '../../lib/errorLogger';
 import { useApp, Actions } from '../../context/AppContext';
-import { MODALITY_LABELS, AVAILABILITY_LABELS } from '../../lib/constants';
+import { MODALITY_LABELS, AVAILABILITY_LABELS, AVAILABILITY_OPTIONS } from '../../lib/constants';
 import { Spinner } from '../../components/ui';
 import './ProfileView.css';
+
+// Formatea un número con separador de miles (3000000 → "3.000.000").
+const fmtThousands = (val) => {
+    const digits = String(val ?? '').replace(/\D/g, '');
+    return digits ? Number(digits).toLocaleString('es-CL') : '';
+};
+// Extrae solo los dígitos (para guardar el número limpio).
+const onlyDigits = (str) => String(str ?? '').replace(/\D/g, '');
 
 export default function ProfileView({ isTab = false }) {
     const navigate = useNavigate();
@@ -18,6 +27,8 @@ export default function ProfileView({ isTab = false }) {
     const [showEdit, setShowEdit] = useState(false);
     const [saving, setSaving] = useState(false);
     const [editData, setEditData] = useState({});
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const avatarInputRef = useRef(null);
 
     // ── Cargar perfil si no está en AppContext ──
     useEffect(() => {
@@ -40,9 +51,11 @@ export default function ProfileView({ isTab = false }) {
         setEditData({
             full_name:          userProfile?.full_name || '',
             headline:           userProfile?.headline || '',
+            bio:                userProfile?.bio || userProfile?.about || '',
             city:               userProfile?.city || '',
             salary_expectation: userProfile?.salary_expectation || '',
             work_modality:      userProfile?.work_modality || '',
+            availability:       userProfile?.availability || '',
         });
         setShowEdit(true);
     };
@@ -50,13 +63,52 @@ export default function ProfileView({ isTab = false }) {
     const handleSave = async () => {
         setSaving(true);
         try {
-            const { data: updated } = await db.profiles.create({ ...userProfile, ...editData });
+            // salary_expectation puede venir como string formateado → limpiar a número
+            const payload = {
+                ...userProfile,
+                ...editData,
+                salary_expectation: editData.salary_expectation
+                    ? Number(onlyDigits(editData.salary_expectation))
+                    : null,
+            };
+            const { data: updated, error } = await db.profiles.create(payload);
+            if (error) {
+                logError('PROFILE_SAVE', error.message, { code: error.code, details: error.details });
+                return;
+            }
             if (updated) dispatch({ type: Actions.SET_PROFILE, payload: updated });
             setShowEdit(false);
         } catch (err) {
-            console.error('[ProfileView]', err);
+            logError('PROFILE_SAVE_THROW', err?.message || String(err), { stack: err?.stack });
         } finally {
             setSaving(false);
+        }
+    };
+
+    // ── Cambiar foto de perfil ──
+    const handleAvatarChange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploadingAvatar(true);
+        try {
+            const publicUrl = await db.storage.uploadImage(file, 'avatars');
+            if (!publicUrl) {
+                logError('AVATAR_UPLOAD', 'uploadImage devolvió null (tipo/tamaño o storage)');
+                return;
+            }
+            const { data: updated, error } = await db.profiles.create({
+                ...userProfile, avatar_url: publicUrl,
+            });
+            if (error) {
+                logError('AVATAR_SAVE', error.message, { code: error.code });
+                return;
+            }
+            if (updated) dispatch({ type: Actions.SET_PROFILE, payload: updated });
+        } catch (err) {
+            logError('AVATAR_THROW', err?.message || String(err), { stack: err?.stack });
+        } finally {
+            setUploadingAvatar(false);
+            if (avatarInputRef.current) avatarInputRef.current.value = '';
         }
     };
 
@@ -105,6 +157,25 @@ export default function ProfileView({ isTab = false }) {
                         ) : (
                             <div className="pv__avatar-fallback">{initial}</div>
                         )}
+                        {/* Botón cambiar foto */}
+                        <button
+                            type="button"
+                            className="pv__avatar-edit"
+                            onClick={() => avatarInputRef.current?.click()}
+                            disabled={uploadingAvatar}
+                            aria-label="Cambiar foto de perfil"
+                        >
+                            <span className="material-symbols-rounded">
+                                {uploadingAvatar ? 'hourglass_top' : 'photo_camera'}
+                            </span>
+                        </button>
+                        <input
+                            ref={avatarInputRef}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={handleAvatarChange}
+                            style={{ display: 'none' }}
+                        />
                     </div>
 
                     <h2 className="pv__name">{p.full_name || 'Sin nombre'}</h2>
@@ -322,19 +393,19 @@ export default function ProfileView({ isTab = false }) {
                         </div>
 
                         <div className="pv-edit-modal__body">
+                            {/* Campos de texto simples */}
                             {[
-                                { key: 'full_name',          label: 'Nombre completo',              placeholder: 'Tu nombre completo',   type: 'text'   },
-                                { key: 'headline',           label: 'Cargo / Título profesional',   placeholder: 'Ej: Frontend Developer', type: 'text'   },
-                                { key: 'city',               label: 'Ciudad',                       placeholder: 'Ej: Santiago',          type: 'text'   },
-                                { key: 'salary_expectation', label: 'Pretensión salarial (USD/mes)', placeholder: 'Ej: 3000',              type: 'number' },
-                            ].map(({ key, label, placeholder, type }) => (
+                                { key: 'full_name', label: 'Nombre completo',            placeholder: 'Tu nombre completo' },
+                                { key: 'headline',  label: 'Cargo / Título profesional', placeholder: 'Ej: Frontend Developer' },
+                                { key: 'city',      label: 'Ciudad',                     placeholder: 'Ej: Santiago' },
+                            ].map(({ key, label, placeholder }) => (
                                 <div key={key} className="pv-edit-field">
                                     <label className="pv-edit-label" htmlFor={`pv-edit-${key}`}>{label}</label>
                                     <input
                                         id={`pv-edit-${key}`}
                                         name={key}
                                         className="pv-edit-input"
-                                        type={type}
+                                        type="text"
                                         value={editData[key] || ''}
                                         onChange={(e) => setEditData({ ...editData, [key]: e.target.value })}
                                         placeholder={placeholder}
@@ -342,6 +413,37 @@ export default function ProfileView({ isTab = false }) {
                                 </div>
                             ))}
 
+                            {/* Sobre mí */}
+                            <div className="pv-edit-field">
+                                <label className="pv-edit-label" htmlFor="pv-edit-bio">Sobre mí</label>
+                                <textarea
+                                    id="pv-edit-bio"
+                                    name="bio"
+                                    className="pv-edit-input"
+                                    rows={3}
+                                    value={editData.bio || ''}
+                                    onChange={(e) => setEditData({ ...editData, bio: e.target.value })}
+                                    placeholder="Cuéntale a las empresas quién eres…"
+                                    style={{ resize: 'vertical', minHeight: 72, fontFamily: 'inherit' }}
+                                />
+                            </div>
+
+                            {/* Pretensión salarial con separador de miles */}
+                            <div className="pv-edit-field">
+                                <label className="pv-edit-label" htmlFor="pv-edit-salary">Pretensión salarial (USD/mes)</label>
+                                <input
+                                    id="pv-edit-salary"
+                                    name="salary_expectation"
+                                    className="pv-edit-input"
+                                    type="text"
+                                    inputMode="numeric"
+                                    value={fmtThousands(editData.salary_expectation)}
+                                    onChange={(e) => setEditData({ ...editData, salary_expectation: onlyDigits(e.target.value) })}
+                                    placeholder="Ej: 3.000.000"
+                                />
+                            </div>
+
+                            {/* Modalidad */}
                             <div className="pv-edit-field">
                                 <label className="pv-edit-label" htmlFor="pv-edit-work_modality">Modalidad preferida</label>
                                 <select
@@ -355,6 +457,23 @@ export default function ProfileView({ isTab = false }) {
                                     <option value="Remoto">Remoto</option>
                                     <option value="Híbrido">Híbrido</option>
                                     <option value="Presencial">Presencial</option>
+                                </select>
+                            </div>
+
+                            {/* Disponibilidad */}
+                            <div className="pv-edit-field">
+                                <label className="pv-edit-label" htmlFor="pv-edit-availability">Disponibilidad</label>
+                                <select
+                                    id="pv-edit-availability"
+                                    name="availability"
+                                    className="pv-edit-select"
+                                    value={editData.availability || ''}
+                                    onChange={(e) => setEditData({ ...editData, availability: e.target.value })}
+                                >
+                                    <option value="">Selecciona disponibilidad</option>
+                                    {AVAILABILITY_OPTIONS.map((o) => (
+                                        <option key={o.value} value={o.value}>{o.label}</option>
+                                    ))}
                                 </select>
                             </div>
                         </div>

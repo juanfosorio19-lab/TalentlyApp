@@ -12,10 +12,10 @@ import { db } from '../../lib/supabase';
 import './MainApp.css';
 import './FiltersView.css';
 
+// Mensajes se accede desde Matches (cada match abre su chat), por eso no es tab.
 const TABS = [
     { id: 'swipe',    label: 'Explorar',  icon: 'style' },
     { id: 'matches',  label: 'Matches',   icon: 'grid_view' },
-    { id: 'messages', label: 'Mensajes',  icon: 'chat_bubble_outline' },
     { id: 'profile',  label: 'Perfil',    icon: 'person_outline' },
 ];
 

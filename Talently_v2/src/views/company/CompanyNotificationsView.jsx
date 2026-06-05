@@ -38,7 +38,7 @@ export default function CompanyNotificationsView() {
     const [loading, setLoading] = useState(true);
 
     const load = useCallback(async () => {
-        if (!userId) return;
+        if (!userId) { setLoading(false); return; }
         setLoading(true);
         const { data } = await db.notifications.getByUser(userId);
         setNotifications(data || []);

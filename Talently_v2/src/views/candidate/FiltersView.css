@@ -158,7 +158,7 @@
 .fv__chip--active {
     border-color: var(--primary);
     background: var(--primary);
-    color: var(--text-inverse);
+    color: var(--text-on-primary);
 }
 
 /* ── Select ── */

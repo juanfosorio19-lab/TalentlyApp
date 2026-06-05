@@ -241,6 +241,11 @@
        NO se sobreescribe en [data-theme='dark'] — diferencia clave con
        --text-inverse que sí se invierte. */
     --text-on-dark: #FFFFFF;
+
+    /* Texto sobre fondo --primary (chips activos, botones primary). SIEMPRE
+       blanco porque --primary es azul en light Y dark. NO usar --text-inverse
+       aquí: en dark mode se vuelve oscuro y queda invisible sobre el azul. */
+    --text-on-primary: #FFFFFF;
 }
 
 /* ═══════════════════════════════════════════

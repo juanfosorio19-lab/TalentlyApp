@@ -548,3 +548,25 @@
     opacity: 0.55;
     cursor: not-allowed;
 }
+
+/* Botón cambiar foto de perfil (sobre el avatar) */
+.pv__avatar-wrap { position: relative; }
+.pv__avatar-edit {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--surface);
+    background: var(--primary);
+    color: var(--text-on-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    padding: 0;
+}
+.pv__avatar-edit .material-symbols-rounded { font-size: 17px; }
+.pv__avatar-edit:disabled { opacity: 0.6; cursor: default; }

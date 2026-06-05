@@ -65,7 +65,8 @@ export default function NotificationsView() {
     const [error, setError] = useState(null);
 
     const load = useCallback(async () => {
-        if (!userId) return;
+        // Sin userId no quedarse en spinner infinito (bug: early return dejaba loading=true).
+        if (!userId) { setLoading(false); return; }
         setLoading(true);
         setError(null);
         const { data, error: fetchError } = await db.notifications.getByUser(userId);
