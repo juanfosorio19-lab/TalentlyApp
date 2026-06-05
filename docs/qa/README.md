@@ -88,6 +88,7 @@ Si Claude Preview no está disponible localmente, alternativa: usar el MCP de Cl
 | 2026-05-19 (v2 con 13 secciones) | 11/13 + 2 ⚠️ | — | Inaugurar Sections 12 (Routing Guards) y 13 (Business Rules estáticas). Sin críticos. 2 warns menores: drift de migración 012b + hooks con early return sin setLoading(false). |
 | 2026-05-19 (qa-e2e v2 refactor) | — | 17/18 + 1 🔴 + 1 🟡 | Suite 0 parcial (Supabase bloquea emails sintéticos). Suite 1 Business Rules 10/10 PASS. Suite 2 Path Matrix descubrió **bug nuevo**: candidato puede acceder /company/dashboard — falta RoleGate. |
 | 2026-05-19 (qa-auditor v2.1 post-RoleGate) | 12/13 + 1 ⚠️ | — | RoleGate detectado ✅, BR-S11 y BR-S12 nuevas y PASS. Único warn: drift 012b (housekeeping). Capas de routing: PrivateRoute → OnboardingGate → RoleGate. |
+| 2026-05-19 (qa-auditor v3 post-editores) | 13/13 ✅ | — | 🔴 Detectó regresión: 6 columnas de empresa en PROFILE_PUBLIC_COLS no existían en profiles (habría roto swipe/matches). Corregido con migración 016 antes de compilar. |
 
 ## Tips para interpretar los reportes
 

@@ -18,6 +18,8 @@
 | 012_company_positions_seniority_metadata.sql | Agregar columnas `icon` a company_positions y `years_range` a seniority_levels + populación | ✅ Sí (2026-05-18) |
 | 013_culture_benefits_tech_metadata.sql | Popular `icon` en company_culture_values y company_benefits + nueva columna `abbreviation` en tech_stack | ✅ Sí (2026-05-18) |
 | 014_normalize_modality_values.sql | Normalizar `modality`/`work_modality`/`work_model` a 'Remoto'/'Híbrido'/'Presencial' (sin i18n por ahora) | ✅ Sí (2026-05-18) |
+| 015_client_logs.sql | Tabla client_logs para debugging remoto del APK (anon insert, lectura via MCP) | ✅ Sí (2026-05-19) |
+| 016_company_profile_missing_columns.sql | Columnas faltantes en profiles: company_uniqueness, linkedin_url, company_photos, company_positions, seniority_levels, company_tags | ✅ Sí (2026-05-19) |
 
 ## Cómo aplicar una migración nueva
 1. Ejecutar el script en Supabase SQL Editor (app.supabase.com > SQL Editor)
