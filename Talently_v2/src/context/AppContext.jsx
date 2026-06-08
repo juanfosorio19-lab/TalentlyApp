@@ -3,6 +3,7 @@
 // Usa useReducer para actualizaciones predecibles y trazables.
 import { createContext, useContext, useReducer, useEffect } from 'react';
 import { db } from '../lib/supabase';
+import { useAuth } from './AuthContext';
 
 // ═══════════════════════════════════════════
 // Estado Inicial
@@ -177,6 +178,22 @@ const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
     const [state, dispatch] = useReducer(appReducer, initialState);
+    // AppProvider está dentro de AuthProvider (ver main.jsx), así que puede leer
+    // la sesión de AuthContext.
+    const { user, profile } = useAuth();
+
+    // ── Sincronizar sesión AuthContext → AppContext ──
+    // CRÍTICO: sin esto, al reabrir la app con sesión persistida (cold start),
+    // AuthContext detecta al user pero AppContext.currentUser/userProfile quedan
+    // null → ProfileView y demás vistas que usan useApp() no cargan (spinner
+    // infinito, sin botón de logout accesible).
+    useEffect(() => {
+        dispatch({ type: Actions.SET_USER, payload: user || null });
+    }, [user]);
+
+    useEffect(() => {
+        if (profile) dispatch({ type: Actions.SET_PROFILE, payload: profile });
+    }, [profile]);
 
     // ── Cargar reference data al montar (datos públicos, no requieren auth) ──
     useEffect(() => {
