@@ -6,9 +6,9 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function OnboardingGate() {
-    const { user, profile, loading } = useAuth();
+    const { user, profile, authReady } = useAuth();
 
-    if (loading) {
+    if (!authReady) {
         return (
             <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center',

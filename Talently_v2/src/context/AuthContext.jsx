@@ -3,37 +3,86 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { supabase, db } from '../lib/supabase';
+import { logError } from '../lib/errorLogger';
 
 const AuthContext = createContext(null);
 
+// Si el fetch del perfil se cuelga (WebView Android), no dejamos el routing
+// pinneado para siempre: tras este tiempo seguimos sin perfil (el tipo se
+// deriva de user_metadata). Es una RED DE SEGURIDAD; en condiciones normales
+// el fetch resuelve en <1s.
+const PROFILE_TIMEOUT_MS = 8000;
+function withTimeout(promise, ms, label) {
+    return Promise.race([
+        promise,
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error(`${label}_timeout_${ms}ms`)), ms)
+        ),
+    ]);
+}
+
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(null);          // auth user object
-    const [profile, setProfile] = useState(null);     // profiles row (has user_type)
-    const [loading, setLoading] = useState(true);     // initial session check
+    const [user, setUser] = useState(null);                       // auth user object
+    const [profile, setProfile] = useState(null);                 // profiles row (has user_type)
+    const [loading, setLoading] = useState(true);                 // chequeo inicial de sesión
+    const [profileFetchedFor, setProfileFetchedFor] = useState(null); // user.id cuyo perfil YA resolvió
 
     useEffect(() => {
         let isMounted = true;
 
+        // ⚠️ CRÍTICO: el fetch del perfil se hace DIFERIDO (setTimeout 0), FUERA
+        // del callback de onAuthStateChange. supabase-js AWAITa la notificación
+        // de subscribers DENTRO de signInWithPassword/signUp. Si el callback hace
+        // `await getById(...)`, esas llamadas no resuelven hasta que el fetch
+        // termine; en el WebView de Android ese primer fetch autenticado se
+        // cuelga → login pegado en "Ingresando…" sin error. Diferirlo lo saca
+        // del lock de auth y deja que signIn resuelva de inmediato.
+        const loadProfile = (uid, email) => {
+            setTimeout(async () => {
+                logError('AUTH_PROFILE', 'fetch:start', { uid }, { level: 'info', overlay: false, userEmail: email });
+                try {
+                    const { data, error } = await withTimeout(
+                        db.profiles.getById(uid), PROFILE_TIMEOUT_MS, 'profile_fetch'
+                    );
+                    if (!isMounted) return;
+                    if (error) {
+                        logError('AUTH_PROFILE', 'fetch:error', { msg: error.message, code: error.code },
+                            { level: 'warn', overlay: false, userEmail: email });
+                    } else {
+                        logError('AUTH_PROFILE', `fetch:ok profile=${data ? 'yes' : 'none'}`, null,
+                            { level: 'info', overlay: false, userEmail: email });
+                    }
+                    setProfile(data ?? null);
+                } catch (e) {
+                    if (!isMounted) return;
+                    // Timeout o fallo de red: NO bloquear el routing. Seguimos sin
+                    // perfil; RoleRedirect/OnboardingGate usan user_metadata.
+                    logError('AUTH_PROFILE', 'fetch:timeout_or_throw', { msg: e?.message, name: e?.name },
+                        { level: 'error', overlay: false, userEmail: email });
+                    setProfile(null);
+                } finally {
+                    if (isMounted) setProfileFetchedFor(uid);
+                }
+            }, 0);
+        };
+
         // Patrón idiomático de Supabase JS: NO llamar getSession()/getUser()
         // explícitamente — onAuthStateChange dispara INITIAL_SESSION al subscribir
-        // (después de hidratar storage). Evita el LockManager y el AbortError
-        // que causa StrictMode con dobles mounts.
+        // (después de hidratar storage). El callback es SÍNCRONO a propósito.
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (event, session) => {
+            (event, session) => {
                 if (!isMounted) return;
                 const newUser = session?.user ?? null;
                 setUser(newUser);
+                // Loading (chequeo inicial) se cierra en el primer evento.
+                setLoading(false);
 
                 if (newUser) {
-                    const { data: profileData } = await db.profiles.getById(newUser.id);
-                    if (!isMounted) return;
-                    setProfile(profileData);
+                    loadProfile(newUser.id, newUser.email);
                 } else {
                     setProfile(null);
+                    setProfileFetchedFor(null);
                 }
-                // Loading se setea false en el primer evento (INITIAL_SESSION
-                // o el primer SIGNED_IN/SIGNED_OUT que llegue).
-                if (isMounted) setLoading(false);
             }
         );
 
@@ -82,11 +131,16 @@ export function AuthProvider({ children }) {
     // Derived state
     const isAuthenticated = !!user;
     const userType = profile?.user_type || null; // 'candidate' | 'company' | null
+    // authReady: la sesión inicial ya se chequeó Y (no hay user, o el perfil de
+    // ESTE user ya resolvió). Los guards (PrivateRoute/OnboardingGate/RoleRedirect)
+    // esperan a authReady para no enrutar antes de tener el perfil cargado.
+    const authReady = !loading && (!user || profileFetchedFor === user.id);
 
     const value = {
         user,
         profile,
         loading,
+        authReady,
         isAuthenticated,
         userType,
         // Convenience methods
@@ -94,6 +148,7 @@ export function AuthProvider({ children }) {
             await db.auth.signOut();
             setUser(null);
             setProfile(null);
+            setProfileFetchedFor(null);
         },
         refreshProfile: async () => {
             if (user) {

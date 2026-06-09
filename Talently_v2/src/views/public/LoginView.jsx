@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
 import { signInWithGoogle } from '../../lib/oauth';
 import { logError } from '../../lib/errorLogger';
-import { useApp, Actions } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import './auth.css';
 
@@ -21,7 +20,6 @@ const GoogleIcon = () => (
 
 export default function LoginView() {
     const navigate = useNavigate();
-    const { dispatch } = useApp();
     const { isAuthenticated, loading: authLoading } = useAuth();
 
     const [email, setEmail] = useState('');
@@ -69,7 +67,7 @@ export default function LoginView() {
         setLoading(true);
 
         try {
-            const { data, error: signInError } = await db.auth.signIn(email, password);
+            const { error: signInError } = await db.auth.signIn(email, password);
 
             if (signInError) {
                 // Log detallado para diagnosticar (status, code, name) — ver client_logs
@@ -87,36 +85,13 @@ export default function LoginView() {
                 return;
             }
 
-            const user = data.user;
+            logError('AUTH_LOGIN', 'signin:ok', null, { level: 'info', overlay: false, userEmail: email });
 
-            // Guardar usuario en estado global
-            dispatch({ type: Actions.SET_USER, payload: user });
-
-            // Obtener perfil para determinar tipo (candidate / company)
-            const { data: profileData } = await db.profiles.getById(user.id);
-
-            // Determinar tipo: profile (si existe) o user_metadata (signup pendiente de onboarding)
-            const userType = profileData?.user_type || user?.user_metadata?.user_type || 'candidate';
-
-            if (profileData) {
-                dispatch({ type: Actions.SET_PROFILE, payload: profileData });
-            }
-
-            // Si NO hay profile o el onboarding no se completó → wizard
-            if (!profileData || !profileData.onboarding_completed) {
-                navigate(
-                    userType === 'company' ? '/onboarding/company' : '/onboarding/candidate',
-                    { replace: true }
-                );
-                return;
-            }
-
-            // Onboarding completo → dashboard del rol
-            if (userType === 'company') {
-                navigate('/company/dashboard', { replace: true });
-            } else {
-                navigate('/app', { replace: true });
-            }
+            // El routing lo decide RoleRedirect (que espera a que el perfil cargue
+            // vía AuthContext.authReady). NO hacemos getById aquí: hacerlo
+            // duplicaba el fetch y, en el WebView, contribuía al cuelgue de
+            // "Ingresando…". Solo navegamos al hub de redirección.
+            navigate('/dashboard', { replace: true });
         } catch (err) {
             // Esto captura "Failed to fetch", errores de red/TLS del WebView, etc.
             logError('AUTH_LOGIN_THROW', err?.message || String(err), {

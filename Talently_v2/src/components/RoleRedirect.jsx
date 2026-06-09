@@ -7,9 +7,9 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function RoleRedirect() {
-    const { user, profile, userType, loading } = useAuth();
+    const { user, profile, userType, authReady } = useAuth();
 
-    if (loading) return null;
+    if (!authReady) return null;
     if (!user) return <Navigate to="/login" replace />;
 
     // Si el profile aún no existe en BD (user recién creado), el tipo viene
