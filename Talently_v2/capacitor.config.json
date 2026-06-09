@@ -17,6 +17,11 @@
     },
     "Keyboard": {
       "resize": "body"
+    },
+    "CapacitorUpdater": {
+      "autoUpdate": false,
+      "resetWhenUpdate": true,
+      "appReadyTimeout": 10000
     }
   }
 }

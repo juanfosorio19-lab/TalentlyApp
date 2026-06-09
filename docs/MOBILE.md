@@ -234,3 +234,48 @@ Talently_v2/
 ├── dist/                     ← build de Vite (NO versionar)
 └── src/lib/oauth.js          ← helper OAuth web/nativo
 ```
+
+---
+
+## 8. Auto-actualización OTA (Over-The-Air) — capa web
+
+Desde que el APK incluye `@capgo/capacitor-updater`, **las actualizaciones de la
+capa web (React/JS/CSS) llegan solas, sin reinstalar el APK**. La app, al abrir,
+chequea si hay un bundle nuevo, lo descarga en background y lo aplica en el
+siguiente arranque (silencioso).
+
+### Qué se actualiza por OTA y qué no
+| Cambio | OTA |
+|---|---|
+| React / JS / CSS / lógica / vistas / fixes | ✅ Sí |
+| Migraciones Supabase (backend) | ✅ Sí (no depende del APK) |
+| Plugins nativos, permisos, capacitor.config, splash/icono | ❌ No → regenerar APK |
+
+### Arquitectura
+- **Manifest**: tabla Supabase `public.app_bundles` (version, url, mandatory). La app
+  lee la fila más reciente. INSERT solo `service_role` (anti-inyección).
+- **Archivos**: el `dist.zip` de cada versión se aloja en **GitHub Releases**
+  (`ota-<sha>`). URL pública de descarga.
+- **Cliente**: `src/lib/otaUpdate.js` — `notifyAppReady()` (rollback si el bundle
+  nuevo crashea) + descarga al abrir + aplica al salir de la app.
+
+### Publicar una actualización OTA (lo ejecuta el asistente)
+```bash
+bash scripts/release-ota.sh
+# imprime version + url; luego registrar en Supabase:
+#   INSERT INTO public.app_bundles (version, url, notes) VALUES ('<sha>', '<url>', 'OTA');
+```
+La próxima vez que abras la app, baja el bundle; al reabrir, ya está actualizada.
+
+### Seguridad
+- La app solo **lee** `app_bundles` (anon select) y descarga un zip público.
+- Publicar un bundle requiere (a) acceso de escritura al repo GitHub (subir el
+  release) y (b) `service_role` de Supabase (insertar la fila) → un atacante con
+  la anon key NO puede inyectar un bundle.
+- `notifyAppReady()` + `appReadyTimeout` hacen rollback automático si un bundle
+  nuevo no arranca → no te quedas con una app rota.
+
+### Setup inicial (una sola vez)
+El APK debe generarse **una vez** con el plugin ya instalado (este commit). A
+partir de ahí, las actualizaciones web son OTA. Regenerar el APK solo es
+necesario para cambios nativos.

@@ -5,6 +5,9 @@ initErrorLogger(); // captura errores antes de todo
 import { initCapacitor } from './lib/capacitorInit';
 initCapacitor(); // config nativa (StatusBar) — no-op en web
 
+import { initOtaUpdate } from './lib/otaUpdate';
+initOtaUpdate(); // auto-actualización OTA de la capa web — no-op en web
+
 // Fonts via npm (no CDN — ver ERROR_LOG.md #1)
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
