@@ -6,15 +6,28 @@ const YEAR_OPTIONS = Array.from(
     (_, i) => new Date().getFullYear() + 1 - i
 );
 
+// Tipos de estudio: cubre pregrado y formación continua (postgrados, cursos…).
+const STUDY_TYPES = [
+    'Educación media',
+    'Técnico',
+    'Universitario (Pregrado)',
+    'Diplomado',
+    'Postítulo',
+    'Magíster',
+    'MBA',
+    'Doctorado / PhD',
+    'Curso / Certificación',
+];
+
 export default function Step5_Educacion({ data, onNext, saving }) {
     const [entries, setEntries] = useState(data.education || []);
     const [showForm, setShowForm] = useState(false);
-    const [formState, setFormState] = useState({ institution: '', degree: '', year: '' });
+    const [formState, setFormState] = useState({ institution: '', degree: '', year: '', level: '' });
 
     const addEntry = () => {
         if (!formState.institution.trim() || !formState.degree.trim()) return;
         setEntries([...entries, { ...formState }]);
-        setFormState({ institution: '', degree: '', year: '' });
+        setFormState({ institution: '', degree: '', year: '', level: '' });
         setShowForm(false);
     };
 
@@ -50,7 +63,9 @@ export default function Step5_Educacion({ data, onNext, saving }) {
                         </div>
                         <div className="ob-edu-card-body">
                             <h3 className="ob-edu-card-title">{entry.degree}</h3>
-                            <p className="ob-edu-card-sub">{entry.institution}</p>
+                            <p className="ob-edu-card-sub">
+                                {[entry.level, entry.institution].filter(Boolean).join(' · ')}
+                            </p>
                             {entry.year && (
                                 <p className="ob-edu-card-date">Egreso {entry.year}</p>
                             )}
@@ -70,6 +85,23 @@ export default function Step5_Educacion({ data, onNext, saving }) {
                 {showForm ? (
                     <div className="ob-inline-form">
                         <p className="ob-inline-form-label">Nueva entrada</p>
+
+                        <div className="ob-field">
+                            <label className="ob-label">Tipo de estudio</label>
+                            <div className="ob-input-wrapper">
+                                <span className="material-symbols-rounded ob-input-icon">school</span>
+                                <select
+                                    className="ob-select"
+                                    value={formState.level}
+                                    onChange={(e) => setFormState({ ...formState, level: e.target.value })}
+                                >
+                                    <option value="">Selecciona el tipo</option>
+                                    {STUDY_TYPES.map((t) => (
+                                        <option key={t} value={t}>{t}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
 
                         <div className="ob-field">
                             <label className="ob-label" htmlFor="edu-degree">Título / Carrera *</label>

@@ -39,6 +39,7 @@ export default function CandidateOnboarding() {
         formData,
         loading,
         saving,
+        saveError,
         totalSteps,
         saveStep,
         goBack,
@@ -89,6 +90,14 @@ export default function CandidateOnboarding() {
                             style={{ width: `${progress}%` }}
                         />
                     </div>
+                </div>
+            )}
+
+            {/* ── Error de guardado (el paso NO avanza si falla el upsert) ── */}
+            {saveError && (
+                <div className="ob-error" role="alert">
+                    <span className="material-symbols-rounded">error</span>
+                    {saveError}
                 </div>
             )}
 

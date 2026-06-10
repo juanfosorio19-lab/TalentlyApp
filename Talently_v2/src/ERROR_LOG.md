@@ -162,3 +162,14 @@
 - **CAUSA RAÍZ:** `index.html` declara `viewport-fit=cover`, así que Capacitor 8 (plugin SystemBars integrado) delega los insets a la capa web inyectando `--safe-area-inset-*` en `<html>`… pero ningún CSS los usaba
 - **SOLUCIÓN APLICADA:** Fallbacks `--safe-area-inset-*: env(safe-area-inset-*, 0px)` en `:root` + padding en `.app-container` y en los elementos `position: fixed` (navbar, bottom sheets, botones de acción)
 - **PATRÓN A EVITAR:** Todo elemento `position: fixed` anclado a `top: 0` o `bottom: 0` debe compensar con `var(--safe-area-inset-top/bottom, 0px)`. En web vale 0 y no afecta.
+
+---
+
+## Error #15 — Onboarding nunca guardó nada: upsert fallaba en silencio por columnas inexistentes
+
+- **ERROR:** El wizard avanzaba los 12 pasos pero `profiles` nunca recibió la fila; al final rebotaba al paso 1
+- **SÍNTOMA:** `client_logs` mostraba `AUTH_PROFILE fetch:ok profile=none` SIEMPRE para el usuario de prueba, incluso después de "completar" el onboarding (2 veces)
+- **CONTEXTO:** `useOnboardingCandidate`/`useOnboardingCompany` → `db.profiles.create` (upsert)
+- **CAUSA RAÍZ:** Doble falla. (1) Los hooks upserteaban columnas que no existían (`onboarding_step`, `company_onboarding_step`, `professional_areas`, `company_type`, `selection_process`) y tipos incompatibles (`experience` text para un array, `languages` text[] para objetos) → 42703/22P02 en CADA paso. (2) El resultado del upsert se ignoraba (`const { data: profile } = ...` sin leer `error`) → el wizard avanzaba en memoria fingiendo éxito.
+- **SOLUCIÓN APLICADA:** Migración 019 (columnas + tipos) + los hooks ahora chequean `error`: no avanzan de paso, muestran `ob-error` y loguean a `client_logs` con contexto `ONBOARDING`.
+- **PATRÓN A EVITAR:** NUNCA ignorar el `error` de un write a Supabase — el cliente JS no lanza excepción, la devuelve. Y regla #4 del CLAUDE.md: verificar que las columnas existen antes de escribirlas (este es el mismo patrón de la migración 016, ahora del lado candidato).

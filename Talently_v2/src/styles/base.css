@@ -44,6 +44,16 @@ select {
     appearance: none;
 }
 
+/* Checkbox/radio: appearance:none los deja INVISIBLES (solo se ve el label).
+   Restaurar el control nativo; el color lo da accent-color. */
+input[type='checkbox'],
+input[type='radio'] {
+    -webkit-appearance: auto;
+    -moz-appearance: auto;
+    appearance: auto;
+    accent-color: var(--primary);
+}
+
 /* Focus en inputs: sin outline azul. El border del wrapper y el caret marcan
    donde escribe el usuario. Para accesibilidad de teclado, el cambio sutil
    de border-color (definido en cada vista) es suficiente. */

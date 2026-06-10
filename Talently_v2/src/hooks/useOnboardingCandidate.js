@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase, db } from '../lib/supabase';
 import { useApp, Actions } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
+import { logError } from '../lib/errorLogger';
 
 const TOTAL_STEPS = 12;
 
@@ -19,6 +20,7 @@ export default function useOnboardingCandidate() {
     const [formData, setFormData] = useState({});
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [saveError, setSaveError] = useState('');
 
     // ── Cargar progreso al montar ──
     useEffect(() => {
@@ -51,6 +53,7 @@ export default function useOnboardingCandidate() {
                         avatar_url: profile.avatar_url || '',
                         cv_url: profile.cv_url || '',
                         interests: profile.interests || [],
+                        currency: profile.currency || 'CLP',
                     });
                 }
             } catch (err) {
@@ -66,6 +69,7 @@ export default function useOnboardingCandidate() {
     // ── Guardar paso ──
     const saveStep = useCallback(async (stepNumber, stepData) => {
         setSaving(true);
+        setSaveError('');
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
@@ -77,11 +81,22 @@ export default function useOnboardingCandidate() {
             setFormData(merged);
 
             // Upsert en profiles
-            const { data: profile } = await db.profiles.create({
+            const { data: profile, error } = await db.profiles.create({
                 ...merged,
                 user_type: merged.user_type || 'candidate',
                 onboarding_step: nextStep,
             });
+
+            // ⚠️ Si el upsert falla NO avanzamos: avanzar fingiría que se
+            // guardó y el wizard partiría de cero en el próximo arranque
+            // (bug del 2026-06-10: columnas faltantes en profiles fallaban
+            // aquí en silencio durante los 12 pasos).
+            if (error) {
+                logError('ONBOARDING', `saveStep:error paso=${stepNumber} ${error.message}`,
+                    { code: error.code }, { overlay: false, userEmail: user.email });
+                setSaveError('No se pudo guardar este paso. Revisa tu conexión e intenta de nuevo.');
+                return;
+            }
 
             if (profile) {
                 dispatch({ type: Actions.SET_PROFILE, payload: profile });
@@ -90,6 +105,8 @@ export default function useOnboardingCandidate() {
             setCurrentStep(nextStep);
         } catch (err) {
             console.error('[useOnboardingCandidate] Error saving step:', err);
+            logError('ONBOARDING', `saveStep:throw paso=${stepNumber} ${err?.message}`, null, { overlay: false });
+            setSaveError('No se pudo guardar este paso. Revisa tu conexión e intenta de nuevo.');
         } finally {
             setSaving(false);
         }
@@ -103,15 +120,24 @@ export default function useOnboardingCandidate() {
     // ── Completar onboarding ──
     const completeOnboarding = useCallback(async () => {
         setSaving(true);
+        setSaveError('');
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            const { data: profile } = await db.profiles.create({
+            const { data: profile, error } = await db.profiles.create({
                 ...formData,
+                user_type: formData.user_type || 'candidate',
                 onboarding_completed: true,
                 onboarding_step: TOTAL_STEPS,
             });
+
+            if (error) {
+                logError('ONBOARDING', `complete:error ${error.message}`,
+                    { code: error.code }, { overlay: false, userEmail: user.email });
+                setSaveError('No se pudo completar el registro. Intenta de nuevo.');
+                return;
+            }
 
             if (profile) {
                 dispatch({ type: Actions.SET_PROFILE, payload: profile });
@@ -145,6 +171,7 @@ export default function useOnboardingCandidate() {
         setFormData,
         loading,
         saving,
+        saveError,
         totalSteps: TOTAL_STEPS,
         saveStep,
         goBack,

@@ -1104,6 +1104,18 @@
     white-space: nowrap;
 }
 
+/* Selector de moneda (CLP/USD) como sufijo del input de salario */
+.ob-currency-select {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary);
+    background: transparent;
+    padding-right: 4px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
 /* ── Field hint text ── */
 .ob-field-hint {
     font-size: 0.75rem;

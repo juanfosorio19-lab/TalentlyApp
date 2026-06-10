@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase, db } from '../lib/supabase';
 import { useApp, Actions } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
+import { logError } from '../lib/errorLogger';
 
 const TOTAL_STEPS = 12;
 
@@ -19,6 +20,7 @@ export default function useOnboardingCompany() {
     const [formData, setFormData] = useState({});
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [saveError, setSaveError] = useState('');
 
     // ── Cargar progreso al montar ──
     useEffect(() => {
@@ -70,6 +72,7 @@ export default function useOnboardingCompany() {
     // ── Guardar paso ──
     const saveStep = useCallback(async (stepNumber, stepData) => {
         setSaving(true);
+        setSaveError('');
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
@@ -78,15 +81,26 @@ export default function useOnboardingCompany() {
             const merged = { ...formData, ...stepData };
             setFormData(merged);
 
-            await db.profiles.create({
+            const { error } = await db.profiles.create({
                 ...merged,
                 user_type: merged.user_type || 'company',
                 company_onboarding_step: nextStep,
             });
 
+            // ⚠️ Si el upsert falla NO avanzamos (ver ERROR_LOG: el wizard
+            // avanzaba en memoria sin guardar nada y partía de cero después).
+            if (error) {
+                logError('ONBOARDING', `saveStep:error empresa paso=${stepNumber} ${error.message}`,
+                    { code: error.code }, { overlay: false, userEmail: user.email });
+                setSaveError('No se pudo guardar este paso. Revisa tu conexión e intenta de nuevo.');
+                return;
+            }
+
             setCurrentStep(nextStep);
         } catch (err) {
             console.error('[useOnboardingCompany] Error saving step:', err);
+            logError('ONBOARDING', `saveStep:throw empresa paso=${stepNumber} ${err?.message}`, null, { overlay: false });
+            setSaveError('No se pudo guardar este paso. Revisa tu conexión e intenta de nuevo.');
         } finally {
             setSaving(false);
         }
@@ -100,15 +114,24 @@ export default function useOnboardingCompany() {
     // ── Completar onboarding ──
     const completeOnboarding = useCallback(async () => {
         setSaving(true);
+        setSaveError('');
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            const { data: profile } = await db.profiles.create({
+            const { data: profile, error } = await db.profiles.create({
                 ...formData,
+                user_type: formData.user_type || 'company',
                 onboarding_completed: true,
                 company_onboarding_step: TOTAL_STEPS,
             });
+
+            if (error) {
+                logError('ONBOARDING', `complete:error empresa ${error.message}`,
+                    { code: error.code }, { overlay: false, userEmail: user.email });
+                setSaveError('No se pudo completar el registro. Intenta de nuevo.');
+                return;
+            }
 
             if (profile) {
                 dispatch({ type: Actions.SET_PROFILE, payload: profile });
@@ -142,6 +165,7 @@ export default function useOnboardingCompany() {
         setFormData,
         loading,
         saving,
+        saveError,
         totalSteps: TOTAL_STEPS,
         saveStep,
         goBack,

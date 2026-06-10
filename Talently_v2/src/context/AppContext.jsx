@@ -4,6 +4,7 @@
 import { createContext, useContext, useReducer, useEffect } from 'react';
 import { db } from '../lib/supabase';
 import { useAuth } from './AuthContext';
+import { setStatusBarTheme } from '../lib/capacitorInit';
 
 // ═══════════════════════════════════════════
 // Estado Inicial
@@ -253,6 +254,9 @@ export function AppProvider({ children }) {
             root.classList.remove('dark-mode');
             document.body.classList.remove('dark-mode');
         }
+
+        // Status bar nativa acorde al tema (no-op en web).
+        setStatusBarTheme(state.darkMode);
     }, [state.darkMode]);
 
     // ── Persistencia: user type → localStorage ──
