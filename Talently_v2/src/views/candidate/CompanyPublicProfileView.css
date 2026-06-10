@@ -17,7 +17,7 @@
 /* ── Navbar ── */
 .cpv-nav {
     position: fixed;
-    top: 0;
+    top: var(--safe-area-inset-top, 0px);
     left: 0;
     right: 0;
     max-width: 448px;
@@ -385,7 +385,7 @@
 /* ── Botones de acción ── */
 .cpv-actions {
     position: fixed;
-    bottom: 2rem;
+    bottom: calc(2rem + var(--safe-area-inset-bottom, 0px));
     left: 0;
     width: 100%;
     padding: 0 2rem;

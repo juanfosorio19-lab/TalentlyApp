@@ -426,7 +426,7 @@
 /* ── Botones de acción ── */
 .cpp-actions {
     position: fixed;
-    bottom: 1.5rem;
+    bottom: calc(1.5rem + var(--safe-area-inset-bottom, 0px));
     left: 0;
     width: 100%;
     padding: 0 1.5rem;

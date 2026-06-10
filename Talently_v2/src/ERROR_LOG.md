@@ -140,3 +140,25 @@
 - **CAUSA RAÍZ:** Ruta `/auth/callback` no registrada en App.jsx o URL incorrecta en Supabase Dashboard
 - **SOLUCIÓN APLICADA:** Registrar `<Route path="/auth/callback" element={<AuthCallbackView />} />` fuera de `<PrivateRoute>`. Verificar que la Redirect URL en Supabase Dashboard → Authentication → URL Configuration coincide con `window.location.origin + '/auth/callback'`
 - **PATRÓN A EVITAR:** Nunca hardcodear la `redirectTo` URL. Usar `window.location.origin` para que funcione tanto en desarrollo (`localhost:5173`) como en producción.
+
+---
+
+## Error #13 — Al terminar el onboarding rebota al wizard (selección de tipo)
+
+- **ERROR:** Completar el onboarding navega a `/app/swipe` pero rebota a `/onboarding/candidate` (paso 1: ¿candidato o empresa?)
+- **SÍNTOMA:** Tras el último paso del onboarding, la app vuelve a la pantalla de selección de tipo de perfil
+- **CONTEXTO:** `useOnboardingCandidate.completeOnboarding` / `useOnboardingCompany.completeOnboarding` + `OnboardingGate`
+- **CAUSA RAÍZ:** Dos contextos desincronizados (mismo patrón del Error de hidratación AppContext/AuthContext). `completeOnboarding` actualizaba el perfil solo en **AppContext** (dispatch SET_PROFILE), pero los guards de routing (`OnboardingGate`, `RoleRedirect`, `RoleGate`) leen el perfil de **AuthContext**, que seguía con `onboarding_completed=false` (o `null` si el fetch post-login falló)
+- **SOLUCIÓN APLICADA:** `await refreshProfile()` (de `useAuth`) en ambos `completeOnboarding` antes de navegar
+- **PATRÓN A EVITAR:** Cualquier mutación de `profiles` que afecte el ROUTING (user_type, onboarding_completed) debe refrescar AuthContext, no solo AppContext. Los guards solo miran AuthContext.
+
+---
+
+## Error #14 — APK dibuja debajo de la status bar y la barra de gestos (Android 15+)
+
+- **ERROR:** La app usa toda la pantalla: el header queda bajo la hora/notificaciones y los botones bajo la barra de gestos
+- **SÍNTOMA:** "Paso X de 12" tapado por el reloj; botón "Continuar" cortado por la barra de navegación
+- **CONTEXTO:** APK con Capacitor 8 en Android 15+ (edge-to-edge forzado por el sistema; `StatusBar.setOverlaysWebView(false)` ya no aplica)
+- **CAUSA RAÍZ:** `index.html` declara `viewport-fit=cover`, así que Capacitor 8 (plugin SystemBars integrado) delega los insets a la capa web inyectando `--safe-area-inset-*` en `<html>`… pero ningún CSS los usaba
+- **SOLUCIÓN APLICADA:** Fallbacks `--safe-area-inset-*: env(safe-area-inset-*, 0px)` en `:root` + padding en `.app-container` y en los elementos `position: fixed` (navbar, bottom sheets, botones de acción)
+- **PATRÓN A EVITAR:** Todo elemento `position: fixed` anclado a `top: 0` o `bottom: 0` debe compensar con `var(--safe-area-inset-top/bottom, 0px)`. En web vale 0 y no afecta.

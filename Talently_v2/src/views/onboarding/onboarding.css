@@ -823,8 +823,20 @@
     gap: 10px;
 }
 
+/* min-width:0 permite que los inputs type=month (ancho intrínseco grande en
+   el WebView de Android) se encojan en vez de desbordar la tarjeta. */
 .ob-inline-row .ob-field {
     flex: 1;
+    min-width: 0;
+}
+
+.ob-inline-row .ob-input-wrapper {
+    min-width: 0;
+}
+
+.ob-inline-row .ob-input {
+    width: 100%;
+    min-width: 0;
 }
 
 .ob-inline-actions {

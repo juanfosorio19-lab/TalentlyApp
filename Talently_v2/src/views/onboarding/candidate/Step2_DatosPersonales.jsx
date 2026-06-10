@@ -7,7 +7,9 @@ export default function Step2_DatosPersonales({ data, onNext, saving }) {
     const [headline, setHeadline] = useState(data.headline || '');
     const [country, setCountry] = useState(data.country || '');
     const [city, setCity] = useState(data.city || '');
-    const [salary, setSalary] = useState(data.salary_expectation || '');
+    // salary guarda SOLO dígitos; en el input se muestra con separador de miles.
+    const [salary, setSalary] = useState(String(data.salary_expectation || ''));
+    const formatMiles = (digits) => (digits ? Number(digits).toLocaleString('es-CL') : '');
 
     const [countries, setCountries] = useState([]);
     const [cities, setCities] = useState([]);
@@ -36,7 +38,7 @@ export default function Step2_DatosPersonales({ data, onNext, saving }) {
             headline: headline.trim(),
             country,
             city,
-            salary_expectation: salary,
+            salary_expectation: salary ? Number(salary) : null,
         });
     };
 
@@ -132,10 +134,11 @@ export default function Step2_DatosPersonales({ data, onNext, saving }) {
                             id="ob-salary"
                             name="salary_expectation"
                             className="ob-input"
-                            type="number"
-                            placeholder="Ej: 3000"
-                            value={salary}
-                            onChange={(e) => setSalary(e.target.value)}
+                            type="text"
+                            inputMode="numeric"
+                            placeholder="Ej: 3.000"
+                            value={formatMiles(salary)}
+                            onChange={(e) => setSalary(e.target.value.replace(/\D/g, ''))}
                         />
                         <span className="ob-input-suffix">USD/mes</span>
                     </div>

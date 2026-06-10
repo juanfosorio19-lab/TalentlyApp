@@ -6,12 +6,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, db } from '../lib/supabase';
 import { useApp, Actions } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 
 const TOTAL_STEPS = 12;
 
 export default function useOnboardingCompany() {
     const navigate = useNavigate();
     const { dispatch } = useApp();
+    const { refreshProfile } = useAuth();
 
     const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState({});
@@ -112,13 +114,18 @@ export default function useOnboardingCompany() {
                 dispatch({ type: Actions.SET_PROFILE, payload: profile });
             }
 
+            // ⚠️ CRÍTICO: OnboardingGate lee el profile de AuthContext (no de
+            // AppContext). Sin este refresh, el gate sigue viendo el perfil
+            // viejo (onboarding_completed=false) y rebota al wizard.
+            await refreshProfile();
+
             navigate('/company/profile-created', { replace: true });
         } catch (err) {
             console.error('[useOnboardingCompany] Error completing onboarding:', err);
         } finally {
             setSaving(false);
         }
-    }, [formData, dispatch, navigate]);
+    }, [formData, dispatch, navigate, refreshProfile]);
 
     // ── Upload de archivo ──
     const uploadFile = useCallback(async (file, type = 'image') => {

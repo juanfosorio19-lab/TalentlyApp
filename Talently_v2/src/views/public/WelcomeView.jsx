@@ -1,11 +1,23 @@
 // src/views/public/WelcomeView.jsx
 // Pantalla de bienvenida — diseño Stitch convertido a CSS variables del proyecto.
 // Imagen de fondo: configurar --welcome-bg-url en variables.css o usar gradiente por defecto.
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import './WelcomeView.css';
 
 export default function WelcomeView() {
     const navigate = useNavigate();
+    const { loading: authLoading, isAuthenticated } = useAuth();
+
+    // Con sesión activa no se muestra Welcome: directo al dashboard del rol.
+    // Cubre el cold start del APK (Android recrea la activity al volver de
+    // background y el WebView recarga en '/').
+    useEffect(() => {
+        if (!authLoading && isAuthenticated) {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [authLoading, isAuthenticated, navigate]);
 
     const handleTerms = () => navigate('/terms');
     const handlePrivacy = () => navigate('/privacy');
