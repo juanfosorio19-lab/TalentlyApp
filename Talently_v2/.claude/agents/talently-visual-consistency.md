@@ -61,7 +61,45 @@ For each duplication found:
 2. List all duplicates that should be replaced
 3. Show the refactoring path
 
-### 5. Onboarding Step Consistency
+### 5. Native Controls & Global Resets (lección 2026-06-10)
+
+Un reset global puede dejar controles nativos INVISIBLES. Caso real: base.css
+aplicaba `appearance: none` a TODOS los inputs → el checkbox "Trabajo
+actualmente aquí" se renderizaba como nada (solo el texto del label).
+
+- Si existe `appearance: none` (o `-webkit-appearance: none`) sobre `input`
+  genérico, DEBE existir una regla que restaure `appearance: auto` para
+  `input[type='checkbox']` e `input[type='radio']` (+ `accent-color: var(--primary)`).
+- Para cada `<input type="checkbox|radio">` del codebase: o usa el control
+  nativo restaurado, o tiene estilos custom completos (pseudo-elemento ::before
+  /background visible en ambos temas). "Sin estilos + appearance none" = 🚨.
+- Inputs de montos: deben usar `type="text" inputMode="numeric"` con separador
+  de miles formateado (es-CL) — `type="number"` no formatea y muestra 30000000.
+- Inputs con ancho intrínseco grande (`type="month"`, `type="date"`, selects)
+  dentro de filas flex: la fila necesita `min-width: 0` en los hijos o
+  desbordan la tarjeta en el WebView de Android.
+
+### 6. Capa nativa del APK (status bar / safe areas)
+
+El diseño no termina en el DOM: el APK tiene una capa nativa con semántica
+traicionera.
+
+- **StatusBar Style está INVERTIDO respecto a la intuición**:
+  `Style.Dark` = TEXTO CLARO (para fondos oscuros); `Style.Light` = TEXTO
+  OSCURO (para fondos claros). Caso real: la hora del teléfono era blanca
+  sobre la app blanca (invisible). Verificar que `setStatusBarTheme(isDark)`
+  use `isDark ? Style.Dark : Style.Light` y que se llame al togglear dark mode
+  (AppContext) — no solo al boot.
+- **Safe areas (Android 15+ edge-to-edge, ERROR_LOG #14)**: todo elemento
+  `position: fixed` anclado a `top: 0` o `bottom: <n>` debe compensar con
+  `var(--safe-area-inset-top/bottom, 0px)`. Grep `position: fixed` en cada
+  audit y verificar uno por uno. `.app-container` debe mantener su padding
+  de safe-area.
+- Colores que se pasan a APIs nativas (setBackgroundColor) son la ÚNICA
+  excepción válida a "no hex" — las APIs nativas no leen CSS variables;
+  deben tener su variante para dark mode hardcodeada al lado.
+
+### 7. Onboarding Step Consistency
 Verify both onboarding flows:
 - Candidate onboarding: exactly 12 steps, consistent step indicator
 - Company onboarding: exactly 12 steps, consistent step indicator
@@ -92,6 +130,9 @@ Structure your audit report as:
 ### 🗂️ Duplicate Components
 [Canonical component + duplicates to remove + migration path]
 
+### 📱 Native Layer & Controls (status bar, safe areas, checkboxes)
+[Hallazgos de las secciones 5 y 6 — controles invisibles, fixed sin safe-area, Style invertido]
+
 ### 📋 Action Items (Priority Ordered)
 1. [Highest impact fix first]
 2. ...
@@ -102,13 +143,16 @@ Structure your audit report as:
 
 ## Decision Framework
 - **Severity CRITICAL**: Any hardcoded color value — breaks dark mode and design system
+- **Severity CRITICAL**: Control nativo invisible (reset global sin restore) o texto de status bar ilegible — el usuario no puede operar la app
 - **Severity HIGH**: Missing parity between flows — creates inconsistent UX
 - **Severity MEDIUM**: Duplicate components — creates maintenance burden
 - **Severity LOW**: Minor inconsistencies in spacing/sizing that don't break design system
 
 ## Key Files to Always Check
 - `src/styles/variables.css` — source of truth for all CSS variables
-- `src/styles/base.css` — base styles
+- `src/styles/base.css` — base styles (¡resets globales! ver sección 5)
+- `src/styles/global.css` — safe-area insets de `.app-container`
+- `src/lib/capacitorInit.js` — status bar / capa nativa (ver sección 6)
 - `src/context/AppContext.jsx` — theme/dark mode state
 - Any recently modified `.css` or `.jsx` files in `src/views/` and `src/components/`
 

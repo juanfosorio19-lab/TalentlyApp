@@ -74,6 +74,10 @@ PATRÓN A EVITAR: [regla general para no repetirlo]
 - **localStorage como fuente de verdad**: Solo para preferencias UI (dark mode, user_type). Los datos relacionales siempre desde Supabase.
 - **OAuth redirect en blanco**: La ruta `/auth/callback` debe estar registrada en App.jsx y la Redirect URL en Supabase Dashboard debe coincidir con el dominio.
 - **redirectTo hardcodeado**: Usar `window.location.origin` para que funcione en dev y prod.
+- **Escrituras mudas a Supabase (ERROR_LOG #15)**: supabase-js devuelve `{ data, error }`, NO lanza. TODA escritura debe chequear `error` y no avanzar el flujo si falla. Antes de escribir columnas nuevas, validar que existen y que el tipo calza (array de objetos → jsonb). Invocar schema-guardian.
+- **Checkbox/radio invisibles**: base.css resetea `appearance: none` en todos los inputs; checkbox y radio tienen `appearance: auto` restaurado. No quitar ese restore.
+- **StatusBar Style invertido**: `Style.Dark` = texto CLARO (fondos oscuros), `Style.Light` = texto OSCURO (fondos claros). Usar `setStatusBarTheme(isDark)` de capacitorInit, nunca el enum directo.
+- **Safe areas APK (ERROR_LOG #14)**: todo `position: fixed` anclado arriba/abajo compensa con `var(--safe-area-inset-top/bottom, 0px)`.
 
 ## Regla — Control de versiones automático
 

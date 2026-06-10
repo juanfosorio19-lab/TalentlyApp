@@ -90,17 +90,37 @@ Verificar también:
 - `db.auth.deleteAccount` llama `supabase.rpc('delete_account')`
 - `db.statistics.logDailyActivity` llama `supabase.rpc('log_daily_activity', ...)` (NO reimplementa con jsonb_set en JS)
 
-### 6. Schema integrity — columnas que el código consume
+### 6. Schema integrity — TODO lo que el código lee Y ESCRIBE
 
-Para cada columna referenciada en `supabase.js`, verificar que existe en la tabla:
+⚠️ Esta sección era una lista fija de 5 columnas y por eso NO pilló el bug
+del 2026-06-10 (ERROR_LOG #15: el onboarding upserteaba columnas inexistentes
+en `profiles` durante semanas). Ahora es GENERAL:
 
-- `company_positions.icon` (migración 012)
-- `seniority_levels.years_range` (migración 012)
-- `tech_stack.abbreviation` (migración 013)
-- `company_culture_values.icon` (migración 013) — no nulls
-- `company_benefits.icon` (migración 013) — no nulls
+**6.1 Mapa real del schema.** Para cada tabla crítica (profiles, offers,
+matches, messages, companies, notifications, swipes):
+```sql
+SELECT column_name, data_type FROM information_schema.columns
+WHERE table_name = '<tabla>' ORDER BY ordinal_position;
+```
 
-Query:
+**6.2 Lecturas.** Cada select explícito en `supabase.js` + cada acceso
+`profile.<campo>` en hooks que hidratan formularios (loadProgress de los
+hooks de onboarding) debe existir en el mapa.
+
+**6.3 ESCRITURAS (lo más importante).** Encontrar todos los
+`.insert(`/`.upsert(`/`.update(` y `db.*.create/update`. Reconstruir las keys
+del payload — incluyendo payloads dinámicos: seguir el `onNext({...})` de
+CADA step del onboarding + las keys que agregan los hooks. Cada key debe:
+- existir como columna, y
+- tener tipo compatible: array de OBJETOS solo entra a jsonb (no text/text[]);
+  number a numeric; '' jamás a numeric/date (mandar null).
+
+**6.4 Prueba de humo runtime.** Para onboarding candidato y empresa, ejecutar
+via MCP un INSERT con el payload completo representativo dentro de
+`BEGIN; ... ROLLBACK;` usando el uid de un usuario de prueba. Si falla, ese
+error es el que sufre producción. Reportar el mensaje exacto.
+
+**6.5 Columnas de metadata (legacy, mantener):**
 ```sql
 SELECT 'company_positions' AS t, COUNT(*) FILTER (WHERE icon IS NULL) AS missing_icon FROM public.company_positions
 UNION ALL SELECT 'seniority_levels', COUNT(*) FILTER (WHERE years_range IS NULL) FROM public.seniority_levels
@@ -146,6 +166,13 @@ En `Talently_v2/src/views/**/*.jsx` y `Talently_v2/src/hooks/**/*.js`:
 - `Chart.js` sin `chart.destroy()` en cleanup
 - `key={index}` en `.map()` sobre listas que pueden reordenarse
 - `supabase.from(` directo (no via `db.*`) — Error #11 del ERROR_LOG
+- **Errores de Supabase ignorados (ERROR_LOG #15) — 🔴 SIEMPRE**: supabase-js
+  devuelve `{ data, error }`, no lanza. Grep de escrituras donde no se
+  destructura/chequea `error`:
+  - `const { data } = await db.` o `await db.x.create(` sin capturar error
+  - flujos que avanzan (setStep, navigate) sin verificar que el write tuvo éxito
+  Cada uno es una falla MUDA esperando ocurrir: el usuario "completa" el flujo
+  y no se persiste nada.
 
 ### 10. Hex hardcoded
 
@@ -222,7 +249,10 @@ Verificar en código que ciertos invariantes del producto se respetan:
 | BR-S09 | Realtime con cleanup | grep `supabase.channel(` y verificar return cleanup en useEffect |
 | BR-S10 | Modalidades capitalizado en español | grep `'remote'`, `'hybrid'`, `'onsite'` (lowercase) — flag (post-migración 014 deben ser `'Remoto'`/`'Híbrido'`/`'Presencial'`) |
 | BR-S11 | Autorización por rol: RoleGate envolviendo `/app/*` y `/company/*` | En `App.jsx`, buscar `<RoleGate type="candidate"` y `<RoleGate type="company"` envolviendo las rutas correspondientes. Sin esto, un candidato puede acceder a /company/dashboard (bug detectado 2026-05-19). |
-| BR-S12 | LoginView y RegisterView redirigen si ya hay sesión | grep en `LoginView.jsx` y `RegisterView.jsx` un `useEffect` que verifique `isAuthenticated` y haga `navigate('/dashboard')`. Sin esto, user logueado puede ver el form de login (UX confusa). |
+| BR-S12 | LoginView y RegisterView redirigen si ya hay sesión | grep en `LoginView.jsx` y `RegisterView.jsx` un `useEffect` que verifique `isAuthenticated` y haga `navigate('/dashboard')`. Sin esto, user logueado puede ver el form de login (UX confusa). Aplica también a `WelcomeView` (ruta `/`): el APK recarga en `/` al volver de background. |
+| BR-S13 | Toda escritura a Supabase chequea `error` y no avanza el flujo si falla | sección 9; ERROR_LOG #15 |
+| BR-S14 | Payload de los wizards (onboarding) inserta limpio en `profiles` | smoke test 6.4 con ROLLBACK — debe ejecutarse en CADA audit, no es opcional |
+| BR-S15 | Mutaciones de `profiles` que afectan routing (user_type, onboarding_completed) refrescan AuthContext | grep `refreshProfile()` en completeOnboarding de ambos hooks; ERROR_LOG #13 |
 
 Cada BR-S## se reporta como PASS/FAIL con archivo:línea del violator si falla.
 
@@ -277,7 +307,9 @@ Generar archivo en `docs/qa/YYYY-MM-DD-report.md` con esta estructura:
 ## Pendiente humano (sin cobertura automática)
 
 - Visuales globales (light/dark/responsive) — sec 1 del checklist
-- Onboarding flows completos — secs 4-5
+- Onboarding flows completos (UI/UX) — secs 4-5. ⚠️ La capa de DATOS del
+  onboarding ya NO es "pendiente humano": la cubre el smoke test 6.4. Que el
+  flujo se vea bien en pantalla no prueba que persista.
 - Realtime con 2 ventanas — sec 9
 - UX feel — secs 6, 12, 14
 ```
