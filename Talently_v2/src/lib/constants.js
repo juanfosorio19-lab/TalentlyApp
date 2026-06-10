@@ -112,4 +112,9 @@ export const UPLOAD_LIMITS = {
 };
 
 // ── Versión de la app ──────────────────────────────────────────────────
-export const APP_VERSION = '1.0.0';
+// BUILD_COMMIT/BUILD_DATE los inyecta Vite en build (ver vite.config.js).
+// El commit identifica el bundle web exacto que corre el dispositivo: es la
+// misma versión que se registra en app_bundles al publicar un OTA.
+export const BUILD_COMMIT = typeof __BUILD_COMMIT__ !== 'undefined' ? __BUILD_COMMIT__ : 'dev';
+export const BUILD_DATE = typeof __BUILD_DATE__ !== 'undefined' ? __BUILD_DATE__ : '';
+export const APP_VERSION = `1.0.0 · ${BUILD_COMMIT}${BUILD_DATE ? ` (${BUILD_DATE})` : ''}`;

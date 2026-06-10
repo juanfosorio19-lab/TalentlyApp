@@ -134,9 +134,11 @@ export function initErrorLogger() {
         return log;
     };
 
-    // Log de arranque: confirma que la app inició y en qué plataforma.
+    // Log de arranque: confirma que la app inició, en qué plataforma y QUÉ
+    // versión del bundle web corre (commit inyectado por Vite en build).
     // Esto SIEMPRE debería aparecer en client_logs si la app carga y hay red.
-    logError('APP_BOOT', `App iniciada en plataforma "${getPlatform()}"`, null, {
+    const buildCommit = typeof __BUILD_COMMIT__ !== 'undefined' ? __BUILD_COMMIT__ : 'dev';
+    logError('APP_BOOT', `App iniciada en plataforma "${getPlatform()}" version=${buildCommit}`, null, {
         level: 'info', overlay: false,
     });
 }

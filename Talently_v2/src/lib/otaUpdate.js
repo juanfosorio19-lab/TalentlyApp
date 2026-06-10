@@ -12,6 +12,11 @@
 // ⚠️ Solo capa WEB (JS/CSS/HTML). Cambios nativos (plugins, permisos,
 // capacitor.config) siguen requiriendo regenerar el APK.
 import { Capacitor } from '@capacitor/core';
+import { logError } from './errorLogger';
+
+// Breadcrumb remoto del ciclo OTA (silencioso, sin overlay) — permite ver en
+// client_logs si el dispositivo chequea/descarga/aplica bundles.
+const otaLog = (message) => logError('OTA', message, null, { level: 'info', overlay: false });
 
 const SUPABASE_URL = 'https://femlqgaqqmkeqtjeruqn.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZlbWxxZ2FxcW1rZXF0amVydXFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcwMTc2MTEsImV4cCI6MjA4MjU5MzYxMX0.7KuB9qQqv-cUaXKi2b6zV8I99dbmp8CNwlEN5uElJRQ';
@@ -30,6 +35,12 @@ export async function initOtaUpdate() {
 
     // 1. Confirmar que el bundle ACTUAL cargó bien (evita rollback del que ya corre).
     try { await CapacitorUpdater.notifyAppReady(); } catch { /* noop */ }
+
+    // Breadcrumb: qué bundle corre ahora ('builtin' = el que vino en el APK).
+    try {
+        const current = await CapacitorUpdater.current();
+        otaLog(`boot bundle=${current?.bundle?.version || current?.bundle?.id || 'builtin'}`);
+    } catch { /* noop */ }
 
     let pending = null;
 
@@ -51,8 +62,10 @@ export async function initOtaUpdate() {
             if (pending?.version === latest.version) return;          // ya descargado, esperando aplicar
 
             pending = await CapacitorUpdater.download({ url: latest.url, version: latest.version });
-        } catch {
+            otaLog(`download:ok version=${latest.version}`);
+        } catch (e) {
             // sin red / error de descarga: reintenta en el próximo appStateChange
+            otaLog(`download:error ${String(e?.message || e).slice(0, 200)}`);
         }
     };
 
@@ -62,8 +75,10 @@ export async function initOtaUpdate() {
             checkAndDownload();
         } else if (pending?.version) {
             try {
+                const applied = pending.version;
                 await CapacitorUpdater.set(pending); // se activa en el próximo arranque
                 pending = null;
+                otaLog(`set:ok version=${applied} (activo en el próximo arranque)`);
             } catch { /* si falla, se reintenta */ }
         }
     });

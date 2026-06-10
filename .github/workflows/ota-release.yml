@@ -1,0 +1,67 @@
+# Publica un bundle OTA de la capa web como GitHub Release (ota-<commit>).
+# El asistente luego registra la versión en Supabase app_bundles — los APK
+# instalados NO se actualizan solo por correr este workflow: el manifest en
+# app_bundles es quien manda (anti-inyección).
+#
+# Se dispara en cada push que toque la app web (main o ramas claude/*),
+# o manualmente con workflow_dispatch.
+name: OTA Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - 'claude/**'
+    paths:
+      - 'Talently_v2/**'
+      - '.github/workflows/ota-release.yml'
+
+permissions:
+  contents: write # crear releases y subir assets
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: Talently_v2/package-lock.json
+
+      - name: Instalar dependencias
+        working-directory: Talently_v2
+        run: npm ci
+
+      - name: Build de producción
+        working-directory: Talently_v2
+        run: npm run build
+
+      - name: Empaquetar dist (index.html en la raíz del zip)
+        id: pack
+        working-directory: Talently_v2
+        run: |
+          VERSION="$(git rev-parse --short HEAD)"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          ( cd dist && zip -r "../ota-$VERSION.zip" . )
+
+      - name: Publicar GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.pack.outputs.version }}
+        run: |
+          URL="https://github.com/${{ github.repository }}/releases/download/ota-$VERSION/ota-$VERSION.zip"
+          if gh release view "ota-$VERSION" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            gh release upload "ota-$VERSION" "Talently_v2/ota-$VERSION.zip" --repo "${{ github.repository }}" --clobber
+          else
+            gh release create "ota-$VERSION" "Talently_v2/ota-$VERSION.zip" \
+              --repo "${{ github.repository }}" \
+              --target "${{ github.sha }}" \
+              --title "OTA $VERSION" \
+              --notes "Bundle web OTA (auto-update). Registrar en app_bundles para activarlo."
+          fi
+          echo "✅ Bundle: version=$VERSION url=$URL"
+          echo "Para activarlo: INSERT INTO public.app_bundles (version, url, notes) VALUES ('$VERSION', '$URL', '<notas>');"
