@@ -12,7 +12,7 @@
 #   INSERT INTO public.app_bundles (version, url, notes)
 #   VALUES ('<VERSION>', '<URL>', '<notas>');
 #
-# Requisitos: gh CLI autenticado (scope repo), zip, npm.
+# Requisitos: gh CLI autenticado (scope repo), npm, y `zip` o `powershell.exe`.
 set -e
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -27,7 +27,21 @@ VERSION="$(git -C "$ROOT" rev-parse --short HEAD)"
 ZIP="ota-$VERSION.zip"
 
 echo "▶ Empaquetando dist → $ZIP"
-( cd dist && zip -r "../$ZIP" . >/dev/null )
+rm -f "$ZIP"
+# index.html debe quedar en la RAÍZ del zip (no bajo dist/). Portátil: usa `zip`
+# si existe; si no (Git Bash en Windows), cae a PowerShell Compress-Archive.
+if command -v zip >/dev/null 2>&1; then
+    ( cd dist && zip -r "../$ZIP" . >/dev/null )
+elif command -v powershell.exe >/dev/null 2>&1; then
+    # Windows: Compress-Archive genera entradas con "\" que rompen el unzip de
+    # Android. Usamos el helper que fuerza separador "/".
+    ROOT_WIN="$(cd "$ROOT" && pwd -W 2>/dev/null || echo "$ROOT")"
+    powershell.exe -NoProfile -ExecutionPolicy Bypass \
+        -File "$ROOT_WIN/scripts/zip-dist.ps1" -SourceDir "dist" -ZipPath "$ZIP"
+else
+    echo "✖ No hay 'zip' ni 'powershell.exe' para empaquetar." >&2
+    exit 1
+fi
 
 echo "▶ Publicando GitHub Release ota-$VERSION..."
 if gh release view "ota-$VERSION" --repo "$REPO" >/dev/null 2>&1; then
