@@ -66,32 +66,27 @@ npx cap run android          # corre con hot reload
 
 ## 2. Login con Google (OAuth) — config externa pendiente ⚠️
 
-El código ya está listo (`src/lib/oauth.js` + deep link en AuthContext + intent-filter en AndroidManifest). **Pero el OAuth nativo NO funcionará hasta completar esta config en consolas externas:**
+El código ya está listo (`src/lib/oauth.js` + deep link en AuthContext + intent-filter en AndroidManifest) y el provider Google ya está habilitado en Supabase (el login con Google en web funciona). **Falta UN solo paso para que funcione en el APK:**
 
-### 2.1 Obtener el SHA-1 del keystore
-```bash
-# Debug (para pruebas):
-cd Talently_v2/android
-./gradlew.bat signingReport
-# Buscar el SHA1 de la variant "debug"
+### 2.1 Supabase Dashboard (el único paso requerido)
 
-# Release (para producción) — después de crear el keystore (sección 4):
-keytool -list -v -keystore talently-release.keystore -alias talently
-```
-
-### 2.2 Google Cloud Console
-1. [console.cloud.google.com](https://console.cloud.google.com) → tu proyecto (el mismo del OAuth web)
-2. **APIs & Services → Credentials → Create Credentials → OAuth client ID**
-3. Application type: **Android**
-4. Package name: `com.talently.app`
-5. SHA-1: el del paso 2.1 (agregar tanto el de debug como el de release)
-
-### 2.3 Supabase Dashboard
-1. **Authentication → URL Configuration → Redirect URLs** → agregar:
+1. [supabase.com/dashboard](https://supabase.com/dashboard) → proyecto Talently
+2. **Authentication → URL Configuration → Redirect URLs** → **Add URL**:
    ```
    com.talently.app://auth/callback
    ```
-2. El provider Google ya debe estar habilitado (igual que para web).
+3. Guardar. No hace falta rebuild del APK: el deep link ya está compilado.
+
+Sin esto, Supabase rechaza la redirección al deep link y el browser queda en
+la web tras elegir la cuenta — la app nunca recibe la sesión.
+
+### 2.2 Google Cloud Console / SHA-1 — NO requerido para este flujo
+
+El flujo implementado es el **OAuth web de Supabase dentro de un in-app
+browser** (Custom Tab): Google ve el client web de Supabase, no a la app
+Android. Por eso **NO** hace falta crear un OAuth client Android ni registrar
+el SHA-1 del keystore. Eso solo sería necesario si algún día migramos al SDK
+nativo de Google Sign-In (`signInWithIdToken`), p. ej. para el botón One Tap.
 
 > **Mientras tanto**: el login con **email + contraseña funciona perfecto en el APK** sin ninguna config extra. Es el camino recomendado para el primer release / pruebas internas.
 
