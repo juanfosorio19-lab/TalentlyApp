@@ -91,8 +91,9 @@ export default function Step9_Idiomas({ data, onNext, saving }) {
                 {hasEntries && (
                     <div className="ob-lang-list">
                         <p className="ob-lang-list-title">Idiomas agregados</p>
+                        {/* name es único (addEntry deduplica) → key estable */}
                         {entries.map((entry, i) => (
-                            <div key={i} className="ob-lang-item">
+                            <div key={entry.name} className="ob-lang-item">
                                 <div className="ob-lang-item-body">
                                     <span className="ob-lang-item-name">{entry.name}</span>
                                     <span className="ob-lang-item-level">{entry.level}</span>

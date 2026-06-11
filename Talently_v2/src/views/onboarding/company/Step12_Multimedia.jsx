@@ -171,7 +171,7 @@ export default function Step12_Multimedia({ data, onNext, saving, uploadFile }) 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                         {/* Fotos existentes */}
                         {photos.map((url, i) => (
-                            <div key={i} style={{ position: 'relative', paddingBottom: '75%', borderRadius: 16, overflow: 'hidden' }}>
+                            <div key={url} style={{ position: 'relative', paddingBottom: '75%', borderRadius: 16, overflow: 'hidden' }}>
                                 <div style={{ position: 'absolute', inset: 0 }}>
                                     <img
                                         src={url}

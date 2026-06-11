@@ -26,7 +26,8 @@ export default function Step5_Educacion({ data, onNext, saving }) {
 
     const addEntry = () => {
         if (!formState.institution.trim() || !formState.degree.trim()) return;
-        setEntries([...entries, { ...formState }]);
+        // id estable para key de React (entradas legacy sin id usan fallback)
+        setEntries([...entries, { ...formState, id: crypto.randomUUID?.() || String(Date.now()) }]);
         setFormState({ institution: '', degree: '', year: '', level: '' });
         setShowForm(false);
     };
@@ -57,7 +58,7 @@ export default function Step5_Educacion({ data, onNext, saving }) {
 
                 {/* Entries list */}
                 {entries.map((entry, i) => (
-                    <div key={i} className="ob-edu-card">
+                    <div key={entry.id || `${entry.degree}-${entry.institution}-${i}`} className="ob-edu-card">
                         <div className="ob-edu-card-icon">
                             <span className="material-symbols-rounded">school</span>
                         </div>

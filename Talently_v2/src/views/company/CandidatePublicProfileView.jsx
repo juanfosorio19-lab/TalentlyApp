@@ -150,6 +150,7 @@ export default function CandidatePublicProfileView() {
         availability,
         bio,
         skills,
+        professional_areas,
         experience,
         education,
         expected_salary_min,
@@ -179,6 +180,7 @@ export default function CandidatePublicProfileView() {
     );
 
     const skillList = Array.isArray(skills) ? skills : [];
+    const areaList  = Array.isArray(professional_areas) ? professional_areas : [];
     const expList   = Array.isArray(experience) ? experience : [];
     const eduList   = Array.isArray(education) ? education : [];
 
@@ -261,6 +263,17 @@ export default function CandidatePublicProfileView() {
                                 Ver CV
                             </button>
                         </div>
+                    )}
+
+                    {/* Áreas profesionales */}
+                    {areaList.length > 0 && (
+                        <SectionCard icon="category" title="Áreas profesionales">
+                            <div className="cpp-skills">
+                                {areaList.map((area) => (
+                                    <span key={area} className="cpp-skill-tag">{area}</span>
+                                ))}
+                            </div>
+                        </SectionCard>
                     )}
 
                     {/* Habilidades */}

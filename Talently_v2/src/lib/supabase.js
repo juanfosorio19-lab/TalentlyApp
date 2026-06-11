@@ -35,7 +35,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 const PROFILE_PUBLIC_COLS = `
     id, user_type, full_name, name, headline, bio, role, title,
     avatar_url, video_url, image,
-    current_position, professional_area, experience_years, experience_level,
+    current_position, professional_area, professional_areas, experience_years, experience_level,
     education_level, education, experience,
     skills, soft_skills, languages, interests,
     modality, work_modality, availability, relocation,

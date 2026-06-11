@@ -13,6 +13,8 @@ export default function SwipeCard({ profile, style, swipeDirection, isFront }) {
         full_name,
         company_sector,
         position,
+        current_position,
+        professional_areas,
         city,
         country,
         location,
@@ -26,8 +28,10 @@ export default function SwipeCard({ profile, style, swipeDirection, isFront }) {
         match_score,
     } = profile;
 
+    const areaList = Array.isArray(professional_areas) ? professional_areas : [];
+
     const displayName     = company_name || full_name || 'Sin nombre';
-    const displaySector   = company_sector || position || '';
+    const displaySector   = company_sector || position || current_position || '';
     const displayLocation = location || [city, country].filter(Boolean).join(', ');
     const description     = company_description || bio || '';
 
@@ -85,7 +89,7 @@ export default function SwipeCard({ profile, style, swipeDirection, isFront }) {
                     <p className="swipe-card__sector">{displaySector}</p>
                 )}
 
-                {/* Chips: ubicación + modalidad + salario */}
+                {/* Chips: ubicación + modalidad + áreas + salario */}
                 <div className="swipe-card__chips">
                     {displayLocation && (
                         <span className="swipe-card__chip">
@@ -99,6 +103,12 @@ export default function SwipeCard({ profile, style, swipeDirection, isFront }) {
                             {work_modality}
                         </span>
                     )}
+                    {areaList.slice(0, 2).map((area) => (
+                        <span key={area} className="swipe-card__chip">
+                            <span className="material-symbols-rounded">category</span>
+                            {area}
+                        </span>
+                    ))}
                     {(salary_min != null || salary_max != null) && (
                         <span className="swipe-card__chip swipe-card__chip--salary">
                             <span className="material-symbols-rounded">attach_money</span>

@@ -8,7 +8,12 @@ export default function Step6_Experiencia({ data, onNext, saving }) {
 
     const addEntry = () => {
         if (!formState.company.trim() || !formState.position.trim()) return;
-        setEntries([...entries, { ...formState, end: formState.current ? 'Actual' : formState.end }]);
+        // id estable para key de React (entradas legacy sin id usan fallback)
+        setEntries([...entries, {
+            ...formState,
+            end: formState.current ? 'Actual' : formState.end,
+            id: crypto.randomUUID?.() || String(Date.now()),
+        }]);
         setFormState({ company: '', position: '', start: '', end: '', current: false });
         setShowForm(false);
     };
@@ -46,7 +51,7 @@ export default function Step6_Experiencia({ data, onNext, saving }) {
 
                 {/* Entries list */}
                 {entries.map((entry, i) => (
-                    <div key={i} className="ob-edu-card">
+                    <div key={entry.id || `${entry.position}-${entry.company}-${i}`} className="ob-edu-card">
                         <div className="ob-edu-card-icon">
                             <span className="material-symbols-rounded">work</span>
                         </div>
