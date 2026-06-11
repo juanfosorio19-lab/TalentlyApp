@@ -37,6 +37,16 @@ export default function LoginView() {
         }
     }, [authLoading, isAuthenticated, navigate]);
 
+    // Si el user vuelve del browser de OAuth sin completar (cerró/canceló),
+    // re-habilitar el botón — quedaba pegado en "Redirigiendo…" para siempre.
+    useEffect(() => {
+        const onVisible = () => {
+            if (document.visibilityState === 'visible') setGoogleLoading(false);
+        };
+        document.addEventListener('visibilitychange', onVisible);
+        return () => document.removeEventListener('visibilitychange', onVisible);
+    }, []);
+
     const handleGoogleLogin = async () => {
         setError('');
         setGoogleLoading(true);

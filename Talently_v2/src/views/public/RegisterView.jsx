@@ -43,6 +43,16 @@ export default function RegisterView() {
         }
     }, [authLoading, isAuthenticated, navigate]);
 
+    // Si el user vuelve del browser de OAuth sin completar (cerró/canceló),
+    // re-habilitar el botón — quedaba pegado en "Redirigiendo…" para siempre.
+    useEffect(() => {
+        const onVisible = () => {
+            if (document.visibilityState === 'visible') setGoogleLoading(false);
+        };
+        document.addEventListener('visibilitychange', onVisible);
+        return () => document.removeEventListener('visibilitychange', onVisible);
+    }, []);
+
     // pendingType: el tipo elegido antes de hacer OAuth. signInWithGoogle lo
     // guarda en localStorage para que AuthCallbackView (web) o el listener de
     // deep link (nativo) lo lea si user_metadata.user_type está vacío.
@@ -76,7 +86,7 @@ export default function RegisterView() {
             return;
         }
 
-        if (!/[A-Z]/.test(password) || !/[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+        if (!/[A-Z]/.test(password) || !/[0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
             setError('La contraseña debe incluir al menos una mayúscula y un número o símbolo');
             return;
         }

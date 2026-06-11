@@ -489,7 +489,12 @@
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    padding: 24px 20px;
+    /* dvh: en el APK/móvil 100vh puede exceder el viewport visible y dejar
+       un colchón en blanco scrolleable abajo */
+    min-height: 100dvh;
+    padding: 16px 20px;
+    padding-top: calc(16px + var(--safe-area-inset-top, 0px));
+    padding-bottom: calc(16px + var(--safe-area-inset-bottom, 0px));
     background: var(--bg);
     animation: fadeIn 0.3s ease;
 }
@@ -500,7 +505,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 28px;
+    gap: 20px;
 }
 
 /* ── Hero ── */
@@ -508,29 +513,29 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     text-align: center;
 }
 
 .login-logo-icon {
-    width: 64px;
-    height: 64px;
+    width: 56px;
+    height: 56px;
     border-radius: var(--radius-lg);
     background: var(--gradient-primary);
     display: flex;
     align-items: center;
     justify-content: center;
     box-shadow: var(--shadow-md);
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 
 .login-logo-icon .material-symbols-rounded {
-    font-size: 32px;
+    font-size: 28px;
     color: var(--text-on-primary);
 }
 
 .login-brand {
-    font-size: 1.875rem;
+    font-size: 1.625rem;
     font-weight: 700;
     color: var(--text-primary);
     letter-spacing: -0.5px;
@@ -549,16 +554,39 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-xl);
-    padding: 28px 24px;
+    padding: 20px;
     box-shadow: var(--shadow-lg);
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
+}
+
+.login-card .auth-btn {
+    padding: 14px;
 }
 
 /* ── Footer debajo del card ── */
 .login-screen .auth-footer-text {
     margin: 0;
+    padding-top: 0;
+}
+
+/* ── Pantallas bajas (display zoom alto / phones chicos): compactar más
+      para que todo entre sin scroll ── */
+@media (max-height: 700px) {
+    .login-main { gap: 14px; }
+    .login-hero { gap: 4px; }
+    .login-logo-icon {
+        width: 44px;
+        height: 44px;
+        margin-bottom: 0;
+    }
+    .login-logo-icon .material-symbols-rounded { font-size: 22px; }
+    .login-brand { font-size: 1.375rem; }
+    .login-tagline { font-size: 0.8125rem; }
+    .login-card { padding: 16px; gap: 12px; }
+    .login-card .auth-btn { padding: 12px; }
+    .login-card .auth-input { padding: 11px 0; }
 }
 
 /* ══════════════════════════════════════════
