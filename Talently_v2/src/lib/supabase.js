@@ -669,13 +669,26 @@ export const db = {
         createTicket: async (data) => {
             const subject = (data?.subject || '').trim();
             const message = (data?.message || '').trim();
+            const email = (data?.email || '').trim();
+            if (!email) {
+                return { error: { message: 'El correo es obligatorio' } };
+            }
             if (!subject || subject.length > 200) {
                 return { error: { message: 'El asunto es obligatorio y debe tener máximo 200 caracteres' } };
             }
             if (!message || message.length > 5000) {
                 return { error: { message: 'El mensaje es obligatorio y debe tener máximo 5000 caracteres' } };
             }
-            return supabase.from('support_tickets').insert({ ...data, subject, message }).select().single();
+            // Whitelist explícita: support_tickets solo tiene user_id, email,
+            // subject, message, status (email es NOT NULL). Un spread con keys
+            // extra (category, description) → 42703.
+            return supabase.from('support_tickets').insert({
+                user_id: data?.user_id ?? null,
+                email,
+                subject,
+                message,
+                status: data?.status || 'open',
+            }).select().single();
         },
     },
 

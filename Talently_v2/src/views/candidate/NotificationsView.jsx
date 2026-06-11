@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { Spinner, EmptyState } from '../../components/ui';
+import { logError } from '../../lib/errorLogger';
 import './NotificationsView.css';
 
 // ── Icon + color per type ──────────────────────────────────
@@ -83,7 +84,8 @@ export default function NotificationsView() {
 
     const handleRead = async (notif) => {
         if (!notif.read) {
-            await db.notifications.markAsRead(notif.id);
+            const { error } = await db.notifications.markAsRead(notif.id);
+            if (error) logError('NOTIF', `markAsRead:error ${error.message || error}`, null, { overlay: false, level: 'warn' });
             setNotifications((prev) =>
                 prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n))
             );
@@ -94,7 +96,8 @@ export default function NotificationsView() {
     };
 
     const handleMarkAllRead = async () => {
-        await db.notifications.markAllAsRead(userId);
+        const { error } = await db.notifications.markAllAsRead(userId);
+        if (error) logError('NOTIF', `markAllAsRead:error ${error.message || error}`, null, { overlay: false, level: 'warn' });
         setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     };
 

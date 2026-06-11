@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
 import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
+import { logError } from '../../lib/errorLogger';
 import './SupportView.css';
 
 const CATEGORIES = [
@@ -19,8 +21,14 @@ export default function SupportView() {
     const navigate  = useNavigate();
     const { state } = useApp();
     const { currentUser } = state;
+    const { user } = useAuth();
+
+    // Email de la sesión (AuthContext es la fuente confiable; AppContext puede
+    // estar vacío en cold start). La ruta es pública: sin sesión, se pide.
+    const sessionEmail = user?.email || currentUser?.email || '';
 
     const [category,    setCategory]    = useState('');
+    const [email,       setEmail]       = useState(sessionEmail);
     const [subject,     setSubject]     = useState('');
     const [description, setDescription] = useState('');
     const [loading,     setLoading]     = useState(false);
@@ -30,6 +38,8 @@ export default function SupportView() {
     // ── Validar campos ──
     const validate = () => {
         const e = {};
+        const finalEmail = (sessionEmail || email).trim();
+        if (!finalEmail || !/\S+@\S+\.\S+/.test(finalEmail)) e.email = 'Ingresa un correo válido para responderte';
         if (!subject.trim())     e.subject     = 'El asunto es obligatorio';
         if (!description.trim()) e.description = 'La descripción es obligatoria';
         setErrors(e);
@@ -41,19 +51,32 @@ export default function SupportView() {
         if (!validate()) return;
         setLoading(true);
         try {
-            await db.support.createTicket({
-                user_id:     currentUser?.id   || null,
-                email:       currentUser?.email || null,
-                category:    category || 'other',
-                subject:     subject.trim(),
-                description: description.trim(),
-                status:      'open',
+            // support_tickets no tiene columna category: va como prefijo del mensaje.
+            const categoryLabel = CATEGORIES.find((c) => c.id === category)?.label;
+            const { error } = await db.support.createTicket({
+                user_id: user?.id || currentUser?.id || null,
+                email:   (sessionEmail || email).trim(),
+                subject: subject.trim(),
+                message: categoryLabel
+                    ? `[${categoryLabel}] ${description.trim()}`
+                    : description.trim(),
+                status:  'open',
             });
-        } catch {
-            // Si la tabla no existe igual mostramos éxito
+
+            // ⚠️ supabase-js no lanza: devuelve { error }. Solo mostramos éxito
+            // si el ticket REALMENTE se creó (antes se mostraba éxito siempre).
+            if (error) {
+                logError('SUPPORT', `createTicket:error ${error.message || error}`, null,
+                    { overlay: false, userEmail: (sessionEmail || email).trim() });
+                setErrors((p) => ({ ...p, form: 'No se pudo enviar el mensaje. Intenta de nuevo o escríbenos a soporte@talently.app.' }));
+                return;
+            }
+            setSent(true);
+        } catch (err) {
+            logError('SUPPORT', `createTicket:throw ${err?.message || err}`, null, { overlay: false });
+            setErrors((p) => ({ ...p, form: 'No se pudo enviar el mensaje. Intenta de nuevo o escríbenos a soporte@talently.app.' }));
         } finally {
             setLoading(false);
-            setSent(true);
         }
     };
 
@@ -80,7 +103,7 @@ export default function SupportView() {
                     <h2 className="supp__success-title">Mensaje enviado</h2>
                     <p className="supp__success-sub">
                         Hemos recibido tu mensaje. Te responderemos a{' '}
-                        <strong>{currentUser?.email || 'tu correo'}</strong> en menos de 48 horas.
+                        <strong>{(sessionEmail || email).trim() || 'tu correo'}</strong> en menos de 48 horas.
                     </p>
                     <button className="supp__success-btn" onClick={() => navigate(-1)}>
                         Volver
@@ -115,20 +138,25 @@ export default function SupportView() {
                     </p>
                 </div>
 
-                {/* ── Email (read-only) ── */}
+                {/* ── Email (read-only con sesión; editable si es anónimo) ── */}
                 <div className="supp__field">
-                    <label className="supp__label" htmlFor="supp-email">Correo electrónico</label>
-                    <div className="supp__input-wrap supp__input-wrap--readonly">
+                    <label className="supp__label" htmlFor="supp-email">
+                        Correo electrónico {!sessionEmail && <span className="supp__required">*</span>}
+                    </label>
+                    <div className={`supp__input-wrap ${sessionEmail ? 'supp__input-wrap--readonly' : ''}`}>
                         <span className="material-symbols-rounded supp__input-icon">mail</span>
                         <input
                             id="supp-email"
                             name="email"
-                            className="supp__input supp__input--readonly"
+                            className={`supp__input ${sessionEmail ? 'supp__input--readonly' : ''} ${errors.email ? 'supp__input--error' : ''}`}
                             type="email"
-                            value={currentUser?.email || ''}
-                            readOnly
+                            placeholder="tu@correo.com"
+                            value={sessionEmail || email}
+                            readOnly={!!sessionEmail}
+                            onChange={(e) => { setEmail(e.target.value); setErrors((p) => ({ ...p, email: '' })); }}
                         />
                     </div>
+                    {errors.email && <p className="supp__error">{errors.email}</p>}
                 </div>
 
                 {/* ── Categoría ── */}
@@ -184,6 +212,9 @@ export default function SupportView() {
                     <p className="supp__char-count">{description.length} / 2000</p>
                     {errors.description && <p className="supp__error">{errors.description}</p>}
                 </div>
+
+                {/* ── Error de envío (el ticket NO se creó) ── */}
+                {errors.form && <p className="supp__error">{errors.form}</p>}
 
                 {/* ── Enviar ── */}
                 <button

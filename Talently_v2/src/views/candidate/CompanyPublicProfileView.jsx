@@ -5,6 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
 import { useApp } from '../../context/AppContext';
 import { Spinner, SectionCard } from '../../components/ui';
+import { logError } from '../../lib/errorLogger';
 import './CompanyPublicProfileView.css';
 
 // ── Helpers ──────────────────────────────────
@@ -63,10 +64,29 @@ export default function CompanyPublicProfileView() {
         if (swipeLoading || !companyUserId) return;
         setSwipeLoading(true);
         try {
-            await db.swipes.create(companyUserId, direction);
+            // supabase-js no lanza: chequear { error }. Y si este like completa
+            // un match mutuo hay que crearlo aquí (antes solo el deck lo hacía
+            // → matches perdidos al swipear desde el perfil).
+            const { error: swipeError, isMutualMatch } = await db.swipes.create(companyUserId, direction);
+            if (swipeError) {
+                logError('SWIPE', `public-profile:error ${swipeError.message || swipeError}`,
+                    null, { overlay: false });
+                return;
+            }
             await db.statistics.increment('swipes_given');
+
+            if (direction === 'right' && isMutualMatch) {
+                const { data: matchData, error: matchError } = await db.matches.create(companyUserId);
+                if (matchError) {
+                    logError('MATCH', `public-profile:match:error ${matchError.message || matchError}`,
+                        null, { overlay: false });
+                } else if (matchData) {
+                    await db.statistics.increment('matches_count');
+                }
+            }
         } catch (e) {
             console.error('[CompanyPublicProfileView] Swipe error:', e);
+            logError('SWIPE', `public-profile:throw ${e?.message || e}`, null, { overlay: false });
         } finally {
             setSwipeLoading(false);
             navigate(-1);

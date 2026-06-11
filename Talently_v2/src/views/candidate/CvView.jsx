@@ -75,7 +75,10 @@ export default function CvView() {
             if (!publicUrl) throw new Error('Upload falló');
 
             const { data: { user } } = await db.auth.getUser();
-            const { data: updated } = await db.profiles.updateCv(user.id, publicUrl);
+            const { data: updated, error: updateError } = await db.profiles.updateCv(user.id, publicUrl);
+            // Sin esto, el PDF quedaba en Storage pero cv_url no se guardaba
+            // y el usuario veía "CV subido" igual (supabase-js no lanza).
+            if (updateError) throw updateError;
 
             if (updated) dispatch({ type: Actions.SET_PROFILE, payload: updated });
             setUploadSuccess(true);

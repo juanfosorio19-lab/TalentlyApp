@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useApp, Actions } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../lib/supabase';
+import { logError } from '../lib/errorLogger';
 
 export default function useSwipeProfiles() {
     const { state, dispatch } = useApp();
@@ -105,22 +106,35 @@ export default function useSwipeProfiles() {
         if (!currentProfile) return { isMutualMatch: false };
 
         try {
-            const { isMutualMatch } = await db.swipes.create(
+            const { error: swipeError, isMutualMatch } = await db.swipes.create(
                 currentProfile.id,
                 direction === 'right' ? 'right' : 'left'
             );
+            if (swipeError) {
+                logError('SWIPE', `deck:error ${swipeError.message || swipeError}`,
+                    null, { overlay: false });
+                advance();
+                return { isMutualMatch: false };
+            }
 
             // Incrementar estadísticas
             await db.statistics.increment('swipes_given');
 
             if (isMutualMatch) {
-                // Crear el match
-                const { data: matchData } = await db.matches.create(currentProfile.id);
+                // Crear el match — si falla NO mostramos el modal (navegaría a
+                // un chat con matchId undefined) y lo dejamos en client_logs.
+                const { data: matchData, error: matchError } = await db.matches.create(currentProfile.id);
+                if (matchError || !matchData) {
+                    logError('MATCH', `deck:create:error ${matchError?.message || 'sin data'}`,
+                        null, { overlay: false });
+                    advance();
+                    return { isMutualMatch: false };
+                }
                 await db.statistics.increment('matches_count');
                 await db.statistics.incrementForUser(currentProfile.id, 'matches_count');
 
                 setMatchResult({
-                    matchId: matchData?.id,
+                    matchId: matchData.id,
                     matchedProfile: currentProfile,
                 });
 

@@ -5,6 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
 import { MODALITY_LABELS } from '../../lib/constants';
 import { Spinner } from '../../components/ui';
+import { logError } from '../../lib/errorLogger';
 import './OfferDetailsView.css';
 
 const MODALITY_ICONS = {
@@ -34,6 +35,7 @@ export default function OfferDetailsView() {
     const [error,   setError]   = useState(false);
     const [applied, setApplied] = useState(false);
     const [applying, setApplying] = useState(false);
+    const [applyError, setApplyError] = useState('');
 
     useEffect(() => {
         if (!offerId) return;
@@ -59,11 +61,36 @@ export default function OfferDetailsView() {
     const handleApply = async () => {
         if (!offer?.user_id || applied) return;
         setApplying(true);
+        setApplyError('');
         try {
-            await db.swipes.create(offer.user_id, 'right', offer.id);
+            // supabase-js no lanza: hay que chequear { error }. Antes se
+            // mostraba "¡Aplicado!" aunque el swipe no se guardara.
+            const { error: swipeError, isMutualMatch } =
+                await db.swipes.create(offer.user_id, 'right', offer.id);
+
+            if (swipeError) {
+                logError('SWIPE', `apply:error offer=${offer.id} ${swipeError.message || swipeError}`,
+                    null, { overlay: false });
+                setApplyError('No se pudo enviar la postulación. Revisa tu conexión e intenta de nuevo.');
+                return;
+            }
             setApplied(true);
+            await db.statistics.increment('swipes_given');
+
+            // Si la empresa ya había dado like, este swipe completa el match.
+            // Sin esto el match nunca se creaba por esta vía (solo el deck lo hacía).
+            if (isMutualMatch) {
+                const { data: matchData, error: matchError } = await db.matches.create(offer.user_id);
+                if (matchError) {
+                    logError('MATCH', `apply:match:error ${matchError.message || matchError}`,
+                        null, { overlay: false });
+                } else if (matchData) {
+                    await db.statistics.increment('matches_count');
+                }
+            }
         } catch (err) {
             console.error('[OfferDetailsView] apply error:', err);
+            setApplyError('No se pudo enviar la postulación. Revisa tu conexión e intenta de nuevo.');
         } finally {
             setApplying(false);
         }
@@ -288,6 +315,7 @@ export default function OfferDetailsView() {
 
             {/* ── CTA bar ── */}
             <div className="od__cta-bar">
+                {applyError && <p className="od__apply-error">{applyError}</p>}
                 <button
                     className={`od__cta-btn ${applied ? 'od__cta-btn--applied' : ''}`}
                     onClick={handleApply}

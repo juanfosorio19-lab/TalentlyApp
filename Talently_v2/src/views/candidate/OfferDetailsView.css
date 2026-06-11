@@ -406,6 +406,14 @@
     flex-shrink: 0;
 }
 
+.od__apply-error {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--danger);
+    margin-bottom: 8px;
+    text-align: center;
+}
+
 .od__cta-btn {
     width: 100%;
     display: flex;
