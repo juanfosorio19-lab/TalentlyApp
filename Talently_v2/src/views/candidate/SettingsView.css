@@ -5,7 +5,7 @@
 .sv {
     display: flex;
     flex-direction: column;
-    height: 100dvh;
+    height: var(--app-height);
     background: var(--bg);
     overflow: hidden;
 }

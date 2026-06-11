@@ -5,7 +5,7 @@
 .od {
     display: flex;
     flex-direction: column;
-    height: 100dvh;
+    height: var(--app-height);
     background: var(--bg);
     overflow: hidden;
 }
@@ -400,7 +400,7 @@
     position: sticky;
     bottom: 0;
     padding: 12px 20px;
-    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(12px + var(--safe-area-inset-bottom, 0px));
     background: var(--surface);
     border-top: 1px solid var(--border);
     flex-shrink: 0;

@@ -3,7 +3,7 @@
 /* ── Wrapper ── */
 .cpp-wrapper {
     position: relative;
-    height: 100dvh;
+    height: var(--app-height);
     width: 100%;
     max-width: 448px;
     margin: 0 auto;
@@ -486,7 +486,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100dvh;
+    height: var(--app-height);
     gap: 1rem;
     background: var(--bg);
     color: var(--text);

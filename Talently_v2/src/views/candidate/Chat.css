@@ -6,8 +6,7 @@
 .chat-view {
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    height: 100dvh;
+    height: var(--app-height);
     background: var(--bg);
 }
 
@@ -286,7 +285,7 @@
     align-items: center;
     gap: 10px;
     padding: 10px 16px;
-    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(10px + var(--safe-area-inset-bottom, 0px));
     background: var(--surface);
     border-top: 1px solid var(--border);
     flex-shrink: 0;

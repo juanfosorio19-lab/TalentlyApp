@@ -5,7 +5,7 @@
 .co {
     display: flex;
     flex-direction: column;
-    height: 100dvh;
+    height: var(--app-height);
     background: var(--bg);
     overflow: hidden;
 }
@@ -561,7 +561,7 @@
     display: flex;
     gap: 12px;
     padding: 14px 20px;
-    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(14px + var(--safe-area-inset-bottom, 0px));
     background: var(--surface);
     border-top: 1px solid var(--border);
     flex-shrink: 0;

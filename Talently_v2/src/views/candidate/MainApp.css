@@ -5,8 +5,7 @@
 .main-app {
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    height: 100dvh;
+    height: var(--app-height);
     /* dynamic viewport height for mobile */
     background: var(--bg);
     overflow: hidden;
@@ -72,7 +71,7 @@
     align-items: stretch;
     background: var(--surface);
     border-top: 1px solid var(--border);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-bottom: var(--safe-area-inset-bottom, 0px);
 }
 
 .main-app__tab {

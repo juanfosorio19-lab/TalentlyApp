@@ -38,6 +38,20 @@ body {
     --safe-area-inset-right: env(safe-area-inset-right, 0px);
     --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
     --safe-area-inset-left: env(safe-area-inset-left, 0px);
+
+    /* Altura útil de una pantalla "shell" (header + contenido + tab bar).
+       100vh/100dvh incluye las zonas de status bar y botones del sistema;
+       como .app-container ya reserva esos espacios con padding, un shell de
+       100dvh DESBORDA el contenedor y la página entera scrollea ese exceso
+       (header se esconde tras la hora / tabs tras los botones). Usar SIEMPRE
+       var(--app-height) para shells de pantalla completa. */
+    --app-height: calc(100vh - var(--safe-area-inset-top) - var(--safe-area-inset-bottom));
+}
+
+@supports (height: 100dvh) {
+    :root {
+        --app-height: calc(100dvh - var(--safe-area-inset-top) - var(--safe-area-inset-bottom));
+    }
 }
 
 /* App Container — max-width 480px mobile-first */
