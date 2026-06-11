@@ -65,7 +65,7 @@ export default function MainApp() {
     const renderContent = () => {
         switch (activeTab) {
             case 'swipe':    return <SwipeStack onCardTap={(profile) => navigate(`/app/company/${profile.id}`)} />;
-            case 'matches':  return <MatchesView isTab />;
+            case 'matches':  return <MatchesView isTab onExplore={() => setActiveTab('swipe')} />;
             case 'messages': return <MessagesList basePath="/app/messages" />;
             case 'profile':  return <ProfileView isTab />;
             default:         return <SwipeStack onCardTap={(profile) => navigate(`/app/company/${profile.id}`)} />;

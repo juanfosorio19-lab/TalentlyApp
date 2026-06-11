@@ -78,6 +78,7 @@ PATRÓN A EVITAR: [regla general para no repetirlo]
 - **Checkbox/radio invisibles**: base.css resetea `appearance: none` en todos los inputs; checkbox y radio tienen `appearance: auto` restaurado. No quitar ese restore.
 - **StatusBar Style invertido**: `Style.Dark` = texto CLARO (fondos oscuros), `Style.Light` = texto OSCURO (fondos claros). Usar `setStatusBarTheme(isDark)` de capacitorInit, nunca el enum directo.
 - **Safe areas APK (ERROR_LOG #14)**: todo `position: fixed` anclado arriba/abajo compensa con `var(--safe-area-inset-top/bottom, 0px)`.
+- **Botones fantasma (ERROR_LOG #16)**: en vistas embebidas como TAB (MainApp `/app`, CompanyDashboard) los tabs son estado interno — `navigate()` a la ruta del contenedor es un no-op. El contenedor debe pasar un callback (patrón `onExplore`). Todo botón visible debe tener handler con efecto real; qa-auditor sección 13 / BR-S16 lo valida.
 
 ## Regla — Control de versiones automático
 

@@ -27,7 +27,9 @@ function isNew(dateStr) {
     return (Date.now() - new Date(dateStr)) < NEW_DAYS * 86400000;
 }
 
-export default function MatchesView({ isTab = false }) {
+// onExplore: cambia al tab Explorar cuando está embebida en MainApp —
+// navigate('/app') es un no-op ahí porque los tabs son estado interno.
+export default function MatchesView({ isTab = false, onExplore }) {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [matches, setMatches] = useState([]);
@@ -98,7 +100,7 @@ export default function MatchesView({ isTab = false }) {
                     title="Sin matches todavía"
                     description="¡Sigue explorando! Cuando hagas match con alguien aparecerá aquí."
                     buttonLabel="Explorar"
-                    onButtonClick={() => navigate('/app')}
+                    onButtonClick={() => (onExplore ? onExplore() : navigate('/app'))}
                 />
             </div>
         );

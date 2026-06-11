@@ -22,7 +22,7 @@ Eres el QA Auditor automatizado de Talently. Tu misión es cubrir el ~35% del ch
 
 ## Protocolo
 
-Ejecuta las 11 secciones en orden. Para cada hallazgo asigna severidad (🔴/🟠/🟡/⚪) y archivo:línea o tabla/policy específica.
+Ejecuta las 14 secciones en orden. Para cada hallazgo asigna severidad (🔴/🟠/🟡/⚪) y archivo:línea o tabla/policy específica.
 
 ### 1. Privacidad de queries
 
@@ -232,7 +232,38 @@ En `handleLogin`/`handleRegister`:
 En `Talently_v2/src/hooks/*.js`:
 - Hooks que hacen `if (!user) return` o `if (!userType) return` deben ALSO setear `setLoading(false)` antes del return, o de lo contrario quedan en spinner infinito.
 
-### 13. Business Rules estáticas
+### 13. Botones fantasma (ghost buttons)
+
+Bug real detectado 2026-06-11: el botón "Explorar" del empty state de
+MatchesView hacía `navigate('/app')`… estando ya en `/app` (los tabs de
+MainApp son estado interno `activeTab`, no rutas). Handler presente,
+efecto cero. Detectar TODAS las variantes:
+
+**13.1 Botones sin handler.** En `Talently_v2/src/views/**/*.jsx` y
+`Talently_v2/src/components/**/*.jsx`, cada `<button` debe tener `onClick`
+en sus atributos (el tag puede abarcar varias líneas). Excepciones: botones
+que reciben el handler por prop spread documentado. Flag el resto como
+🟠 VISUAL ONLY.
+
+**13.2 Handlers no-op.** Grep de `onClick={() => {}}`, `onClick={() => null}`,
+`onClick={noop}`, handlers cuyo cuerpo es solo `console.log`, y `// TODO`
+dentro del handler.
+
+**13.3 Navegación a la propia ruta (el caso MatchesView).** Para cada vista
+embebida como TAB (estado interno, no ruta): MainApp (`/app` — tabs swipe/
+matches/profile) y CompanyDashboard (`/company/dashboard` — sus tabs).
+Cualquier `navigate('<ruta del contenedor>')` dentro de una vista embebida
+es un no-op → debe usar un callback del contenedor (patrón `onExplore`).
+Verificar:
+- `MatchesView` recibe y usa `onExplore` cuando `isTab`
+- Grep `navigate('/app')` y `navigate('/company/dashboard')` en vistas que
+  MainApp/CompanyDashboard renderizan como tabs → flag
+- Nuevos tabs embebidos siguen el mismo patrón
+
+**13.4 Links muertos.** `href="#"`, `to=""`, `navigate('')` o rutas que no
+existen en `App.jsx` (comparar contra el route table real).
+
+### 14. Business Rules estáticas
 
 Verificar en código que ciertos invariantes del producto se respetan:
 
@@ -253,6 +284,7 @@ Verificar en código que ciertos invariantes del producto se respetan:
 | BR-S13 | Toda escritura a Supabase chequea `error` y no avanza el flujo si falla | sección 9; ERROR_LOG #15 |
 | BR-S14 | Payload de los wizards (onboarding) inserta limpio en `profiles` | smoke test 6.4 con ROLLBACK — debe ejecutarse en CADA audit, no es opcional |
 | BR-S15 | Mutaciones de `profiles` que afectan routing (user_type, onboarding_completed) refrescan AuthContext | grep `refreshProfile()` en completeOnboarding de ambos hooks; ERROR_LOG #13 |
+| BR-S16 | Sin botones fantasma: todo botón visible tiene handler con efecto real | sección 13; en vistas embebidas como tab, navegar a la ruta del contenedor es no-op (caso MatchesView 2026-06-11) |
 
 Cada BR-S## se reporta como PASS/FAIL con archivo:línea del violator si falla.
 
@@ -282,9 +314,10 @@ Generar archivo en `docs/qa/YYYY-MM-DD-report.md` con esta estructura:
 | 10. Hex hardcoded | ✅/⚠️/❌ | <n> |
 | 11. Migraciones sync | ✅/⚠️/❌ | <n> |
 | 12. Routing Guards | ✅/⚠️/❌ | <n> |
-| 13. Business Rules estáticas | ✅/⚠️/❌ | <n> |
+| 13. Botones fantasma | ✅/⚠️/❌ | <n> |
+| 14. Business Rules estáticas | ✅/⚠️/❌ | <n> |
 
-**Score**: X/13
+**Score**: X/14
 
 ## Hallazgos por severidad
 

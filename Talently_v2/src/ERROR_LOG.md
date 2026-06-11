@@ -173,3 +173,14 @@
 - **CAUSA RAÍZ:** Doble falla. (1) Los hooks upserteaban columnas que no existían (`onboarding_step`, `company_onboarding_step`, `professional_areas`, `company_type`, `selection_process`) y tipos incompatibles (`experience` text para un array, `languages` text[] para objetos) → 42703/22P02 en CADA paso. (2) El resultado del upsert se ignoraba (`const { data: profile } = ...` sin leer `error`) → el wizard avanzaba en memoria fingiendo éxito.
 - **SOLUCIÓN APLICADA:** Migración 019 (columnas + tipos) + los hooks ahora chequean `error`: no avanzan de paso, muestran `ob-error` y loguean a `client_logs` con contexto `ONBOARDING`.
 - **PATRÓN A EVITAR:** NUNCA ignorar el `error` de un write a Supabase — el cliente JS no lanza excepción, la devuelve. Y regla #4 del CLAUDE.md: verificar que las columnas existen antes de escribirlas (este es el mismo patrón de la migración 016, ahora del lado candidato).
+
+---
+
+## Error #16 — Botón fantasma: "Explorar" en Matches no hacía nada
+
+- **ERROR:** El botón "Explorar" del empty state de Matches no llevaba al swipe
+- **SÍNTOMA:** Tap en "Explorar" (sin matches) → nada visible ocurre; sin error en consola
+- **CONTEXTO:** `MatchesView` (empty state) embebida como tab dentro de `MainApp`
+- **CAUSA RAÍZ:** El handler existía (`navigate('/app')`) pero los tabs de `MainApp` son estado interno (`activeTab`), no rutas — la vista YA está en `/app`, así que react-router no remonta nada y el tab activo sigue siendo "matches". Handler presente, efecto cero: un botón fantasma que ningún grep de "botones sin onClick" detecta.
+- **SOLUCIÓN APLICADA:** `MainApp` pasa `onExplore={() => setActiveTab('swipe')}` a `<MatchesView isTab>`; el botón usa `onExplore` si existe y cae a `navigate('/app')` solo en el uso standalone (`/app/matches`).
+- **PATRÓN A EVITAR:** En vistas embebidas como tab, NUNCA navegar a la ruta del contenedor — pasar un callback del contenedor para cambiar de tab. Todo botón visible debe tener efecto observable. Validación automática: qa-auditor sección 13 (ghost buttons) / BR-S16.
