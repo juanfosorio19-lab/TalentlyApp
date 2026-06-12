@@ -32,7 +32,10 @@ export default function useOnboardingCandidate() {
                 const { data: profile } = await db.profiles.getById(user.id);
                 if (profile) {
                     // Restaurar paso guardado
-                    const savedStep = profile.onboarding_step || 1;
+                    let savedStep = profile.onboarding_step || 1;
+                    // El paso 1 es la selección de tipo: si ya está definido como
+                    // candidato, no volver a preguntarlo (doble selección 2026-06-11)
+                    if (savedStep <= 1 && profile.user_type === 'candidate') savedStep = 2;
                     setCurrentStep(savedStep);
 
                     // Restaurar datos parciales
@@ -55,6 +58,11 @@ export default function useOnboardingCandidate() {
                         interests: profile.interests || [],
                         currency: profile.currency || 'CLP',
                     });
+                } else if (user.user_metadata?.user_type === 'candidate') {
+                    // Sin perfil pero eligió tipo al registrarse: el wizard no
+                    // debe preguntarlo de nuevo — saltar la selección de tipo
+                    setFormData({ user_type: 'candidate' });
+                    setCurrentStep(2);
                 }
             } catch (err) {
                 console.error('[useOnboardingCandidate] Error loading progress:', err);

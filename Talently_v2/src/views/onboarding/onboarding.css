@@ -7,7 +7,11 @@
 .ob-screen {
     display: flex;
     flex-direction: column;
+    /* --app-height = alto visible real. app-container YA reserva los safe
+       insets; 100vh aquí desborda y el botón Siguiente quedaba bajo la
+       barra de gestos (2026-06-11). Ver nota en global.css. */
     min-height: 100vh;
+    min-height: var(--app-height, 100vh);
     padding: 20px;
     background: var(--bg);
     animation: fadeIn 0.3s ease;
