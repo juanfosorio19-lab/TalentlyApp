@@ -206,3 +206,14 @@
 - **CAUSA RAÍZ:** El overlay se creó para depurar el APK y quedó activo por defecto en TODOS los logError; credenciales inválidas es un error esperado pero se logueaba sin `overlay: false`
 - **SOLUCIÓN APLICADA:** `overlayEnabled()`: el overlay solo se muestra en dev o con el flag `talently_debug` en localStorage (activable con `window.__talentlyDebug(true)` vía chrome://inspect). El log remoto a client_logs sigue siempre activo. AUTH_LOGIN fallido pasó a `level: 'warn', overlay: false`.
 - **PATRÓN A EVITAR:** Herramientas de debug visibles JAMÁS activas por defecto en producción; los errores esperados (validación, credenciales) se loguean como warn sin UI de developer. Validación: qa-auditor BR-S18.
+
+---
+
+## Error #19 — "No se pudo guardar este paso": hidratación re-enviaba '' a columnas numeric
+
+- **ERROR:** El paso 1 del onboarding falla con "No se pudo guardar este paso. Revisa tu conexión" aunque hay internet
+- **SÍNTOMA:** client_logs: `saveStep:error paso=1 invalid input syntax for type numeric: "" (22P02)`
+- **CONTEXTO:** `useOnboardingCandidate.loadProgress` + `db.profiles.create` — usuario con perfil parcial existente que vuelve al wizard
+- **CAUSA RAÍZ:** loadProgress hidrata los inputs con `profile.salary_expectation || ''` (los inputs controlados necesitan ''), y saveStep hace spread de TODO el formData al upsert → `salary_expectation: ''` llega a una columna numeric → 22P02. La variante de hidratación del patrón #15 ("'' jamás a numeric/date"): el smoke test del audit usaba valores bien formados y no la cubría.
+- **SOLUCIÓN APLICADA:** Sanitizador central en `db.profiles.create`: `'' → null` en todas las columnas numeric/date reales de profiles (salary_*, *_onboarding_step, lat/long, birth_*). Beneficia a ambos wizards y a cualquier caller futuro.
+- **PATRÓN A EVITAR:** Inputs controlados hidratan null→'' y los spreads lo devuelven a la BD. La sanitización de tipos vive en el WRAPPER (única puerta a la tabla), no en cada caller. El smoke test 6.4 del qa-auditor ahora incluye la variante con '' en numeric/date.

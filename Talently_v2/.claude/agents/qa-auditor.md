@@ -120,6 +120,13 @@ via MCP un INSERT con el payload completo representativo dentro de
 `BEGIN; ... ROLLBACK;` usando el uid de un usuario de prueba. Si falla, ese
 error es el que sufre producción. Reportar el mensaje exacto.
 
+⚠️ Incluir SIEMPRE la variante de HIDRATACIÓN (ERROR_LOG #19): los hooks
+convierten null→'' para los inputs controlados y el spread re-envía esos ''
+al guardar. Verificar que `db.profiles.create` sanitiza ''→null en TODAS las
+columnas numeric/date de profiles (comparar su lista NUMERIC_OR_DATE_COLS
+contra information_schema — si se agregó una columna numeric nueva y no está
+en la lista, es un 22P02 esperando usuario con perfil parcial).
+
 **6.5 Columnas de metadata (legacy, mantener):**
 ```sql
 SELECT 'company_positions' AS t, COUNT(*) FILTER (WHERE icon IS NULL) AS missing_icon FROM public.company_positions

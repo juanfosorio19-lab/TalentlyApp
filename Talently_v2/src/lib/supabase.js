@@ -160,9 +160,22 @@ export const db = {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return { error: { message: 'No authenticated user' } };
 
+            // '' jamás a numeric/date (22P02) — ERROR_LOG #15/#19. Los hooks
+            // hidratan los inputs con '' cuando la columna es null y re-envían
+            // ese '' al guardar. Columnas numeric/date reales de profiles:
+            const NUMERIC_OR_DATE_COLS = [
+                'salary_expectation', 'salary_min', 'salary_max',
+                'onboarding_step', 'company_onboarding_step',
+                'latitude', 'longitude', 'birth_date', 'birthday',
+            ];
+            const clean = { ...profileData, id: user.id };
+            for (const col of NUMERIC_OR_DATE_COLS) {
+                if (clean[col] === '') clean[col] = null;
+            }
+
             return await supabase
                 .from('profiles')
-                .upsert([{ ...profileData, id: user.id }])
+                .upsert([clean])
                 .select()
                 .single();
         },
