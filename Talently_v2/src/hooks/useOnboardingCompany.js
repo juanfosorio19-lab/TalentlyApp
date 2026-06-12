@@ -96,6 +96,14 @@ export default function useOnboardingCompany() {
                 return;
             }
 
+            // Caso espejo del wizard candidato: si en el paso 1 eligió
+            // "Soy Candidato", refrescar AuthContext y saltar al wizard correcto.
+            if (merged.user_type === 'candidate') {
+                await refreshProfile();
+                navigate('/onboarding/candidate', { replace: true });
+                return;
+            }
+
             setCurrentStep(nextStep);
         } catch (err) {
             console.error('[useOnboardingCompany] Error saving step:', err);
@@ -104,7 +112,7 @@ export default function useOnboardingCompany() {
         } finally {
             setSaving(false);
         }
-    }, [formData]);
+    }, [formData, navigate, refreshProfile]);
 
     // ── Retroceder paso ──
     const goBack = useCallback(() => {

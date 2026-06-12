@@ -184,3 +184,25 @@
 - **CAUSA RAÍZ:** El handler existía (`navigate('/app')`) pero los tabs de `MainApp` son estado interno (`activeTab`), no rutas — la vista YA está en `/app`, así que react-router no remonta nada y el tab activo sigue siendo "matches". Handler presente, efecto cero: un botón fantasma que ningún grep de "botones sin onClick" detecta.
 - **SOLUCIÓN APLICADA:** `MainApp` pasa `onExplore={() => setActiveTab('swipe')}` a `<MatchesView isTab>`; el botón usa `onExplore` si existe y cae a `navigate('/app')` solo en el uso standalone (`/app/matches`).
 - **PATRÓN A EVITAR:** En vistas embebidas como tab, NUNCA navegar a la ruta del contenedor — pasar un callback del contenedor para cambiar de tab. Todo botón visible debe tener efecto observable. Validación automática: qa-auditor sección 13 (ghost buttons) / BR-S16.
+
+---
+
+## Error #17 — Elegir "Soy Empresa" en el wizard de candidato no bifurcaba
+
+- **ERROR:** Usuario inicia sesión sin perfil, elige "Soy Empresa" en el paso 1 y el wizard continúa con los 12 pasos de CANDIDATO
+- **SÍNTOMA:** Tras seleccionar empresa y tocar Continuar, aparece "¿Cómo te llamas?" (paso 2 de candidato); el perfil queda con `user_type='company'` pero datos de candidato
+- **CONTEXTO:** `OnboardingGate` manda a `/onboarding/candidate` por defecto (sin perfil ni metadata, ej. cuentas creadas desde el dashboard) → `useOnboardingCandidate.saveStep`
+- **CAUSA RAÍZ:** `saveStep` guardaba el `user_type` elegido y avanzaba al siguiente paso del MISMO wizard, sin chequear si el tipo elegido corresponde a otro wizard
+- **SOLUCIÓN APLICADA:** En ambos hooks, tras el upsert del paso 1: si el tipo elegido es del otro wizard → `refreshProfile()` (AuthContext manda en routing, ver #13) + `navigate('/onboarding/<otro>', { replace: true })`
+- **PATRÓN A EVITAR:** Toda pantalla de selección que determina un FLUJO (no solo un dato) debe bifurcar explícitamente tras guardar. Validación: qa-auditor BR-S17.
+
+---
+
+## Error #18 — Overlay de debug con stack trace visible en producción
+
+- **ERROR:** Al escribir mal la contraseña, además del mensaje amigable aparecía el overlay "Talently — error capturado" con stack trace completo
+- **SÍNTOMA:** Panel oscuro con `[AUTH_LOGIN] Invalid login credentials` + stack de minificado, visible para cualquier usuario del APK
+- **CONTEXTO:** `errorLogger.js` (showOverlay) + `LoginView.handleLogin`
+- **CAUSA RAÍZ:** El overlay se creó para depurar el APK y quedó activo por defecto en TODOS los logError; credenciales inválidas es un error esperado pero se logueaba sin `overlay: false`
+- **SOLUCIÓN APLICADA:** `overlayEnabled()`: el overlay solo se muestra en dev o con el flag `talently_debug` en localStorage (activable con `window.__talentlyDebug(true)` vía chrome://inspect). El log remoto a client_logs sigue siempre activo. AUTH_LOGIN fallido pasó a `level: 'warn', overlay: false`.
+- **PATRÓN A EVITAR:** Herramientas de debug visibles JAMÁS activas por defecto en producción; los errores esperados (validación, credenciales) se loguean como warn sin UI de developer. Validación: qa-auditor BR-S18.

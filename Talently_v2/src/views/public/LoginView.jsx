@@ -80,13 +80,14 @@ export default function LoginView() {
             const { error: signInError } = await db.auth.signIn(email, password);
 
             if (signInError) {
-                // Log detallado para diagnosticar (status, code, name) — ver client_logs
+                // Log detallado para diagnosticar (status, code, name) — ver client_logs.
+                // overlay:false — credenciales inválidas es un error ESPERADO; el
+                // usuario ya ve el mensaje amigable de abajo.
                 logError('AUTH_LOGIN', signInError.message, {
                     name: signInError.name,
                     status: signInError.status,
                     code: signInError.code,
-                    stack: signInError.stack,
-                }, { userEmail: email });
+                }, { userEmail: email, overlay: false, level: 'warn' });
                 setError(
                     signInError.message === 'Invalid login credentials'
                         ? 'Credenciales incorrectas. Verifica tu email y contraseña.'

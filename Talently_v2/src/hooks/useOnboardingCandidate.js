@@ -13,7 +13,7 @@ const TOTAL_STEPS = 12;
 
 export default function useOnboardingCandidate() {
     const navigate = useNavigate();
-    const { state, dispatch } = useApp();
+    const { dispatch } = useApp();
     const { refreshProfile } = useAuth();
 
     const [currentStep, setCurrentStep] = useState(1);
@@ -102,6 +102,16 @@ export default function useOnboardingCandidate() {
                 dispatch({ type: Actions.SET_PROFILE, payload: profile });
             }
 
+            // Si en el paso 1 eligió "Soy Empresa", este wizard no le corresponde:
+            // refrescar AuthContext (user_type afecta el routing — ERROR_LOG #13)
+            // y saltar al wizard de empresa. Sin esto seguía llenando los 12
+            // pasos de candidato con user_type='company' (bug 2026-06-11).
+            if (merged.user_type === 'company') {
+                await refreshProfile();
+                navigate('/onboarding/company', { replace: true });
+                return;
+            }
+
             setCurrentStep(nextStep);
         } catch (err) {
             console.error('[useOnboardingCandidate] Error saving step:', err);
@@ -110,7 +120,7 @@ export default function useOnboardingCandidate() {
         } finally {
             setSaving(false);
         }
-    }, [formData, dispatch]);
+    }, [formData, dispatch, navigate, refreshProfile]);
 
     // ── Retroceder paso ──
     const goBack = useCallback(() => {

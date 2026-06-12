@@ -80,6 +80,14 @@ PATRÓN A EVITAR: [regla general para no repetirlo]
 - **Safe areas APK (ERROR_LOG #14)**: todo `position: fixed` anclado arriba/abajo compensa con `var(--safe-area-inset-top/bottom, 0px)`.
 - **Botones fantasma (ERROR_LOG #16)**: en vistas embebidas como TAB (MainApp `/app`, CompanyDashboard) los tabs son estado interno — `navigate()` a la ruta del contenedor es un no-op. El contenedor debe pasar un callback (patrón `onExplore`). Todo botón visible debe tener handler con efecto real; qa-auditor sección 13 / BR-S16 lo valida.
 
+## Regla permanente — Registro de pendientes
+
+Todo lo que se postergue ("lo veo después", "queda pendiente", bloqueado por
+config externa o datos del dueño) se anota INMEDIATAMENTE en
+`docs/PENDIENTES.md` con fecha, descripción y qué lo bloquea. Al resolver un
+pendiente, moverlo a la sección "Resueltos" con commit/OTA. Revisar ese
+archivo al inicio de cada sesión junto con ERROR_LOG.md.
+
 ## Regla — Control de versiones automático
 
 Después de cada modificación que funcione correctamente:

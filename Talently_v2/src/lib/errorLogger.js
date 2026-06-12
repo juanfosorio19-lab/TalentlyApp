@@ -1,3 +1,4 @@
+/* global __BUILD_COMMIT__ */
 // src/lib/errorLogger.js
 // Logger remoto + local. Funciona en web Y en el APK (producción).
 // Canal A: inserta en Supabase public.client_logs (lo leemos via MCP/service_role).
@@ -94,6 +95,20 @@ function showOverlay(entry) {
     } catch { /* noop */ }
 }
 
+// ── Overlay solo para debug ──
+// En producción los usuarios NO deben ver stack traces (bug 2026-06-11: el
+// overlay aparecía al equivocarse de contraseña). El log remoto a client_logs
+// sigue SIEMPRE activo — esa es nuestra visibilidad. El overlay queda para
+// dev, o en el APK activándolo manualmente: window.__talentlyDebug(true).
+function overlayEnabled() {
+    try {
+        if (import.meta.env.DEV) return true;
+        return localStorage.getItem('talently_debug') === '1';
+    } catch {
+        return false;
+    }
+}
+
 // ── API pública: log explícito desde cualquier parte ──
 export function logError(context, message, detail = null, opts = {}) {
     const entry = {
@@ -105,7 +120,7 @@ export function logError(context, message, detail = null, opts = {}) {
     };
     appendLocal(entry);
     sendRemote(entry);
-    if (opts.overlay !== false) showOverlay(entry);
+    if (opts.overlay !== false && overlayEnabled()) showOverlay(entry);
     console.warn('[ErrorLogger]', context, entry.message);
 }
 
@@ -132,6 +147,12 @@ export function initErrorLogger() {
         const log = JSON.parse(localStorage.getItem('talently_error_log') || '[]');
         console.table(log);
         return log;
+    };
+
+    // Activar/desactivar el overlay de debug en producción (persiste en el device)
+    window.__talentlyDebug = (on = true) => {
+        localStorage.setItem('talently_debug', on ? '1' : '0');
+        return `overlay de debug ${on ? 'ACTIVADO' : 'desactivado'}`;
     };
 
     // Log de arranque: confirma que la app inició, en qué plataforma y QUÉ
