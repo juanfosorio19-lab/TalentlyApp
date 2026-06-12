@@ -43,7 +43,7 @@ styles/         → variables.css, base.css
 5. **Chart.js**: Siempre destruir la instancia en el return del useEffect (`chart.destroy()`).
 6. **Rutas**: Rutas públicas en `/`, candidato en `/app/`, empresa en `/company/`.
 7. **Formularios**: Nunca usar la etiqueta HTML `<form>`. Usar handlers con onClick/onChange.
-8. **Pasos de onboarding**: El onboarding de candidato tiene 12 pasos (no 16). El de empresa tiene 12 pasos (no 14). Los pasos fantasma NO existen.
+8. **Pasos de onboarding**: El onboarding de candidato tiene 12 pasos (no 16). El de empresa tiene 11 pasos (no 14 ni 12): la selección de tipo candidato/empresa existe UNA sola vez en toda la app — el paso 1 del wizard de candidato. El wizard de empresa NO tiene paso de tipo (pantalla duplicada eliminada 2026-06-11). Los pasos fantasma NO existen.
 
 ## Regla permanente — Bitácora de errores
 

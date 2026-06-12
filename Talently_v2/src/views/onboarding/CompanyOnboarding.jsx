@@ -1,11 +1,14 @@
 // src/views/onboarding/CompanyOnboarding.jsx
-// Container del onboarding empresa — 12 pasos reales.
-// Pasos fantasma (9, 11 originales) NO existen aquí.
+// Container del onboarding empresa — 11 pasos reales.
+// La selección de tipo (candidato/empresa) NO es un paso de este wizard:
+// vive solo en el paso 1 del wizard de candidato (pantalla duplicada
+// eliminada el 2026-06-11). Los archivos conservan su nombre StepN_ viejo;
+// el número real del paso es la key de STEP_COMPONENTS.
 // companyBanner NO se implementa aquí (vive en Settings).
+import { useNavigate } from 'react-router-dom';
 import useOnboardingCompany from '../../hooks/useOnboardingCompany';
 import './onboarding.css';
 
-import Step1_TipoPerfil from './company/Step1_TipoPerfil';
 import Step2_InfoBasica from './company/Step2_InfoBasica';
 import Step3_Detalles from './company/Step3_Detalles';
 import Step4_Cultura from './company/Step4_Cultura';
@@ -19,21 +22,21 @@ import Step11_Tags from './company/Step11_Tags';
 import Step12_Multimedia from './company/Step12_Multimedia';
 
 const STEP_COMPONENTS = {
-    1: Step1_TipoPerfil,
-    2: Step2_InfoBasica,
-    3: Step3_Detalles,
-    4: Step4_Cultura,
-    5: Step5_EtapaTamano,
-    6: Step6_ModalidadesBeneficios,
-    7: Step7_PosicionesSeniority,
-    8: Step8_Stack,
-    9: Step9_ProcesoSeleccion,
-    10: Step10_Unicidad,
-    11: Step11_Tags,
-    12: Step12_Multimedia,
+    1: Step2_InfoBasica,
+    2: Step3_Detalles,
+    3: Step4_Cultura,
+    4: Step5_EtapaTamano,
+    5: Step6_ModalidadesBeneficios,
+    6: Step7_PosicionesSeniority,
+    7: Step8_Stack,
+    8: Step9_ProcesoSeleccion,
+    9: Step10_Unicidad,
+    10: Step11_Tags,
+    11: Step12_Multimedia,
 };
 
 export default function CompanyOnboarding() {
+    const navigate = useNavigate();
     const {
         currentStep,
         formData,
@@ -76,11 +79,15 @@ export default function CompanyOnboarding() {
             {/* ── Progress bar ── */}
             <div className="ob-progress">
                 <div className="ob-header">
-                    {currentStep > 1 && (
-                        <button className="ob-back-btn" onClick={goBack} aria-label="Volver">
-                            <span className="material-symbols-rounded">arrow_back</span>
-                        </button>
-                    )}
+                    {/* Volver desde el paso 1 regresa a la selección de tipo
+                        (paso 1 del wizard de candidato) por si se equivocó */}
+                    <button
+                        className="ob-back-btn"
+                        onClick={currentStep > 1 ? goBack : () => navigate('/onboarding/candidate')}
+                        aria-label="Volver"
+                    >
+                        <span className="material-symbols-rounded">arrow_back</span>
+                    </button>
                     <span className="ob-step-label">Paso {currentStep} de {totalSteps}</span>
                 </div>
                 <div className="ob-progress-bar">

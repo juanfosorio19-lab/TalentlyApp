@@ -9,7 +9,10 @@ import { useApp, Actions } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { logError } from '../lib/errorLogger';
 
-const TOTAL_STEPS = 12;
+// 11 pasos: la selección de tipo NO es un paso de este wizard — vive
+// únicamente en el paso 1 del wizard de candidato (eliminada la pantalla
+// duplicada el 2026-06-11; quien llega aquí ya es empresa).
+const TOTAL_STEPS = 11;
 
 export default function useOnboardingCompany() {
     const navigate = useNavigate();
@@ -31,11 +34,9 @@ export default function useOnboardingCompany() {
 
                 const { data: profile } = await db.profiles.getById(user.id);
                 if (profile) {
-                    let savedStep = profile.company_onboarding_step || 1;
-                    // El paso 1 es la selección de tipo: si ya está definido como
-                    // empresa (ej. bifurcó desde el wizard de candidato), no volver
-                    // a preguntarlo (doble selección 2026-06-11)
-                    if (savedStep <= 1 && profile.user_type === 'company') savedStep = 2;
+                    // Clamp: perfiles guardados con la numeración vieja (12 pasos
+                    // con selección de tipo) no deben apuntar fuera de rango
+                    const savedStep = Math.min(profile.company_onboarding_step || 1, TOTAL_STEPS);
                     setCurrentStep(savedStep);
 
                     setFormData({
@@ -62,11 +63,6 @@ export default function useOnboardingCompany() {
                         company_logo: profile.company_logo || '',
                         company_photos: profile.company_photos || [],
                     });
-                } else if (user.user_metadata?.user_type === 'company') {
-                    // Sin perfil pero eligió tipo al registrarse: el wizard no
-                    // debe preguntarlo de nuevo — saltar la selección de tipo
-                    setFormData({ user_type: 'company' });
-                    setCurrentStep(2);
                 }
             } catch (err) {
                 console.error('[useOnboardingCompany] Error loading progress:', err);

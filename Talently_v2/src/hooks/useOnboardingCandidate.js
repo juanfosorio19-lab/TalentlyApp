@@ -88,11 +88,14 @@ export default function useOnboardingCandidate() {
             const merged = { ...formData, ...stepData };
             setFormData(merged);
 
-            // Upsert en profiles
+            // Upsert en profiles. Si eligió Empresa, este wizard NO avanza su
+            // propio paso: así, "volver" desde el wizard de empresa re-muestra
+            // la selección de tipo (única pantalla de tipo en toda la app).
+            const isCrossType = merged.user_type === 'company';
             const { data: profile, error } = await db.profiles.create({
                 ...merged,
                 user_type: merged.user_type || 'candidate',
-                onboarding_step: nextStep,
+                onboarding_step: isCrossType ? 1 : nextStep,
             });
 
             // ⚠️ Si el upsert falla NO avanzamos: avanzar fingiría que se
