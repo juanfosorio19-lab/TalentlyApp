@@ -2,15 +2,26 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../../lib/supabase';
 
-// Icono y descripción por etapa conocida; fallback para etapas nuevas en DB
+// Icono y descripción por etapa conocida; fallback para etapas nuevas en DB.
+// Las descripciones explican en simple qué significa cada etapa — no todos
+// los usuarios saben qué es "Serie B" (feedback real 2026-06-11).
 const STAGE_CONFIG = {
-    'Startup':     { icon: 'rocket_launch', description: 'Etapa temprana, buscando product-market fit.' },
-    'Scale-up':    { icon: 'trending_up',   description: 'Fase de crecimiento y expansión acelerada.' },
-    'Scaleup':     { icon: 'trending_up',   description: 'Fase de crecimiento y expansión acelerada.' },
-    'Pyme':        { icon: 'storefront',    description: 'Empresa pequeña o mediana consolidada.' },
-    'SME':         { icon: 'storefront',    description: 'Empresa pequeña o mediana consolidada.' },
-    'Enterprise':  { icon: 'domain',        description: 'Gran organización con 250+ empleados.' },
-    'Corporación': { icon: 'domain',        description: 'Gran organización con estructura corporativa.' },
+    'Pre-seed':     { icon: 'lightbulb',     description: 'Recién partiendo: validando la idea, aún sin inversión formal.' },
+    'Seed':         { icon: 'psychiatry',    description: 'Primera inversión recibida para construir el producto inicial.' },
+    'Serie A':      { icon: 'rocket_launch', description: 'Producto funcionando; inversión para crecer en clientes y equipo.' },
+    'Serie B':      { icon: 'trending_up',   description: 'Negocio probado; inversión grande para expandirse rápido.' },
+    'Serie C+':     { icon: 'public',        description: 'Empresa consolidada con varias rondas; expansión a gran escala.' },
+    'Early stage':  { icon: 'rocket_launch', description: 'Etapa temprana, buscando encajar el producto con el mercado.' },
+    'Growth stage': { icon: 'trending_up',   description: 'Fase de crecimiento y expansión acelerada.' },
+    'Mature':       { icon: 'storefront',    description: 'Empresa estable y rentable, sin depender de inversión externa.' },
+    'Corporativo':  { icon: 'domain',        description: 'Gran organización con estructura y procesos corporativos.' },
+    'Startup':      { icon: 'rocket_launch', description: 'Etapa temprana, buscando product-market fit.' },
+    'Scale-up':     { icon: 'trending_up',   description: 'Fase de crecimiento y expansión acelerada.' },
+    'Scaleup':      { icon: 'trending_up',   description: 'Fase de crecimiento y expansión acelerada.' },
+    'Pyme':         { icon: 'storefront',    description: 'Empresa pequeña o mediana consolidada.' },
+    'SME':          { icon: 'storefront',    description: 'Empresa pequeña o mediana consolidada.' },
+    'Enterprise':   { icon: 'domain',        description: 'Gran organización con 250+ empleados.' },
+    'Corporación':  { icon: 'domain',        description: 'Gran organización con estructura corporativa.' },
 };
 const FALLBACK_STAGE_ICONS = ['rocket_launch', 'trending_up', 'storefront', 'domain', 'business'];
 

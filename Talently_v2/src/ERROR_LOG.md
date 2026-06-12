@@ -217,3 +217,36 @@
 - **CAUSA RAÍZ:** loadProgress hidrata los inputs con `profile.salary_expectation || ''` (los inputs controlados necesitan ''), y saveStep hace spread de TODO el formData al upsert → `salary_expectation: ''` llega a una columna numeric → 22P02. La variante de hidratación del patrón #15 ("'' jamás a numeric/date"): el smoke test del audit usaba valores bien formados y no la cubría.
 - **SOLUCIÓN APLICADA:** Sanitizador central en `db.profiles.create`: `'' → null` en todas las columnas numeric/date reales de profiles (salary_*, *_onboarding_step, lat/long, birth_*). Beneficia a ambos wizards y a cualquier caller futuro.
 - **PATRÓN A EVITAR:** Inputs controlados hidratan null→'' y los spreads lo devuelven a la BD. La sanitización de tipos vive en el WRAPPER (única puerta a la tabla), no en cada caller. El smoke test 6.4 del qa-auditor ahora incluye la variante con '' en numeric/date.
+
+---
+
+## Error #20 — Publicar oferta fallaba: columnas inexistentes y sin log remoto
+
+- **ERROR:** Al terminar de crear una oferta aparece "Error al publicar la oferta" (alert)
+- **SÍNTOMA:** La oferta nunca se crea; NADA en client_logs (la vista usaba console.error + alert)
+- **CONTEXTO:** `CreateOffer.handlePublish` → `db.offers.create`
+- **CAUSA RAÍZ:** El payload incluía `area`, `location` y `selection_process` — columnas que NO existen en offers (las reales: professional_area, city, currency…) → 42703. Mismo patrón del #15 (escribir columnas sin verificar el schema), y además el error solo iba a console (invisible en APK).
+- **SOLUCIÓN APLICADA:** Payload mapeado a columnas reales (professional_area, city, currency) + logError('OFFER', …) + error visible inline. El smoke test 6.4 del qa-auditor ahora incluye el payload de offers.
+- **PATRÓN A EVITAR:** Regla 4 del CLAUDE.md SIEMPRE (verificar columnas antes de escribir) y NUNCA console.error como único registro — en el APK no hay consola: logError o no existió.
+
+---
+
+## Error #21 — Los datos del ÚLTIMO paso del wizard se perdían (logo y fotos)
+
+- **ERROR:** El usuario sube logo/fotos en el paso final del onboarding pero el perfil queda sin ellos
+- **SÍNTOMA:** company_logo='' y company_photos=[] en BD pese a uploads exitosos a Storage
+- **CONTEXTO:** `CompanyOnboarding.handleNext` + `useOnboardingCompany.completeOnboarding`
+- **CAUSA RAÍZ:** En el paso final el container llamaba `completeOnboarding()` SIN pasarle el stepData; completeOnboarding usa formData (estado React) que aún no incluye los datos del paso que se acaba de completar → se persistía todo MENOS lo del último paso.
+- **SOLUCIÓN APLICADA:** `completeOnboarding(finalStepData)` hace merge explícito; aplicado en espejo al wizard de candidato.
+- **PATRÓN A EVITAR:** El estado de React no se actualiza síncronamente: cualquier "guardar todo" disparado por un paso debe recibir los datos de ESE paso como argumento, nunca confiar en que ya están en el estado.
+
+---
+
+## Error #22 — Fallback entre columnas-lista con || : un array vacío es truthy
+
+- **ERROR:** Los valores de cultura guardados en onboarding no aparecían en Configuración de empresa
+- **SÍNTOMA:** culture_values=['Innovación',…] en BD pero la UI muestra "+ Agrega los valores de tu empresa"
+- **CONTEXTO:** `CompanySettingsView` — `userProfile?.company_values || userProfile?.culture_values`
+- **CAUSA RAÍZ:** `company_values` era `[]` (vacío pero truthy) → el || nunca caía al fallback `culture_values`
+- **SOLUCIÓN APLICADA:** helper `firstNonEmpty(...listas)` que elige la primera lista con elementos
+- **PATRÓN A EVITAR:** Para fallbacks entre columnas-lista usar `.length`, jamás `||`. Auditar con grep `\|\| userProfile` / `\|\| profile\.` sobre campos array.

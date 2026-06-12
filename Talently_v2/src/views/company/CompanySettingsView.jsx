@@ -140,11 +140,16 @@ export default function CompanySettingsView() {
         navigate('/', { replace: true });
     };
 
+    // ⚠️ Para fallbacks entre columnas-lista usar .length, no || : un array
+    // VACÍO es truthy y corta el fallback (los valores de cultura del
+    // onboarding no se mostraban porque company_values era [] — 2026-06-11)
+    const firstNonEmpty = (...lists) => lists.find((l) => Array.isArray(l) && l.length > 0) || [];
+
     const logo        = userProfile?.company_logo || userProfile?.company_logo_url;
     const companyName = userProfile?.company_name || 'Tu empresa';
     const techStack   = userProfile?.company_tech_stack || [];
-    const benefits    = userProfile?.benefits || userProfile?.company_benefits || [];
-    const values      = userProfile?.company_values || userProfile?.culture_values || [];
+    const benefits    = firstNonEmpty(userProfile?.benefits, userProfile?.company_benefits);
+    const values      = firstNonEmpty(userProfile?.company_values, userProfile?.culture_values);
 
     return (
         <div className="csv">

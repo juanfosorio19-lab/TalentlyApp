@@ -10,7 +10,9 @@ export default function CompanySwipe() {
         <div style={{
             display: 'flex',
             flexDirection: 'column',
-            height: '100vh',
+            // --app-height: 100vh desborda (app-container ya reserva los safe
+            // insets) y los botones X/corazón quedaban bajo la barra de gestos
+            height: 'var(--app-height, 100vh)',
             background: 'var(--bg)',
         }}>
             {/* Header */}

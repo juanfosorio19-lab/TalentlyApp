@@ -703,3 +703,22 @@
     letter-spacing: 0.4px;
     margin-bottom: 4px;
 }
+
+/* ── Errores de validación / publicación ── */
+.co__salary-error {
+    margin-top: 8px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--danger);
+}
+
+.co__publish-error {
+    margin: 0 20px 4px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--error-subtle);
+    color: var(--danger);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: center;
+}

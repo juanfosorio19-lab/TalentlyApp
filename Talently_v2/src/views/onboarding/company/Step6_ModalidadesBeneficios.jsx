@@ -45,7 +45,11 @@ const BENEFIT_ICONS = {
 const FALLBACK_BENEFIT_ICONS = ['star', 'check_circle', 'favorite', 'bolt', 'eco', 'handshake'];
 
 export default function Step6_ModalidadesBeneficios({ data, onNext, saving }) {
-    const [modalities, setModalities] = useState(data.work_modalities || []);
+    // Modalidad ÚNICA (feedback 2026-06-11: multi-select confundía). La
+    // columna work_modalities sigue siendo array — se guarda [modality].
+    const [modality, setModality] = useState(
+        Array.isArray(data.work_modalities) ? (data.work_modalities[0] || '') : (data.work_modalities || '')
+    );
     const [benefits, setBenefits] = useState(data.company_benefits || []);
 
     const [modalityOptions, setModalityOptions] = useState([]);
@@ -56,11 +60,6 @@ export default function Step6_ModalidadesBeneficios({ data, onNext, saving }) {
         db.reference.getCompanyBenefits().then(({ data: b }) => setBenefitOptions(b || []));
     }, []);
 
-    const toggleModality = (name) => {
-        setModalities((prev) =>
-            prev.includes(name) ? prev.filter((m) => m !== name) : [...prev, name]
-        );
-    };
 
     const toggleBenefit = (name) => {
         setBenefits((prev) =>
@@ -69,7 +68,7 @@ export default function Step6_ModalidadesBeneficios({ data, onNext, saving }) {
     };
 
     const handleNext = () => {
-        onNext({ work_modalities: modalities, company_benefits: benefits });
+        onNext({ work_modalities: modality ? [modality] : [], company_benefits: benefits });
     };
 
     return (
@@ -80,7 +79,7 @@ export default function Step6_ModalidadesBeneficios({ data, onNext, saving }) {
             <div className="ob-content">
                 {/* ── Sección: Modalidad de trabajo ── */}
                 <div className="ob-field">
-                    <label className="ob-label">Modalidad de trabajo</label>
+                    <label className="ob-label">Modalidad de trabajo principal</label>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                         {modalityOptions.map((m, i) => {
@@ -88,11 +87,11 @@ export default function Step6_ModalidadesBeneficios({ data, onNext, saving }) {
                                 icon: FALLBACK_MODALITY_ICONS[i % FALLBACK_MODALITY_ICONS.length],
                                 description: '',
                             };
-                            const isSelected = modalities.includes(m.name);
+                            const isSelected = modality === m.name;
                             return (
                                 <button
                                     key={m.id || m.name}
-                                    onClick={() => toggleModality(m.name)}
+                                    onClick={() => setModality(m.name)}
                                     style={{
                                         display: 'flex',
                                         alignItems: 'center',

@@ -127,6 +127,12 @@ columnas numeric/date de profiles (comparar su lista NUMERIC_OR_DATE_COLS
 contra information_schema — si se agregó una columna numeric nueva y no está
 en la lista, es un 22P02 esperando usuario con perfil parcial).
 
+⚠️ Incluir también el payload de `CreateOffer.handlePublish` contra el schema
+de offers (ERROR_LOG #20: enviaba area/location/selection_process — columnas
+inexistentes → 42703 y la oferta jamás se creaba; el error solo iba a
+console, invisible en APK). Toda vista con escrituras debe usar logError, no
+console.error.
+
 **6.5 Columnas de metadata (legacy, mantener):**
 ```sql
 SELECT 'company_positions' AS t, COUNT(*) FILTER (WHERE icon IS NULL) AS missing_icon FROM public.company_positions

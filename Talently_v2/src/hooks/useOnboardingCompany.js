@@ -9,10 +9,9 @@ import { useApp, Actions } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { logError } from '../lib/errorLogger';
 
-// 11 pasos: la selección de tipo NO es un paso de este wizard — vive
-// únicamente en el paso 1 del wizard de candidato (eliminada la pantalla
-// duplicada el 2026-06-11; quien llega aquí ya es empresa).
-const TOTAL_STEPS = 11;
+// 10 pasos: la selección de tipo vive solo en el wizard de candidato y el
+// stack tecnológico se pide al crear ofertas de área TI (no en onboarding).
+const TOTAL_STEPS = 10;
 
 export default function useOnboardingCompany() {
     const navigate = useNavigate();
@@ -125,16 +124,22 @@ export default function useOnboardingCompany() {
     }, []);
 
     // ── Completar onboarding ──
-    const completeOnboarding = useCallback(async () => {
+    // finalStepData: datos del último paso (logo/fotos). formData es estado y
+    // aún no los incluye cuando el container llama esto — sin el merge se
+    // perdían (bug 2026-06-11).
+    const completeOnboarding = useCallback(async (finalStepData = {}) => {
         setSaving(true);
         setSaveError('');
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
+            const merged = { ...formData, ...finalStepData };
+            setFormData(merged);
+
             const { data: profile, error } = await db.profiles.create({
-                ...formData,
-                user_type: formData.user_type || 'company',
+                ...merged,
+                user_type: merged.user_type || 'company',
                 onboarding_completed: true,
                 company_onboarding_step: TOTAL_STEPS,
             });

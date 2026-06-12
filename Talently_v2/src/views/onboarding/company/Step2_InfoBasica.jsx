@@ -1,4 +1,4 @@
-// Company Step 2 — Información básica: nombre, sector, país, ciudad, sitio web
+// Company Step 2 — Información básica: nombre, sector, país, ciudad, links
 import { useState, useEffect } from 'react';
 import { db } from '../../../lib/supabase';
 
@@ -8,9 +8,13 @@ export default function Step2_InfoBasica({ data, onNext, saving }) {
     const [country, setCountry] = useState(data.country || '');
     const [city, setCity] = useState(data.city || '');
     const [website, setWebsite] = useState(data.website || '');
+    // LinkedIn vive aquí junto al sitio web (antes estaba en otro paso y
+    // parecía que se pedían links dos veces)
+    const [linkedinUrl, setLinkedinUrl] = useState(data.linkedin_url || '');
     const [error, setError] = useState('');
 
     const [countries, setCountries] = useState([]);
+    const [cities, setCities] = useState([]);
     const [sectors, setSectors] = useState([]);
 
     useEffect(() => {
@@ -18,14 +22,27 @@ export default function Step2_InfoBasica({ data, onNext, saving }) {
         db.reference.getCompanySectors().then(({ data: s }) => setSectors(s || []));
     }, []);
 
+    // Ciudades dependientes del país (mismo patrón que el wizard de candidato)
+    useEffect(() => {
+        if (!country) return;
+        const countryObj = countries.find((c) => c.name === country);
+        if (!countryObj) return;
+        let cancelled = false;
+        db.reference.getCities(countryObj.id).then(({ data: c }) => {
+            if (!cancelled) setCities(c || []);
+        });
+        return () => { cancelled = true; };
+    }, [country, countries]);
+
     const validateUrl = (url) => /^https?:\/\/.+\..+/.test(url);
 
     const handleNext = () => {
         if (!companyName.trim()) { setError('Ingresa el nombre de tu empresa'); return; }
         if (!sector) { setError('Selecciona el sector de tu empresa'); return; }
         if (!country) { setError('Selecciona el país de tu empresa'); return; }
-        if (!city.trim()) { setError('Ingresa la ciudad de tu empresa'); return; }
+        if (!city.trim()) { setError('Selecciona la ciudad de tu empresa'); return; }
         if (website && !validateUrl(website)) { setError('El sitio web debe tener el formato https://...'); return; }
+        if (linkedinUrl && !validateUrl(linkedinUrl)) { setError('El LinkedIn debe tener el formato https://...'); return; }
         setError('');
         onNext({
             company_name: companyName.trim(),
@@ -33,6 +50,7 @@ export default function Step2_InfoBasica({ data, onNext, saving }) {
             country,
             city: city.trim(),
             website: website.trim(),
+            linkedin_url: linkedinUrl.trim(),
         });
     };
 
@@ -96,7 +114,7 @@ export default function Step2_InfoBasica({ data, onNext, saving }) {
                         <select
                             className="ob-select"
                             value={country}
-                            onChange={(e) => setCountry(e.target.value)}
+                            onChange={(e) => { setCountry(e.target.value); setCity(''); }}
                         >
                             <option value="">Seleccionar país...</option>
                             {countries.map((c) => (
@@ -119,14 +137,25 @@ export default function Step2_InfoBasica({ data, onNext, saving }) {
                     </label>
                     <div className="ob-input-wrapper">
                         <span className="material-symbols-rounded ob-input-icon">location_on</span>
-                        <input
+                        <select
                             id="ob-city"
                             name="city"
-                            className="ob-input"
-                            placeholder="Ej. Madrid"
+                            className="ob-select"
                             value={city}
                             onChange={(e) => setCity(e.target.value)}
-                        />
+                            disabled={!country}
+                        >
+                            <option value="">{country ? 'Seleccionar ciudad...' : 'Primero elige un país'}</option>
+                            {cities.map((c) => (
+                                <option key={c.id} value={c.name}>{c.name}</option>
+                            ))}
+                        </select>
+                        <span
+                            className="material-symbols-rounded"
+                            style={{ fontSize: 20, color: 'var(--text-muted)', flexShrink: 0, pointerEvents: 'none' }}
+                        >
+                            expand_more
+                        </span>
                     </div>
                 </div>
 
@@ -147,6 +176,27 @@ export default function Step2_InfoBasica({ data, onNext, saving }) {
                             placeholder="https://tuempresa.com"
                             value={website}
                             onChange={(e) => setWebsite(e.target.value)}
+                        />
+                    </div>
+                </div>
+
+                <div className="ob-field">
+                    <label className="ob-label" htmlFor="ob-linkedin">
+                        LinkedIn de la empresa{' '}
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>
+                            (Opcional)
+                        </span>
+                    </label>
+                    <div className="ob-input-wrapper">
+                        <span className="material-symbols-rounded ob-input-icon">link</span>
+                        <input
+                            id="ob-linkedin"
+                            name="linkedin_url"
+                            className="ob-input"
+                            type="url"
+                            placeholder="https://linkedin.com/company/..."
+                            value={linkedinUrl}
+                            onChange={(e) => setLinkedinUrl(e.target.value)}
                         />
                     </div>
                 </div>

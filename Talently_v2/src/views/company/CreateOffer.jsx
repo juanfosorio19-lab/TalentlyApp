@@ -1,34 +1,34 @@
 // src/views/company/CreateOffer.jsx
-// Wizard 4 pasos para crear ofertas — diseño Stitch
-// Abreviaturas de tech vienen de tech_stack.abbreviation y los iconos de
-// beneficios de company_benefits.icon (ver migración 013).
-import { useState, useMemo } from 'react';
+// Wizard para crear ofertas — diseño Stitch.
+// El paso de stack tecnológico SOLO aparece si el área de la oferta es TI
+// (una constructora buscando arquitectos no debe responder tecnologías).
+// Beneficios y proceso de selección NO se piden aquí: viven en el perfil
+// de la empresa (onboarding). Decisiones del 2026-06-11.
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
 import { useApp } from '../../context/AppContext';
 import { POPULAR_TECH_FALLBACK, WORK_MODALITIES } from '../../lib/constants';
 import { getTechAbbrev } from '../../lib/techAbbrev';
+import { logError } from '../../lib/errorLogger';
 import './CreateOffer.css';
 
 // ── Constantes ─────────────────────────────────────────────────────────
 const STEPS = [
-    { id: 'basic',      title: 'Información básica',       desc: 'Título, área y descripción del cargo' },
-    { id: 'stack',      title: 'Stack tecnológico',        desc: 'Tecnologías requeridas para el puesto' },
-    { id: 'conditions', title: 'Condiciones y beneficios', desc: 'Modalidad, salario y beneficios' },
-    { id: 'review',     title: 'Vista previa',             desc: 'Revisa los detalles antes de publicar' },
+    { id: 'basic',  title: 'Información básica', desc: 'Título, área, condiciones y descripción del cargo' },
+    { id: 'stack',  title: 'Stack tecnológico',  desc: 'Tecnologías requeridas para el puesto' },
+    { id: 'review', title: 'Vista previa',       desc: 'Revisa los detalles antes de publicar' },
 ];
+
+// Áreas (por nombre en professional_areas) donde aplica pedir stack
+const TECH_AREAS = ['Desarrollo', 'Data', 'Diseño UX/UI'];
 
 // Reusa WORK_MODALITIES de constants.js — el formato canónico en BD es
 // 'Remoto'/'Híbrido'/'Presencial' (sin i18n por ahora). Migración 014
 // normaliza valores legacy ('remote', 'presencial', etc.) si quedaban.
 const MODALITIES = WORK_MODALITIES;
 
-const FALLBACK_BENEFIT_ICON = 'check_circle';
-const BENEFITS_FALLBACK_NAMES = [
-    'Seguro médico privado', 'Flexibilidad horaria', 'Setup para home office',
-    'Bonos por desempeño', 'Presupuesto para cursos', 'Vacaciones sobre lo legal',
-    'Gimnasio / Wellness', 'Día libre en cumpleaños',
-];
+const CURRENCIES = ['CLP', 'USD'];
 
 const INITIAL_FORM = {
     title: '',
@@ -36,19 +36,20 @@ const INITIAL_FORM = {
     description: '',
     modality: 'Remoto',
     location: '',
+    currency: 'CLP',
     salary_min: '',
     salary_max: '',
     tech_stack: [],
-    benefits: [],
-    selection_process: '',
 };
 
-function fmtSalary(min, max) {
+const fmtMiles = (digits) => (digits ? Number(digits).toLocaleString('es-CL') : '');
+
+function fmtSalary(min, max, currency = 'CLP') {
     if (!min && !max) return null;
-    const fmt = (v) => `$${Number(v).toLocaleString()}`;
-    if (min && max) return `${fmt(min)} – ${fmt(max)} USD`;
-    if (min) return `Desde ${fmt(min)} USD`;
-    return `Hasta ${fmt(max)} USD`;
+    const fmt = (v) => `$${Number(v).toLocaleString('es-CL')}`;
+    if (min && max) return `${fmt(min)} – ${fmt(max)} ${currency}`;
+    if (min) return `Desde ${fmt(min)} ${currency}`;
+    return `Hasta ${fmt(max)} ${currency}`;
 }
 
 // ── Componente ─────────────────────────────────────────────────────────
@@ -68,23 +69,51 @@ export default function CreateOffer() {
     }, [techList]);
     const getAbbrev = (name) => getTechAbbrev(name, techAbbrevMap);
 
-    // Beneficios: usar objetos completos (con .icon) si vienen de Supabase
-    const benefitList = state.referenceData?.benefits || [];
-    const benefitOptions = benefitList.length > 0
-        ? benefitList.map((b) => ({ name: b.name, icon: b.icon }))
-        : BENEFITS_FALLBACK_NAMES.map((name) => ({ name, icon: null }));
-
     const [step, setStep]       = useState(0);
     const [form, setForm]       = useState(INITIAL_FORM);
     const [techSearch, setTechSearch] = useState('');
     const [saving, setSaving]   = useState(false);
     const [published, setPublished] = useState(false);
+    const [publishError, setPublishError] = useState('');
 
-    const currentStep = STEPS[step];
-    const progress = ((step + 1) / STEPS.length) * 100;
+    // Áreas profesionales — las MISMAS que eligen los candidatos, para que
+    // las ofertas se puedan cruzar/filtrar por área después
+    const [areas, setAreas] = useState([]);
+    useEffect(() => {
+        let cancelled = false;
+        db.reference.getAreas().then(({ data }) => {
+            if (!cancelled) setAreas(data || []);
+        });
+        return () => { cancelled = true; };
+    }, []);
+
+    // El paso de stack solo existe para áreas TI
+    const isTechArea = TECH_AREAS.includes(form.area);
+    const visibleSteps = useMemo(
+        () => STEPS.filter((s) => s.id !== 'stack' || isTechArea),
+        [isTechArea]
+    );
+    // Clamp: si el usuario cambia el área a una no-TI estando más adelante,
+    // el índice no puede apuntar fuera de los pasos visibles
+    const stepIndex = Math.min(step, visibleSteps.length - 1);
+    const currentStep = visibleSteps[stepIndex];
+    const progress = ((stepIndex + 1) / visibleSteps.length) * 100;
+    const goToStepId = (id) => {
+        const i = visibleSteps.findIndex((s) => s.id === id);
+        setStep(i >= 0 ? i : 0);
+    };
 
     const updateField = (field, value) =>
         setForm((prev) => ({ ...prev, [field]: value }));
+
+    // Salario: solo dígitos en el estado; el input muestra separador de miles
+    const updateSalary = (field, raw) =>
+        updateField(field, raw.replace(/\D/g, '').slice(0, 9));
+
+    const salaryError = form.salary_min && form.salary_max
+        && Number(form.salary_min) > Number(form.salary_max)
+        ? 'El salario máximo debe ser mayor o igual al mínimo'
+        : '';
 
     const toggleTech = (name) => {
         setForm((prev) => ({
@@ -95,55 +124,52 @@ export default function CreateOffer() {
         }));
     };
 
-    const toggleBenefit = (name) => {
-        setForm((prev) => ({
-            ...prev,
-            benefits: prev.benefits.includes(name)
-                ? prev.benefits.filter((b) => b !== name)
-                : [...prev.benefits, name],
-        }));
-    };
-
     const canNext = () => {
-        if (step === 0) return form.title.trim() !== '';
+        if (currentStep.id === 'basic') {
+            return form.title.trim() !== '' && form.area !== '' && !salaryError;
+        }
         return true;
     };
 
     const handleNext = () => {
-        if (step < STEPS.length - 1) setStep(step + 1);
+        if (stepIndex < visibleSteps.length - 1) setStep(stepIndex + 1);
     };
 
     const handleBack = () => {
-        if (step > 0) setStep(step - 1);
+        if (stepIndex > 0) setStep(stepIndex - 1);
     };
 
     const handlePublish = async () => {
         setSaving(true);
+        setPublishError('');
         try {
+            // ⚠️ Solo columnas REALES de offers (ERROR_LOG #20: area/location/
+            // selection_process no existen → 42703 y la oferta nunca se creaba)
             const offerData = {
                 title:              form.title,
-                area:               form.area,
+                professional_area:  form.area || null,
                 description:        form.description,
                 modality:           form.modality,
-                location:           form.location,
+                city:               form.location || null,
+                currency:           form.currency,
                 salary_min:         form.salary_min ? Number(form.salary_min) : null,
                 salary_max:         form.salary_max ? Number(form.salary_max) : null,
                 tech_stack:         form.tech_stack.length > 0 ? form.tech_stack : null,
-                benefits:           form.benefits.length > 0 ? form.benefits : null,
-                selection_process:  form.selection_process || null,
                 status:             'active',
             };
 
             const { error } = await db.offers.create(offerData);
             if (error) {
-                console.error('[CreateOffer] Error:', error);
-                alert('Error al publicar la oferta');
+                logError('OFFER', `publish:error ${error.message || error}`,
+                    { code: error.code }, { overlay: false });
+                setPublishError('No se pudo publicar la oferta. Intenta de nuevo.');
                 return;
             }
 
             setPublished(true);
         } catch (err) {
-            console.error('[CreateOffer] Error:', err);
+            logError('OFFER', `publish:throw ${err?.message || err}`, null, { overlay: false });
+            setPublishError('No se pudo publicar la oferta. Intenta de nuevo.');
         } finally {
             setSaving(false);
         }
@@ -174,15 +200,20 @@ export default function CreateOffer() {
 
             <div className="co__field">
                 <label className="co__label" htmlFor="co-area">Área profesional</label>
-                <input
+                {/* Mismas áreas que eligen los candidatos → permite cruzar/filtrar.
+                    Si el área es TI, el wizard agrega el paso de stack tecnológico. */}
+                <select
                     id="co-area"
                     name="area"
                     className="co__input"
-                    type="text"
-                    placeholder="Ej: Desarrollo de Software"
                     value={form.area}
                     onChange={(e) => updateField('area', e.target.value)}
-                />
+                >
+                    <option value="">Seleccionar área...</option>
+                    {areas.map((a) => (
+                        <option key={a.id} value={a.name}>{a.name}</option>
+                    ))}
+                </select>
             </div>
 
             <div className="co__field">
@@ -213,7 +244,19 @@ export default function CreateOffer() {
             </div>
 
             <div className="co__field">
-                <label className="co__label">Rango salarial mensual en USD <span className="co__optional">(opcional)</span></label>
+                <label className="co__label">Rango salarial mensual <span className="co__optional">(opcional)</span></label>
+                {/* Moneda */}
+                <div className="co__chips" style={{ marginBottom: 10 }}>
+                    {CURRENCIES.map((c) => (
+                        <button
+                            key={c}
+                            className={`co__chip ${form.currency === c ? 'co__chip--selected' : ''}`}
+                            onClick={() => updateField('currency', c)}
+                        >
+                            {c}
+                        </button>
+                    ))}
+                </div>
                 <div className="co__salary-row">
                     <div className="co__salary-wrap">
                         <span className="co__salary-sym">$</span>
@@ -221,10 +264,11 @@ export default function CreateOffer() {
                             id="co-salary-min"
                             name="salary_min"
                             className="co__input co__input--salary"
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
                             placeholder="Mínimo"
-                            value={form.salary_min}
-                            onChange={(e) => updateField('salary_min', e.target.value)}
+                            value={fmtMiles(form.salary_min)}
+                            onChange={(e) => updateSalary('salary_min', e.target.value)}
                         />
                     </div>
                     <div className="co__salary-wrap">
@@ -233,13 +277,29 @@ export default function CreateOffer() {
                             id="co-salary-max"
                             name="salary_max"
                             className="co__input co__input--salary"
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
                             placeholder="Máximo"
-                            value={form.salary_max}
-                            onChange={(e) => updateField('salary_max', e.target.value)}
+                            value={fmtMiles(form.salary_max)}
+                            onChange={(e) => updateSalary('salary_max', e.target.value)}
                         />
                     </div>
                 </div>
+                {salaryError && <p className="co__salary-error">{salaryError}</p>}
+            </div>
+
+            {/* Ubicación (antes vivía en el paso de condiciones) */}
+            <div className="co__field">
+                <label className="co__label" htmlFor="co-location">Ubicación <span className="co__optional">(opcional)</span></label>
+                <input
+                    id="co-location"
+                    name="location"
+                    className="co__input"
+                    type="text"
+                    placeholder="Ej: Santiago, Chile / Latam / Global"
+                    value={form.location}
+                    onChange={(e) => updateField('location', e.target.value)}
+                />
             </div>
         </>
     );
@@ -324,65 +384,6 @@ export default function CreateOffer() {
         </>
     );
 
-    const renderConditions = () => (
-        <>
-            {/* Ubicación */}
-            <div className="co__field">
-                <label className="co__label" htmlFor="co-location">Ubicación <span className="co__optional">(opcional)</span></label>
-                <input
-                    id="co-location"
-                    name="location"
-                    className="co__input"
-                    type="text"
-                    placeholder="Ej: Santiago, Chile / Latam / Global"
-                    value={form.location}
-                    onChange={(e) => updateField('location', e.target.value)}
-                />
-            </div>
-
-            {/* Beneficios */}
-            <div className="co__field">
-                <label className="co__label">Beneficios</label>
-                <div className="co__chips co__chips--wrap">
-                    {benefitOptions.map(({ name, icon }) => {
-                        const isSelected = form.benefits.includes(name);
-                        return (
-                            <button
-                                key={name}
-                                className={`co__chip co__chip--icon ${isSelected ? 'co__chip--selected' : ''}`}
-                                onClick={() => toggleBenefit(name)}
-                            >
-                                <span className="material-symbols-rounded co__chip-ico">{icon || FALLBACK_BENEFIT_ICON}</span>
-                                {name}
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
-
-            {/* Proceso de selección */}
-            <div className="co__field">
-                <label className="co__label" htmlFor="co-selection-process">
-                    Proceso de selección <span className="co__optional">(opcional)</span>
-                </label>
-                <textarea
-                    id="co-selection-process"
-                    name="selection_process"
-                    className="co__textarea"
-                    placeholder="Describe las etapas del proceso, entrevistas, pruebas técnicas y tiempos estimados..."
-                    value={form.selection_process}
-                    onChange={(e) => updateField('selection_process', e.target.value)}
-                />
-                <div className="co__hint-box">
-                    <span className="material-symbols-rounded co__hint-icon">lightbulb</span>
-                    <p className="co__hint-text">
-                        Un proceso claro aumenta la tasa de finalización de aplicaciones por parte de los candidatos.
-                    </p>
-                </div>
-            </div>
-        </>
-    );
-
     const renderReview = () => (
         <>
             {/* Card básico */}
@@ -412,11 +413,11 @@ export default function CreateOffer() {
                             {form.location ? ` — ${form.location}` : ''}
                         </span>
                     </div>
-                    {fmtSalary(form.salary_min, form.salary_max) && (
+                    {fmtSalary(form.salary_min, form.salary_max, form.currency) && (
                         <div className="co__review-row">
                             <span className="co__review-row-label">Salario</span>
                             <span className="co__review-row-value co__review-row-value--salary">
-                                {fmtSalary(form.salary_min, form.salary_max)}
+                                {fmtSalary(form.salary_min, form.salary_max, form.currency)}
                             </span>
                         </div>
                     )}
@@ -439,7 +440,7 @@ export default function CreateOffer() {
                     <div className="co__review-section-header">
                         <span className="material-symbols-rounded co__review-section-icon">code</span>
                         <h3 className="co__review-section-title">Stack tecnológico</h3>
-                        <button className="co__review-edit" onClick={() => setStep(1)} aria-label="Editar">
+                        <button className="co__review-edit" onClick={() => goToStepId('stack')} aria-label="Editar">
                             <span className="material-symbols-rounded">edit</span>
                         </button>
                     </div>
@@ -451,35 +452,14 @@ export default function CreateOffer() {
                 </div>
             )}
 
-            {/* Beneficios */}
-            {form.benefits.length > 0 && (
-                <div className="co__review-section">
-                    <div className="co__review-section-header">
-                        <span className="material-symbols-rounded co__review-section-icon">star</span>
-                        <h3 className="co__review-section-title">Beneficios</h3>
-                        <button className="co__review-edit" onClick={() => setStep(2)} aria-label="Editar">
-                            <span className="material-symbols-rounded">edit</span>
-                        </button>
-                    </div>
-                    <ul className="co__review-benefits">
-                        {form.benefits.map((b) => (
-                            <li key={b} className="co__review-benefit-item">
-                                <span className="material-symbols-rounded co__check-icon">check_circle</span>
-                                {b}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
         </>
     );
 
     const renderStepContent = () => {
         switch (currentStep.id) {
-            case 'basic':      return renderBasic();
-            case 'stack':      return renderStack();
-            case 'conditions': return renderConditions();
-            case 'review':     return renderReview();
+            case 'basic':  return renderBasic();
+            case 'stack':  return renderStack();
+            case 'review': return renderReview();
             default:           return null;
         }
     };
@@ -528,7 +508,7 @@ export default function CreateOffer() {
             <header className="co__header">
                 <button
                     className="co__back"
-                    onClick={() => step > 0 ? handleBack() : navigate(-1)}
+                    onClick={() => stepIndex > 0 ? handleBack() : navigate(-1)}
                     aria-label="Volver"
                 >
                     <span className="material-symbols-rounded">arrow_back</span>
@@ -541,7 +521,7 @@ export default function CreateOffer() {
             <div className="co__progress-wrap">
                 <div className="co__progress-top">
                     <p className="co__progress-label">{currentStep.title}</p>
-                    <p className="co__progress-step">Paso {step + 1} de {STEPS.length}</p>
+                    <p className="co__progress-step">Paso {stepIndex + 1} de {visibleSteps.length}</p>
                 </div>
                 <div className="co__progress-track">
                     <div className="co__progress-fill" style={{ width: `${progress}%` }} />
@@ -555,9 +535,14 @@ export default function CreateOffer() {
                 {renderStepContent()}
             </div>
 
+            {/* Error de publicación (la oferta NO se creó) */}
+            {publishError && (
+                <p className="co__publish-error" role="alert">{publishError}</p>
+            )}
+
             {/* Footer */}
             <footer className="co__footer">
-                {step > 0 && (
+                {stepIndex > 0 && (
                     <button
                         className="co__btn co__btn--secondary"
                         onClick={handleBack}
@@ -565,7 +550,7 @@ export default function CreateOffer() {
                         Anterior
                     </button>
                 )}
-                {step < STEPS.length - 1 ? (
+                {stepIndex < visibleSteps.length - 1 ? (
                     <button
                         className="co__btn co__btn--primary"
                         onClick={handleNext}

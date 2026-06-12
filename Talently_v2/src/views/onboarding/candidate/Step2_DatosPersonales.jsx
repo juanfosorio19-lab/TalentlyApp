@@ -21,14 +21,14 @@ export default function Step2_DatosPersonales({ data, onNext, saving }) {
     }, []);
 
     useEffect(() => {
-        if (country) {
-            const countryObj = countries.find((c) => c.name === country);
-            if (countryObj) {
-                db.reference.getCities(countryObj.id).then(({ data: c }) => setCities(c || []));
-            }
-        } else {
-            setCities([]);
-        }
+        if (!country) return;
+        const countryObj = countries.find((c) => c.name === country);
+        if (!countryObj) return;
+        let cancelled = false;
+        db.reference.getCities(countryObj.id).then(({ data: c }) => {
+            if (!cancelled) setCities(c || []);
+        });
+        return () => { cancelled = true; };
     }, [country, countries]);
 
     const handleNext = () => {

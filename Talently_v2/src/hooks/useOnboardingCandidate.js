@@ -139,16 +139,19 @@ export default function useOnboardingCandidate() {
     }, []);
 
     // ── Completar onboarding ──
-    const completeOnboarding = useCallback(async () => {
+    const completeOnboarding = useCallback(async (finalStepData = {}) => {
         setSaving(true);
         setSaveError('');
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
+            // Merge del último paso: formData es estado y aún no lo incluye
+            const merged = { ...formData, ...finalStepData };
+
             const { data: profile, error } = await db.profiles.create({
-                ...formData,
-                user_type: formData.user_type || 'candidate',
+                ...merged,
+                user_type: merged.user_type || 'candidate',
                 onboarding_completed: true,
                 onboarding_step: TOTAL_STEPS,
             });

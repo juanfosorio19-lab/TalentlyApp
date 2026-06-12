@@ -21,6 +21,7 @@ se marca y se mueve a "Resueltos". (Pedido del dueño, 2026-06-11.)
 
 | Pendiente | Resuelto | Commit/OTA |
 |---|---|---|
+| Batch UX 2026-06-11 (12 items): ciudad de empresa como dropdown por país, LinkedIn y tamaño de equipo duplicados en el wizard, descripciones de etapas (Serie B…), modalidad única, stack tecnológico movido del onboarding a ofertas TI, botones de swipe bajo la barra de gestos, fotos/logo del último paso no se guardaban, valores de cultura no se mostraban, país mostraba UUID, crear oferta: CLP/USD + miles + validación min/max + áreas de candidato + sin beneficios + error 42703 por columnas inexistentes | 2026-06-11 | (este commit) |
 | Áreas profesionales invisibles para empresas | 2026-06-11 | `91cc11b` |
 | `key={index}` en listas editables del onboarding | 2026-06-11 | `91cc11b` |
 | Botón "Explorar" fantasma en Matches | 2026-06-11 | `650307f` |

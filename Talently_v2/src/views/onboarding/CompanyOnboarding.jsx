@@ -15,12 +15,14 @@ import Step4_Cultura from './company/Step4_Cultura';
 import Step5_EtapaTamano from './company/Step5_EtapaTamano';
 import Step6_ModalidadesBeneficios from './company/Step6_ModalidadesBeneficios';
 import Step7_PosicionesSeniority from './company/Step7_PosicionesSeniority';
-import Step8_Stack from './company/Step8_Stack';
 import Step9_ProcesoSeleccion from './company/Step9_ProcesoSeleccion';
 import Step10_Unicidad from './company/Step10_Unicidad';
 import Step11_Tags from './company/Step11_Tags';
 import Step12_Multimedia from './company/Step12_Multimedia';
 
+// El stack tecnológico NO se pregunta en el onboarding: solo aplica a
+// empresas TI y se pide al crear una oferta de área tecnológica
+// (decisión 2026-06-11 — una constructora no debería responder esto).
 const STEP_COMPONENTS = {
     1: Step2_InfoBasica,
     2: Step3_Detalles,
@@ -28,11 +30,10 @@ const STEP_COMPONENTS = {
     4: Step5_EtapaTamano,
     5: Step6_ModalidadesBeneficios,
     6: Step7_PosicionesSeniority,
-    7: Step8_Stack,
-    8: Step9_ProcesoSeleccion,
-    9: Step10_Unicidad,
-    10: Step11_Tags,
-    11: Step12_Multimedia,
+    7: Step9_ProcesoSeleccion,
+    8: Step10_Unicidad,
+    9: Step11_Tags,
+    10: Step12_Multimedia,
 };
 
 export default function CompanyOnboarding() {
@@ -68,7 +69,10 @@ export default function CompanyOnboarding() {
 
     const handleNext = async (stepData) => {
         if (currentStep === totalSteps) {
-            await completeOnboarding();
+            // ⚠️ Pasar los datos del ÚLTIMO paso: completeOnboarding usa
+            // formData (estado) y sin esto el logo y las fotos del paso
+            // final se perdían (bug 2026-06-11)
+            await completeOnboarding(stepData);
         } else {
             await saveStep(currentStep, stepData);
         }

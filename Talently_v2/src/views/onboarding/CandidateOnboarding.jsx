@@ -65,7 +65,10 @@ export default function CandidateOnboarding() {
 
     const handleNext = async (stepData) => {
         if (currentStep === totalSteps) {
-            await completeOnboarding();
+            // Pasar los datos del último paso — sin esto se perderían
+            // (formData es estado y aún no los incluye; bug 2026-06-11
+            // del wizard de empresa, aplicado aquí en espejo)
+            await completeOnboarding(stepData);
         } else {
             await saveStep(currentStep, stepData);
         }
