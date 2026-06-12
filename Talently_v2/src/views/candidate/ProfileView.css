@@ -49,6 +49,12 @@
     letter-spacing: -0.3px;
 }
 
+.pv__header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
 .pv__header-edit {
     width: 36px;
     height: 36px;

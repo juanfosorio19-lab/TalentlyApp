@@ -163,9 +163,16 @@ export default function ProfileView({ isTab = false }) {
             {/* ── Sticky header ── */}
             <div className="pv__header">
                 <h1 className="pv__header-title">Mi Perfil</h1>
-                <button className="pv__header-edit" onClick={openEdit} aria-label="Editar perfil">
-                    <span className="material-symbols-rounded">edit</span>
-                </button>
+                <div className="pv__header-actions">
+                    <button className="pv__header-edit" onClick={openEdit} aria-label="Editar perfil">
+                        <span className="material-symbols-rounded">edit</span>
+                    </button>
+                    {/* /app/settings era una ruta fantasma: existía en App.jsx pero
+                        nada navegaba ahí (soporte/FAQ/eliminar cuenta inaccesibles) */}
+                    <button className="pv__header-edit" onClick={() => navigate('/app/settings')} aria-label="Ajustes">
+                        <span className="material-symbols-rounded">settings</span>
+                    </button>
+                </div>
             </div>
 
             {/* ── Scroll ── */}
