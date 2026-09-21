@@ -8,15 +8,17 @@ import MessagesList from './MessagesList';
 import MatchesView from './MatchesView';
 import ProfileView from './ProfileView';
 import { useApp } from '../../context/AppContext';
+import { TalentlyLogo, IconMatches, IconHeart, IconPerson } from '../../components/ui/icons';
 import { db } from '../../lib/supabase';
 import './MainApp.css';
 import './FiltersView.css';
 
 // Mensajes se accede desde Matches (cada match abre su chat), por eso no es tab.
+// Iconos de marca Talently (src/components/ui/icons.jsx)
 const TABS = [
-    { id: 'swipe',    label: 'Explorar',  icon: 'style' },
-    { id: 'matches',  label: 'Matches',   icon: 'grid_view' },
-    { id: 'profile',  label: 'Perfil',    icon: 'person_outline' },
+    { id: 'swipe',    label: 'Explorar',  Icon: IconMatches },
+    { id: 'matches',  label: 'Matches',   Icon: IconHeart },
+    { id: 'profile',  label: 'Perfil',    Icon: IconPerson },
 ];
 
 function hasActiveFilters(f) {
@@ -84,16 +86,7 @@ export default function MainApp() {
             <header className="main-app__header">
                 {/* Logo: icono T + texto */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{
-                        width: 32, height: 32,
-                        background: 'var(--gradient-primary)',
-                        borderRadius: 10,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: '0 4px 8px rgba(var(--primary-rgb), 0.25)',
-                        flexShrink: 0,
-                    }}>
-                        <span style={{ color: 'white', fontWeight: 800, fontSize: 18, lineHeight: 1 }}>T</span>
-                    </div>
+                    <TalentlyLogo size={32} radius={9} style={{ flexShrink: 0, filter: 'drop-shadow(0 3px 6px rgba(124, 58, 237, 0.3))' }} />
                     <span className="main-app__logo">Talently</span>
                 </div>
 
@@ -150,7 +143,7 @@ export default function MainApp() {
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                 }}>
-                                    <span className="material-symbols-rounded">{tab.icon}</span>
+                                    <tab.Icon size={24} />
                                 </div>
                                 {badge && (
                                     <span className="main-app__tab-badge">{badge}</span>

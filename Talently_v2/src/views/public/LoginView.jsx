@@ -1,6 +1,7 @@
 // src/views/public/LoginView.jsx
 // Login con email + password — usa supabase.auth.signInWithPassword()
 // También soporta Google OAuth via supabase.auth.signInWithOAuth()
+import { TalentlyLogo } from '../../components/ui/icons';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../lib/supabase';
@@ -121,9 +122,12 @@ export default function LoginView() {
 
                 {/* ── Hero: logo + título + tagline ── */}
                 <div className="login-hero">
-                    <div className="login-logo-icon">
-                        <span className="material-symbols-rounded">work</span>
-                    </div>
+                    {/* Logo de marca (tile morado + T) — diseño del dueño 2026-09-21 */}
+                    <TalentlyLogo
+                        size={72}
+                        radius={16}
+                        style={{ marginBottom: 2, filter: 'drop-shadow(0 6px 14px rgba(124, 58, 237, 0.35))' }}
+                    />
                     <h1 className="login-brand">Talently</h1>
                     <p className="login-tagline">Conectando talento con oportunidades</p>
                 </div>
