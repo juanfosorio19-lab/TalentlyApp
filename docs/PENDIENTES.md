@@ -21,6 +21,7 @@ se marca y se mueve a "Resueltos". (Pedido del dueño, 2026-06-11.)
 
 | Pendiente | Resuelto | Commit/OTA |
 |---|---|---|
+| Batch UX 2026-09-21 (4 items): switch moderno para activar/desactivar ofertas, botón atrás de Android restaura la pestaña activa (?tab= en URL, ambos dashboards), perfil de empresa movido de Configuración a la pestaña Perfil (CompanyProfileSections), "Editar Perfil" ya no abre el wizard y el wizard en modo edición sale con volver en vez de ir a la selección de tipo | 2026-09-21 | (este commit) |
 | Batch UX 2026-06-11 (12 items): ciudad de empresa como dropdown por país, LinkedIn y tamaño de equipo duplicados en el wizard, descripciones de etapas (Serie B…), modalidad única, stack tecnológico movido del onboarding a ofertas TI, botones de swipe bajo la barra de gestos, fotos/logo del último paso no se guardaban, valores de cultura no se mostraban, país mostraba UUID, crear oferta: CLP/USD + miles + validación min/max + áreas de candidato + sin beneficios + error 42703 por columnas inexistentes | 2026-06-11 | (este commit) |
 | Áreas profesionales invisibles para empresas | 2026-06-11 | `91cc11b` |
 | `key={index}` en listas editables del onboarding | 2026-06-11 | `91cc11b` |

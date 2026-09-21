@@ -22,6 +22,8 @@ export default function useOnboardingCompany() {
     const [formData, setFormData] = useState({});
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    // true cuando el perfil ya estaba completo: el wizard actúa como editor
+    const [isEditing, setIsEditing] = useState(false);
     const [saveError, setSaveError] = useState('');
 
     // ── Cargar progreso al montar ──
@@ -33,9 +35,14 @@ export default function useOnboardingCompany() {
 
                 const { data: profile } = await db.profiles.getById(user.id);
                 if (profile) {
+                    // Modo edición: perfil ya completo → empezar en el paso 1
+                    // (el usuario viene a EDITAR, no a retomar un avance)
+                    setIsEditing(!!profile.onboarding_completed);
                     // Clamp: perfiles guardados con la numeración vieja (12 pasos
                     // con selección de tipo) no deben apuntar fuera de rango
-                    const savedStep = Math.min(profile.company_onboarding_step || 1, TOTAL_STEPS);
+                    const savedStep = profile.onboarding_completed
+                        ? 1
+                        : Math.min(profile.company_onboarding_step || 1, TOTAL_STEPS);
                     setCurrentStep(savedStep);
 
                     setFormData({
@@ -179,6 +186,7 @@ export default function useOnboardingCompany() {
     return {
         currentStep,
         setCurrentStep,
+        isEditing,
         formData,
         setFormData,
         loading,

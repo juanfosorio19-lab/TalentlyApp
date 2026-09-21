@@ -45,6 +45,7 @@ export default function CompanyOnboarding() {
         saving,
         saveError,
         totalSteps,
+        isEditing,
         saveStep,
         goBack,
         completeOnboarding,
@@ -83,11 +84,17 @@ export default function CompanyOnboarding() {
             {/* ── Progress bar ── */}
             <div className="ob-progress">
                 <div className="ob-header">
-                    {/* Volver desde el paso 1 regresa a la selección de tipo
-                        (paso 1 del wizard de candidato) por si se equivocó */}
+                    {/* En el paso 1: si el perfil ya estaba completo esto es un
+                        EDITOR y volver debe salir de él; si es onboarding real,
+                        vuelve a la selección de tipo (paso 1 del wizard de
+                        candidato) por si se equivocó */}
                     <button
                         className="ob-back-btn"
-                        onClick={currentStep > 1 ? goBack : () => navigate('/onboarding/candidate')}
+                        onClick={
+                            currentStep > 1
+                                ? goBack
+                                : () => (isEditing ? navigate(-1) : navigate('/onboarding/candidate'))
+                        }
                         aria-label="Volver"
                     >
                         <span className="material-symbols-rounded">arrow_back</span>
