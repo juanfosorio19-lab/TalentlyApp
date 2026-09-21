@@ -46,6 +46,9 @@ npx cap sync android
 cd android
 ./gradlew.bat assembleDebug          # Windows
 # ./gradlew assembleDebug            # Mac/Linux
+
+# 3b. O abrir en Android Studio para correr en emulador/dispositivo
+npx cap open android
 ```
 
 El APK debug queda en:
