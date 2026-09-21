@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Talently app icon — marca "T" sobre tile morado (diseño del dueño, 2026-09-21) -->
+  <defs>
+    <linearGradient id="tl-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#A78BFA"/>
+      <stop offset="0.55" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#6D28D9"/>
+    </linearGradient>
+    <linearGradient id="tl-bar" x1="0" y1="0" x2="1" y2="0.4">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E4DBFF"/>
+    </linearGradient>
+    <linearGradient id="tl-stem" x1="0.2" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#EDE5FF"/>
+      <stop offset="1" stop-color="#C2ABFA"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="url(#tl-bg)"/>
+  <!-- Asta con curva hacia la izquierda (bajo la barra) -->
+  <path d="M540 420 L521 632 Q509 758 376 772" stroke="url(#tl-stem)" stroke-width="164" stroke-linecap="round" fill="none" opacity="0.92"/>
+  <!-- Barra superior de la T (ligeramente inclinada, por encima del asta) -->
+  <path d="M298 372 L718 320" stroke="url(#tl-bar)" stroke-width="164" stroke-linecap="round" fill="none" opacity="0.97"/>
+</svg>
