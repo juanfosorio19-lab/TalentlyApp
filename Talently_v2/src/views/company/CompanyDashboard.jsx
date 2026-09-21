@@ -1,12 +1,13 @@
 // src/views/company/CompanyDashboard.jsx
 // Dashboard principal de empresa — diseño Stitch
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../lib/supabase';
 import CompanyStats from './CompanyStats';
 import MessagesList from '../candidate/MessagesList';
 import { EmptyState } from '../../components/ui';
+import CompanyProfileSections from '../../components/profile/CompanyProfileSections';
 import './CompanyDashboard.css';
 
 const TABS = [
@@ -25,7 +26,12 @@ function badgeLabel(n) {
 }
 
 export default function CompanyDashboard() {
-    const [activeTab, setActiveTab] = useState('home');
+    // La pestaña vive en la URL (?tab=) para que el botón atrás del teléfono
+    // regrese a la pestaña donde estaba el usuario, no a Inicio. replace:true
+    // para que cambiar de pestaña no llene el historial.
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeTab = searchParams.get('tab') || 'home';
+    const setActiveTab = (tab) => setSearchParams(tab === 'home' ? {} : { tab }, { replace: true });
     const navigate = useNavigate();
     const { user, profile } = useAuth();
 
@@ -209,14 +215,14 @@ export default function CompanyDashboard() {
                                     </div>
                                 </div>
                                 <button
-                                    className="cd__offer-card__toggle"
+                                    className={`cd-switch cd-switch--on${togglingId === offer.id ? ' cd-switch--busy' : ''}`}
                                     onClick={() => toggleOfferStatus(offer)}
                                     disabled={togglingId === offer.id}
+                                    role="switch"
+                                    aria-checked="true"
                                     aria-label="Desactivar oferta"
                                 >
-                                    <span className="material-symbols-rounded">
-                                        {togglingId === offer.id ? 'sync' : 'toggle_on'}
-                                    </span>
+                                    <span className="cd-switch__thumb" />
                                 </button>
                             </div>
                         ))}
@@ -267,14 +273,14 @@ export default function CompanyDashboard() {
                                         {isActive ? 'Activa' : 'Inactiva'}
                                     </span>
                                     <button
-                                        className={`cd__toggle-btn ${toggling ? 'cd__toggle-btn--spinning' : ''}`}
+                                        className={`cd-switch${isActive ? ' cd-switch--on' : ''}${toggling ? ' cd-switch--busy' : ''}`}
                                         onClick={() => toggleOfferStatus(offer)}
                                         disabled={toggling}
+                                        role="switch"
+                                        aria-checked={isActive}
                                         aria-label={isActive ? 'Desactivar oferta' : 'Activar oferta'}
                                     >
-                                        <span className="material-symbols-rounded">
-                                            {toggling ? 'sync' : isActive ? 'toggle_on' : 'toggle_off'}
-                                        </span>
+                                        <span className="cd-switch__thumb" />
                                     </button>
                                 </div>
                                 <h3 className="cd__offer-item__title">{offer.title || 'Sin título'}</h3>
@@ -303,96 +309,7 @@ export default function CompanyDashboard() {
 
     const renderProfile = () => (
         <div className="cd__tab-scroll">
-            {/* Hero */}
-            <div className="cd__profile-hero">
-                {logo ? (
-                    <img
-                        className="cd__profile-logo"
-                        src={logo}
-                        alt={companyName}
-                    />
-                ) : (
-                    <div className="cd__profile-logo-placeholder">
-                        <span className="material-symbols-rounded">business</span>
-                    </div>
-                )}
-                <div className="cd__profile-hero-info">
-                    <h2 className="cd__profile-name">{companyName}</h2>
-                    {profile?.company_sector && (
-                        <p className="cd__profile-sector">{profile.company_sector}</p>
-                    )}
-                </div>
-            </div>
-
-            {/* Fields */}
-            <div className="cd__profile-fields">
-                {profile?.country && (
-                    <div className="cd__profile-field">
-                        <div className="cd__profile-field-icon cd__profile-field-icon--blue">
-                            <span className="material-symbols-rounded">public</span>
-                        </div>
-                        <div>
-                            <p className="cd__profile-field-label">Ubicación</p>
-                            <p className="cd__profile-field-value">
-                                {[profile.city, profile.country].filter(Boolean).join(', ')}
-                            </p>
-                        </div>
-                    </div>
-                )}
-                {profile?.website && (
-                    <div className="cd__profile-field">
-                        <div className="cd__profile-field-icon cd__profile-field-icon--green">
-                            <span className="material-symbols-rounded">language</span>
-                        </div>
-                        <div>
-                            <p className="cd__profile-field-label">Sitio web</p>
-                            <p className="cd__profile-field-value">{profile.website}</p>
-                        </div>
-                    </div>
-                )}
-                {profile?.company_stage && (
-                    <div className="cd__profile-field">
-                        <div className="cd__profile-field-icon cd__profile-field-icon--purple">
-                            <span className="material-symbols-rounded">rocket_launch</span>
-                        </div>
-                        <div>
-                            <p className="cd__profile-field-label">Etapa</p>
-                            <p className="cd__profile-field-value">{profile.company_stage}</p>
-                        </div>
-                    </div>
-                )}
-                {profile?.company_size && (
-                    <div className="cd__profile-field">
-                        <div className="cd__profile-field-icon cd__profile-field-icon--amber">
-                            <span className="material-symbols-rounded">group</span>
-                        </div>
-                        <div>
-                            <p className="cd__profile-field-label">Tamaño del equipo</p>
-                            <p className="cd__profile-field-value">{profile.company_size}</p>
-                        </div>
-                    </div>
-                )}
-                {profile?.company_description && (
-                    <div className="cd__profile-field cd__profile-field--block">
-                        <div className="cd__profile-field-icon cd__profile-field-icon--muted">
-                            <span className="material-symbols-rounded">description</span>
-                        </div>
-                        <div>
-                            <p className="cd__profile-field-label">Descripción</p>
-                            <p className="cd__profile-field-value">{profile.company_description}</p>
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            <button
-                className="cd__profile-edit-btn"
-                onClick={() => navigate('/onboarding/company')}
-            >
-                <span className="material-symbols-rounded">edit</span>
-                Editar Perfil
-            </button>
-
+            <CompanyProfileSections />
             <div style={{ height: 16 }} />
         </div>
     );

@@ -413,19 +413,7 @@
     color: var(--success);
 }
 
-.cd__offer-card__toggle {
-    background: none;
-    border: none;
-    outline: none;
-    cursor: pointer;
-    color: var(--success);
-    display: flex;
-    align-items: center;
-    padding: 4px;
-    flex-shrink: 0;
-}
 
-.cd__offer-card__toggle .material-symbols-rounded { font-size: 30px; }
 
 /* ──────────────────────────────────────────────
    OFFERS TAB
@@ -472,25 +460,8 @@
     border: 1px solid var(--border);
 }
 
-.cd__toggle-btn {
-    background: none;
-    border: none;
-    outline: none;
-    cursor: pointer;
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    color: var(--text-muted);
-    transition: color 0.15s ease;
-}
 
-.cd__toggle-btn:hover:not(:disabled) { color: var(--primary); }
-.cd__toggle-btn .material-symbols-rounded { font-size: 28px; }
 
-.cd__toggle-btn--spinning .material-symbols-rounded {
-    animation: cd-spin 0.7s linear infinite;
-    color: var(--text-muted);
-}
 
 @keyframes cd-spin { to { transform: rotate(360deg); } }
 
@@ -722,3 +693,37 @@
 }
 
 .cd__profile-edit-btn .material-symbols-rounded { font-size: 20px; }
+
+/* ── Switch de oferta activa/inactiva (pill moderno) ── */
+.cd-switch {
+    position: relative;
+    width: 46px;
+    height: 28px;
+    flex-shrink: 0;
+    border: none;
+    outline: none;
+    border-radius: 999px;
+    background: var(--border);
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.25s ease;
+}
+
+.cd-switch--on { background: var(--success, #22c55e); }
+
+.cd-switch__thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    transition: transform 0.25s ease;
+}
+
+.cd-switch--on .cd-switch__thumb { transform: translateX(18px); }
+
+.cd-switch--busy { opacity: 0.55; pointer-events: none; }
+.cd-switch:disabled { cursor: default; }
