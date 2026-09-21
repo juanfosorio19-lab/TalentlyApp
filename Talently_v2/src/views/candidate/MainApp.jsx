@@ -2,7 +2,7 @@
 // Vista principal del candidato con navegación por tabs inferior
 // Tabs: Explorar (swipe), Matches, Mensajes, Perfil
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import SwipeStack from '../../components/swipe/SwipeStack';
 import MessagesList from './MessagesList';
 import MatchesView from './MatchesView';
@@ -36,7 +36,11 @@ function badgeLabel(n) {
 }
 
 export default function MainApp() {
-    const [activeTab, setActiveTab] = useState('swipe');
+    // La pestaña vive en la URL (?tab=) para que el botón atrás del teléfono
+    // regrese a la pestaña donde estaba el usuario, no al inicio (2026-09-21)
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeTab = searchParams.get('tab') || 'swipe';
+    const setActiveTab = (tab) => setSearchParams(tab === 'swipe' ? {} : { tab }, { replace: true });
     const [unreadCount, setUnreadCount] = useState(0);
     const navigate = useNavigate();
     const { state } = useApp();
