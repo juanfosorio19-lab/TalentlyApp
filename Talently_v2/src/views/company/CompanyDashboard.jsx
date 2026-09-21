@@ -8,14 +8,16 @@ import CompanyStats from './CompanyStats';
 import MessagesList from '../candidate/MessagesList';
 import { EmptyState } from '../../components/ui';
 import CompanyProfileSections from '../../components/profile/CompanyProfileSections';
+import { IconHome, IconOffers, IconExplore, IconChat, IconBuilding } from '../../components/ui/icons';
 import './CompanyDashboard.css';
 
+// Iconos de marca Talently (src/components/ui/icons.jsx)
 const TABS = [
-    { id: 'home',     label: 'Inicio',    icon: 'home' },
-    { id: 'offers',   label: 'Ofertas',   icon: 'work' },
-    { id: 'swipe',    label: 'Explorar',  icon: 'style' },
-    { id: 'messages', label: 'Mensajes',  icon: 'chat_bubble' },
-    { id: 'profile',  label: 'Perfil',    icon: 'business' },
+    { id: 'home',     label: 'Inicio',    Icon: IconHome },
+    { id: 'offers',   label: 'Ofertas',   Icon: IconOffers },
+    { id: 'swipe',    label: 'Explorar',  Icon: IconExplore },
+    { id: 'messages', label: 'Mensajes',  Icon: IconChat },
+    { id: 'profile',  label: 'Perfil',    Icon: IconBuilding },
 ];
 
 const MODALITY_LABEL = { remote: 'Remoto', hybrid: 'Híbrido', onsite: 'Presencial' };
@@ -375,7 +377,7 @@ export default function CompanyDashboard() {
                         onClick={() => tab.id === 'swipe' ? navigate('/company/swipe') : setActiveTab(tab.id)}
                         aria-label={tab.label}
                     >
-                        <span className="material-symbols-rounded">{tab.icon}</span>
+                        <tab.Icon size={22} />
                         <span>{tab.label}</span>
                     </button>
                 ))}
