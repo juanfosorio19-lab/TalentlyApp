@@ -33,13 +33,19 @@ npm run build
 # 2. Copiar el build al proyecto Android nativo
 npx cap sync android
 
+# 3-PRE. Generar los iconos y splash de marca (una sola vez por cambio de logo)
+# El logo maestro vive en Talently_v2/assets/logo.svg; este comando regenera
+# TODOS los PNG nativos (launcher, round, adaptativo, splash) y el favicon:
+#   cd Talently_v2
+#   npm i --no-save sharp   (solo la primera vez)
+#   npm run icons
+# Después continuar con el build normal. Commitear los PNG regenerados si quieres
+# versionarlos (el asistente no puede subir binarios por la API de GitHub).
+
 # 3a. Generar APK debug (para probar en tu teléfono)
 cd android
 ./gradlew.bat assembleDebug          # Windows
 # ./gradlew assembleDebug            # Mac/Linux
-
-# 3b. O abrir en Android Studio para correr en emulador/dispositivo
-npx cap open android
 ```
 
 El APK debug queda en:
@@ -92,23 +98,24 @@ nativo de Google Sign-In (`signInWithIdToken`), p. ej. para el botón One Tap.
 
 ---
 
-## 3. Iconos y Splash Screen
+## 3. Iconos y Splash Screen ✅ (marca propia desde 2026-09-21)
 
-El proyecto trae iconos genéricos de Capacitor. Para los tuyos:
+El logo maestro vive en **`Talently_v2/assets/logo.svg`** (tile morado + marca T,
+diseño del dueño). Un script genera TODOS los assets nativos desde ese SVG:
 
 ```bash
 cd Talently_v2
-npm install -D @capacitor/assets
-
-# Colocar en Talently_v2/resources/:
-#   icon.png        (1024×1024, logo Talently)
-#   splash.png      (2732×2732, fondo + logo centrado)
-
-npx capacitor-assets generate --android
-npx cap sync android
+npm i --no-save sharp    # solo la primera vez (no va al package.json)
+npm run icons            # regenera mipmap-* (launcher/round/adaptativo),
+                         # splash en todas las densidades y public/icon-512.png
+npx cap sync android     # y recompilar el APK (sección 1)
 ```
 
-Esto regenera todos los tamaños de íconos (`mipmap-*`) y splash screens. El color de fondo del splash (`#1392EC`) ya está en `capacitor.config.json`.
+Los PNG generados NO están versionados (el asistente no puede subir binarios
+por la API de GitHub) — corre `npm run icons` antes de compilar, y commitea los
+PNG desde tu máquina si quieres versionarlos. El fondo del icono adaptativo
+(`ic_launcher_background` = #6D28D9) ya está en el repo. Para cambiar el logo:
+editar `assets/logo.svg` y volver a correr `npm run icons`.
 
 ---
 
@@ -219,6 +226,8 @@ cd android
 ```
 Talently_v2/
 ├── capacitor.config.json     ← config de Capacitor (versionado)
+├── assets/logo.svg           ← LOGO MAESTRO de marca (versionado)
+├── scripts/generate-icons.mjs ← genera todos los PNG nativos (npm run icons)
 ├── android/                  ← proyecto nativo Android (parcialmente versionado)
 │   ├── app/
 │   │   ├── build.gradle      ← config de firma (editar para release)
