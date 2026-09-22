@@ -1,144 +1,229 @@
 // src/components/ui/icons.jsx
-// Set de iconos de marca Talently (diseño del dueño, 2026-09-21).
-// Duotono: forma principal a opacidad plena + detalle secundario translúcido.
-// Usan currentColor para heredar el color del tab activo/inactivo y del tema.
-// El logo (tile morado + T) es la única pieza con color propio de marca.
+// Set de iconos OFICIAL de Talently — SVGs entregados por el dueño
+// (talently-icons-svg.zip, 2026-09-22). Geometría verbatim; el color
+// principal (#6D4AFF) se mapea a currentColor para que los iconos hereden
+// el color del tab activo/inactivo y del tema; los acentos (#A78BFA) se
+// expresan como currentColor translúcido. El logo conserva sus gradientes.
+//
+// Paleta de marca: purple #6D4AFF · light #A78BFA · dark #35256F
 
 const base = (size, props) => ({
     width: size,
     height: size,
     viewBox: '0 0 24 24',
-    fill: 'currentColor',
+    fill: 'none',
     'aria-hidden': 'true',
     ...props,
 });
 
-/* ── Logo Talently: tile morado con la marca T ── */
+const strokeProps = {
+    stroke: 'currentColor',
+    strokeWidth: '1.8',
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+};
+
+/* ── Logo Talently: tile con gradiente de marca + T blanca (launcher/login) ── */
 export function TalentlyLogo({ size = 32, radius = 7, ...props }) {
     return (
-        <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true" {...props}>
+        <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" {...props}>
             <defs>
-                <linearGradient id="tlg-bg" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0" stopColor="#A78BFA" />
-                    <stop offset="0.55" stopColor="#8B5CF6" />
-                    <stop offset="1" stopColor="#6D28D9" />
+                <linearGradient id="tlg-tile" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#6D4AFF" />
+                    <stop offset="1" stopColor="#B48CFF" />
+                </linearGradient>
+                <linearGradient id="tlg-t" x1="4" y1="4" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#FFFFFF" />
+                    <stop offset="1" stopColor="#E6DBFF" />
                 </linearGradient>
             </defs>
-            <rect width="32" height="32" rx={radius} fill="url(#tlg-bg)" />
-            <TalentlyMarkPaths />
+            <rect width="24" height="24" rx={radius * (24 / 32)} fill="url(#tlg-tile)" />
+            {/* Marca T oficial (talently-t-mark.svg) recoloreada a blanco,
+                centrada al 72% dentro del tile */}
+            <g transform="translate(3.36 3.36) scale(0.72)">
+                <path
+                    d="M4.5 5.25A1.25 1.25 0 0 1 5.75 4h12.5a1.25 1.25 0 0 1 .99 2.01l-2.05 2.6a1.25 1.25 0 0 1-.98.49H13.75v8.52c0 .39-.18.76-.49 1L11 20.22a1.25 1.25 0 0 1-2.03-.98V9.1H6.15A1.65 1.65 0 0 1 4.5 7.45V5.25Z"
+                    fill="url(#tlg-t)"
+                />
+            </g>
         </svg>
     );
 }
 
-/* ── Solo la marca T (para ponerla sobre un fondo propio, ej. login) ── */
+/* ── Logo principal: T con gradiente morado, fondo transparente
+      (talently-logo.svg oficial, verbatim) ── */
 export function TalentlyMark({ size = 32, ...props }) {
     return (
-        <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true" {...props}>
-            <TalentlyMarkPaths />
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+            <defs>
+                <linearGradient id="talentlyGradient" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#6D4AFF" />
+                    <stop offset="1" stopColor="#B48CFF" />
+                </linearGradient>
+            </defs>
+            <path
+                d="M4.2 5.2C4.2 4.54 4.74 4 5.4 4h13.2c.77 0 1.2.88.73 1.49l-2.14 2.77a1.5 1.5 0 0 1-1.18.58H13.8v8.86c0 .45-.2.87-.55 1.14l-2.16 1.68c-.79.61-1.93.05-1.93-.95V8.84H6.1c-1.05 0-1.9-.85-1.9-1.9V5.2Z"
+                fill="url(#talentlyGradient)"
+            />
         </svg>
     );
 }
 
-function TalentlyMarkPaths() {
-    return (
-        <g fill="none" strokeLinecap="round" strokeWidth="5.1">
-            <path d="M16.9 13.1 16.3 19.8 Q15.9 23.7 11.8 24.1" stroke="#D9CBFC" opacity="0.92" />
-            <path d="M9.3 11.6 22.4 10" stroke="#FFFFFF" opacity="0.97" />
-        </g>
-    );
-}
-
-/* ── Inicio: casa con puerta translúcida ── */
+/* ── Inicio (inicio.svg) ── */
 export function IconHome({ size = 24, ...props }) {
     return (
         <svg {...base(size, props)}>
-            <path
-                fillRule="evenodd"
-                d="M11.1 2.9a1.5 1.5 0 0 1 1.8 0l8 6.1c.38.28.6.73.6 1.2V19.5A2.5 2.5 0 0 1 19 22H5a2.5 2.5 0 0 1-2.5-2.5v-9.3c0-.47.22-.92.6-1.2l8-6.1ZM10 22v-5.4c0-.9.72-1.6 1.6-1.6h.8c.88 0 1.6.7 1.6 1.6V22h-4Z"
-            />
-            <path d="M11.6 15h.8c.88 0 1.6.7 1.6 1.6V22h-4v-5.4c0-.9.72-1.6 1.6-1.6Z" opacity="0.4" />
+            <path {...strokeProps} d="M3.5 10.5 12 3.8l8.5 6.7v8.2a1.3 1.3 0 0 1-1.3 1.3H4.8a1.3 1.3 0 0 1-1.3-1.3v-8.2Z" />
+            <path {...strokeProps} d="M9 20v-5.5h6V20" />
         </svg>
     );
 }
 
-/* ── Ofertas: maletín con tapa translúcida ── */
+/* ── Ofertas (ofertas.svg) ── */
 export function IconOffers({ size = 24, ...props }) {
     return (
         <svg {...base(size, props)}>
-            <path d="M9 6V5.2A2.2 2.2 0 0 1 11.2 3h1.6A2.2 2.2 0 0 1 15 5.2V6h-1.8v-.8a.4.4 0 0 0-.4-.4h-1.6a.4.4 0 0 0-.4.4V6H9Z" />
-            <path d="M4.5 6h15A2.5 2.5 0 0 1 22 8.5v3.2c0 .62-.38 1.18-.97 1.4A25.3 25.3 0 0 1 12 14.7a25.3 25.3 0 0 1-9.03-1.6A1.51 1.51 0 0 1 2 11.7V8.5A2.5 2.5 0 0 1 4.5 6Z" opacity="0.5" />
-            <path d="M2 14.9c3.13 1.14 6.5 1.75 10 1.75s6.87-.6 10-1.75v3.6A2.5 2.5 0 0 1 19.5 21h-15A2.5 2.5 0 0 1 2 18.5v-3.6ZM10.9 13h2.2v2.6h-2.2V13Z" />
+            <rect {...strokeProps} x="3.2" y="6.8" width="17.6" height="13" rx="2" />
+            <path {...strokeProps} d="M8 6.8V5.4A2.4 2.4 0 0 1 10.4 3h3.2A2.4 2.4 0 0 1 16 5.4v1.4M3.2 11.4h17.6M10 11.4v2h4v-2" />
+            <path {...strokeProps} d="M6.2 15.6h5.2" />
         </svg>
     );
 }
 
-/* ── Buscar/Explorar: lupa con persona ── */
+/* ── Buscar / Explorar (buscar.svg) ── */
 export function IconExplore({ size = 24, ...props }) {
     return (
         <svg {...base(size, props)}>
-            <path
-                fillRule="evenodd"
-                d="M10.5 2a8.5 8.5 0 1 0 5.26 15.18l3.53 3.53a1.5 1.5 0 0 0 2.12-2.12l-3.53-3.53A8.5 8.5 0 0 0 10.5 2Zm0 2.6a5.9 5.9 0 1 1 0 11.8 5.9 5.9 0 0 1 0-11.8Z"
-            />
-            <path d="M10.5 6.4a2 2 0 1 1 0 4 2 2 0 0 1 0-4Zm0 4.9c2 0 3.6 1 3.9 2.5a5.88 5.88 0 0 1-7.8 0c.3-1.5 1.9-2.5 3.9-2.5Z" opacity="0.45" />
+            <circle {...strokeProps} cx="10.7" cy="10.7" r="6.3" />
+            <path {...strokeProps} d="m15.5 15.5 5 5" />
+            <circle cx="10.7" cy="10.7" r="2.4" fill="currentColor" fillOpacity=".35" />
         </svg>
     );
 }
 
-/* ── Mensajes: burbuja con puntos + burbuja secundaria ── */
+/* ── Mensajes (mensajes.svg) ── */
 export function IconChat({ size = 24, ...props }) {
     return (
         <svg {...base(size, props)}>
-            <path d="M15.5 8.5c3.6 0 6.5 2.35 6.5 5.25 0 1.3-.58 2.48-1.54 3.4l.5 2.62a.5.5 0 0 1-.7.55l-2.87-1.3c-.6.15-1.24.23-1.89.23-3.6 0-6.5-2.35-6.5-5.25S11.9 8.5 15.5 8.5Z" opacity="0.45" />
-            <path
-                fillRule="evenodd"
-                d="M9.5 2C5.36 2 2 4.8 2 8.25c0 1.55.68 2.96 1.8 4.05l-.6 3.05a.55.55 0 0 0 .78.6l3.3-1.53c.7.18 1.44.28 2.22.28 4.14 0 7.5-2.8 7.5-6.2C17 4.8 13.64 2 9.5 2ZM6.2 9.35a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Zm3.3 0a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Zm3.3 0a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Z"
-            />
+            <path {...strokeProps} d="M4.1 5.2h11.8a2.1 2.1 0 0 1 2.1 2.1v6.1a2.1 2.1 0 0 1-2.1 2.1H9.4l-3.9 3v-3H4.1A2.1 2.1 0 0 1 2 13.4V7.3a2.1 2.1 0 0 1 2.1-2.1Z" />
+            <path {...strokeProps} strokeWidth="2.6" d="M8.1 9.9h.01M11.9 9.9h.01M15.7 9.9h.01" />
+            <path {...strokeProps} d="M13.5 17.1h5.1a2.1 2.1 0 0 1 2.1 2.1v2.1l-2.4-1.7h-4.8" />
         </svg>
     );
 }
 
-/* ── Perfil: persona ── */
+/* ── Perfil (perfil.svg) ── */
 export function IconPerson({ size = 24, ...props }) {
     return (
         <svg {...base(size, props)}>
-            <circle cx="12" cy="7.2" r="4.2" />
-            <path d="M12 13.4c4.42 0 8 2.24 8 5.3 0 1.8-1.4 3.3-3.2 3.3H7.2C5.4 22 4 20.5 4 18.7c0-3.06 3.58-5.3 8-5.3Z" opacity="0.5" />
+            <circle {...strokeProps} cx="12" cy="7.4" r="3.4" />
+            <path {...strokeProps} d="M5 20c.75-4 3.1-6 7-6s6.25 2 7 6" />
+            <circle cx="12" cy="7.4" r="1.15" fill="currentColor" fillOpacity=".5" />
         </svg>
     );
 }
 
-/* ── Perfil empresa: edificio con ventanas ── */
-export function IconBuilding({ size = 24, ...props }) {
-    return (
-        <svg {...base(size, props)}>
-            <path
-                fillRule="evenodd"
-                d="M5.5 2h9A2.5 2.5 0 0 1 17 4.5V22H3V4.5A2.5 2.5 0 0 1 5.5 2Zm1.3 4.2h2.4v2.4H6.8V6.2Zm4.9 0h2.4v2.4h-2.4V6.2Zm-4.9 4.6h2.4v2.4H6.8v-2.4Zm4.9 0h2.4v2.4h-2.4v-2.4ZM8.6 22v-4.1c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5V22H8.6Z"
-            />
-            <path d="M17 9.4h2A2 2 0 0 1 21 11.4V22h-4V9.4Z" opacity="0.45" />
-        </svg>
-    );
-}
-
-/* ── Matches: tarjetas apiladas con corazón ── */
+/* ── Matches (matches.svg): dos tarjetas de perfil + estrella ── */
 export function IconMatches({ size = 24, ...props }) {
     return (
         <svg {...base(size, props)}>
-            <rect x="3" y="4.4" width="11" height="15" rx="2.2" transform="rotate(-8 8.5 12)" opacity="0.45" />
+            <rect {...strokeProps} x="3.4" y="4.2" width="8.6" height="11.8" rx="1.8" />
+            <rect {...strokeProps} x="12" y="7.2" width="8.6" height="11.8" rx="1.8" />
+            <circle cx="7.7" cy="8.1" r="1.45" fill="currentColor" />
+            <path {...strokeProps} d="M5.5 12.4c.65-1.15 3.7-1.15 4.35 0" />
+            <circle cx="16.3" cy="11.1" r="1.45" fill="currentColor" fillOpacity=".55" />
+            <path {...strokeProps} d="M14.1 15.4c.65-1.15 3.7-1.15 4.35 0" />
+            <path d="m15.9 5.8.45.9.99.14-.72.7.17.99-.89-.47-.89.47.17-.99-.72-.7.99-.14.45-.9Z" fill="currentColor" fillOpacity=".55" />
+        </svg>
+    );
+}
+
+/* ── Favoritos / corazón (favoritos.svg) ── */
+export function IconHeart({ size = 24, ...props }) {
+    return (
+        <svg {...base(size, props)}>
             <path
-                fillRule="evenodd"
-                d="M12.6 4.9 20 6.2a2.2 2.2 0 0 1 1.78 2.55L19.9 19.4a2.2 2.2 0 0 1-2.55 1.78l-7.4-1.3a2.2 2.2 0 0 1-1.78-2.55L10 6.68A2.2 2.2 0 0 1 12.6 4.9Zm2.15 5.1c-.75-.4-1.66-.2-2.1.5-.5.82-.2 1.86.64 2.66.6.57 2 1.44 2.6 1.8.16.1.36.06.48-.08.45-.55 1.45-1.85 1.77-2.6.44-1.05.05-2.06-.83-2.42-.77-.32-1.6-.02-2.02.62-.14-.2-.32-.37-.54-.48Z"
+                {...strokeProps}
+                d="M12 20.2s-7.5-4.5-7.5-10A4.1 4.1 0 0 1 8.6 6a4.4 4.4 0 0 1 3.4 1.7A4.4 4.4 0 0 1 15.4 6a4.1 4.1 0 0 1 4.1 4.2c0 5.5-7.5 10-7.5 10Z"
+                fill="currentColor"
+                fillOpacity=".22"
             />
         </svg>
     );
 }
 
-/* ── Corazón (favoritos / matches simples) ── */
-export function IconHeart({ size = 24, ...props }) {
+/* ── Match confirmado (match-heart.svg): corazón con check ── */
+export function IconMatchHeart({ size = 24, ...props }) {
     return (
         <svg {...base(size, props)}>
-            <path d="M12 21s-7.1-4.35-9.33-8.73C1.06 9.1 2.53 5.6 5.64 5.07 7.6 4.74 9.5 5.6 10.6 7.1c.56.76 2.24.76 2.8 0 1.1-1.5 3-2.36 4.96-2.03 3.1.53 4.58 4.03 2.97 7.2C19.1 16.65 12 21 12 21Z" />
+            <path
+                {...strokeProps}
+                d="M12 20.2s-7.1-4.2-7.1-9.2A3.9 3.9 0 0 1 8.8 7a4.1 4.1 0 0 1 3.2 1.6A4.1 4.1 0 0 1 15.2 7a3.9 3.9 0 0 1 3.9 4c0 5-7.1 9.2-7.1 9.2Z"
+                fill="currentColor"
+                fillOpacity=".18"
+            />
+            <path {...strokeProps} d="m9.3 12.1 1.7 1.7 3.7-3.8" />
+        </svg>
+    );
+}
+
+/* ── Notificaciones (notificaciones.svg): campana con badge + ── */
+export function IconBell({ size = 24, ...props }) {
+    return (
+        <svg {...base(size, props)}>
+            <path {...strokeProps} d="M6.1 16.8h11.8l-1.5-2.2V10a4.4 4.4 0 0 0-8.8 0v4.6l-1.5 2.2Z" />
+            <path {...strokeProps} d="M9.8 19.2a2.4 2.4 0 0 0 4.4 0" />
+            <circle cx="18.7" cy="5.3" r="2.3" fill="currentColor" fillOpacity=".45" />
+            <path {...strokeProps} strokeWidth="1.2" d="M18.7 4v1.6M17.9 4.8h1.6" />
+        </svg>
+    );
+}
+
+/* ── Ajustes (ajustes.svg): sliders ── */
+export function IconGear({ size = 24, ...props }) {
+    return (
+        <svg {...base(size, props)}>
+            <path {...strokeProps} d="M4 7h7M15 7h5M4 12h3M11 12h9M4 17h7M15 17h5" />
+            <circle {...strokeProps} cx="13" cy="7" r="2" fill="var(--surface, #fff)" />
+            <circle {...strokeProps} cx="9" cy="12" r="2" fill="var(--surface, #fff)" />
+            <circle {...strokeProps} cx="13" cy="17" r="2" fill="var(--surface, #fff)" />
+        </svg>
+    );
+}
+
+/* ── Cerrar / nope (cerrar.svg, sin el círculo: los botones del deck ya son
+      circulares) ── */
+export function IconClose({ size = 24, circle = false, ...props }) {
+    return (
+        <svg {...base(size, props)}>
+            {circle && <circle {...strokeProps} cx="12" cy="12" r="8.5" />}
+            <path {...strokeProps} d="m9 9 6 6M15 9l-6 6" />
+        </svg>
+    );
+}
+
+/* ── Like / pulgar (like.svg) ── */
+export function IconLike({ size = 24, ...props }) {
+    return (
+        <svg {...base(size, props)}>
+            <path
+                {...strokeProps}
+                d="M7.4 10.2v9.1h9.1c1.1 0 1.9-.6 2.2-1.6l1.2-4.6a2 2 0 0 0-1.9-2.5h-3.1l.7-3.1c.3-1.4-.8-2.7-2.2-2.7L9.1 10.2H7.4Z"
+                fill="currentColor"
+                fillOpacity=".2"
+            />
+            <path {...strokeProps} d="M4 10.2h3.4v9.1H4z" />
+        </svg>
+    );
+}
+
+/* ── Más (mas.svg) ── */
+export function IconMore({ size = 24, ...props }) {
+    return (
+        <svg {...base(size, props)}>
+            <circle cx="6" cy="12" r="1.7" fill="currentColor" />
+            <circle cx="12" cy="12" r="1.7" fill="currentColor" />
+            <circle cx="18" cy="12" r="1.7" fill="currentColor" />
         </svg>
     );
 }
