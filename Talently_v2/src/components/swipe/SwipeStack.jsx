@@ -1,5 +1,6 @@
 // src/components/swipe/SwipeStack.jsx
 // Stack de tarjetas con gestos de swipe y botones de acción
+import { IconClose, IconHeart } from '../ui/icons';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import SwipeCard from './SwipeCard';
 import MatchModal from './MatchModal';
@@ -170,7 +171,7 @@ export default function SwipeStack({ onCardTap }) {
                     disabled={isAnimatingOut || !currentProfile}
                     aria-label="No me interesa"
                 >
-                    <span className="material-symbols-rounded">close</span>
+                    <IconClose size={28} />
                 </button>
 
                 <button
@@ -179,7 +180,7 @@ export default function SwipeStack({ onCardTap }) {
                     disabled={isAnimatingOut || !currentProfile}
                     aria-label="Me interesa"
                 >
-                    <span className="material-symbols-rounded">favorite</span>
+                    <IconHeart size={28} />
                 </button>
 
                 <button
