@@ -8,7 +8,7 @@ import MessagesList from './MessagesList';
 import MatchesView from './MatchesView';
 import ProfileView from './ProfileView';
 import { useApp } from '../../context/AppContext';
-import { TalentlyLogo, IconMatches, IconHeart, IconPerson } from '../../components/ui/icons';
+import { TalentlyLogo, IconMatches, IconHeart, IconPerson, IconBell } from '../../components/ui/icons';
 import { db } from '../../lib/supabase';
 import './MainApp.css';
 import './FiltersView.css';
@@ -86,7 +86,7 @@ export default function MainApp() {
             <header className="main-app__header">
                 {/* Logo: icono T + texto */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <TalentlyLogo size={32} radius={9} style={{ flexShrink: 0, filter: 'drop-shadow(0 3px 6px rgba(124, 58, 237, 0.3))' }} />
+                    <TalentlyLogo size={32} radius={9} style={{ flexShrink: 0, filter: 'drop-shadow(0 3px 6px rgba(109, 74, 255, 0.3))' }} />
                     <span className="main-app__logo">Talently</span>
                 </div>
 
@@ -107,7 +107,7 @@ export default function MainApp() {
                         aria-label="Notificaciones"
                         style={{ position: 'relative' }}
                     >
-                        <span className="material-symbols-rounded">notifications</span>
+                        <IconBell size={22} />
                         {notifBadge && <span className="notif-count-badge">{notifBadge}</span>}
                     </button>
                 </div>
