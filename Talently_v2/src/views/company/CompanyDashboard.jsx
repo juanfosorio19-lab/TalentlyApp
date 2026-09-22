@@ -8,7 +8,7 @@ import CompanyStats from './CompanyStats';
 import MessagesList from '../candidate/MessagesList';
 import { EmptyState } from '../../components/ui';
 import CompanyProfileSections from '../../components/profile/CompanyProfileSections';
-import { IconHome, IconOffers, IconExplore, IconChat, IconBuilding } from '../../components/ui/icons';
+import { IconHome, IconOffers, IconExplore, IconChat, IconPerson, IconBell, IconGear } from '../../components/ui/icons';
 import './CompanyDashboard.css';
 
 // Iconos de marca Talently (src/components/ui/icons.jsx)
@@ -17,7 +17,7 @@ const TABS = [
     { id: 'offers',   label: 'Ofertas',   Icon: IconOffers },
     { id: 'swipe',    label: 'Explorar',  Icon: IconExplore },
     { id: 'messages', label: 'Mensajes',  Icon: IconChat },
-    { id: 'profile',  label: 'Perfil',    Icon: IconBuilding },
+    { id: 'profile',  label: 'Perfil',    Icon: IconPerson },
 ];
 
 const MODALITY_LABEL = { remote: 'Remoto', hybrid: 'Híbrido', onsite: 'Presencial' };
@@ -348,7 +348,7 @@ export default function CompanyDashboard() {
                         aria-label="Notificaciones"
                         style={{ position: 'relative' }}
                     >
-                        <span className="material-symbols-rounded">notifications</span>
+                        <IconBell size={22} />
                         {badgeLabel(unreadCount) && (
                             <span className="cd__notif-badge">{badgeLabel(unreadCount)}</span>
                         )}
@@ -358,7 +358,7 @@ export default function CompanyDashboard() {
                         onClick={() => navigate('/company/settings')}
                         aria-label="Configuración"
                     >
-                        <span className="material-symbols-rounded">settings</span>
+                        <IconGear size={22} />
                     </button>
                 </div>
             </header>
