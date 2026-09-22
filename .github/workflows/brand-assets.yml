@@ -1,0 +1,50 @@
+# Regenera los PNG nativos de Android (launcher/round/adaptativo/splash) y el
+# favicon desde Talently_v2/assets/logo.svg, y los COMMITEA a la rama.
+# Existe porque el asistente no puede subir binarios por la API de GitHub;
+# este workflow sí puede. El dueño solo hace `git pull` y recompila el APK.
+#
+# [skip ci] en el commit evita que este push dispare el workflow de OTA
+# (los PNG nativos no viajan por OTA de todas formas).
+name: Brand Assets
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - 'claude/**'
+    paths:
+      - 'Talently_v2/assets/logo.svg'
+      - 'Talently_v2/scripts/generate-icons.mjs'
+      - '.github/workflows/brand-assets.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  generate-and-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Generar assets desde el logo SVG
+        working-directory: Talently_v2
+        run: |
+          npm i --no-save sharp
+          npm run icons
+
+      - name: Commitear PNGs regenerados
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Talently_v2/android/app/src/main/res Talently_v2/public/icon-512.png
+          if git diff --cached --quiet; then
+            echo "Sin cambios en los assets."
+          else
+            git commit -m "chore(marca): regenerar assets nativos desde logo.svg [skip ci]"
+            git push
+          fi
