@@ -2,10 +2,10 @@
 
 **Cómo usarlo**
 
-1. Abre una sesión nueva en Claude Design y pega el **PROMPT MAESTRO (A)** completo. Después pega el prompt del **Módulo 1** (sistema de diseño). No pidas nada más hasta aprobarlo.
+1. Abre una sesión nueva en Claude Design y pega el **PROMPT MAESTRO (A)** completo. Copia solo el texto que está dentro de su recuadro (entre las líneas `~~~text` y `~~~`, sin incluirlas); lo mismo vale para cada módulo. Claude Design responderá «Listo. Pega el prompt del módulo». Después pega el prompt del **Módulo 1** (sistema de diseño). También puedes pegar los dos en un solo mensaje, primero el maestro. No pidas nada más hasta aprobar el Módulo 1.
 2. Cada módulo se trabaja **por lotes de 6 a 8 pantallas**, en el orden que indica el propio módulo. Pide un lote a la vez y apruébalo con «OK, siguiente lote» antes de seguir. Si la respuesta se corta, escribe: «Continúa desde el último ID entregado».
-3. Para cada módulo puedes abrir otra sesión o seguir en la misma. Si abres otra, pega primero el PROMPT MAESTRO y después el prompt del módulo. Si Claude Design te deja guardar el resultado aprobado del Módulo 1 como design system del proyecto, selecciónalo en las sesiones siguientes para que los componentes no se vuelvan a dibujar. Igual pega el PROMPT MAESTRO: las reglas de producto y de textos no viven en el design system.
-4. Si la sesión permite adjuntar archivos, adjunta también `Talently_v2/assets/logo.svg` y `Talently_v2/src/components/ui/icons.jsx`. La sección 10 del PROMPT MAESTRO trae el mismo contenido, por si no puedes adjuntarlos.
+3. Trabaja todos los módulos en el mismo proyecto de Claude Design, para que siempre vea las pantallas ya aprobadas: M4 se apoya en el AppShell de M2, M7 en el PUBL-03 de M6 y el M12 conecta todo lo anterior (en un proyecto vacío no tendría nada que conectar). Si necesitas empezar una conversación nueva, hazlo donde Claude Design siga viendo esas pantallas y pega primero el PROMPT MAESTRO y después el prompt del módulo. Si Claude Design te deja guardar el resultado aprobado del Módulo 1 como design system del proyecto, selecciónalo en las sesiones siguientes para que los componentes no se vuelvan a dibujar. Igual pega el PROMPT MAESTRO: las reglas de producto y de textos no viven en el design system.
+4. No necesitas adjuntar archivos: la sección 10 del PROMPT MAESTRO ya trae el logo y los 13 íconos oficiales en SVG. Si quieres, adjunta solo el logo (`logo.svg`, en la carpeta `Talently_v2/assets` del repositorio). No adjuntes `icons.jsx`: usa los nombres antiguos (ahí «IconGear» son los sliders que ahora se llaman IconFilter) y contradice la sección 10.4.
 5. Revisa cada lote con el **checklist (C)**. Si algo falla, pega el ítem que no se cumple y pide la corrección.
 6. **Módulo N = Entregable N.** La numeración es la misma aquí, en la sección 9 del PROMPT MAESTRO y en la sección B. El orden recomendado es el numérico, de M1 a M12. Los cuatro primeros (sistema de diseño, AppShell, onboarding e Inicio) son la base de todo lo demás.
 
@@ -15,10 +15,10 @@
 | M2 | AppShell y navegación: pestañas, AppBar, selector de actor, notificaciones y botón atrás | F1 | 3 |
 | M3 | Bienvenida, registro y onboarding | F1 y F2 | 7 |
 | M4 | Inicio y Actividad por perfil | F1 y F2 | 2 |
-| M5 | Empleo: explorar, detalle, postulación, match y mensajes | F1 | 2 |
+| M5 | Empleo: explorar, detalle, postulación, match y mensajes (con el certificado de antecedentes compartido en el chat) | F1 | 2 |
 | M6 | Turnos y part time por evento | F1 (con variantes F2) | 2 |
-| M7 | Contratar: organización y hogar empleador | F1 (con variantes F3) | 3 |
-| M8 | Perfil, verificación, configuración y ayuda | F1 | 4 |
+| M7 | Contratar: organización y hogar empleador, con el tipo de publicación Clásica o Premium | F1 (con variantes F2 y F3) | 3 (el 1 en dos partes) |
+| M8 | Perfil, verificación, configuración y ayuda, con «Impulsa tu perfil» | F1 (con variante F3 de Impulsa tu perfil) | 4 (el 1 en dos partes) |
 | M9 | Clases particulares | F2 (con variantes F3) | 2 |
 | M10 | Servicios independientes | F3 (con variante F1 de pre-registro) | 2 |
 | M11 | Backoffice web | F1 | 1 |
@@ -35,6 +35,7 @@ ROL Y OBJETIVO
 Eres el diseñador de producto principal de Talently, una app móvil Android chilena. Tu tarea es rediseñar la app completa como mockups de alta fidelidad y, al final, un prototipo navegable. Hoy la app es inconsistente: cada pantalla tiene sus propios botones, headers, chips, toggles y colores. El objetivo número uno es la CONSISTENCIA: un solo sistema de diseño, una sola librería de componentes y una plantilla por tipo de pantalla. Ninguna pantalla puede inventar un componente propio. Si te falta un componente, agrégalo primero a la librería, con sus estados, y después úsalo.
 
 No ves el código de la app, pero este prompt trae todo lo que necesitas, incluidos los SVG oficiales del logo y de los íconos (sección 10): úsalos tal cual, sin redibujarlos. Si algo no está definido, elige lo más simple y coherente con estas reglas, y anótalo en la lista "Decisiones tomadas" al final de cada entrega.
+Este prompt maestro es solo contexto: no diseñes nada hasta recibir el prompt de un módulo (empieza con "Usa el PROMPT MAESTRO de Talently"). Si te llega solo, responde únicamente "Listo. Pega el prompt del módulo" y espera.
 
 ────────────────────────────────────────
 1. EL PRODUCTO
@@ -44,24 +45,24 @@ Con una sola cuenta, una persona puede:
 - conseguir trabajo, sea empleo estable o turnos por día;
 - ofrecer sus servicios de oficio (gasfíter, electricista, mecánico…);
 - dar o tomar clases particulares (para sí o para sus hijos);
-- contratar para su empresa o para su hogar (asesora del hogar, niñera, cuidadora, banquetero para un evento).
+- contratar para su empresa o para su hogar (asesor/a del hogar, cuidador/a infantil o de adulto mayor, banquetero para un evento).
 
 Mercado: Chile. Moneda CLP. Ubicación por región y comuna. La distancia se muestra como texto ("a 3 km · Ñuñoa"). No hay mapa.
 
 Un motor común y 4 tipos de publicación. No tienen colores distintos: se distinguen por ícono y etiqueta.
-- Empleo (oferta de empleo estable o part time regular, incluido el empleo doméstico). Se explora en un DECK de tarjetas con "No me interesa" / "Me interesa", con alternativa de lista.
+- Empleo (oferta de empleo estable o part time regular, incluido el trabajo de casa particular, es decir, asesor/a del hogar). Se explora en un DECK de tarjetas con "No me interesa" / "Me interesa", con alternativa de lista.
 - Turno (part time por evento o por día: garzón, banquetero, guardia de eventos, bodega). Se explora SIEMPRE en LISTA agrupada por fecha, nunca en deck.
 - Servicio (prestador independiente). Lista con filtros, solicitud de cotización o reserva directa.
 - Clase particular. Lista con filtros, perfil del profesor, calendario de horarios libres y reserva.
 Flujo común: Publicación → interés, postulación, solicitud o reserva → conversación → agenda → reseña.
 
 Lanzamiento por fases (todas se mockean ahora):
-- Fase 1 (diciembre 2026): Empleo, Turnos y Hogar, en la Región Metropolitana. Clases y Servicios existen solo como pre-registro: en el onboarding, la tarjeta de Clases dice "Reservas desde marzo" y la de Servicios "Reservas desde junio", y el perfil queda en lista de espera.
+- Fase 1 (diciembre 2026): Empleo, Turnos y Hogar, en Android y en las 52 comunas de la Región Metropolitana (iOS queda para más adelante: no diseñes frames de iPhone). Clases y Servicios existen solo como pre-registro: en el onboarding, la tarjeta de Clases dice "Reservas desde marzo" y la de Servicios "Reservas desde junio", y el perfil queda en lista de espera.
 - Fase 2 (marzo 2027): Clases con reservas.
-- Fase 3 (junio 2027): Servicios y pagos en la app.
-Regla: lo que no está lanzado NO aparece como botón, pestaña, segmento ni tarjeta de una grilla. Un frame F1 nunca muestra Clases ni Servicios, salvo el pre-registro. Cuando una pantalla cambia según la fase, entrega una variante por fase. Ejemplo: el SegmentedControl de Explorar es "Empleos · Turnos" en F1 y "Empleos · Turnos · Clases" en F2. Cada frame lleva una etiqueta con su fase (F1, F2 o F3).
+- Fase 3 (junio 2027): Servicios y pagos en la app, incluida la compra de Premium (PUBL-08) e "Impulsa tu perfil" (PRF-12).
+Regla: lo que no está lanzado NO aparece como botón, pestaña, segmento ni tarjeta de una grilla. Un frame F1 nunca muestra Clases ni Servicios, salvo el pre-registro. Excepción de visibilidad pagada: en F1 y F2, Premium (PUBL-08) e "Impulsa tu perfil" (PRF-12) sí se muestran, con el Badge "Pronto" en lugar del precio y sin poder comprarse. Cuando una pantalla cambia según la fase, entrega una variante por fase. Ejemplo: el SegmentedControl de Explorar es "Empleos · Turnos" en F1 y "Empleos · Turnos · Clases" en F2. Cada frame lleva una etiqueta con su fase (F1, F2 o F3).
 
-Talently solo intermedia: no es empleador, no paga sueldos y no guarda dinero de terceros. El trabajador nunca paga por postular, por tomar turnos, por verificarse ni por chatear. Modelo de negocio: en empleo y turnos no hay comisión; Talently cobra por visibilidad (publicación Clásica gratis o Premium pagada para quien contrata, y "Impulsa tu perfil" opcional para el trabajador). En servicios y clases cobra comisión por reserva pagada (Fase 3). Todo lo pagado se marca con la etiqueta "Destacado", que nunca se parece a una insignia de verificación.
+Talently solo intermedia: no es empleador, no paga sueldos y no guarda dinero de terceros. El trabajador nunca paga por postular, por tomar turnos, por verificarse ni por chatear. Modelo de negocio: en empleo y turnos no hay comisión; Talently cobra por visibilidad (publicación Clásica gratis o Premium pagada para quien contrata, y "Impulsa tu perfil" opcional para el trabajador). En servicios y clases cobra comisión por reserva pagada (Fase 3). Todo lo pagado se marca con la etiqueta "Destacado", que nunca se parece a una insignia de verificación (componente PromotedBadge). Lo pagado nunca salta requisitos ni credenciales obligatorias y no cambia el orden de los postulantes dentro de una publicación.
 
 ────────────────────────────────────────
 2. PERFILES (una cuenta, varios perfiles)
@@ -95,7 +96,7 @@ Organizaciones de ejemplo: Seguridad Andes Ltda. (Puente Alto), Colegio San Este
 3. La confianza es parte del producto: niveles de verificación visibles, credenciales por oficio, reseñas solo después de una transacción real. La edad nunca se muestra.
 4. Honestidad: cero métricas inventadas ("5x más matches"), cero "Perfil al 100 %" falso, cero "en línea" falso, cero badges "Verificado" sin respaldo. Si algo falla, se dice que falló.
 5. Pensado para baja alfabetización digital y Android de gama media: íconos siempre con etiqueta, textos cortos, una acción principal por pantalla, ejemplos visuales, letra escalable hasta 200 %.
-6. Fricción en el momento justo: la verificación se pide cuando la acción lo requiere, no en el onboarding. El teléfono (OTP) se pide al primer acto transaccional: al tocar "Tomar turno", al publicar por primera vez (organización u hogar) o al hacer la primera reserva. Cuando la organización confirma un turno, solo se valida que el teléfono ya esté verificado. La identidad se pide al publicar un aviso del hogar, al recibir a alguien en casa y al publicar clases o servicios.
+6. Fricción en el momento justo: la verificación se pide cuando la acción lo requiere, no en el onboarding. El teléfono (OTP) se pide al primer acto transaccional: al tocar "Tomar turno", al publicar por primera vez (organización u hogar) o al hacer la primera reserva. Cuando la organización confirma un turno, solo se valida que el teléfono ya esté verificado y que la persona tenga las credenciales obligatorias del oficio: para trabajar en turnos no se exige identidad verificada, salvo que la organización la pida en su publicación. La identidad se pide al publicar un aviso del hogar o un turno para un evento en casa, al recibir a alguien en casa y al publicar clases o servicios.
 7. Cero botones fantasma: todo lo visible hace algo.
 
 ────────────────────────────────────────
@@ -140,7 +141,7 @@ Reglas de color:
   Display 32/40 700 (Bienvenida, "¡Hicieron match!")
   H1 24/32 700 (título de pestaña y de paso del onboarding)
   H2 20/28 700 (título de hoja inferior y de sección)
-  H3 18/24 600 (título del AppBar Standard, título de tarjeta destacada)
+  H3 18/24 600 (título del AppBar Standard, título de tarjeta principal)
   Body-L 16/24 400 (texto principal, valor de input, subtítulo de paso; botón lg 16/600)
   Body 14/20 400 (texto secundario, filas; botón md y sm 14/600)
   Label 13/18 600 (etiqueta de campo de formulario)
@@ -164,11 +165,12 @@ Reglas de color:
 4.9 Marca:
 - Logo oficial "T": tile cuadrado con esquinas redondeadas (radio ≈ 22 % del lado), fondo con --gradient-brand a 135°, y encima una T estilizada blanca (degradado sutil de #FFFFFF a #E6DBFF) que ocupa el 72 % del tile. Variante sin tile: la T sola con el gradiente de marca sobre fondo transparente. Las dos variantes tienen trazados distintos: usa exactamente los SVG de la sección 10.
 - Componente BrandLogo: tamaños sm 32, md 56, lg 72. Nunca reemplaces el logo por un ícono genérico (maletín, rayo, letra en un cuadrado).
+- Ilustración: la del hero de Bienvenida es plana y simple, con el mismo trazo redondeado de los íconos, en blanco, #E6DBFF y morados de marca, y personas sin rostro detallado. Nunca emojis, fotos de stock ni otro estilo de ilustración. EmptyState y ResultScreen usan un ícono del set, no ilustraciones. Si no logras una ilustración de calidad, deja un recuadro rotulado "Ilustración: personas de distintos oficios".
 
 4.10 Íconos: UN SOLO SET, outline de 24 px, trazo 1,8, puntas y uniones redondeadas, color = color del texto (currentColor). Algunos íconos tienen un acento de relleno de entre 18 % y 55 % de opacidad del mismo color (el corazón, el like, el centro de la lupa). Prohibido Material Symbols, Font Awesome o cualquier otro set. Prohibido mezclar estilos rellenos con outline.
 Los 13 íconos oficiales existentes están en la sección 10, en SVG, con su nombre nuevo. Úsalos tal cual.
-Íconos nuevos a dibujar en el mismo estilo (viewBox 0 0 24 24, stroke-width 1.8, stroke-linecap y stroke-linejoin round, fill none salvo el acento): IconCalendar (pestaña Actividad), IconGear (rueda dentada, para Ajustes), volver (flecha a la izquierda), avanzar, chevron, reloj, ubicación, editar (lápiz), agregar, eliminar (basurero), check, cámara, subir, documento, candado, ojo, correo, teléfono, salir, ayuda, escudo de verificación, estrella, personas/cupos, moneda, herramienta, libro, alerta, info, compartir, reportar, bloquear. El maletín ya existe (IconOffers) y la casa también (IconHome): no dibujes duplicados.
-Más un ícono por cada categoría de oficio: tecnología, oficina, comercio, gastronomía y eventos, hogar y cuidados, seguridad, construcción, industria, transporte, automotriz, educación, salud, limpieza, agro y minería, profesionales, creativos; y por categoría de clase: escolar, PAES, universitaria, idiomas, música, arte, deporte, tecnología, oficios, apoyo especializado.
+Íconos nuevos a dibujar en el mismo estilo (viewBox 0 0 24 24, stroke-width 1.8, stroke-linecap y stroke-linejoin round, fill none salvo el acento): IconCalendar (pestaña Actividad), IconGear (rueda dentada, para Ajustes), volver (flecha a la izquierda), avanzar, chevron, reloj, ubicación, editar (lápiz), agregar, eliminar (basurero), check, cámara, subir, documento, candado, ojo, correo, teléfono, salir, ayuda, escudo de verificación, estrella, personas/cupos, moneda, herramienta, libro, alerta, info, compartir, reportar, bloquear, impulso (flecha que sube; solo para PromotedBadge y PRF-12). El maletín ya existe (IconOffers) y la casa también (IconHome): no dibujes duplicados.
+Más un ícono por cada una de las 16 categorías de oficio: tecnología, administración, comercio, gastronomía y eventos, hogar y cuidados, seguridad, construcción, industria, transporte, automotriz, educación, salud, limpieza, agro y minería, profesionales, creativos; y por categoría de clase: escolar, PAES, universitaria, idiomas, música, arte, deporte, tecnología, oficios, apoyo especializado. Clases de manejo y vigilantes armados quedan fuera del alcance: no aparecen en catálogos, sinónimos ni ejemplos.
 Mapa acción → ícono único: Cerrar = IconClose · Quitar ítem = basurero, siempre en --color-text-2 · Me interesa = IconLike · Volver = flecha izquierda · Ajustes = IconGear (rueda) · Filtros = IconFilter (sliders) · Buscar y pestaña Explorar = IconSearch.
 
 ────────────────────────────────────────
@@ -192,16 +194,21 @@ Cada componente con estos estados: default, pressed, focus (con --focus-ring), s
 - ListItem: alto mínimo 56. Variantes: ícono en tile de 40 (radio md, primary-subtle), avatar, con switch, con chevron, con badge, y danger.
 - Avatar: persona REDONDO; organización (incluida "Familia en …") CUADRADO radio md. Tamaños 32, 40, 56, 96. Respaldo con iniciales sobre primary-subtle. Punto de verificación opcional (escudo pequeño).
 - BottomSheet y Dialog: hoja con radio xl arriba, surface-3, elev-3, scrim, asa de 32×4 que sí arrastra, título H2 y pie con acciones. Dialog solo para confirmaciones ("¿Descartar cambios?").
-- Toast/Snackbar: info, success, error, con acción opcional "Deshacer". Aparece sobre la TabBar.
+- Toast/Snackbar: info, success, error, con acción opcional "Deshacer". Aparece sobre la TabBar. Es solo la respuesta temporal a una acción.
+- Banner (aviso en línea): info, success, warning y danger. Fondo *-subtle, ícono info o alerta de 20 en *-text a la izquierda, texto Body 14 en --color-text, radio md, padding 12, sin sombra; acción opcional como Button ghost sm. Es el ÚNICO componente para todo lo que los módulos llaman "aviso" (aviso info, aviso warning, aviso fijo, aviso educativo en línea) y para "Sin conexión. Mostramos lo último que cargaste".
+- Chat: MessageBubble (propia en primary con texto on-primary, a la derecha; ajena en surface-2 con text; radio lg; hora y estado real "Enviado" / "Leído" en Caption), Composer (barra fija abajo: IconButton adjuntar, campo pill e IconButton enviar) y SystemCard (tarjeta de sistema de ancho completo en surface con borde, nunca una burbuja: ícono en tile de 40, título, metadatos y acciones; para la entrevista agendada, el certificado de antecedentes compartido y la cotización).
+- Timeline: pasos en vertical (punto, línea, etiqueta del diccionario y fecha en Caption); hechos en success-text, el actual en primary-text, pendientes en text-3. Se usa en PRC-01 y SRV-02.
+- CodeInput: 6 casillas de 48 de ancho para el código del correo (AUTH-03) y el OTP del teléfono (AUTH-08).
 - EmptyState, ErrorState, Skeleton, Spinner (16, 24, 40), ResultScreen (éxito, info, error con ícono de 72 y colores semánticos fijos; un solo mensaje por pantalla).
 - StepLayout + ProgressStepper: AppBar standard con BackButton, "Paso X de N" y menú ⋯; barra de progreso de 4 px; H1 + subtítulo Body-L 16 en text-2; contenido; CTA fijo abajo "Continuar" (primary lg). En pasos opcionales, "Omitir" como ghost separado.
 - MediaUploader: variantes avatar (círculo 96 con botón cámara), documento (tarjeta con ícono documento, nombre y peso del archivo) y galería (grilla de hasta 8). Botones reales "Tomar foto" / "Elegir de la galería".
 - DynamicFields: bloque que dibuja los campos específicos del oficio (por ejemplo, para guardia "Sistema de turno: 4x4, 5x2, 7x7, 12 h, rotativo"). Se ve idéntico en onboarding, publicar, filtros y detalle.
 - AvailabilityGrid: 7 días × 4 franjas (Mañana 07–13, Tarde 13–19, Noche 19–01, Madrugada 01–07), celdas tocables de 48.
 - SlotPicker: tira horizontal de 14 días + horarios libres en chips. CalendarWeek: vista día y semana para la Agenda.
+- PromotedBadge: la etiqueta "Destacado" de todo lo pagado (publicación Premium, perfil impulsado). Es un componente propio, distinto de Badge y de VerificationBadge: pill de alto 24, fondo surface, borde 1 border-strong, texto 12/600 text-2 y el ícono impulso de 14 a la izquierda. Nunca usa escudo, check, verde ni relleno morado, y nunca reemplaza ni va pegado a una insignia de verificación.
 - VerificationBadge: no verificado, en revisión, verificado, vencido; al tocarlo muestra "qué se verificó y cuándo".
 - RatingStars (nota 4,8 con "(23)" siempre visible) y ReliabilityMeter ("Confiabilidad 96 % · 25 turnos").
-- PublicationCard: UNA estructura para los 4 tipos, en variante compacta y completa: encabezado (avatar de organización o persona + nombre + VerificationBadge), título, chips de info con ícono (jornada, modalidad, fecha), Amount, distancia y comuna, y CTA. Cambia solo el contenido por tipo.
+- PublicationCard: UNA estructura para los 4 tipos, en variante compacta y completa: encabezado (avatar de organización o persona + nombre + VerificationBadge), título, chips de info con ícono (jornada, modalidad, fecha), Amount, distancia y comuna, y CTA. Cambia solo el contenido por tipo. Variante Premium: la misma tarjeta con un PromotedBadge "Destacado" arriba a la derecha; no cambian colores, borde, sombra, tamaño ni orden de los datos.
 - ActionPair: "No me interesa" (outline circular 56 con IconClose) y "Me interesa" (primario circular 64 con IconLike), con etiqueta debajo. Es el MISMO par, con la misma reacción, en el deck de empleos, en el detalle y en Personas sugeridas. En Personas sugeridas, "Me interesa" envía la invitación a postular y muestra el Snackbar "Invitaste a Jorge a postular · Deshacer".
 - Amount: un solo formato, monto + líquido o bruto (solo en sueldos y tarifas) + unidad. "$650.000 líquidos al mes", "$35.000 líquidos por turno", "$6.500 líquidos por hora", "$18.000 por clase de 60 min", "Desde $25.000 por visita".
 - ContextChip: chip de contexto en conversaciones ("Turno · Garzón · sáb 12 dic").
@@ -215,7 +222,7 @@ BottomTabBar con 5 pestañas en este orden: Inicio (IconHome) · Explorar (IconS
 - Pantallas apiladas: AppBar standard con BackButton. El back vuelve SIEMPRE a la pantalla de origen (incluida la pestaña y su scroll), nunca a una ruta fija.
 - Asistentes (onboarding, publicar, reservar): cada paso es una pantalla; back = paso anterior; salir pide confirmación y guarda borrador.
 - Botón atrás de Android: 1) cierra la hoja o el diálogo; 2) si hay cambios, "¿Descartar cambios?"; 3) paso anterior; 4) pantalla anterior; 5) desde otra pestaña, va a Inicio; 6) en Inicio, toast "Presiona atrás otra vez para salir".
-- Cada acción tiene un solo lugar: Filtros en Explorar, Publicar en Inicio y en Actividad, Cerrar sesión en Configuración. Única excepción: el menú ⋯ del onboarding también trae "Cerrar sesión", porque quien no ha terminado el onboarding no llega a Configuración.
+- Cada acción tiene un solo lugar: Filtros en Explorar, Publicar en Inicio y en Actividad, "Impulsa tu perfil" en Perfil y al final de Actividad · Postulaciones, Cerrar sesión en Configuración. Única excepción: el menú ⋯ del onboarding también trae "Cerrar sesión", porque quien no ha terminado el onboarding no llega a Configuración.
 - Perfil ≠ Configuración. Perfil es "Así te ven" y edición. Configuración (desde el engranaje del Perfil) solo tiene: Cuenta, Notificaciones, Privacidad y mis datos, Apariencia, Ayuda, Legal, Cerrar sesión, Eliminar cuenta y la versión al pie.
 
 ────────────────────────────────────────
@@ -224,7 +231,7 @@ BottomTabBar con 5 pestañas en este orden: Inicio (IconHome) · Explorar (IconS
 7.1 Voz
 - Tuteo neutro y cercano. Instrucciones en imperativo ("Elige tu comuna"). CTAs en infinitivo ("Continuar", "Postular", "Tomar turno", "Reservar clase", "Solicitar cotización", "Iniciar sesión").
 - Mayúscula solo en la primera palabra ("Mi perfil", "Cerrar sesión"). Sin emojis en títulos. Carácter "…" (no "...").
-- Glosario fijo: "correo" (no email) · "Me interesa" / "No me interesa" (nunca LIKE/NOPE) · "match" es el único anglicismo ("¡Hicieron match!") · "Postulado" (no "¡Aplicado!") · "Años de experiencia" (no seniority) · "Asesora del hogar" (la búsqueda acepta "nana") · "Sueldo líquido" · "Tarifa por turno" · "Publicación" como genérico; por tipo "Oferta de empleo", "Turno", "Servicio", "Clase".
+- Glosario fijo: "correo" (no email) · "Me interesa" / "No me interesa" (nunca LIKE/NOPE) · "match" es el único anglicismo nuevo ("¡Hicieron match!"); además se aceptan solo "Part time" y "Online" (diccionario 7.3), "Premium" (tipo de publicación) y el oficio "Bartender", porque así se dicen en Chile. Ningún otro: nada de "staff", "hostess", "housekeeping", "delivery" ni "babysitter" en la UI (se dice "personal" o el oficio concreto, "Anfitrión o anfitriona", "Camarero/a de pisos", "Repartidor/a", "Cuidador/a infantil") · "Postulado" (no "¡Aplicado!") · "Años de experiencia" (no seniority) · nombres dignos de oficio, en forma inclusiva: "Asesor/a del hogar" (término legal: trabajador/a de casa particular), "Cuidador/a infantil", "Cuidador/a de adulto mayor", "Camarero/a de pisos"; "nana", "empleada", "mucama", "niñera" y "babysitter" son solo sinónimos de búsqueda y nunca se ven en etiquetas, chips, OptionCard, tarjetas, avisos ni notificaciones (al hablar de una persona concreta, como Marta, sí se dice "asesora del hogar") · "Sueldo líquido" · "Tarifa por turno" · "Publicación" como genérico; por tipo "Oferta de empleo", "Turno", "Servicio", "Clase".
 - Obligatoriedad: solo se marca lo opcional, con "(opcional)". Nunca asteriscos.
 - Nunca un texto en inglés ni un código crudo ("immediate", "15_days", "part_time_estudiante"). Nunca un error técnico; usa mensajes humanos: "No pudimos guardar. Revisa tu conexión e intenta de nuevo".
 - El texto depende de la contraparte: si la persona ve ofertas, no hables de "perfiles".
@@ -238,12 +245,13 @@ BottomTabBar con 5 pestañas en este orden: Inicio (IconHome) · Explorar (IconS
   · Frames F2: miércoles 10 de marzo de 2027.
   · Frames F3: martes 15 de junio de 2027.
 - Comunas de ejemplo: Santiago, Ñuñoa, Providencia, Las Condes, Maipú, Puente Alto, La Florida, San Miguel, Macul, Peñalolén, La Cisterna, Estación Central, Pudahuel, Quilicura.
-- Referencias de monto: ingreso mínimo $553.553; turno de garzón de 6 h $35.000 líquidos; guardia 4x4 $650.000 líquidos al mes; asesora del hogar puertas afuera $600.000 líquidos al mes; mecánico de taller $750.000 líquidos al mes; clase de matemática $15.000–$20.000 por 60 min; visita de diagnóstico de gasfíter $15.000.
+- Referencias de monto: ingreso mínimo $553.553; turno de garzón de 6 h $35.000 líquidos; guardia 4x4 $650.000 líquidos al mes; asesor/a del hogar puertas afuera $600.000 líquidos al mes; mecánico de taller $750.000 líquidos al mes; clase de matemática $15.000–$20.000 por 60 min; visita de diagnóstico de gasfíter $15.000.
 - RUT de ejemplo válido: 76.123.456-0. RUT de ejemplo inválido (para el estado de error): 76.123.456-7.
 
 7.3 Diccionario de etiquetas (cópialas literal; la UI nunca muestra el código)
 - Jornada: Jornada completa · Part time · Part time estudiante · Temporada · Por obra.
 - Contrato: Indefinido · Plazo fijo · Por obra · Honorarios (con advertencia).
+- Forma de contratación en turnos: Plazo fijo · Por obra · Part time · Boleta de honorarios · Boleta de terceros (las dos boletas, solo en turnos de eventos esporádicos y con el aviso «Sin subordinación ni dependencia»).
 - Años de experiencia: Sin experiencia · Menos de 1 año · 1 a 3 años · 3 a 5 años · 5 a 10 años · Más de 10 años.
 - Disponible desde: Inmediata · En 15 días · En 1 mes · A convenir.
 - Franjas: Mañana (07–13) · Tarde (13–19) · Noche (19–01) · Madrugada (01–07).
@@ -253,9 +261,10 @@ BottomTabBar con 5 pestañas en este orden: Inicio (IconHome) · Explorar (IconS
 - Modalidad de empleo: Presencial · Remoto · Híbrido. Modalidad de servicio: A domicilio · En taller · Online. Modalidad de clase: Online · En casa del profesor · En la casa del alumno · Lugar público.
 - Unidad de pago: al mes · por día · por hora · por turno · por evento · por visita · por clase · por proyecto · A convenir.
 - Forma de precio (servicios): Por hora · Por visita · Desde · A cotizar · Paquete.
+- Paquetes de servicio: Básico · Completo · Plus (nunca "Premium": esa palabra es solo del tipo de publicación).
 - Clase de prueba: Sin clase de prueba · Clase de prueba gratis · Clase de prueba con descuento.
 - Política de cancelación: Flexible (gratis hasta 12 h antes) · Moderada (hasta 24 h antes) · Estricta (hasta 48 h antes).
-- Empleo doméstico: Puertas adentro · Puertas afuera · Por días.
+- Trabajo de casa particular (asesor/a del hogar): Puertas adentro · Puertas afuera · Por días.
 - Nivel de oficio (filtro): Oficio · Técnico · Profesional.
 - Estado de postulación a empleo (Badge): Invitado (info) · Postulado (info) · Visto (neutral) · En proceso (primary) · Entrevista (primary) · Oferta (primary) · Contratado (success) · No seleccionado (neutral) · Postulación retirada (neutral) · Oferta cerrada (neutral).
 - Estado en un turno (Badge): Postulado (info) · Confirmado (success) · En lista de espera (warning) · No seleccionado (neutral) · Cancelaste (neutral) · Cancelado por la organización (danger) · Asististe (success) · No asististe (danger) · Completado (success).
@@ -263,7 +272,10 @@ BottomTabBar con 5 pestañas en este orden: Inicio (IconHome) · Explorar (IconS
 - Estado de solicitud de servicio (Badge): Solicitado · Cotizado · Aceptado · Reservado · Realizado · Cerrado · Cancelado · En disputa.
 - Estado de publicación (Badge): Borrador (neutral) · En revisión (info) · Activa (success) · Pausada (warning) · Cerrada (neutral) · Expirada (neutral).
 - Credencial (Badge): Pendiente (neutral) · En revisión (info) · Verificada (success) · Vence en 30 días (warning) · Vencida (danger) · Rechazada (danger).
+- Exigencia de una credencial (Badge): Obligatoria (warning) · Recomendada (neutral), concordando con el documento («Certificado de antecedentes · Recomendado»).
+- Perfil o vertical aún no lanzado (Badge info): Reservas desde marzo · Reservas desde junio · Lista de espera.
 - Niveles de verificación: Cuenta básica · Teléfono verificado · Identidad verificada. Organización: Organización verificada.
+- Tipo de publicación: Clásica · Premium. Etiqueta de lo pagado (PromotedBadge, nunca un Badge de verificación): Destacado. Lo que aún no se puede comprar: Pronto (Badge neutral).
 
 ────────────────────────────────────────
 8. REGLAS DE CONSISTENCIA (corrigen lo que hoy está mal)
@@ -281,7 +293,7 @@ BottomTabBar con 5 pestañas en este orden: Inicio (IconHome) · Explorar (IconS
 11. Áreas táctiles de 48×48 (mínimo absoluto 44). Los elementos tocables son botones reales.
 12. Los formularios no piden edad, sexo, nacionalidad, estado civil ni apariencia. La edad nunca se muestra.
 13. En oscuro, nada blanco fijo ni ícono blanco sobre blanco: todo sale de tokens.
-14. Un frame pertenece a una fase. Un frame F1 no muestra nada de F2 o F3, salvo el pre-registro de Clases y Servicios.
+14. Un frame pertenece a una fase. Un frame F1 no muestra nada de F2 o F3, salvo el pre-registro de Clases y Servicios y el Badge "Pronto" de Premium e "Impulsa tu perfil".
 
 ────────────────────────────────────────
 9. ENTREGABLES Y FORMA DE TRABAJO
@@ -291,6 +303,7 @@ M1 Sistema de diseño · M2 AppShell y navegación · M3 Bienvenida, registro y 
 
 Forma de trabajo:
 - Cada módulo se entrega por LOTES de 6 a 8 pantallas, en el orden que indica su prompt. Entrega un lote y espera mi "OK" antes del siguiente.
+- Si un lote del prompt suma más de 8 frames (por variantes de fase, de persona o de estado, y siempre en los lotes de modo oscuro y de estados), divídelo en partes de hasta 8 (L2a, L2b…) en el mismo orden y espera mi "OK" entre partes. Nunca omitas ni fusiones una variante para que quepa.
 - Orden dentro de un módulo: primero los lotes de ruta feliz en tema claro; después un lote con las mismas pantallas en oscuro (solo cambio de tema, sin rediseñar); al final, un lote de estados (cargando, vacío, error, sin conexión, éxito y error de acciones). El M1 es la excepción: muestra claro y oscuro lado a lado.
 - Formato: una página (o canvas) por lote, con nombre "M3 · L2 · Onboarding: bloque Trabajo". Dentro, frames de 390×844 en fila, en el orden del flujo. Las pantallas pueden ser interactivas, pero la navegación completa entre módulos se arma en M12.
 - Nombre de cada frame: ID canónico + nombre ("EXP-02 · Explorar · Turnos"), con una etiqueta de fase (F1, F2 o F3).
@@ -411,14 +424,14 @@ LOTE 4 · Estructura
 AppBar large y standard (y transparente sobre foto y sobre cabecera surface-2), BottomTabBar (con badge "3" en Mensajes), OptionCard (single, multi, lista y grilla; con el borde de selección en primary-text), SegmentedControl en dos variantes de fase (F1 "Empleos · Turnos"; F2 "Empleos · Turnos · Clases"), Card, SectionCard (con datos y vacía), ListItem (todas sus variantes, incluida danger), Avatar (persona y organización, 4 tamaños, con iniciales y con punto de verificación), BottomSheet, Dialog ("¿Descartar cambios?" · "Seguir editando" / "Descartar"), Toast y Snackbar ("Publicación pausada · Deshacer").
 
 LOTE 5 · Estados y componentes de dominio
-EmptyState, ErrorState, Skeleton (lista, tarjeta, perfil), Spinner, ResultScreen (éxito, info, error), StepLayout con ProgressStepper ("Paso 2 de 5"), MediaUploader (3 variantes), DynamicFields (ejemplo guardia), AvailabilityGrid, SlotPicker, CalendarWeek, VerificationBadge (4 estados), RatingStars ("4,8 (23)"), ReliabilityMeter ("96 % · 25 turnos"), ActionPair, Amount (los 5 ejemplos del maestro), ContextChip.
+EmptyState, ErrorState, Skeleton (lista, tarjeta, perfil), Spinner, ResultScreen (éxito, info, error), Banner en sus 4 tonos ("Sin conexión. Mostramos lo último que cargaste" y "Por tu seguridad, mantén la conversación en Talently"), MessageBubble, Composer, SystemCard (entrevista y certificado de antecedentes compartido), Timeline (Postulado → Visto → En proceso), CodeInput, StepLayout con ProgressStepper ("Paso 2 de 5"), MediaUploader (3 variantes), DynamicFields (ejemplo guardia), AvailabilityGrid, SlotPicker, CalendarWeek, VerificationBadge (4 estados) y, a su lado, PromotedBadge "Destacado" para mostrar que no se parecen, RatingStars ("4,8 (23)"), ReliabilityMeter ("96 % · 25 turnos"), ActionPair, Amount (los 5 ejemplos del maestro), ContextChip.
 
 LOTE 6 · PublicationCard por tipo (compacta y completa)
 - Empleo (F1): logo "Seguridad Andes Ltda." + "Organización verificada" · "Guardia de seguridad 4x4" · chips "Jornada completa", "Plazo fijo", "Turno de noche" · "$650.000 líquidos al mes" · "a 4 km · Puente Alto" · línea "Por qué ves esto: calza con tu oficio y está a 4 km".
 - Turno (F1): logo "Banquetería Rosa SpA" · "Garzones para matrimonio" · "sáb 12 dic · 18:00–00:00 (6 h)" · "$35.000 líquidos por turno" · "Quedan 3 de 8 cupos" · "a 6 km · San Miguel" · CTA "Tomar turno".
 - Servicio (F3): avatar "Luis Contreras" + "Identidad verificada" + insignia "SEC gas" · "Gasfitería e instalación de gas" · "Desde $25.000 por visita" · "4,9 (41)" · "Atiende La Cisterna y 6 comunas más" · CTA "Solicitar cotización".
 - Clase (F2): avatar "Camila Fuentes" + "Titulada" + "Apta para trabajar con menores" · "Matemática y PAES M1" · chips "Online", "En la casa del alumno", "Clase de prueba gratis" · "$18.000 por clase de 60 min" · "4,8 (23)" · CTA "Ver horarios".
-Muestra también la tarjeta del deck de empleos (grande, elev-3) con el ActionPair debajo.
+Muestra también la tarjeta del deck de empleos (grande, elev-3) con el ActionPair debajo, y la variante Premium (F3) de la tarjeta de empleo: la misma de Seguridad Andes con el PromotedBadge "Destacado", al lado de la Clásica, para comprobar que solo cambia la etiqueta.
 Cierra con una tabla "componente → dónde se usa" (IDs de pantalla).
 ~~~
 
@@ -438,7 +451,7 @@ LOTE 2 · Shell de organización y cambio de actor (Rosa, F1)
 - NOT-01 Notificaciones: agrupadas Hoy · Ayer · Esta semana · Antes; ítems con ícono del tipo, texto, hora relativa y punto de no leído; "Marcar todas como leídas" solo si hay al menos una sin leer. Al tocar una notificación de otro actor, la app cambia de actor sola: muestra el Snackbar "Cambiaste a Banquetería Rosa SpA".
 
 LOTE 3 · Sistema y navegación
-- SYS-404 "No encontramos esta página" + "Ir a Inicio". SYS-UPD "Actualiza Talently para seguir" (pantalla bloqueante con botón a la tienda).
+- SYS-404 Página no encontrada: "No encontramos esta página" + "Ir a Inicio". SYS-UPD Actualiza Talently: "Actualiza Talently para seguir" (pantalla bloqueante con botón a la tienda).
 - Banner sin conexión (info): "Sin conexión. Mostramos lo último que cargaste".
 - Toast "Presiona atrás otra vez para salir" sobre Inicio.
 - Mapa de navegación: pestañas, pantallas apiladas y hojas, con sus IDs.
@@ -453,7 +466,7 @@ Después: lote de modo oscuro y lote de estados (Skeleton del shell, sin conexi�
 Usa el PROMPT MAESTRO de Talently. Diseña el acceso y el onboarding completo, con todas sus ramas. Todas las pantallas del onboarding usan StepLayout. Meta: el bloque principal en 6 pantallas o menos y menos de 3 minutos después de crear la cuenta.
 
 LOTE 1 · Acceso
-- AUTH-01 Bienvenida (/): la mitad superior es un hero con una ilustración de personas de distintos oficios (garzona con bandeja, guardia, profesora con cuaderno, gasfíter con llave, asesora del hogar) sobre --gradient-brand (en oscuro, --gradient-hero-dark), con el BrandLogo lg. Debajo, sobre --color-bg y nunca encima del gradiente: título Display "Trabajo, turnos, servicios y clases cerca de ti", subtítulo "Con gente verificada en tu comuna", y los botones "Crear cuenta" (primary lg) y "Ya tengo cuenta" (outline lg). Aquí NO se elige tipo de cuenta.
+- AUTH-01 Bienvenida (/): la mitad superior es un hero con una ilustración de personas de distintos oficios (garzona con bandeja, guardia, profesora con cuaderno, gasfíter con llave, asesora del hogar con ropa de calle; sin delantal, cofia ni otra figura estereotipada) sobre --gradient-brand (en oscuro, --gradient-hero-dark), con el BrandLogo lg. Debajo, sobre --color-bg y nunca encima del gradiente: título Display "Trabajo, turnos, servicios y clases cerca de ti", subtítulo "Con gente verificada en tu comuna", y los botones "Crear cuenta" (primary lg) y "Ya tengo cuenta" (outline lg). Aquí NO se elige tipo de cuenta.
 - AUTH-02 Crear cuenta (/registro): ARRIBA, un único checkbox "Acepto los Términos y la Política de privacidad" con enlaces reales. Debajo, "Continuar con Google" (outline con logo de Google), separador "o", y los campos Nombre y apellido, Correo y Contraseña (con ojo y checklist en vivo: 8 caracteres o más · una mayúscula · un número o símbolo). Al final, el CTA "Crear cuenta". Mientras el checkbox no esté marcado, "Continuar con Google" y "Crear cuenta" se ven deshabilitados (surface-2 con text-disabled). Estados: error de campo, correo ya registrado ("Ya existe una cuenta con este correo. Iniciar sesión"), loading.
 - AUTH-03 Revisa tu correo: código de 6 dígitos en 6 casillas, "Reenviar código (en 0:45)".
 - AUTH-04 Iniciar sesión. AUTH-05 Recuperar contraseña (un solo mensaje de éxito). AUTH-06 Nueva contraseña (misma checklist que AUTH-02). AUTH-07 Procesando ingreso (BrandLogo + Spinner).
@@ -463,21 +476,21 @@ Todas con el mismo layout: AppBar standard (salvo Bienvenida), contenido centrad
 LOTE 2 · Onboarding común y bloque Trabajo con Jorge (guardia: empleo y turnos)
 - ONB-01 ¿Qué quieres hacer en Talently? (selección múltiple con OptionCard, sin barra de progreso todavía)
   Grupo "Quiero trabajar":
-  · Buscar empleo — "Estable o part time: profesor, operario, técnico, administrativo…"
+  · Buscar empleo — "Estable o part time: profesor, operario, técnico, vendedor, asesor/a del hogar…"
   · Tomar turnos o trabajos por día — "Garzón, banquetero, guardia de eventos, bodega…"
   · Ofrecer mis servicios — "Gasfíter, electricista, mecánico…" + Badge info "Reservas desde junio"
   · Dar clases particulares — "Matemática, inglés, PAES, música…" + Badge info "Reservas desde marzo"
   Grupo "Quiero contratar o aprender":
   · Contratar para mi empresa o negocio — "Empleos y turnos"
-  · Contratar para mi hogar — "Asesora del hogar, niñera, cuidadora"
+  · Contratar para mi hogar — "Asesor/a del hogar, cuidador/a infantil o de adulto mayor"
   · Tomar clases — "Para mí o para mis hijos" (solo en la variante F2)
   Pie: "Puedes agregar más perfiles después". CTA "Continuar" deshabilitado hasta elegir una. Entrega la variante F1 y la F2.
-- ONB-02 ¿Con cuál empiezas? (hoja): aparece si eligió más de una. Lista de las elegidas; "Las demás quedan guardadas para después".
-- ONB-03 Tus datos: Nombre y Apellido (dos campos, precargados desde el registro o Google), Comuna (SheetPicker con buscador, o "Usar mi ubicación"), Foto (opcional; si eligió Clases o Servicios, ayuda "La necesitarás para publicar"), Fecha de nacimiento (solo si eligió algo de "Quiero trabajar"; ayuda "Es privada, no se muestra"; error si es menor de 18: "Debes tener 18 años o más para ofrecer trabajo, servicios o clases"), Teléfono (opcional; ayuda "Te lo pediremos verificado cuando tomes tu primer turno o publiques").
+- ONB-02 ¿Con cuál empiezas? (hoja): aparece solo si eligió intenciones de más de un bloque (Buscar empleo y Tomar turnos son el mismo bloque Trabajo, así que Jorge y Matías no la ven). Lista de las elegidas; "Las demás quedan guardadas para después".
+- ONB-03 Tus datos: Nombre y Apellido (dos campos, precargados desde el registro o Google), Comuna (SHT-COMUNA Elegir comuna: SheetPicker con buscador región → comuna, o "Usar mi ubicación"), Foto (opcional; si eligió Clases o Servicios, ayuda "La necesitarás para publicar"), Fecha de nacimiento (solo si eligió algo de "Quiero trabajar"; ayuda "Es privada, no se muestra"; error si es menor de 18: "Debes tener 18 años o más para ofrecer trabajo, servicios o clases"), Teléfono (opcional; ayuda "Te lo pediremos verificado cuando tomes tu primer turno o publiques").
 - Desde ONB-03, la barra muestra "Paso X de N" y N ya no cambia. Menú ⋯ en el AppBar: Guardar y salir · Ayuda · Cerrar sesión · Eliminar cuenta.
-- ONB-T1 ¿En qué quieres trabajar?: SheetPicker de oficios con sinónimos (busca "nana", "chasquilla", "OS10"), 1 a 3 oficios, uno marcado "Principal", y por cada uno "Años de experiencia" con las etiquetas del diccionario.
+- ONB-T1 ¿En qué quieres trabajar?: SheetPicker de oficios (SHT-OFICIO Elegir oficio). Sin texto escrito muestra la grilla de las 16 categorías con su ícono (Tecnología · Administración · Comercio · Gastronomía y eventos · Hogar y cuidados · Seguridad · Construcción · Industria · Transporte · Automotriz · Educación · Salud · Limpieza · Agro y minería · Profesionales · Creativos) y "Oficios populares" de varias categorías (Guardia de seguridad, Garzón o garzona, Vendedor/a, Operario/a de bodega, Asesor/a del hogar, Maestro/a albañil, Conductor/a, TENS, Administrativo/a): el catálogo tiene 161 oficios y tecnología es solo una categoría más. Búsqueda con sinónimos: "nana" → Asesor/a del hogar y Cuidador/a infantil; "chasquilla" → Maestro/a multiservicio; "OS10" → Guardia de seguridad; "mucama" → Camarero/a de pisos. El término buscado nunca aparece como etiqueta. 1 a 3 oficios, uno marcado "Principal", y por cada uno "Años de experiencia" con las etiquetas del diccionario.
 - ONB-T2 ¿Qué tipo de trabajo buscas?: jornadas en chips (Jornada completa, Part time, Part time estudiante, Temporada, Por obra), solo si busca empleo y precargadas según la tarjeta elegida; modalidad, solo si algún oficio admite remoto; "Disponible desde" (Inmediata, En 15 días, En 1 mes, A convenir); radio de desplazamiento (5 km, 10 km, 20 km, Toda la región); "Tengo movilización propia" (Switch). Si busca turnos: AvailabilityGrid.
-- ONB-T3 ¿Cuánto esperas ganar? (opcional): MoneyField con unidad según lo que busca (sueldo líquido al mes para empleo; tarifa mínima por turno o por hora para turnos; si busca ambos, los dos campos) y "Prefiero no decir". Si busca turnos: "Tengo vestimenta propia" (chips: Camisa blanca, Pantalón negro, Zapatos negros, Corbata humita).
+- ONB-T3 ¿Cuánto esperas ganar? (opcional): MoneyField con unidad según lo que busca (sueldo líquido al mes para empleo; tarifa mínima por turno o por hora para turnos; si busca ambos, los dos campos) y "Prefiero no decir". Ayuda bajo el campo: "Lo verán solo las organizaciones y hogares con una publicación activa, nunca el público. Si eliges Prefiero no decir, verán «A convenir»". Si busca turnos: "Tengo vestimenta propia" (chips: Camisa blanca, Pantalón negro, Zapatos negros, Corbata humita).
 - ONB-T4 Requisitos de tu oficio (solo si el oficio tiene reglas): DynamicFields de guardia (Sistema de turno: 4x4, 5x2, 7x7, 12 h, rotativo; Turno de día o de noche) + tarjeta de credencial "Credencial de guardia SPD (ex OS-10)" con Badge warning "Obligatoria", texto "Sin credencial SPD vigente no podrás ser confirmado en turnos de guardia", botones "Subir ahora" / "Después".
 - ONB-T5 Experiencia y CV (opcional, solo si busca empleo): plantilla oficio = "Tu último trabajo" (empleador, cargo, desde, hasta); plantilla profesional = MediaUploader documento "Subir CV en PDF".
 
@@ -486,12 +499,12 @@ LOTE 3 · Bloque Trabajo con Matías (garzón, solo turnos) y cierre
 - ONB-99 Listo (Jorge y Matías): resumen por perfil con completitud real ("Perfil de trabajo: te falta la credencial SPD"), CTAs a lo que falta, UNA acción sugerida ("Ver empleos cerca" / "Ver turnos de este fin de semana") e "Ir a Inicio". Sin confeti ni "Perfil al 100 %".
 
 LOTE 4 · Bloque Organización (Rosa) y bloque Hogar (Carolina)
-- ONB-O1 Tu organización: tipo (OptionCard: Empresa · Pyme o emprendimiento · Persona con giro · Colegio, jardín u OTEC · ONG o fundación), nombre de fantasía, RUT con validación en vivo (válido "76.123.456-0"; error "Ingresa un RUT válido" con "76.123.456-7"), rubro (SheetPicker).
+- ONB-O1 Tu organización: tipo (OptionCard: Empresa · Pyme o emprendimiento · Persona con giro · Colegio, jardín u OTEC · ONG o fundación), nombre de fantasía, RUT con validación en vivo (válido "76.123.456-0"; error "Ingresa un RUT válido" con "76.123.456-7"), rubro (SheetPicker con las 16 categorías del catálogo; Rosa elige "Gastronomía y eventos").
 - ONB-O2 Tamaño y ubicación: tramo de trabajadores (Solo yo · 2 a 9 · 10 a 49 · 50 a 199 · 200 o más), comuna de la sede principal, sitio web (opcional).
 - ONB-O3 Cómo te verán (opcional): logo (MediaUploader cuadrado) y descripción con contador "0/300".
-- ONB-O4 ¿Qué quieres publicar primero?: Empleo · Turno · Más tarde. Aviso info: "Revisaremos tu organización con tu primera publicación (hasta 24 h hábiles)". Empleo y Turno abren el asistente de publicación (M7 y M6); "Más tarde" lleva a ONB-99.
+- ONB-O4 ¿Qué quieres publicar primero?: Empleo · Turno · Más tarde. Aviso info: "Revisaremos tu organización con tu primera publicación (hasta 24 h hábiles). Mientras tanto puedes tener 1 publicación activa, y los turnos se publican cuando quede verificada". Empleo y Turno abren el asistente de publicación (M7 y M6); "Más tarde" lleva a ONB-99.
   Nada de etapa de inversión, B2B/B2C, seniority, LinkedIn ni tags en inglés: la cultura, los beneficios, LinkedIn y las tecnologías (solo si el rubro es TI) se completan después en el Perfil de la organización.
-- ONB-H1 ¿Qué necesitas?: OptionCard con Asesora del hogar (puertas adentro, puertas afuera o por días) · Niñera · Cuidado de adulto mayor · Chofer · Banquetero o garzón para un evento · Arreglo puntual ("Te avisaremos cuando abramos Servicios"). Contexto del hogar con 3 Checkbox: Hay niños · Hay adulto mayor · Hay mascotas. Texto: "Te pediremos verificar tu identidad cuando publiques tu aviso".
+- ONB-H1 ¿Qué necesitas?: OptionCard con Asesor/a del hogar (puertas adentro, puertas afuera o por días) · Cuidador/a infantil · Cuidador/a de adulto mayor · Chofer particular · Banquetero o garzón para un evento · Arreglo puntual ("Te avisaremos cuando abramos Servicios"). Contexto del hogar con 3 Checkbox: Hay niños · Hay adulto mayor · Hay mascotas. Texto: "Te pediremos verificar tu identidad cuando publiques tu aviso".
 - ONB-99 Listo del hogar, con la acción sugerida "Publicar aviso para tu hogar" (o "Publicar turno para tu evento").
 
 LOTE 5 · Bloque Clases (Camila) · ONB-K1 a K5
@@ -506,14 +519,13 @@ LOTE 5 · Bloque Clases (Camila) · ONB-K1 a K5
   · Formación (opcional).
 - Cierre en ONB-99, variante lista de espera (F1): "Tu perfil de profesora se publicará en marzo" con Badge info "Lista de espera". Variante F2: vista previa y "Publicar", que pide identidad verificada.
 
-LOTE 6 · Bloque Servicios (Luis) y bloque Aprendo (Carolina, F2)
+LOTE 6 · Bloque Servicios (Luis)
 - ONB-S1 Oficios y servicios · S2 Cobertura (comunas o radio; a domicilio o en taller) · S3 Precio (Por hora · Por visita · Desde · A cotizar · Paquete), visita de diagnóstico, "Emito boleta" · S4 Horario semanal · S5 Credenciales (SEC obligatoria si es gas o electricidad: "Sin licencia SEC solo podrás ofrecerte como ayudante") y portafolio de hasta 8 fotos (opcional).
 - Cierre en ONB-99, variante lista de espera: "Tu perfil de servicios se publicará en junio".
+
+LOTE 7 · Bloque Aprendo (Carolina, F2) y extras
 - ONB-A1 ¿Para quién? (Para mí · Para mi hijo/a: nombre de pila, nivel y año de nacimiento). ONB-A2 Materias, modalidad y presupuesto (opcional).
 - Cierre en ONB-99 con la acción sugerida "Ver profesores de inglés para Tomás", que abre Explorar · Clases con esos filtros aplicados.
-
-LOTE 7 · Extras
-- SHT-MIGRA "Confirma tu comuna y tu oficio" (usuarios de la versión anterior): una sola hoja, no repite el onboarding.
 - Menú ⋯ abierto sobre un paso. Dialog al salir de un paso: "¿Salir del registro? Guardaremos lo que llevas" · "Seguir" / "Guardar y salir".
 - Diagrama de flujo de todas las ramas con su largo. Pantallas desde Crear cuenta, sin contar Revisa tu correo: guardia que solo busca turnos 8 (AUTH-02, ONB-01, ONB-03, T1 a T4, ONB-99); empresa 7 (AUTH-02, ONB-01, ONB-03, O1 a O4, y termina publicando); hogar 5 (AUTH-02, ONB-01, ONB-03, H1, ONB-99). La barra "Paso X de N" cuenta desde ONB-03: N = 5, 5 y 2. Jorge, que además busca empleo, suma T5 (N = 6).
 
@@ -529,17 +541,17 @@ LOTE 1 · INI-01 Inicio (persona). AppBar large "Hola, <nombre>" + campana con b
 1a. Trabajador de turnos (Matías, F1): "Hoy en tu agenda" (Turno de garzón · hoy 19:00–00:00 · Banquetería Rosa SpA · cóctel corporativo en Providencia), "Turnos para ti" (3 PublicationCard compactas ordenadas por fecha y distancia + "Ver todos"), "Postulaciones con novedades" ("Hotel Andino vio tu postulación"), tarjeta de completitud honesta ("Agrega tu curso de manipulación de alimentos para destacar").
 1b. Trabajador que busca empleo (Pedro, mecánico, F1): "Empleos para ti" (atajo al deck con la primera tarjeta: "Mecánico/a automotriz · Taller Los Aromos · Macul"), "Postulaciones con novedades" ("Taller Los Aromos vio tu postulación"), tarjeta de completitud ("Agrega tu título técnico o tu certificación ChileValora para destacar").
 2. Profesora (Camila, F2): "Reservas por confirmar" (2), "Tus próximas clases", acceso "Mi disponibilidad", CTA "Publicar".
-3. Hogar (Carolina, F1): grilla "¿Qué necesitas?" con OptionCard en grilla de 2 (Asesora del hogar, Niñera, Cuidado de adulto mayor, Banquetero para un evento); "Tu aviso: Asesora del hogar puertas afuera · 6 postulantes nuevos"; CTA "Publicar". Entrega también la variante F2, donde la grilla suma "Clases".
+3. Hogar (Carolina, F1): grilla "¿Qué necesitas?" con OptionCard en grilla de 2 (Asesor/a del hogar, Cuidador/a infantil, Cuidador/a de adulto mayor, Banquetero para un evento); "Tu aviso: Asesor/a del hogar puertas afuera · 6 postulantes nuevos"; CTA "Publicar". Entrega también la variante F2, donde la grilla suma "Clases".
 4. Apoderada (Carolina con el perfil Aprendo, F2): "Próxima clase de Tomás: Inglés · mañana jue 11 mar · 17:00 · online".
 5. Multi-perfil (Valentina, F1): "Turnos para ti" (promotora), tarjeta "Completa tu perfil de servicios" y tarjeta "Tu perfil de profesora se publicará en marzo".
 
 LOTE 2 · Inicio de la organización y Actividad
 - INI-02 Inicio (organización, Rosa): chip de actor "Banquetería Rosa SpA". KPIs reales en Cards (Postulantes nuevos 12 · Turnos de la semana 4/6 cubiertos · Conversaciones sin responder 3 · Respondes en promedio en 2 h). CTA "Publicar" (abre la hoja Empleo / Turno). Lista "Requiere tu atención": "Turno vie 11 dic · 12:00: faltan 2 garzones (en 23 h)", "5 postulantes sin revisar en Bartender", "Evalúa a 6 personas del turno del sáb 5 dic".
-- Actividad (persona): SegmentedControl solo con los segmentos que aplican.
-  · ACT-01 Agenda (Matías): CalendarWeek (día y semana) con turnos confirmados, entrevistas, clases y visitas, cada uno con su ícono. En la variante de Camila (F2), acceso "Mi disponibilidad" (la pantalla ACT-04 se diseña en M9).
-  · ACT-02 Postulaciones (Jorge): empleos y turnos con Badge de estado (Postulado, Visto, En proceso, Entrevista, Confirmado, En lista de espera, No seleccionado).
-  · ACT-03 Mis publicaciones (Carolina): su aviso del hogar con el número de postulantes.
-- Actividad (organización, Rosa): Publicaciones (Activas · Pausadas · Cerradas) y Agenda (turnos por fecha con "4/6 cupos").
+- Actividad (persona): SegmentedControl con los segmentos Agenda · Postulaciones · Publicaciones, en ese orden, y solo los que aplican.
+  · ACT-01 Agenda (Matías): CalendarWeek (día y semana) con turnos confirmados y entrevistas, cada uno con su ícono (en F1 no aparecen clases ni visitas). En la variante de Camila (F2), sus clases agendadas y el acceso "Mi disponibilidad" (la pantalla ACT-04 se diseña en M9).
+  · ACT-02 Postulaciones (Jorge): empleos y turnos con Badge de estado (Postulado, Visto, En proceso, Entrevista, Confirmado, En lista de espera, No seleccionado). Al final de la lista, un ListItem "Impulsa tu perfil" que abre PRF-12 (en F1, con "Pronto"); nunca dentro de una postulación ni como condición para avanzar.
+  · ACT-03 Publicaciones (Carolina): su aviso del hogar con el número de postulantes.
+- Actividad (organización, Rosa): segmentos ACT-01 Agenda (turnos por fecha con "4/6 cupos") · ACT-03 Publicaciones (Activas · Pausadas · Cerradas).
 
 Después: lote de modo oscuro y lote de estados: Skeleton de Inicio, Inicio vacío de una cuenta nueva, Agenda vacía ("Aún no tienes nada agendado · Ver turnos de esta semana"), sin conexión.
 ~~~
@@ -557,7 +569,7 @@ LOTE 1 · Explorar y detalle
   · Empleos: oficio, comuna y radio, nivel (chips Oficio · Técnico · Profesional), jornada, contrato, sueldo mínimo (MoneyField), "Solo organizaciones verificadas".
   · Turnos: oficio, comuna y radio, cuándo (Hoy · Mañana · Este fin de semana), franja, tarifa mínima, "Solo organizaciones verificadas".
   Pie: "Limpiar" (ghost) y "Ver 24 resultados" (primary).
-- EXP-07 Buscar: SearchField con sugerencias por sinónimo ("nana" → Asesora del hogar, Niñera) y resultados agrupados por tipo. Ejemplos: "Operario/a de bodega · Jornada completa · $620.000 líquidos al mes · a 7 km · Quilicura"; "Profesor/a de Matemática media · 30 h semanales · Colegio San Esteban · Ñuñoa".
+- EXP-07 Buscar: SearchField con sugerencias por sinónimo ("nana" → Asesor/a del hogar y Cuidador/a infantil; "mucama" → Camarero/a de pisos; "babysitter" → Cuidador/a infantil; el término buscado nunca aparece como etiqueta) y resultados agrupados por tipo. Ejemplos: "Operario/a de bodega · Jornada completa · $620.000 líquidos al mes · a 7 km · Quilicura"; "Profesor/a de Matemática media · 30 h semanales · Colegio San Esteban · Ñuñoa".
 - DET-01 Detalle · plantilla Empleo (Jorge ve "Guardia de seguridad 4x4"): AppBar standard transparente sobre una cabecera surface-2 con el logo de la organización (avatar cuadrado 56), su nombre y "Organización verificada"; título; Amount grande; chips; secciones Descripción, Requisitos (credenciales con su estado para esta persona: "Tienes tu credencial SPD vigente"), Beneficios (Colación, Movilización, Bono de asistencia), Sobre la organización (enlace a PRF-11); aviso fijo "Talently nunca te pedirá pagar para postular". Pie fijo con el MISMO ActionPair del deck.
 - DET-02 Postular (hoja): mensaje opcional, preguntas filtro de la organización ("¿Tienes disponibilidad para turnos de noche?" Sí/No), CV si se exige. CTA "Postular". Éxito: Snackbar "Postulaste a Guardia de seguridad 4x4". No pide teléfono: postular a un empleo no lo exige.
 
@@ -566,7 +578,7 @@ LOTE 2 · Match, proceso y mensajes
 - PRC-01 Proceso de empleo (vista del trabajador): timeline que ven ambos lados (Postulado → Visto → En proceso → Entrevista → Oferta → Contratado), con fechas, la entrevista agendada y, al final, ListItem danger "Retirar postulación" que abre un Dialog.
 - MSG-01 Mensajes: AppBar large "Mensajes". Carrusel "Nuevos matches (2)" solo con los que no tienen mensajes. Chips de filtro: Todos · Empleo · Turno (en F2 suma Clase; en F3, Servicio). Filas con avatar (redondo persona, cuadrado organización), nombre, ContextChip ("Empleo · Guardia 4x4"), último mensaje, hora relativa y contador real de no leídos. Vacío: "Cuando hagas match, tus conversaciones aparecerán aquí · Explorar empleos".
 - MSG-02 Conversación: AppBar standard con avatar y nombre (tocable, abre el perfil público), ContextChip fijo bajo el AppBar con acceso a la publicación, burbujas (propias en primary con texto blanco, ajenas en surface-2), estados reales "Enviado" / "Leído", tarjeta de sistema de la entrevista ("Entrevista · mar 15 dic · 10:00 · Av. Concha y Toro 1234, Puente Alto · Agregar al calendario"), aviso warning al escribir un teléfono o un enlace externo ("Por tu seguridad, mantén la conversación en Talently"), menú ⋯ con Ver publicación · Reportar · Bloquear. Composer con adjuntar y enviar; mensaje en cola si no hay conexión ("Se enviará cuando vuelva la conexión").
-- MSG-02b Compartir certificado de antecedentes (solo lado trabajador, después del match): en el menú "+" del composer, opción "Compartir certificado de antecedentes" → BottomSheet "Compartirlo es voluntario. Solo esta persona podrá verlo durante 7 días y puedes dejar de compartirlo cuando quieras." con "Usar el que ya subí (emitido el 12-09-2026)" o "Subir uno nuevo" y botón "Compartir". En la conversación aparece una tarjeta de sistema (no una burbuja de archivo): ícono de documento, "Certificado de antecedentes", "Emitido el 12-09-2026", VerificationBadge si fue verificado por Talently o el texto "Subido por la persona, sin verificar", botón "Ver" para la contraparte, y para el trabajador "Visto por Familia en Ñuñoa · hace 2 h" + acción "Dejar de compartir". Estado vencido o revocado: tarjeta atenuada "Ya no está disponible". El lado empleador NO tiene botón para pedirlo.
+- MSG-02b Compartir certificado de antecedentes (conversación de Marta con "Familia en Ñuñoa", después del match; solo lo inicia el trabajador, o el prestador en F3): en el menú de adjuntar del composer, opción "Compartir certificado de antecedentes" → BottomSheet "Compartirlo es voluntario. Solo esta persona podrá verlo durante 7 días y puedes dejar de compartirlo cuando quieras." con "Usar el que ya subí (emitido el 30-11-2026)" (el guardado en VER-01 Verificación y credenciales) o "Subir uno nuevo" (foto o PDF) y botón "Compartir". En la conversación aparece una tarjeta de sistema (no una burbuja de archivo): ícono de documento, "Certificado de antecedentes", "Emitido el 30-11-2026" (si tiene más de 30 días, la fecha va en warning: "Emitido hace 45 días"), VerificationBadge si fue verificado por Talently o el texto "Documento subido por la persona, sin verificar", botón "Ver" para la contraparte, y para Marta "Visto por Familia en Ñuñoa · hace 2 h" + acción "Dejar de compartir". Estado vencido (a los 7 días), revocado, o cortado por bloqueo o eliminación de la cuenta: tarjeta en surface-2 con text-disabled "Ya no está disponible" (sin bajar la opacidad). El lado empleador NO tiene botón para pedirlo; si lo pide por texto, Marta ve el aviso info "Compartirlo es voluntario".
 - SHT-REPORTE: motivos tipificados (Acoso, Estafa o cobro, Discriminación, Suplantación, Menor en riesgo, Agresión, Otro).
 
 Después: lote de modo oscuro y lote de estados: deck vacío ("Viste todas las ofertas cerca. Amplía tu radio a 20 km"), cargando (Skeleton de tarjeta), error de red, publicación cerrada ("Esta oferta ya no recibe postulaciones").
@@ -583,17 +595,17 @@ LOTE 1 · Trabajador
   · MAÑANA: "Guardia de eventos · Concierto en Parque O'Higgins · vie 11 dic · 17:00–01:00 · $40.000 líquidos por turno".
   · ESTE FIN DE SEMANA: "Garzones para matrimonio · Casona en Las Condes · sáb 12 dic · 18:00–00:00 · $35.000 líquidos por turno".
   · MÁS ADELANTE: "Bartender · Fiesta de Año Nuevo · jue 31 dic · 21:00–04:00 · $60.000 líquidos por turno".
-- DET-01 Detalle · plantilla Turno: fecha y horario grandes, varios bloques si es una serie (sáb 12 y dom 13 dic), cupos restantes, tarifa, punto de encuentro aproximado ("Metro Los Dominicos · la dirección exacta se muestra al confirmar"), vestimenta ("Camisa blanca, pantalón y zapatos negros"), requisitos con su estado para esta persona, nota mínima ("Nota mínima 4,5"), nota de la organización y aviso "Talently no contrata ni paga: la organización te contrata directamente (plazo fijo o por obra)". CTA fijo "Tomar turno".
-- Al tocar "Tomar turno": si falta el teléfono verificado, primero AUTH-08 (hoja); si falta una credencial obligatoria, hoja "Te falta la credencial SPD para este turno · Subir ahora". Si todo está bien: Snackbar "Postulaste al turno. Te avisaremos cuando te confirmen".
+- DET-01 Detalle · plantilla Turno: fecha y horario grandes, varios bloques si es una serie (sáb 12 y dom 13 dic), cupos restantes, tarifa, punto de encuentro aproximado ("Metro Los Dominicos · la dirección exacta se muestra al confirmar"), vestimenta ("Camisa blanca, pantalón y zapatos negros"), requisitos con su estado para esta persona, nota mínima ("Nota mínima 4,5"), nota de la organización, forma de contratación como chip ("Plazo fijo", "Por obra", "Part time", "Boleta de honorarios" o "Boleta de terceros") y aviso "Talently no contrata ni paga: quien publica el turno te contrata o te paga directamente". CTA fijo "Tomar turno".
+- Al tocar "Tomar turno": si falta el teléfono verificado, primero AUTH-08 (hoja); si falta una credencial obligatoria, hoja "Te falta la credencial SPD para este turno · Subir ahora"; si la publicación pide identidad verificada y la persona no la tiene, hoja "Este turno pide identidad verificada · Verificar ahora" (abre VER-02). Si todo está bien: Snackbar "Postulaste al turno. Te avisaremos cuando te confirmen".
 - TUR-01 Mi turno: estados Postulado · Confirmado · En lista de espera (con posición "Estás en el lugar 2 de la lista de espera") · No seleccionado · Cancelado por la organización. Confirmado muestra: dirección exacta, nombre del encargado, "Conversación con la organización" (1:1 en F1; en la variante F2, "Chat del turno" grupal), "Agregar al calendario", recordatorio "Confirmo asistencia" (24 h y 2 h antes), "Cancelar turno" con la regla visible ("Si cancelas con menos de 12 h, baja tu Confiabilidad") y "Compartir mi turno con alguien de confianza".
 - REV-01 Evaluación mutua al cerrar el turno: nota de 1 a 5 con estrellas grandes, etiquetas (al evaluar al trabajador: Puntualidad, Presentación, Desempeño; al evaluar a la organización: Pago a tiempo) y comentario opcional. Se pide antes de postular al siguiente turno. Texto: "Tu evaluación se publicará cuando ambos evalúen o en 7 días".
 
 LOTE 2 · Organización (Rosa) y hogar (Carolina)
-- PUBL-03 Publicar turno (asistente de 4 pasos): 1 Oficio y plantilla ("Usar plantilla: Garzones fin de semana") · 2 Fechas y bloques (agregar fecha, horario y cupos; "+ Agregar otro bloque") · 3 Tarifa (MoneyField "por turno" o "por hora", líquido o bruto) y forma de contratación (Plazo fijo · Por obra · Part time · "Boleta de honorarios" · "Boleta de terceros"; al elegir una boleta aparece el aviso warning "Sin subordinación ni dependencia: no puede haber horario fijo impuesto, supervisión directa ni exclusividad"), vestimenta, punto de encuentro, requisitos y nota mínima · 4 Vista previa con la PublicationCard real.
-  · Si la organización no está verificada: aviso "Los turnos se habilitan cuando verifiquemos tu organización".
-  · Variante hogar (Carolina publica un turno para un evento en casa): aviso "Verifica tu identidad para publicar el turno de tu evento", con acceso a VER-02.
+- PUBL-03 Publicar turno (asistente de 5 pasos; el 5 es el paso final PUBL-08 Tipo de publicación, que se diseña en M7, y la barra cuenta 5): 1 Oficio y plantilla ("Usar plantilla: Garzones fin de semana") · 2 Fechas y bloques (agregar fecha, horario y cupos; "+ Agregar otro bloque") · 3 Tarifa (MoneyField "por turno" o "por hora", líquido o bruto) y forma de contratación (Plazo fijo · Por obra · Part time · "Boleta de honorarios" · "Boleta de terceros", estas dos solo si el turno es para un evento esporádico, no en turnos que se repiten como bodega; al elegir una boleta aparece el aviso warning "Sin subordinación ni dependencia: no puede haber horario fijo impuesto, supervisión directa ni exclusividad"), vestimenta, punto de encuentro, requisitos (credenciales obligatorias del oficio y Switch opcional "Pedir identidad verificada"; si no lo activa, basta el teléfono verificado) y nota mínima · 4 Vista previa con la PublicationCard real · 5 Tipo de publicación (PUBL-08, Clásica o Premium; se diseña en M7).
+  · Si la organización aún no está verificada (por ejemplo, su primera publicación desde ONB-O4): aviso info "Tu turno quedará en revisión y se publicará cuando verifiquemos tu organización (hasta 24 h hábiles)". Si ya tiene 1 publicación esperando la verificación, no puede crear otra: "Podrás publicar más cuando verifiquemos tu organización".
+  · Variante hogar (Carolina publica un turno para un evento en casa): aviso "Verifica tu identidad para publicar el turno de tu evento", con acceso a VER-02. Mismas formas de contratación que la organización (contrato directo o "Boleta de honorarios" / "Boleta de terceros", con el mismo aviso warning), y su primera publicación queda "En revisión · hasta 24 h hábiles" (PUBL-07).
   · Al publicar por primera vez, AUTH-08 si falta el teléfono.
-- GES-04 Cupos del turno: cabecera "Garzones · sáb 12 dic · 5/8 confirmados" con barra de progreso y SegmentedControl Confirmados · Postulados · Lista de espera. Cada persona en ListItem con avatar, nota, Confiabilidad y botón "Confirmar" (un toque); acción masiva "Confirmar a mis favoritos". Después del turno: "Asistió" / "No asistió" y "Evaluar".
+- GES-04 Cupos del turno: cabecera "Garzones · sáb 12 dic · 5/8 confirmados" con barra de progreso y SegmentedControl Confirmados · Postulados · Lista de espera. Cada persona en ListItem con avatar, nota, Confiabilidad y botón "Confirmar" (un toque); acción masiva "Confirmar a mis favoritos". Después del turno: "Asistió" / "No asistió" (solo alimenta la Confiabilidad; no hay check-in, check-out ni marcaje con ubicación: el control de asistencia es del empleador) y "Evaluar".
 - GES-05 Trabajadores favoritos: lista con "Invitar a un turno".
 - Perfil del trabajador visto por la organización (PRF-10 ?ver=trabajo): ReliabilityMeter "Confiabilidad 96 % · 25 turnos cumplidos" y nota "4,9 (25)".
 
@@ -605,27 +617,26 @@ Después: lote de modo oscuro y lote de estados: sin turnos cerca ("No hay turno
 ~~~text
 Usa el PROMPT MAESTRO de Talently. Diseña lo que hace quien contrata: Rosa (Banquetería Rosa SpA, San Miguel), el Colegio San Esteban (Ñuñoa), que publica un empleo de profesor, Seguridad Andes Ltda. (Puente Alto) y Carolina (hogar, Ñuñoa). PUBL-03, GES-04 y GES-05 ya se diseñaron en M6, INI-02 en M4 y VER-04 se diseña en M8.
 
-LOTE 1 · Publicar empleo
+LOTE 1 · Publicar empleo (entrégalo en dos partes para no pasar de 8 pantallas: 1a = PUBL-01 y PUBL-02 pasos 1 a 5; 1b = PUBL-08 con sus variantes y PUBL-07)
 - PUBL-01 ¿Qué quieres publicar? (hoja): OptionCard solo con lo que aplica al actor activo. Rosa: Empleo · Turno. Carolina (persona con hogar): Aviso para mi hogar · Turno para un evento. Camila (F2): Clase. Luis (F3): Servicio.
-- PUBL-02 Publicar empleo (5 pasos, Colegio San Esteban): 1 Oficio, título y vacantes · 2 Contrato (Indefinido, Plazo fijo, Por obra; "Honorarios" con la advertencia "Con honorarios no puede haber jefatura ni horario fijo; si los hay, corresponde un contrato de trabajo"), jornada, horas semanales, modalidad (solo si el oficio admite remoto), sueldo (MoneyField, líquido o bruto), comuna o sede · 3 Requisitos del oficio con DynamicFields y credenciales (profesor: nivel, asignatura, horas cronológicas, y Título + inhabilidades obligatorios; variante de Seguridad Andes para guardia: sistema de turno y credencial SPD) · 4 Descripción con contador "0/3000" y aviso "No pidas edad, sexo, nacionalidad, estado civil ni 'buena presencia'" (si la escribe, aviso educativo warning en línea) · 5 Vista previa con la PublicationCard y el DET-01 reales.
-- PUBL-08 Elegir tipo de publicación (último paso de PUBL-02, PUBL-03 y PUBL-04, antes de la vista previa): dos OptionCard lado a lado, "Clásica · Gratis" (orden normal, 30 días) y "Premium · $14.990" (etiqueta Destacado, primera en su oficio y comuna, llega a más personas, aviso a candidatos que calzan, estadísticas); en F1 y F2 la Premium dice "Pronto" y no se puede elegir.
-- PRF-12 Impulsa tu perfil (trabajador, desde Perfil y desde Postulaciones): explica en 3 viñetas qué hace ("Más empresas de tu oficio verán tu perfil primero", "Durante 7 días", "No cambia cómo te evalúan"), precios "7 días · $2.990" y "30 días · $7.990", y aclara "Postular siempre es gratis". Variante F1/F2 con "Pronto". Estado activo: "Destacado hasta el 18 dic · 12 empresas vieron tu perfil".
-- PUBL-07 Publicación enviada (ResultScreen): "Publicada" (éxito) o "En revisión · hasta 24 h hábiles" (info, con el motivo). CTAs "Ver publicación" e "Ir a Inicio".
+- PUBL-02 Publicar empleo (6 pasos, Colegio San Esteban; el 6 es el paso final PUBL-08 y la barra cuenta 6): 1 Oficio, título y vacantes · 2 Contrato (Indefinido, Plazo fijo, Por obra; "Honorarios" con la advertencia "Con honorarios no puede haber jefatura ni horario fijo; si los hay, corresponde un contrato de trabajo"), jornada, horas semanales, modalidad (solo si el oficio admite remoto), sueldo (MoneyField, líquido o bruto), comuna o sede · 3 Requisitos del oficio con DynamicFields y credenciales (profesor: nivel, asignatura, horas cronológicas, y Título + inhabilidades obligatorios; variante de Seguridad Andes para guardia: sistema de turno y credencial SPD) · 4 Descripción con contador "0/3000" y aviso "No pidas edad, sexo, nacionalidad, estado civil ni 'buena presencia'" (si la escribe, aviso educativo warning en línea) · 5 Vista previa con la PublicationCard y el DET-01 reales · 6 Tipo de publicación (PUBL-08).
+- PUBL-08 Tipo de publicación (paso final de PUBL-02, PUBL-03 y PUBL-04, después de la vista previa; cuenta en «Paso X de N» y aquí vive el CTA "Publicar", que lleva a PUBL-07): dos OptionCard lado a lado. "Clásica · Gratis": orden normal, dura 30 días (empleo) o hasta la fecha del turno. "Premium": PromotedBadge "Destacado", primera en su oficio y comuna, sale en "Para ti" de más trabajadores, aviso a candidatos que calzan, renovación automática y estadísticas; precio "$14.990 por 30 días" en empleo y aviso del hogar, y "$9.990 por turno" en turnos. Variante F1 y F2 (la de la ruta feliz): la Clásica viene marcada y la Premium muestra el Badge neutral "Pronto" en lugar del precio, se ve deshabilitada y al tocarla aparece el Snackbar "Te avisaremos cuando puedas destacar tus publicaciones". Variante F3: Premium elegible; al marcarla, el CTA pasa a "Pagar $14.990 y publicar" ("Pagar $9.990 y publicar" en turnos), y la Clásica muestra su límite ("Gratis: 1 empleo activo y 3 turnos al mes"). Entrega PUBL-08 de empleo (Colegio San Esteban) y de turno (Rosa).
+- PUBL-07 Publicación enviada (ResultScreen): "Publicada" (éxito) o "En revisión · hasta 24 h hábiles" (info, con el motivo). CTAs "Ver publicación" e "Ir a Inicio". En F1 y F2 no menciona Premium. Variante F3 Premium: "Publicada como Premium · Destacada hasta el jue 15 jul" con el PromotedBadge; si queda en revisión, "Los 30 días de Premium empiezan a contar cuando se publique".
 
 LOTE 2 · Aviso del hogar y gestión
-- PUBL-04 Aviso para mi hogar (Carolina, 4 pasos, plantilla legal): 1 tipo (Puertas adentro, Puertas afuera, Por días) · 2 días y horario (aviso si supera 42 h semanales puertas afuera) · 3 tareas y contexto (aseo, cocina, lavado, niños, adulto mayor, mascotas). Si marcó "Hay niños": aviso info "Como hay niños, solo podrán postular personas con certificado de inhabilidades vigente" · 4 sueldo (validación "El sueldo no puede ser menor al ingreso mínimo de $553.553 en jornada completa (proporcional si es parcial)") y vista previa. Al publicar pide identidad verificada (entrada a VER-02). Sin campos de edad, sexo ni nacionalidad.
+- PUBL-04 Aviso para mi hogar (Carolina, 5 pasos, plantilla legal; el 5 es el paso final PUBL-08 y la barra cuenta 5): 1 tipo (Puertas adentro, Puertas afuera, Por días) · 2 días y horario (aviso si supera 42 h semanales puertas afuera) · 3 tareas y contexto (aseo, cocina, lavado, niños, adulto mayor, mascotas). Si marcó "Hay niños": aviso info "Como hay niños, solo podrán postular personas con certificado de inhabilidades vigente" · 4 sueldo (validación "El sueldo no puede ser menor al ingreso mínimo de $553.553 en jornada completa (proporcional si es parcial)") y vista previa · 5 Tipo de publicación (PUBL-08; en su primer aviso viene marcada la Clásica gratis). Al tocar "Publicar" pide identidad verificada (entrada a VER-02). Sin campos de edad, sexo ni nacionalidad.
 - GES-01 Gestionar publicación: resumen con estado (Badge), métricas reales (vistas, postulantes), acciones Editar · Pausar (Snackbar "Publicación pausada · Deshacer") · Cerrar con motivo · Renovar (expira a los 30 días). Modo edición: reutiliza los pasos del asistente con los datos cargados; si el cambio toca título, descripción, sueldo o requisitos, muestra un aviso info de revisión ("Revisaremos los cambios antes de publicarlos (hasta 24 h hábiles)") y anota esa regla en "Decisiones tomadas" para confirmarla.
-- GES-02 Postulantes: lista ordenada por afinidad; cada persona en ListItem con avatar, oficio principal, años de experiencia, comuna, insignias, nota y Badge de estado; acciones rápidas "Avanzar" / "No seleccionar" (con motivo amable). Al abrir una: PRF-10 con barra inferior de acciones de estado (En proceso, Agendar entrevista, Hacer oferta, Contratado).
-  Variante hogar (Carolina): chip de filtro "Solo con antecedentes verificados" y, en cada fila, VerificationBadge "Apto para trabajar con menores · vence 11/2027".
+- GES-02 Postulantes: lista ordenada por afinidad; cada persona en ListItem con avatar, oficio principal, años de experiencia, comuna, pretensión ("Pretensión: $750.000 líquidos al mes" o "A convenir" si eligió Prefiero no decir), insignias, nota y Badge de estado; acciones rápidas "Avanzar" / "No seleccionar" (con motivo amable). Al abrir una: PRF-10 con barra inferior de acciones de estado (En proceso, Agendar entrevista, Hacer oferta, Contratado).
+  Variante hogar (Carolina, aviso con "Hay niños"): en cada fila, VerificationBadge "Apto para trabajar con menores · vence 11/2027" (inhabilidades, obligatorio por ley). Sin filtro ni requisito de certificado de antecedentes: es voluntario y solo la persona lo comparte en el chat (MSG-02b).
 
 LOTE 3 · Personas sugeridas, proceso y equipo
-- GES-03 Personas sugeridas / EXP-05 Explorar · Personas: selector de publicación arriba, vista lista o deck de personas con el MISMO ActionPair ("No me interesa" / "Me interesa"). Aquí "Me interesa" envía la invitación a postular: Snackbar "Invitaste a Jorge a postular · Deshacer". Nunca se muestra la edad.
-- PRC-01 Proceso (vista del empleador): timeline compartida, agendar entrevista (fecha, hora, lugar u online) y, al marcar "Contratado" en un aviso del hogar, checklist legal: "Firma el contrato por escrito" · "Regístralo en la Dirección del Trabajo dentro de 15 días (enlace)".
-- PRC-01 vista de la trabajadora en un hogar (Marta postula a "Familia en Ñuñoa"): encabezado con avatar cuadrado "Familia en Ñuñoa" e "Identidad verificada"; antes de confirmar la entrevista, "La dirección se mostrará cuando confirmen la entrevista"; después, la dirección exacta, "Compartir mi visita con alguien de confianza", "Llegué" / "Terminé" y el botón "Ayuda · 133 · 131".
+- GES-03 Personas sugeridas / EXP-05 Explorar · Personas: selector de publicación arriba, vista lista o deck de personas con el MISMO ActionPair ("No me interesa" / "Me interesa"). Aquí "Me interesa" envía la invitación a postular: Snackbar "Invitaste a Jorge a postular · Deshacer". Nunca se muestra la edad. Variante F3: una persona con el perfil impulsado sale primero con el PromotedBadge "Destacado"; en GES-02 Postulantes el impulso no cambia el orden ni muestra la etiqueta.
+- PRC-01 Proceso (vista del empleador): timeline compartida, agendar entrevista (fecha, hora, lugar u online) y, al marcar "Contratado" en un aviso del hogar, lista de pasos legales con el título visible "Para contratar como corresponde" (en pantalla nunca dice "checklist"): "Firma el contrato por escrito" · "Regístralo en la Dirección del Trabajo dentro de 15 días (enlace)".
+- PRC-01 vista de la trabajadora en un hogar (Marta postula a "Familia en Ñuñoa"): encabezado con avatar cuadrado "Familia en Ñuñoa" e "Identidad verificada"; antes de confirmar la entrevista, "La dirección se mostrará cuando confirmen la entrevista"; después, la dirección exacta, "Compartir mi visita con alguien de confianza", "Llegué" / "Terminé" de la entrevista (solo para su seguridad: avisa a su contacto de confianza; no es control de asistencia ni marcaje) y el botón "Ayuda · 133 · 131".
 - PRF-06 Equipo (F3): miembros con rol Dueño/a · Administrador/a · Reclutador/a, "Invitar a alguien".
-- Tarjeta de estado de verificación de la organización en GES-01 e INI-02, con lo que habilita ("Hasta verificar: 1 publicación activa y sin turnos") y acceso a VER-04.
+- Tarjeta de estado de verificación de la organización en GES-01 e INI-02, con lo que habilita ("Hasta verificar: 1 publicación activa; los turnos se publican cuando te verifiquemos") y acceso a VER-04.
 
-Después: lote de modo oscuro y lote de estados: primera publicación en revisión, publicación rechazada por moderación con motivo y "Editar y reenviar", sin postulantes aún ("Aún no hay postulantes · Compartir tu publicación"; un consejo como "las publicaciones con sueldo visible reciben más interés" solo si hay datos que lo respalden), límite del plan gratuito (F3).
+Después: lote de modo oscuro y lote de estados: primera publicación en revisión, publicación rechazada por moderación con motivo y "Editar y reenviar", sin postulantes aún ("Aún no hay postulantes · Compartir tu publicación"; un consejo como "las publicaciones con sueldo visible reciben más interés" solo si hay datos que lo respalden), intento de una segunda publicación antes de que la organización quede verificada ("Podrás publicar más cuando verifiquemos tu organización"), límite de publicaciones Clásicas gratis (F3: "Ya usaste tus 3 turnos gratis de este mes · Publicar por $4.990 o elegir Premium").
 ~~~
 
 ### Módulo 8 · Perfil, verificación, configuración y ayuda
@@ -633,16 +644,17 @@ Después: lote de modo oscuro y lote de estados: primera publicación en revisi�
 ~~~text
 Usa el PROMPT MAESTRO de Talently. Separa claramente Perfil (lo que muestras) de Configuración (ajustes de la cuenta). NOT-01 ya se diseñó en M2.
 
-LOTE 1 · Perfil
-- PRF-01 Mi perfil (Jorge, con perfiles Trabajo y Hogar): AppBar large "Perfil" con campana e IconGear (sin chip de actor: Jorge no pertenece a una organización). Encabezado "Así te ven": foto 96, nombre, comuna, insignias reales, nota por rol. Chips "Mis perfiles": Trabajo · Hogar (con completitud real, "Te falta 1 cosa") y "Ver como me ven". SectionCards editables, cada una con lápiz de 44: Sobre mí, Oficios y experiencia, Disponibilidad, Pretensión, Credenciales, Idiomas, CV (solo si busca empleo). Más "Agregar un perfil", "Verificación y credenciales" y "Mis perfiles" (pausar o eliminar). NO incluye Cerrar sesión ni ajustes.
+LOTE 1 · Perfil (entrégalo en dos partes para no pasar de 8 pantallas: 1a = PRF-01, PRF-12 con sus variantes, PRF-03 y PRF-04; 1b = PRF-05, PRF-10 con sus dos vistas, PRF-02 y PRF-11)
+- PRF-01 Mi perfil (Jorge, con perfiles Trabajo y Hogar): AppBar large "Perfil" con campana e IconGear (sin chip de actor: Jorge no pertenece a una organización). Encabezado "Así te ven": foto 96, nombre, comuna, insignias reales, nota por rol. Chips "Mis perfiles": Trabajo · Hogar (con completitud real, "Te falta 1 cosa") y "Ver como me ven". SectionCards editables, cada una con lápiz de 44: Sobre mí, Oficios y experiencia, Disponibilidad, Pretensión, Credenciales, Idiomas, CV (solo si busca empleo). Más "Agregar un perfil", "Verificación y credenciales", "Mis perfiles" (pausar o eliminar) e "Impulsa tu perfil" (solo con el perfil Trabajo; abre PRF-12; en F1 lleva el Badge "Pronto"). NO incluye Cerrar sesión ni ajustes.
+- PRF-12 Impulsa tu perfil (trabajador; se abre desde PRF-01 y desde ACT-02 Postulaciones): 3 viñetas con lo que hace ("Más organizaciones y hogares de tu oficio y comuna verán tu perfil primero", "Durante 7 o 30 días, con la etiqueta Destacado", "No cambia tu lugar entre los postulantes de una oferta"), opciones en OptionCard "7 días · $2.990" y "30 días · $7.990", y el aviso fijo "Postular, tomar turnos, verificarte y chatear siempre es gratis". Solo se activa con el perfil completo y sin sanciones; si falta algo: "Completa tu perfil para impulsarlo" con el CTA a lo que falta. Variante F1 y F2 (ruta feliz): las mismas viñetas, Badge neutral "Pronto" en lugar de los precios y CTA tonal "Avisarme cuando esté disponible" (Snackbar "Te avisaremos"). Variante F3 activa (Jorge): PromotedBadge "Destacado" y "Destacado hasta el mar 22 jun · 12 empresas vieron tu perfil".
 - PRF-03 Editar sección (hoja): usa EXACTAMENTE los mismos controles del onboarding (por ejemplo, Disponibilidad abre el AvailabilityGrid). Pie "Cancelar" / "Guardar". Snackbar de éxito o error.
 - PRF-04 Agregar un perfil: OptionCard con los perfiles que aún no tiene + "Crear organización". Corre solo ese bloque.
 - PRF-05 Mis perfiles: cada perfil con Switch "Visible" (pausar) y "Eliminar este perfil" (ListItem danger, con Dialog).
-- PRF-10 Perfil público de persona (/u/:id?ver=trabajo): lo que ve un tercero, separado por perfil con SegmentedControl si tiene varios. Sin edad, sin teléfono, sin dirección.
+- PRF-10 Perfil público de persona (/u/:id?ver=trabajo): lo que ve un tercero, separado por perfil con SegmentedControl si tiene varios. Sin edad, sin teléfono, sin dirección. La pretensión (monto o "A convenir" si eligió Prefiero no decir) solo la ven organizaciones y hogares con una publicación activa, nunca el público general: entrega las dos vistas.
 - PRF-02 y PRF-11 Perfil de organización (propio y público, Rosa): logo cuadrado, "Organización verificada", rubro, comuna, tramo, descripción, beneficios, proceso de selección, LinkedIn y sitio web (una sola vez), publicaciones activas tocables, nota como empleador. Solo si ocurrió, la línea "Canceló 2 turnos con menos de 24 h de aviso"; si nunca pasó, no se muestra.
 
 LOTE 2 · Verificación
-- VER-01 Verificación y credenciales: escalera de niveles (Cuenta básica · Teléfono verificado · Identidad verificada) con el estado de cada uno, credenciales con VerificationBadge y vencimiento ("Credencial SPD · Verificada · vence 03/2028"), y lo que falta y para qué sirve ("Verifica tu identidad para recibir a alguien en tu casa").
+- VER-01 Verificación y credenciales: escalera de niveles (Cuenta básica · Teléfono verificado · Identidad verificada) con el estado de cada uno, credenciales con VerificationBadge y vencimiento ("Credencial SPD · Verificada · vence 03/2028"; "Certificado de antecedentes" con Badge "Recomendado" y la ayuda "Si quieres, lo compartes tú en el chat después del match"), y lo que falta y para qué sirve ("Verifica tu identidad para recibir a alguien en tu casa").
 - VER-02 Verificar identidad (asistente de 3 o 4 pantallas): ejemplos visuales (cédula por delante y por detrás con guía de encuadre, selfie), reintento guiado, "Pedir ayuda por WhatsApp", estado final "En revisión · te avisamos en menos de 24 h". "Verificarte es gratis".
 - VER-03 Subir credencial: ejemplo visual del documento, número, fecha de vencimiento, archivo y consentimiento en contexto ("Usaremos este documento solo para verificarlo y lo borraremos en 30 días").
 - VER-04 Verificar organización: RUT, documentos del SII, dominio del correo.
@@ -677,15 +689,15 @@ LOTE 1 · Alumno o apoderado
   CTA "Confirmar reserva". Si es la primera reserva y falta el teléfono, AUTH-08 antes. Sugerencia para menores: "Para la primera clase te recomendamos modalidad online o un lugar público".
 - RES-03 Detalle de reserva (vista alumno): estados Solicitada · Confirmada · Realizada · Cancelada · No asistió · Expirada, "Agregar al calendario", enlace de videollamada, "Reprogramar", "Cancelar" (muestra lo que aplica de la política) y, después de la hora, "¿Se realizó la clase?" Sí / No.
 - REV-01 Reseña de la clase.
-- Perfil del dependiente (Tomás): solo nombre de pila, nivel y año de nacimiento; sin foto ni chat propio.
+- Perfil del dependiente (Tomás), como sección de PRF-01 de Carolina editable con PRF-03: solo nombre de pila, nivel y año de nacimiento; sin foto ni chat propio.
 
 LOTE 2 · Profesora
 - ACT-04 Mi disponibilidad: editor semanal por bloques, excepciones ("No disponible del lun 12 al mié 14 abr"), anticipación mínima y buffer entre clases.
 - PUBL-05 Publicar clase (pasos: materia y niveles · modalidad y precio · clase de prueba y paquetes · vista previa).
-- Reserva entrante con "Aceptar" / "Rechazar" (expira en 12 h si tiene la confirmación manual).
+- RES-03 en estado Solicitada (reserva entrante, vista profesora) con "Aceptar" / "Rechazar" (expira en 12 h si tiene la confirmación manual).
 - RES-03 Detalle de reserva (vista profesora): solo ve el nombre de pila y el nivel del alumno.
 
-Después: lote de modo oscuro y lote de estados: sin horarios disponibles ("Camila no tiene horarios libres en los próximos 14 días · Avisarme"), horario tomado mientras reservabas ("Este horario se acaba de ocupar. Elige otro"), profesora en lista de espera (variante F1 de su Inicio, ya diseñada en M4).
+Después: lote de modo oscuro y lote de estados: sin horarios disponibles ("Camila no tiene horarios libres en los próximos 14 días · Avisarme"), horario tomado mientras reservabas ("Este horario se acaba de ocupar. Elige otro"), profesora en lista de espera (en F1, la tarjeta "Tu perfil de profesora se publicará en marzo" del INI-01 multi-perfil de Valentina, ya diseñada en M4).
 ~~~
 
 ### Módulo 10 · Servicios independientes (F3)
@@ -695,7 +707,7 @@ Usa el PROMPT MAESTRO de Talently. Diseña Servicios, que se lanza en Fase 3 (ju
 
 LOTE 1 · Cliente
 - EXP-04 Explorar · Servicios: lista con filtros por oficio (Gasfitería, Electricidad, Mecánica, Cerrajería, Pintura, Refrigeración), comuna, "Precio desde", nota y "Solo identidad verificada". PublicationCard de servicio.
-- DET-01 Detalle · plantilla Servicio / PRF-10 perfil público del prestador (/u/:id?ver=servicios): foto obligatoria, nombre, comuna base, insignias reales (Identidad verificada, SEC gas clase 3, Antecedentes verificados), nota "4,9 (41)", servicios con su forma de precio ("Destape de cañerías · Desde $25.000", "Instalación de calefont · A cotizar", "Visita de diagnóstico · $15.000"), paquetes (Básico, Estándar, Premium), cobertura ("La Cisterna, San Miguel, El Bosque y 4 más"), horario, portafolio (galería) y reseñas. CTAs "Solicitar cotización" (primary) y "Reservar" si es de precio fijo.
+- DET-01 Detalle · plantilla Servicio / PRF-10 perfil público del prestador (/u/:id?ver=servicios): foto obligatoria, nombre, comuna base, insignias reales (Identidad verificada, SEC gas clase 3; el certificado de antecedentes nunca es una insignia pública: solo el prestador lo comparte en el chat, como en MSG-02b), nota "4,9 (41)", servicios con su forma de precio ("Destape de cañerías · Desde $25.000", "Instalación de calefont · A cotizar", "Visita de diagnóstico · $15.000"), paquetes (Básico, Completo, Plus), cobertura ("La Cisterna, San Miguel, El Bosque y 4 más"), horario, portafolio (galería) y reseñas. CTAs "Solicitar cotización" (primary) y "Reservar" si es de precio fijo.
 - SRV-01 Solicitar servicio (asistente): 1 Describe lo que necesitas (texto + hasta 5 fotos) · 2 Comuna, fecha preferida y urgencia (Hoy · Esta semana · Sin apuro) · 3 Revisar y enviar. La dirección exacta NO se pide aquí.
 - SRV-02 Solicitud y cotizaciones: estado (Solicitado → Cotizado → Aceptado → Realizado → Cerrado) y tarjeta de cotización estructurada dentro del chat ("$85.000 · Cambio de llave de paso y flexible · jue 17 jun · 10:00 · Válida hasta el dom 20 jun", con "Aceptar" / "Rechazar").
 
@@ -704,7 +716,7 @@ LOTE 2 · Visita, pago y prestador
 - Pago en la app: resumen con el monto y, si se cobra al cliente, el cargo de servicio de Talently como línea separada; "Pagar con Mercado Pago"; estados Pendiente de pago, Pagado, Reembolsado.
 - REV-01 Reseña mutua cuando ambos confirman "Servicio realizado".
 - PUBL-06 Publicar servicio (prestador): servicio, forma de precio, paquetes, fotos, vista previa.
-- Variante F1 (pre-registro): tarjeta en Inicio "Tu perfil de servicios se publicará en junio".
+- Variante F1 (pre-registro, Luis): INI-01 con la tarjeta "Tu perfil de servicios se publicará en junio".
 
 Después: lote de modo oscuro y lote de estados: prestador sin credencial SEC ("Te falta tu licencia SEC para ofrecer instalación de gas. Puedes ofrecerte como ayudante"), sin prestadores en la comuna, cotización vencida, disputa abierta.
 ~~~
@@ -733,12 +745,14 @@ Flujos que deben poder recorrerse con clics:
 1. Onboarding de Jorge (guardia): AUTH-01 → AUTH-02 → AUTH-03 → ONB-01 → ONB-03 → ONB-T1 a T5 → ONB-99 → INI-01.
 2. Matías toma un turno: INI-01 → EXP-02 → DET-01 (turno) → AUTH-08 → Snackbar → ACT-02 → TUR-01 (confirmado) → REV-01.
 3. Pedro postula a un empleo y hace match: EXP-01 (deck) → DET-01 (empleo) → DET-02 → DET-03 → MSG-02 → PRC-01.
-4. Rosa publica un turno y confirma cupos: INI-02 → PUBL-01 → PUBL-03 (pasos 1 a 4) → PUBL-07 → GES-01 → GES-04.
-5. Carolina publica su aviso del hogar: INI-01 (hogar) → PUBL-04 (pasos 1 a 4) → VER-02 → PUBL-07 → GES-02 → PRC-01 → checklist legal.
+4. Rosa publica un turno y confirma cupos: INI-02 → PUBL-01 → PUBL-03 (pasos 1 a 4) → PUBL-08 (paso 5: tocar Premium "Pronto" muestra el Snackbar; publica como Clásica) → PUBL-07 → GES-01 → GES-04.
+5. Carolina publica su aviso del hogar: INI-01 (hogar) → PUBL-04 (pasos 1 a 4) → PUBL-08 (paso 5, Clásica) → VER-02 → PUBL-07 → GES-02 → PRC-01 → checklist legal.
 6. (F2) Carolina reserva una clase para Tomás: EXP-03 → DET-01 (clase) → RES-01 → RES-02 → RES-03.
 7. Cambio de actor: Rosa abre SHT-ACTOR, pasa a su persona y vuelve a Banquetería Rosa SpA; una notificación de otro actor cambia de actor sola.
 8. Perfil y configuración: PRF-01 → IconGear → CFG-01 → "Cerrar sesión" (Dialog).
 9. Botón atrás: desde DET-01 abierto en EXP-02, el atrás vuelve a EXP-02 en el mismo scroll; desde Mensajes va a Inicio; en Inicio muestra el toast de salida.
+10. Marta comparte su certificado de antecedentes: MSG-01 → MSG-02 (con Familia en Ñuñoa) → menú de adjuntar del composer → MSG-02b (hoja) → tarjeta de sistema en la conversación → "Dejar de compartir" (tarjeta "Ya no está disponible").
+11. Jorge abre "Impulsa tu perfil": PRF-01 → PRF-12 (variante con "Pronto") → "Avisarme cuando esté disponible" (Snackbar); el mismo PRF-12 se abre desde ACT-02.
 
 Entrega también un índice con cada flujo y su pantalla de inicio.
 ~~~
@@ -767,6 +781,7 @@ Revisa cada lote de Claude Design con esta lista. Un solo «no» basta para pedi
 - [ ] El avatar de persona es redondo y el de organización (incluido «Familia en …») cuadrado, en todas las vistas.
 - [ ] «Me interesa» / «No me interesa» es el mismo ActionPair en el deck, en el detalle y en Personas sugeridas (donde «Me interesa» invita a postular).
 - [ ] La PublicationCard tiene la misma estructura en los 4 tipos.
+- [ ] «Destacado» es el PromotedBadge (pill neutra con borde y flecha de impulso): nunca usa escudo, check ni verde, no se confunde con VerificationBadge, y la PublicationCard Premium es la misma tarjeta con esa sola etiqueta extra.
 - [ ] Amount usa un solo formato: monto + líquido o bruto (en sueldos y tarifas) + unidad.
 
 **Íconos y tipografía**
@@ -787,25 +802,34 @@ Revisa cada lote de Claude Design con esta lista. Un solo «no» basta para pedi
 **Fases**
 - [ ] Cada frame tiene su etiqueta de fase y los frames F1 no muestran Clases ni Servicios (ni en el SegmentedControl, ni en la grilla del hogar, ni en los filtros de Mensajes), salvo el pre-registro «Reservas desde marzo» o «Reservas desde junio».
 - [ ] Las fechas de ejemplo calzan con el «hoy» de su fase (F1: jue 10 dic 2026) y con sus grupos «Hoy», «Mañana», «Este fin de semana» y «Más adelante».
+- [ ] En F1 y F2, Premium (PUBL-08) e «Impulsa tu perfil» (PRF-12) muestran el Badge «Pronto» en vez de precio y no se pueden comprar. PUBL-08 es el último paso de PUBL-02, PUBL-03 y PUBL-04 y cuenta en «Paso X de N».
 
 **Contenido**
-- [ ] Todo está en español de Chile: sin LIKE/NOPE, email, seniority, Tech Stack, Dashboard ni «¡Aplicado!».
+- [ ] Todo está en español de Chile: sin LIKE/NOPE, email, seniority, Tech Stack, Dashboard, staff, hostess, babysitter ni «¡Aplicado!».
 - [ ] Las etiquetas de catálogo y de estado son las del diccionario de la sección 7.3, idénticas en todas las pantallas.
+- [ ] Los oficios usan nombres dignos: «Asesor/a del hogar», «Cuidador/a infantil», «Camarero/a de pisos». «Nana», «empleada», «mucama», «niñera» y «babysitter» no aparecen en ninguna etiqueta, chip, OptionCard, tarjeta ni notificación (solo funcionan al buscar).
+- [ ] Los ejemplos de oficios (SHT-OFICIO, ONB-01, rubros) muestran la amplitud del catálogo de 16 categorías, no solo tecnología.
 - [ ] La mayúscula va solo en la primera palabra, no hay emojis en títulos y se usa el carácter «…».
 - [ ] Los montos van en CLP con punto de miles y unidad («$35.000 líquidos por turno»).
+- [ ] «Premium» solo nombra la publicación pagada; los paquetes de servicio se llaman Básico, Completo y Plus.
 - [ ] Las fechas relativas usan un solo formato («hace 5 min», «ayer», «12 dic»).
 - [ ] Solo los campos opcionales se marcan, con «(opcional)», y no hay asteriscos.
-- [ ] Ningún formulario de guardia, garzón, asesora, mecánico u operario pregunta por tecnologías, etapa de inversión ni B2B.
+- [ ] Ningún formulario de guardia, garzón, asesor/a del hogar, mecánico u operario pregunta por tecnologías, etapa de inversión ni B2B.
 - [ ] No se muestra la edad y los formularios no piden sexo, nacionalidad ni apariencia.
 - [ ] Los datos de ejemplo son chilenos, realistas y los mismos en todos los módulos (personas, comunas, montos, RUT válido 76.123.456-0).
-- [ ] Los oficios que pidió el dueño aparecen en algún mockup: profesor, técnico, operario, guardia, banquetero o garzón, mecánico, asesora del hogar y clases particulares.
+- [ ] Los oficios que pidió el dueño aparecen en algún mockup: profesor, técnico, operario, guardia, banquetero o garzón, mecánico, asesor/a del hogar y clases particulares.
 
 **Honestidad, confianza y estados**
 - [ ] No hay métricas inventadas, «Perfil al 100 %», punto «en línea» ni «Verificado» sin respaldo.
 - [ ] Cada pantalla trae sus estados: cargando (Skeleton), vacío con CTA útil, error con «Reintentar», sin conexión, y éxito o error de cada acción.
-- [ ] Ningún botón visible queda sin acción, y lo que no está lanzado no se muestra (o se muestra como «Reservas desde…»).
+- [ ] Ningún botón visible queda sin acción, y lo que no está lanzado no se muestra (o se muestra como «Reservas desde…» o, en Premium e «Impulsa tu perfil», como «Pronto» con una acción real).
 - [ ] Las credenciales obligatorias se explican con su consecuencia («Sin credencial SPD no podrás ser confirmado»).
-- [ ] El teléfono se pide al tocar «Tomar turno», al publicar por primera vez o en la primera reserva; nunca en el onboarding.
+- [ ] Lo pagado nunca es requisito: en empleo y turnos no aparece comisión ni cobro por turno cubierto; postular, tomar turnos, verificarse y chatear se ven gratis; y todo resultado pagado lleva «Destacado».
+- [ ] La verificación del teléfono (AUTH-08, OTP) se pide al tocar «Tomar turno», al publicar por primera vez o en la primera reserva; nunca en el onboarding (en ONB-03 el teléfono es solo un campo opcional, sin OTP).
+- [ ] Para ser confirmado en un turno basta el teléfono verificado y las credenciales obligatorias del oficio (identidad solo si la publicación la pide). No hay check-in, check-out ni marcaje con ubicación.
+- [ ] El certificado de antecedentes es voluntario: solo la persona lo comparte desde el chat (MSG-02b), como tarjeta que vence a los 7 días, con «Visto por…» y «Dejar de compartir»; quien contrata no tiene filtro, requisito ni botón para pedirlo. Inhabilidades (con menores) y SPD (guardias) sí son obligatorias.
+- [ ] La pretensión de sueldo se muestra (monto o «A convenir») solo a organizaciones y hogares con una publicación activa (GES-02 y la vista de PRF-10 para quien contrata), nunca al público general (la otra vista de PRF-10 no la muestra).
+- [ ] Una organización sin verificar tiene como máximo 1 publicación activa, su primera publicación queda «En revisión» y sus turnos se publican solo cuando queda verificada.
 - [ ] En el hogar: el aviso con niños exige inhabilidades, la dirección se oculta hasta confirmar y la trabajadora tiene «Compartir mi visita», «Llegué», «Terminé» y «Ayuda · 133 · 131».
 
 **Plataforma y accesibilidad**
@@ -829,3 +853,4 @@ Revisa cada lote de Claude Design con esta lista. Un solo «no» basta para pedi
 | Stack tecnológico preguntado a empresas no TI | Las tecnologías solo aparecen si el oficio o el rubro es de tecnología | ONB-O1 a O4 (M3), PUBL-02 de guardia y de profesor (M7) |
 | Ofertas con campos que no aplican al área | DynamicFields según el oficio elegido | PUBL-02 paso 3 de profesor frente a guardia (M7) y DET-01 (M5) |
 | Textos en inglés y español mezclados | Glosario y diccionario de etiquetas en español de Chile | Todas las pantallas; especialmente Badges y filtros |
+| Nombres de oficio poco dignos («nana», «mucama», «niñera») | Nombres dignos e inclusivos (Asesor/a del hogar, Cuidador/a infantil, Camarero/a de pisos); los otros términos solo como sinónimos de búsqueda | ONB-01, ONB-T1 y ONB-H1 (M3), INI-01 del hogar (M4), EXP-07 (M5) |
