@@ -29,8 +29,8 @@ Fecha: 1 de octubre de 2026. Rama: `claude/pending-items-review-akh8cv`.
 1. **Relevamiento** con 7 auditorías en paralelo: UI por zonas (público y onboarding, candidato, empresa), sistema de diseño, flujos y navegación, modelo de datos y dominio chileno.
 2. **Tres propuestas** de arquitectura de producto con enfoques distintos: plataforma unificada por capacidades, módulos verticales y evolución incremental.
 3. **Jurado** de tres lentes (producto y UX, ingeniería y datos, negocio en Chile). Ganó la plataforma unificada (126 puntos contra 114,5 y 112,5), con ideas injertadas de las otras dos.
-4. **Spec maestro** consolidado y redacción de los cuatro documentos a partir de él.
-5. **Revisión adversarial** (cobertura del pedido, coherencia cruzada y calidad técnica): 143 hallazgos aplicados. El documento de base de datos se corrigió sección por sección para no perder contenido.
+4. Verificación de identidad (nivel 2) para turnos: ¿se exige a todos? Decidido (2-10-2026): no en el MVP, se sigue la recomendación. Para ser confirmado en un turno basta nivel 1 (teléfono) más las credenciales obligatorias del oficio; cada organización puede exigir nivel 2 en su publicación. Se reevalúa cuando el KYC automático esté activo (Fase 2).
+5. Nombre de la pestaña 3: 'Actividad' frente a 'Agenda' o 'Mis cosas'. Decidido (2-10-2026): se sigue la recomendación: la pestaña se llama «Actividad», con los segmentos Agenda, Postulaciones y Publicaciones. Se valida igual en la prueba con 5 usuarios de la Fase 0.
 6. Los diagramas se validaron con el parser de Mermaid v11.
 
 ## Cómo usar el super prompt
