@@ -1377,7 +1377,7 @@ ONB-T5 se retira del onboarding para que ningún caso de Trabajo pase de 6 panta
 
 - «Cambiar» abre el mismo control de H1 en un `BottomSheet`. Si cambia el contexto, se actualiza `household_profiles` para los avisos siguientes.
 
-**PUBL-03 · Turno para un evento en casa** [Ajuste A27]. El hogar que publica un turno (banquetero, garzón) **pasa a ser empleador directo**: en turnos no hay honorarios ni boleta de terceros. Por eso:
+**PUBL-03 · Turno para un evento en casa** [Ajuste A27]. El hogar que publica un turno (banquetero, garzón) puede contratar directamente (plazo fijo o por obra) o pagar con boleta de honorarios o de terceros, porque se trata de un evento esporádico (decisión del dueño, 2-10-2026). Si contrata directamente:
 
 - **El paso 3 de PUBL-03**, cuando el actor es un hogar, agrega la `Card` «Checklist del turno en tu casa»:
   - «Talently solo te conecta: tú contratas directamente a cada persona (Ley 20.123).»

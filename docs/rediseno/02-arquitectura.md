@@ -1193,7 +1193,7 @@ Cada ADR tiene un formato corto: contexto, decisión, qué se descartó, consecu
   - El mapa llega en F4, con MapLibre.
 - **Descartado.** Pedir ubicación precisa de forma continua; mostrar coordenadas exactas; usar el SDK de Google Maps en F1 (por costo y peso).
 - **Consecuencias.** La privacidad viene por defecto, y el ranking por distancia funciona aunque la persona no dé permiso de ubicación.
-- **Revisar si.** Turnos o servicios necesitan registrar la llegada exacta (el check-in de F2, sujeto a revisión legal).
+- **Fuera de alcance.** Registrar la llegada o la ubicación del trabajador en turnos (decisión del dueño, 2-10-2026): el control de asistencia de quien ya fue contratado es responsabilidad del empleador.
 
 ### ADR-05 · Pagos: ninguno hasta F3; luego Mercado Pago Split + Flow o Webpay
 
@@ -1538,7 +1538,6 @@ En lo técnico se suman dos criterios: los pgTAP de todas las políticas en verd
   - Auto-confirmación de favoritos y lista de espera automática.
   - Chat grupal (`conversations.shift_id`, flag `chat_grupal_turno`).
   - Búsquedas guardadas con alerta.
-  - Check-in (`check_in_turnos`), si el abogado lo aprueba.
 - Contracción del esquema v2 (`199_drop_legacy`) cuando ≥ 95 % de las sesiones estén en 3.x. Solo aplica en el modo *expand/contract*.
 - **Decisión legal sobre Servicios a más tardar el 30 de abril de 2027** (ver el riesgo en §6.5).
 

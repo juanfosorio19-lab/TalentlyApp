@@ -31,26 +31,8 @@ Fecha: 1 de octubre de 2026. Rama: `claude/pending-items-review-akh8cv`.
 3. **Jurado** de tres lentes (producto y UX, ingeniería y datos, negocio en Chile). Ganó la plataforma unificada (126 puntos contra 114,5 y 112,5), con ideas injertadas de las otras dos.
 4. Verificación de identidad (nivel 2) para turnos: ¿se exige a todos? Decidido (2-10-2026): no en el MVP, se sigue la recomendación. Para ser confirmado en un turno basta nivel 1 (teléfono) más las credenciales obligatorias del oficio; cada organización puede exigir nivel 2 en su publicación. Se reevalúa cuando el KYC automático esté activo (Fase 2).
 5. Nombre de la pestaña 3: 'Actividad' frente a 'Agenda' o 'Mis cosas'. Decidido (2-10-2026): se sigue la recomendación: la pestaña se llama «Actividad», con los segmentos Agenda, Postulaciones y Publicaciones. Se valida igual en la prueba con 5 usuarios de la Fase 0.
-6. Los diagramas se validaron con el parser de Mermaid v11.
-
-## Cómo usar el super prompt
-
-1. Abre una sesión en Claude Design, pega el **prompt maestro** y después el **Módulo 1** (sistema de diseño). Aprueba el sistema de diseño antes de seguir.
-2. Avanza módulo por módulo, por lotes de 6 a 8 pantallas.
-3. Revisa cada entrega con el checklist del final del documento 01.
-
-## Decisiones abiertas
-
-Dependen del dueño, de un abogado o de una validación comercial. Cada una trae una recomendación.
-
-1. Modo de migración: ¿hay usuarios reales en la BD o son casi todos de QA? Decidido (2-10-2026): todos los usuarios son de QA, así que se hace un corte limpio. No se migran datos de usuarios ni publicaciones: se parte con el esquema nuevo vacío, se cargan solo los catálogos semilla (categorías, oficios, comunas, credenciales) y las cuentas de QA se recrean con el seed. Esto elimina la convivencia de versiones, las vistas de compatibilidad y el paso de backfill del plan de migración.
-
-2. Proyecto Supabase: ¿restaurar el actual o crear uno nuevo (por ejemplo en São Paulo, por latencia)? Recomendación: restaurar y hacer el baseline esta misma semana (riesgo de que no se pueda restaurar si lleva más de 90 días pausado) y pasar a plan Pro. Crear un proyecto nuevo solo si la restauración falla, eligiendo la región después de evaluar la transferencia internacional de datos (Ley 21.719). **En espera (2-10-2026):** el dueño contratará el plan Pro de Supabase en breve; con eso se reactiva el proyecto actual sin pausar otros. Hacerlo antes de fines de diciembre de 2026.
-3. Certificado de antecedentes en Hogar y servicios a domicilio: ¿obligatorio o recomendado? Decidido (2-10-2026): recomendado. Después del match, el trabajador puede compartirlo voluntariamente en el chat con un enlace privado que vence a los 7 días y que puede revocar; el empleador no puede exigirlo desde la app. Detalle en el spec maestro §10.1.1 y en el super prompt (MSG-02b). Inhabilidades (menores) y SPD (guardias) siguen obligatorias por ley.
-4. Verificación de identidad (nivel 2) para turnos: ¿se exige a todos? Recomendación: no en el MVP. Exigir nivel 1 (teléfono) más las credenciales del oficio para ser confirmado, y permitir que cada organización exija nivel 2 en su publicación. Revaluar cuando el KYC automático esté activo (Fase 2).
-5. Nombre de la pestaña 3: 'Actividad' frente a 'Agenda' o 'Mis cosas'. Recomendación: 'Actividad', con los segmentos Agenda, Postulaciones y Publicaciones. Validarlo en la prueba con 5 usuarios de la Fase 0 y cambiarlo si genera confusión.
-6. Check-in y check-out con ubicación en turnos: ¿se incluyen? Recomendación: dejarlo para la Fase 2, como opción y solo con visto bueno del abogado. El control de asistencia con GPS es un indicio de subordinación frente a las Leyes 21.431 y 20.123.
-7. Formas de contratación en turnos: ¿se permite 'boleta de prestación de servicios de terceros' u honorarios para eventos esporádicos? Recomendación: no ofrecerlas en el MVP (solo plazo fijo, por obra, jornada parcial o part time estudiante). Revisarlo con el abogado.
+6. Check-in y check-out con ubicación en turnos: ¿se incluyen? Decidido (2-10-2026): no se incluye. Talently solo intermedia la búsqueda; una vez contratada la persona, el control de asistencia es responsabilidad del empleador. Se quitó del roadmap.
+7. Formas de contratación en turnos: ¿se permite 'boleta de prestación de servicios de terceros' u honorarios para eventos esporádicos? Decidido (2-10-2026): se permite, en contra de la recomendación inicial. En turnos de eventos esporádicos la publicación puede ofrecer boleta de honorarios o boleta de terceros, además de plazo fijo, por obra o part time. Al elegirlas se muestra el aviso de que no puede haber subordinación ni dependencia. Conviene que el abogado revise el texto del aviso.
 8. Pagos: ¿Mercado Pago Split 1:1 está disponible en Chile con las condiciones que se necesitan? Recomendación: validarlo en la Fase 1 con una cuenta sandbox chilena y una reunión comercial antes de comprometer comisiones de 10 a 12 %. Plan B: Pro y destacados con Flow, y pago de reservas fuera de la app.
 9. Monetización de turnos: ¿por plan o por turno cubierto? Recomendación: medir en las Fases 1 y 2. Ofrecer por uso (~$1.990 por trabajador que asistió) por sobre un cupo gratuito, porque las productoras de eventos prefieren pagar por uso.
 10. Comunas de lanzamiento. Recomendación: entre 8 y 12 comunas de la RM con demanda de eventos, seguridad y bodega (Santiago, Providencia, Ñuñoa, Las Condes, Vitacura, Maipú, La Florida, Puente Alto, San Miguel, Estación Central, Quilicura, Pudahuel), confirmadas con los socios que siembren la oferta.

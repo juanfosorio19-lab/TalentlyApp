@@ -1519,7 +1519,7 @@ create type public.done_stage             as enum ('llegada','termino');
 create type public.agenda_source          as enum ('booking','shift_assignment');
 create type public.pay_unit               as enum ('mes','dia','hora','turno','evento','visita','clase','proyecto','a_convenir');
 create type public.workday                as enum ('completa','parcial','part_time_estudiante','temporada','por_obra');
-create type public.contract_type          as enum ('indefinido','plazo_fijo','por_obra','honorarios');
+create type public.contract_type          as enum ('indefinido','plazo_fijo','por_obra','honorarios','boleta_terceros');
 create type public.live_in_type           as enum ('puertas_adentro','puertas_afuera','por_dias');
 create type public.modality               as enum ('presencial','remoto','hibrido','a_domicilio','en_taller','online','en_casa_profesor','lugar_publico');
 create type public.class_level            as enum ('preescolar','basica_1_4','basica_5_8','media','paes','universitaria','adultos','adulto_mayor');

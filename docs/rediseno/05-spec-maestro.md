@@ -128,12 +128,12 @@ Todas comparten el motor: **Publicación → Interés, postulación, solicitud o
 | Aspecto | Definición |
 |---|---|
 | **Actores** | Oferta: `trabajador` con `seeks_shifts`. Demanda: organización verificada (incluido el hogar para eventos en casa). |
-| **Publicación** | `publications(type='turno')` + 1..N `shifts`: `time_range tstzrange`, `slots`, `slots_confirmed`, `rate_amount`, `rate_unit` (`turno` u `hora`), `rate_is_net`, `meeting_point`, `dress_code`, requisitos, `min_rating`, `auto_confirm`, `status`. Hay `shift_templates` para series que se repiten (banquetería cada fin de semana). Forma de contratación permitida: `plazo_fijo`, `por_obra`, jornada `parcial` o `part_time_estudiante`. **No se ofrece «boleta de terceros» ni «honorarios» en el MVP**. La organización contrata directamente. |
+| **Publicación** | `publications(type='turno')` + 1..N `shifts`: `time_range tstzrange`, `slots`, `slots_confirmed`, `rate_amount`, `rate_unit` (`turno` u `hora`), `rate_is_net`, `meeting_point`, `dress_code`, requisitos, `min_rating`, `auto_confirm`, `status`. Hay `shift_templates` para series que se repiten (banquetería cada fin de semana). Forma de contratación permitida: `plazo_fijo`, `por_obra`, jornada `parcial` o `part_time_estudiante` y, para eventos esporádicos, también `honorarios` o `boleta_terceros` (decisión del dueño, 2-10-2026). Al elegir honorarios o boleta de terceros, la publicación muestra el aviso «Sin subordinación ni dependencia: no puede haber horario fijo impuesto, supervisión directa ni exclusividad» y el trabajador ve la forma de pago en la tarjeta («Boleta de honorarios»). Talently no emite ni gestiona boletas. |
 | **Descubrimiento** | **Siempre LISTA agrupada por fecha («Hoy», «Mañana», «Este fin de semana», «Más adelante»), nunca deck**. La tarjeta muestra oficio, fecha y hora, tarifa con unidad, distancia, cupos restantes e insignia de la organización. Chips de oficio y comuna. Mapa en Fase 4. |
 | **Postulación y confirmación** | «Tomar turno» (un toque) crea `shift_assignments` en estado `postulado`. La organización confirma con un toque desde `GES-04`. Si activó auto-confirmación, aplica a sus favoritos o a quienes tengan ≥ 3 turnos cumplidos y nota ≥ 4,5 (Fase 2). La RPC `confirm_assignment()` hace `SELECT … FOR UPDATE` sobre el shift y nunca sobrevende. La confirmación exige nivel 1 y credenciales obligatorias vigentes. Si no hay cupo, el estado es `en_espera`, con lista de espera automática. |
 | **Estados** (`shift_assignment_status`) | `postulado` → `confirmado` / `en_espera` / `rechazado`. `confirmado` → `asistio` / `no_asistio` / `cancelado_trabajador` / `cancelado_organizacion`. `asistio` → `completado` cuando se cierra el turno. |
 | **Chat** | Conversación 1:1 por assignment confirmado. Desde Fase 2, además, un chat grupal del turno con las instrucciones (`conversations.shift_id`). |
-| **Recordatorios** | Push 24 h y 2 h antes, con «Confirmo asistencia». Marcar entrada y salida con ubicación: **Fase 2, opcional y sujeto a revisión legal**. |
+| **Recordatorios** | Push 24 h y 2 h antes, con «Confirmo asistencia». **Sin marcaje de entrada y salida ni ubicación** (decisión del dueño, 2-10-2026): Talently intermedia la búsqueda; el control de asistencia de una persona ya contratada es responsabilidad del empleador. |
 | **Reseñas** | **Evaluación mutua obligatoria** al cerrar el turno: nota 1–5 y etiquetas (puntualidad, presentación, desempeño, pago a tiempo). Se pide antes de postular al siguiente. Indicador visible de **Confiabilidad**: % de turnos cumplidos frente a cancelaciones con menos de 12 h. Si la organización cancela con menos de 24 h, queda marcado en su perfil. |
 | **Pago** | Fuera de la app. Talently registra el turno cumplido como respaldo. |
 | **Favoritos** | `favorite_workers(org_id, person_id)` para volver a convocar. |
@@ -258,7 +258,7 @@ Categorías nivel 1 con `allowed_types = ['clase']`. Las materias son el nivel 2
 |---|---|
 | `publication_type` | `empleo` Empleo · `turno` Turno · `servicio` Servicio · `clase` Clase |
 | `workday` | `completa` (42 h desde abril de 2026), `parcial`, `part_time_estudiante`, `temporada`, `por_obra` |
-| `contract_type` | `indefinido`, `plazo_fijo`, `por_obra`, `honorarios` (con advertencia; no disponible en turnos) |
+| `contract_type` | `indefinido`, `plazo_fijo`, `por_obra`, `honorarios`, `boleta_terceros` (con advertencia; en turnos solo para eventos esporádicos) |
 | `pay_unit` | `mes`, `dia`, `hora`, `turno`, `evento`, `visita`, `clase`, `proyecto`, `a_convenir`. Siempre se muestra como monto + unidad + líquido o bruto: «$650.000 líquidos al mes», «$25.000 por turno», «$15.000 por clase de 60 min». CLP por defecto. USD solo en remoto TI |
 | `modality` | Empleo: `presencial`, `remoto`, `hibrido`. Servicio: `a_domicilio`, `en_taller`, `online`. Clase: `online`, `en_casa_profesor`, `a_domicilio`, `lugar_publico` |
 | `experience_range` (reemplaza «seniority») | `sin_experiencia`, `menos_1`, `1_3`, `3_5`, `5_10`, `mas_10` |
@@ -641,7 +641,7 @@ booking_type: clase, visita, entrevista
 booking_status: solicitada, pendiente_pago, confirmada, realizada, cancelada_cliente, cancelada_proveedor, no_asistio, expirada
 pay_unit: mes, dia, hora, turno, evento, visita, clase, proyecto, a_convenir
 workday: completa, parcial, part_time_estudiante, temporada, por_obra
-contract_type: indefinido, plazo_fijo, por_obra, honorarios
+contract_type: indefinido, plazo_fijo, por_obra, honorarios, boleta_terceros
 modality: presencial, remoto, hibrido, a_domicilio, en_taller, online, en_casa_profesor, lugar_publico
 class_level: preescolar, basica_1_4, basica_5_8, media, paes, universitaria, adultos, adulto_mayor
 time_band: manana, tarde, noche, madrugada
@@ -1443,7 +1443,7 @@ Se agregan triggers de match y notificaciones en el servidor. El cliente pasa de
 - Disponibilidad, `get_slots`, reserva para sí o para un dependiente, recordatorios, `.ics`, política de cancelación informativa, reseñas.
 - Bloque Aprendo y Explorar → Clases.
 - **KYC automático.**
-- Turnos: auto-confirmación de favoritos, lista de espera automática, chat grupal, búsquedas guardadas con alerta y, si el abogado lo aprueba, check-in.
+- Turnos: auto-confirmación de favoritos, lista de espera automática, chat grupal, búsquedas guardadas con alerta y.
 
 **Criterio de salida**: ≥ 100 profesores verificados, ≥ 300 reservas realizadas y cancelaciones < 15 %.
 

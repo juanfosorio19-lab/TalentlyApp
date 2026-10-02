@@ -589,7 +589,7 @@ LOTE 1 · Trabajador
 - REV-01 Evaluación mutua al cerrar el turno: nota de 1 a 5 con estrellas grandes, etiquetas (al evaluar al trabajador: Puntualidad, Presentación, Desempeño; al evaluar a la organización: Pago a tiempo) y comentario opcional. Se pide antes de postular al siguiente turno. Texto: "Tu evaluación se publicará cuando ambos evalúen o en 7 días".
 
 LOTE 2 · Organización (Rosa) y hogar (Carolina)
-- PUBL-03 Publicar turno (asistente de 4 pasos): 1 Oficio y plantilla ("Usar plantilla: Garzones fin de semana") · 2 Fechas y bloques (agregar fecha, horario y cupos; "+ Agregar otro bloque") · 3 Tarifa (MoneyField "por turno" o "por hora", líquido o bruto), vestimenta, punto de encuentro, requisitos y nota mínima · 4 Vista previa con la PublicationCard real.
+- PUBL-03 Publicar turno (asistente de 4 pasos): 1 Oficio y plantilla ("Usar plantilla: Garzones fin de semana") · 2 Fechas y bloques (agregar fecha, horario y cupos; "+ Agregar otro bloque") · 3 Tarifa (MoneyField "por turno" o "por hora", líquido o bruto) y forma de contratación (Plazo fijo · Por obra · Part time · "Boleta de honorarios" · "Boleta de terceros"; al elegir una boleta aparece el aviso warning "Sin subordinación ni dependencia: no puede haber horario fijo impuesto, supervisión directa ni exclusividad"), vestimenta, punto de encuentro, requisitos y nota mínima · 4 Vista previa con la PublicationCard real.
   · Si la organización no está verificada: aviso "Los turnos se habilitan cuando verifiquemos tu organización".
   · Variante hogar (Carolina publica un turno para un evento en casa): aviso "Verifica tu identidad para publicar el turno de tu evento", con acceso a VER-02.
   · Al publicar por primera vez, AUTH-08 si falta el teléfono.
