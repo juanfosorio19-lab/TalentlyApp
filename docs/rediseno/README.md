@@ -43,7 +43,7 @@ Fecha: 1 de octubre de 2026. Rama: `claude/pending-items-review-akh8cv`.
 15. Datos legales y de marca para Términos y Privacidad: razón social, domicilio en Chile, dominio único (recomendado `talently.app`) y correo de contacto único. Los debe entregar el dueño para reescribir los textos antes del 1 de diciembre de 2026. **En curso (2-10-2026):** el dueño constituirá la empresa y enviará razón social, domicilio y correo para reescribir Términos y Privacidad.
 16. Nivel de verificación mínimo para que una organización publique su primer empleo: ¿visible al instante o en revisión? Decidido (2-10-2026): se sigue la recomendación: la primera publicación de una organización queda en revisión (24 h hábiles) y eso verifica a la organización; hasta entonces puede tener solo 1 publicación activa, y los turnos solo se publican con la organización verificada.
 17. Clases de manejo y vigilantes armados. Decidido (2-10-2026): se sigue la recomendación: clases de manejo y vigilantes armados quedan fuera del alcance hasta tener una revisión legal específica.
-18. iOS. Recomendación: Fase 4. El código Capacitor ya lo permite, pero la prioridad es la liquidez en Android en la RM.
+18. iOS. Decidido (2-10-2026): se sigue la recomendación: iOS en la Fase 4. La prioridad es Android en la Región Metropolitana.
 
 ## Aviso: base de datos pausada
 
