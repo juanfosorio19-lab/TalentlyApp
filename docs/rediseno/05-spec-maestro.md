@@ -1299,6 +1299,20 @@ Los rellenos (`primary`, `danger`, `success`, `info`) no cambian con el tema y s
 
 **Verificación asistida** (baja alfabetización): ejemplo visual de cada documento, guía paso a paso, reintento guiado, «Pedir ayuda por WhatsApp» y estado visible («En revisión, te avisamos en menos de 24 h»). **Verificarse nunca le cuesta al trabajador.**
 
+#### 10.1.1 Certificado de antecedentes compartido en el chat (decisión del dueño, 2-10-2026)
+
+**Decisión:** el certificado de antecedentes es **recomendado, no obligatorio** en Hogar y en servicios a domicilio (las obligaciones legales no cambian: inhabilidades para trabajo con menores y credencial SPD para guardias siguen siendo obligatorias y bloqueantes).
+
+**Cómo se comparte:** después del match, en la conversación (`MSG-02`), el trabajador o prestador tiene la acción **«Compartir certificado de antecedentes»** (en el menú del composer). Reglas:
+- **Solo lo inicia el trabajador**, nunca se le puede exigir por chat: el empleador no tiene un botón «Pedir certificado» (por el riesgo de discriminación que prohíbe el art. 2 del Código del Trabajo; confirmar el alcance con el abogado). Si el empleador lo pide por texto, la app muestra al trabajador el aviso «Compartirlo es voluntario».
+- **No es un adjunto común.** El PDF vive en el bucket privado `private-docs` (el mismo de las credenciales). En el chat aparece una **tarjeta de sistema** «Certificado de antecedentes · emitido el 12-09-2026 · Ver» con un enlace firmado que **vence a los 7 días** y que el trabajador puede **revocar** en cualquier momento («Dejar de compartir»).
+- Solo lo ve la contraparte de esa conversación. Cada apertura queda registrada (`audit_log`) y el trabajador ve «Visto por Familia en Ñuñoa · hace 2 h».
+- Se puede subir en el momento (foto o PDF) o reutilizar uno ya cargado en «Verificación y credenciales». Si tiene más de 30 días se muestra la fecha de emisión en warning («Emitido hace 45 días»).
+- Si el certificado además fue verificado por Talently (credencial `antecedentes` aprobada), la tarjeta muestra la insignia; si no, dice «Documento subido por la persona, sin verificar».
+- Al eliminar la cuenta o cerrar la conversación por bloqueo, el acceso compartido se revoca de inmediato.
+
+**Datos:** tabla `document_shares(id, owner_person_id, conversation_id, storage_path, credential_id null, expires_at, revoked_at, created_at)` + `message.kind = 'documento_compartido'`. RLS: SELECT solo para participantes de la conversación mientras `revoked_at is null and expires_at > now()`; la URL firmada la emite la RPC `get_shared_document(share_id)`, que registra el acceso.
+
 ### 10.2 Reglas por riesgo
 
 | Riesgo | Medidas |
