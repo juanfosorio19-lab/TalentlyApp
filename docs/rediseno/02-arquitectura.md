@@ -1198,7 +1198,7 @@ Cada ADR tiene un formato corto: contexto, decisión, qué se descartó, consecu
 ### ADR-05 · Pagos: ninguno hasta F3; luego Mercado Pago Split + Flow o Webpay
 
 - **Decisión.**
-  - F1 y F2: no hay pagos entre usuarios. El trabajador nunca paga.
+  - F1 y F2: no hay pagos entre usuarios. Postular y tomar turnos es siempre gratis; la visibilidad pagada (publicación Premium, «Impulsa tu perfil») puede adelantarse con un cobro simple sin split.
   - F3:
     - Las reservas de clases y servicios usan **Mercado Pago Split 1:1**. El vendedor vincula su cuenta por OAuth y Talently cobra `marketplace_fee`; el dinero no pasa por Talently.
     - Los planes y destacados usan **Flow** (suscripción) o **Webpay**.

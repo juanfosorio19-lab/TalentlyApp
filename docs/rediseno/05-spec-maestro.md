@@ -378,6 +378,7 @@ Fase de entrega: F1, F2, F3 o F4. **Todas se mockean en Fase 0.** Perfiles: T = 
 | PUBL-04 | Aviso para mi hogar | `/publicar/hogar/:paso` | H | Plantilla legal de 4 pasos: tipo y puertas · días y horario · tareas y contexto · sueldo y vista previa | F1 |
 | PUBL-05 | Publicar clase | `/publicar/clase/:paso` | K | Materia, niveles, modalidad, precio, prueba, paquetes | F2 |
 | PUBL-06 | Publicar servicio | `/publicar/servicio/:paso` | P | Servicio, precio, paquetes, fotos | F3 |
+| PUBL-08 | Tipo de publicación | paso final de PUBL-02/03/04 | O,H | Clásica gratis o Premium (§10.3) | F1 (Premium con «Pronto») |
 | PUBL-07 | Publicación enviada | `ResultScreen` | O,H,K,P | «Publicada» o «En revisión (hasta 24 h hábiles)» con el motivo | F1 |
 | GES-01 | Gestionar publicación | `/publicaciones/:id` | O,H,K,P | Resumen, editar, pausar (Snackbar con «Deshacer»), cerrar con motivo, renovar | F1 |
 | GES-02 | Postulantes | `/publicaciones/:id/postulantes` | O,H | Lista por afinidad con acciones de estado | F1 |
@@ -407,6 +408,7 @@ Fase de entrega: F1, F2, F3 o F4. **Todas se mockean en Fase 0.** Perfiles: T = 
 | PRF-06 | Equipo | `/o/:id/equipo` | O | Miembros y roles | F3 |
 | PRF-10 | Perfil público de persona | `/u/:id?ver=trabajo\|servicios\|clases` | * | Lo que ve un tercero, separado por capacidad | F1 |
 | PRF-11 | Perfil público de organización | `/o/:id` | * | Con sus publicaciones activas tocables | F1 |
+| PRF-12 | Impulsa tu perfil | `/perfil/impulsar` | T | «Perfil destacado» 7 o 30 días; postular sigue siendo gratis (§10.3) | F1 (con «Pronto») |
 | VER-01 | Verificación y credenciales | `/verificacion` | * | Qué se verificó y cuándo, qué falta y por qué | F1 |
 | VER-02 | Verificar identidad | `/verificacion/identidad` | * | Asistida con ejemplos visuales (cédula y selfie). Manual en F1, KYC automático en F2 | F1 |
 | VER-03 | Subir credencial | `/verificacion/credencial/:tipo` | * | Ejemplo visual, número, vencimiento y archivo. Consentimiento en contexto. Ayuda por WhatsApp | F1 |
@@ -1328,25 +1330,44 @@ Los rellenos (`primary`, `danger`, `success`, `info`) no cambian con el tema y s
 | **Reportes y bloqueos** | En todo perfil, publicación y chat, con motivos tipificados (acoso, estafa, discriminación, suplantación, menor en riesgo, agresión). «Menor en riesgo» y «agresión»: respuesta en menos de 4 h. 3 reportes graves independientes: suspensión preventiva. Recordatorio de la Ley Karin a las organizaciones |
 | **Datos personales (Ley 21.719, vigente desde el 1-12-2026)** | Minimización (resultado y no documento, purga a 30 días). Esquema `private`. Consentimientos por tipo en `consents`, revocables. CFG-04 con descargar mis datos, rectificar, eliminar (incluye Storage), visibilidad por capacidad y «qué se verificó y cuándo». `audit_log` de accesos sensibles. DPA con encargados (Supabase, FCM, SMS, KYC, MP). Evaluación de transferencia internacional según la región. Términos y Privacidad reescritos para Chile, con un solo dominio (`talently.app`), razón social real y una sola fecha |
 
-### 10.3 Monetización
+### 10.3 Monetización (decisión del dueño, 2-10-2026)
+
+**Modelo:** Talently **no cobra comisión en empleo ni en turnos**. En esos verticales gana por **visibilidad**, al estilo de las publicaciones de Mercado Libre. Solo cobra **comisión en servicios y clases**, donde el pago de la reserva pasa por la app (Fase 3).
 
 **Principios**
-- **El trabajador nunca paga**: ni por postular, ni por tomar turnos, ni por verificarse.
-- Cobra quien obtiene valor económico directo.
+- Postular, tomar turnos, verificarse y chatear es **siempre gratis** para el trabajador. Lo que paga es opcional y solo da más visibilidad.
+- Lo pagado nunca compra confianza ni salta reglas: «Destacado» y «Premium» son etiquetas distintas de las insignias de verificación, el ranking `discover()` las trata como un impulso acotado (nunca por encima de requisitos o credenciales obligatorias) y todo resultado pagado lleva la etiqueta visible «Destacado».
 - Talently no custodia fondos.
-- Lo pagado nunca compra confianza: «Destacado» y «Pro» son etiquetas distintas de las insignias.
 - Los precios son hipótesis en CLP más IVA, a validar con 10 a 15 entrevistas por segmento.
 
-| Fase | Fuente | Quién paga | Hipótesis |
-|---|---|---|---|
-| F1–F2 | Gratis. «Destacar» gestionado por soporte, para medir disposición a pagar | — | — |
-| F3 | Plan Pyme / Plan Empresa | Organizaciones | Gratis: 1 empleo activo y 3 turnos al mes. Pyme ~$19.990/mes (10 publicaciones, sugeridos ilimitados, 2 destacados). Empresa ~$59.990/mes (ilimitado, varios reclutadores, estadísticas por publicación) |
-| F3 | Turnos sobre el cupo del plan | Organización | ~$1.990 por trabajador confirmado que asistió |
-| F3 | Destacar publicación | Organización, profesor, prestador | ~$4.990 por 7 días |
-| F3 | Pase Hogar (opcional) | Hogar | Primer aviso gratis. ~$6.990/mes para avisos ilimitados y destacado |
-| F3 | Comisión de clases | Profesor | 12 % por reserva pagada (sin comisión en la clase de prueba) |
-| F3 | Comisión de servicios | Prestador | 10 %, más un posible cargo al cliente de 3–5 % a evaluar |
-| F3 | Plan Pro | Prestador y profesor | ~$5.990/mes: comisión reducida, más alcance, estadísticas |
+**Empleo y turnos: tipos de publicación (quien contrata)**
+
+| Tipo | Qué incluye | Hipótesis de precio |
+|---|---|---|
+| **Clásica** | Gratis. Aparece en el deck o la lista con el orden normal, dura 30 días (empleo) o hasta la fecha del turno | $0 (límite: 1 empleo activo y 3 turnos al mes; sobre eso, por publicación ~$4.990) |
+| **Premium** | Etiqueta «Destacado», sale primero en su oficio y comuna, se muestra en «Para ti» de más trabajadores (radio ampliado), aviso push a candidatos que calzan, renovación automática y estadísticas de la publicación | ~$14.990 por empleo (30 días) · ~$9.990 por turno |
+| **Pack empresa** (opcional) | N publicaciones Premium al mes con descuento, varios reclutadores | ~$49.990/mes |
+
+Aplica igual a organizaciones y hogares (el primer aviso del hogar es Clásico y gratis).
+
+**Empleo y turnos: «Impulsa tu perfil» (trabajador)**
+
+| Producto | Qué incluye | Hipótesis de precio |
+|---|---|---|
+| **Perfil destacado** | Durante 7 días el perfil aparece primero en «Personas sugeridas» de más organizaciones y hogares de su oficio y comuna (radio ampliado), con etiqueta «Destacado». Muestra cuántas empresas lo vieron | ~$2.990 por 7 días · ~$7.990 por 30 días |
+
+Reglas: nunca es requisito para postular ni para ser confirmado; no cambia el orden de los postulantes dentro de una publicación (eso lo decide quien contrata); se puede comprar solo con el perfil completo y sin sanciones. **Revisión legal pendiente**: confirmar con el abogado que cobrar visibilidad al trabajador no se considere cobro por intermediación laboral.
+
+**Servicios y clases: comisión (Fase 3)**
+
+| Fuente | Quién paga | Hipótesis |
+|---|---|---|
+| Comisión de clases | Profesor | 12 % por reserva pagada (sin comisión en la clase de prueba) |
+| Comisión de servicios | Prestador | 10 %, más un posible cargo al cliente de 3–5 % a evaluar |
+| Plan Pro | Prestador y profesor | ~$5.990/mes: comisión reducida, más alcance, estadísticas |
+| Destacar servicio o clase | Prestador y profesor | ~$4.990 por 7 días |
+
+**Calendario:** en las Fases 1 y 2 todo es gratis y «Destacar» se activa a mano desde soporte para medir disposición a pagar. Los pagos de visibilidad parten cuando la pasarela esté validada (ver `validacion-pagos.md`); se pueden adelantar a la Fase 2 con un cobro simple (Flow o Mercado Pago sin split), porque no requieren dividir pagos entre usuarios.
 
 **Métricas de negocio**
 - Liquidez por celda: % de publicaciones con ≥ 3 postulantes en 48 h; % de turnos cubiertos antes de 24 h.

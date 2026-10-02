@@ -4212,3 +4212,34 @@ Resumen de claves (debe calzar con onboarding §2.4):
 | Entradas y estados | `apply_to_publication` (empleo), `apply_to_shift`, `book_slot`, `request_service`, `express_interest`; `confirm_done` de ambas partes + cierre a 48 h | Arquitectura §3.3 suma el cierre automático |
 | Plataforma | Realtime solo `messages` y `notifications`; `pushed_at`; errores en español; `supabase/migrations`; `ci_release`; staff `aal2`; `purge-verification` | Spec §8.3 y arquitectura §2.3 |
 | Super prompt | PUBL-03: «Tu turno se publicará cuando verifiquemos tu organización»; PUBL-04 lee el sueldo mínimo de configuración | — |
+
+## Adenda · Monetización por visibilidad (decisión del dueño, 2-10-2026)
+
+El modelo de negocio cambió: en empleo y turnos no hay comisión; se cobra por visibilidad (spec maestro §10.3). Cambios al modelo:
+
+```sql
+create type public.publication_tier as enum ('clasica','premium');
+create type public.promotion_kind   as enum ('publicacion_premium','perfil_destacado','servicio_destacado','clase_destacada');
+
+alter table public.publications add column tier publication_tier not null default 'clasica';
+
+create table public.promotions (
+  id            uuid primary key default gen_random_uuid(),
+  kind          promotion_kind not null,
+  publication_id uuid references public.publications(id) on delete cascade,
+  person_id     uuid references public.persons(id) on delete cascade,      -- perfil_destacado
+  bought_by_person_id uuid not null references public.persons(id),
+  as_org_id     uuid references public.organizations(id),
+  active_range  tstzrange not null,
+  price_clp     int not null check (price_clp >= 0),                       -- 0 si lo activa soporte en F1-F2
+  payment_ref   text,                                                      -- id del cobro en la pasarela
+  created_at    timestamptz not null default now(),
+  check ((kind = 'perfil_destacado') = (person_id is not null)),
+  check ((kind <> 'perfil_destacado') = (publication_id is not null))
+);
+create index promotions_active_idx on public.promotions using gist (active_range);
+```
+
+- `discover()` y «Personas sugeridas» suman un impulso acotado si existe una `promotions` vigente, siempre después de aplicar requisitos y credenciales obligatorias, y devuelven `is_promoted` para mostrar la etiqueta «Destacado».
+- El orden de los postulantes dentro de una publicación no considera `perfil_destacado`.
+- RLS: el comprador ve sus promociones; nadie más ve precios ni referencias de pago. Solo una RPC `activate_promotion()` (llamada por el webhook de la pasarela o por staff en F1–F2) puede insertar.

@@ -61,7 +61,7 @@ Lanzamiento por fases (todas se mockean ahora):
 - Fase 3 (junio 2027): Servicios y pagos en la app.
 Regla: lo que no está lanzado NO aparece como botón, pestaña, segmento ni tarjeta de una grilla. Un frame F1 nunca muestra Clases ni Servicios, salvo el pre-registro. Cuando una pantalla cambia según la fase, entrega una variante por fase. Ejemplo: el SegmentedControl de Explorar es "Empleos · Turnos" en F1 y "Empleos · Turnos · Clases" en F2. Cada frame lleva una etiqueta con su fase (F1, F2 o F3).
 
-Talently solo intermedia: no es empleador, no paga sueldos y no guarda dinero de terceros. El trabajador nunca paga por postular, por tomar turnos ni por verificarse.
+Talently solo intermedia: no es empleador, no paga sueldos y no guarda dinero de terceros. El trabajador nunca paga por postular, por tomar turnos, por verificarse ni por chatear. Modelo de negocio: en empleo y turnos no hay comisión; Talently cobra por visibilidad (publicación Clásica gratis o Premium pagada para quien contrata, y "Impulsa tu perfil" opcional para el trabajador). En servicios y clases cobra comisión por reserva pagada (Fase 3). Todo lo pagado se marca con la etiqueta "Destacado", que nunca se parece a una insignia de verificación.
 
 ────────────────────────────────────────
 2. PERFILES (una cuenta, varios perfiles)
@@ -608,6 +608,8 @@ Usa el PROMPT MAESTRO de Talently. Diseña lo que hace quien contrata: Rosa (Ban
 LOTE 1 · Publicar empleo
 - PUBL-01 ¿Qué quieres publicar? (hoja): OptionCard solo con lo que aplica al actor activo. Rosa: Empleo · Turno. Carolina (persona con hogar): Aviso para mi hogar · Turno para un evento. Camila (F2): Clase. Luis (F3): Servicio.
 - PUBL-02 Publicar empleo (5 pasos, Colegio San Esteban): 1 Oficio, título y vacantes · 2 Contrato (Indefinido, Plazo fijo, Por obra; "Honorarios" con la advertencia "Con honorarios no puede haber jefatura ni horario fijo; si los hay, corresponde un contrato de trabajo"), jornada, horas semanales, modalidad (solo si el oficio admite remoto), sueldo (MoneyField, líquido o bruto), comuna o sede · 3 Requisitos del oficio con DynamicFields y credenciales (profesor: nivel, asignatura, horas cronológicas, y Título + inhabilidades obligatorios; variante de Seguridad Andes para guardia: sistema de turno y credencial SPD) · 4 Descripción con contador "0/3000" y aviso "No pidas edad, sexo, nacionalidad, estado civil ni 'buena presencia'" (si la escribe, aviso educativo warning en línea) · 5 Vista previa con la PublicationCard y el DET-01 reales.
+- PUBL-08 Elegir tipo de publicación (último paso de PUBL-02, PUBL-03 y PUBL-04, antes de la vista previa): dos OptionCard lado a lado, "Clásica · Gratis" (orden normal, 30 días) y "Premium · $14.990" (etiqueta Destacado, primera en su oficio y comuna, llega a más personas, aviso a candidatos que calzan, estadísticas); en F1 y F2 la Premium dice "Pronto" y no se puede elegir.
+- PRF-12 Impulsa tu perfil (trabajador, desde Perfil y desde Postulaciones): explica en 3 viñetas qué hace ("Más empresas de tu oficio verán tu perfil primero", "Durante 7 días", "No cambia cómo te evalúan"), precios "7 días · $2.990" y "30 días · $7.990", y aclara "Postular siempre es gratis". Variante F1/F2 con "Pronto". Estado activo: "Destacado hasta el 18 dic · 12 empresas vieron tu perfil".
 - PUBL-07 Publicación enviada (ResultScreen): "Publicada" (éxito) o "En revisión · hasta 24 h hábiles" (info, con el motivo). CTAs "Ver publicación" e "Ir a Inicio".
 
 LOTE 2 · Aviso del hogar y gestión
