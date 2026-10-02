@@ -353,6 +353,9 @@ La unidad sugerida es la del oficio cuando busca turnos o servicios. En empleo, 
 
 ### 2.3 Oficios por categoría (seed inicial)
 
+> **Nombres dignos (pedido del dueño, 2-10-2026).** Los oficios se muestran con su nombre respetuoso y, cuando aplica, en forma inclusiva: «Asesor/a del hogar» (término legal: trabajador/a de casa particular, Ley 20.786), «Cuidador/a infantil», «Camarero/a de pisos». Palabras como «nana», «empleada», «mucama» o «babysitter» existen SOLO como sinónimos de búsqueda: nunca aparecen como etiqueta en la interfaz, en avisos ni en notificaciones. Los slugs internos no cambian.
+
+
 En las columnas: «R» = `allows_remote`; «M» = `involves_minors`; «H» = `enters_homes`. «Obl.» = obligatoria y bloqueante en la acción; «Rec.» = recomendada (da insignia). Los sinónimos alimentan `categories.synonyms` y la búsqueda tolerante a errores (`pg_trgm` + `f_unaccent`). Los códigos de credencial están en §2.5.
 
 **1 · Tecnología y digital** (`tecnologia`; todos `is_it`, R)
@@ -415,15 +418,15 @@ El cajero o cajera vive solo en Comercio: un oficio va en un único lugar.
 | Barista | `barista` | cafetero | O | E, T | — |
 | **Anfitrión o anfitriona** | `anfitrion` | hostess, recepcionista de eventos | O | T, E | — |
 | Montaje de eventos | `montaje-eventos` | montajista, staff de eventos | O | T | — |
-| Mucama | `mucama` | camarera de hotel, housekeeping | O | E, T | — |
+| Camarero/a de pisos | `mucama` | mucama, camarera de hotel, housekeeping | O | E, T | — |
 | Recepcionista de hotel | `recepcionista-hotel` | front desk | T | E, T | — |
 
 **5 · Hogar y cuidados** (`hogar-cuidados`; todos H)
 
 | Oficio | slug | Sinónimos | Nivel | Modos | Verificación |
 |---|---|---|---|---|---|
-| **Asesora del hogar** (puertas adentro, puertas afuera o por días, como atributo `live_in`) | `asesora-hogar` | nana, empleada doméstica, nana puertas afuera, nana por día | O | **Solo E** (Ley 20.786) | Inhabilidades: Obl. si hay trato con menores. Antecedentes: Rec. |
-| **Niñera o babysitter** (M) | `ninera` | nana, babysitter, cuidadora de niños | O | E, S | Inhabilidades: Obl. siempre |
+| **Asesor/a del hogar** (puertas adentro, puertas afuera o por días, como atributo `live_in`) | `asesora-hogar` | nana, empleada doméstica, nana puertas afuera, nana por día | O | **Solo E** (Ley 20.786) | Inhabilidades: Obl. si hay trato con menores. Antecedentes: Rec. |
+| **Cuidador/a infantil** (M) | `ninera` | niñera, nana, babysitter, cuidadora de niños | O | E, S | Inhabilidades: Obl. siempre |
 | Cuidador/a de adulto mayor | `cuidador-adulto-mayor` | cuidadora, acompañante | O | E, S | Antecedentes: Rec. |
 | Cuidador/a de persona con discapacidad | `cuidador-discapacidad` | asistente personal | O | E, S | Antecedentes: Rec. |
 | TENS a domicilio | `tens-domicilio` | técnico en enfermería a domicilio | T | E, S | Superintendencia de Salud: Obl. |
