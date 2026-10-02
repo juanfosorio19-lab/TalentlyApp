@@ -87,7 +87,7 @@ Convenciones obligatorias:
 | Persona | Capacidades y organizaciones | Cómo la ve la app |
 |---|---|---|
 | Estudiante de Pedagogía | `trabajo` (turnos de garzón) + `clases` (Matemática) + `aprendo` (inglés) | Un solo actor. Inicio muestra «Turnos para ti», «Reservas por confirmar» y «Tus próximas clases». Explorar: Turnos · Clases |
-| Mamá que trabaja de TENS | `trabajo` (TENS, busca empleo) + `hogar` (busca niñera) + `aprendo` (clases para su hijo) | Un solo actor. Explorar en F1: Empleos · Personas. Desde F2 se agrega Clases |
+| Mamá que trabaja de TENS | `trabajo` (TENS, busca empleo) + `hogar` (busca cuidador/a infantil) + `aprendo` (clases para su hijo) | Un solo actor. Explorar en F1: Empleos · Personas. Desde F2 se agrega Clases |
 | Dueña de una banquetería que además atiende eventos | `trabajo` + organización «Banquetería Rosa SpA» (`owner`) | Dos actores en SHT-ACTOR: «Rosa Muñoz» y «Banquetería Rosa SpA» |
 | Gasfíter independiente que busca empleo estable | `servicios` + `trabajo` | Un solo actor. Perfil con chips «Trabajo» y «Servicios», cada uno con su vista pública |
 | Asesora del hogar venezolana con pasaporte | `trabajo` (asesora del hogar, busca empleo) | Igual que cualquier trabajadora. Nunca se le pregunta la nacionalidad. Verifica su identidad con pasaporte (§1.7) |
@@ -204,10 +204,10 @@ Convenciones obligatorias:
 
 | Aspecto | Detalle |
 |---|---|
-| **Quién es** | Familias que contratan asesora del hogar (puertas adentro, puertas afuera o por días), niñera, cuidadora de adulto mayor o chofer, o un banquetero o garzón para un evento en casa |
+| **Quién es** | Familias que contratan asesora del hogar (puertas adentro, puertas afuera o por días), cuidador/a infantil, cuidador/a de adulto mayor o chofer, o un banquetero o garzón para un evento en casa |
 | **Qué necesita** | Encontrar a alguien confiable y cercano, y contratar como corresponde legalmente |
 | **Qué puede hacer** | • Publicar un aviso del hogar con la plantilla legal (PUBL-04), precargada con lo que respondió en ONB-H1 (§4.5.1).<br>• Publicar un turno para un evento en casa (PUBL-03), con el checklist legal de empleador directo (§4.5.1).<br>• Ver postulantes (GES-02) y personas sugeridas (GES-03). Invitar.<br>• Chatear después del match.<br>• Avanzar el proceso (PRC-01). Al marcar «Contratado» aparece el checklist legal (contrato escrito y registro en la DT dentro de 15 días).<br>• Evaluar el turno del evento.<br>• Anotarse en «Avísame» para arreglos (desde ONB-H1) y para clases (grilla de Inicio).<br>**F2:** clases para sus hijos (con `aprendo`). **F3:** servicios |
-| **Inicio** | Tarjeta de estado del aviso («3 postulantes nuevos») → «Postulantes con novedades» → «Hoy en tu agenda» (entrevistas) → grilla «¿Qué necesitas?»: Asesora del hogar, Niñera, Cuidado de adulto mayor, Banquetero para un evento, Clases («Desde marzo» en F1, activa en F2), Gasfíter y Electricista (desde F3) → CTA «Publicar» |
+| **Inicio** | Tarjeta de estado del aviso («3 postulantes nuevos») → «Postulantes con novedades» → «Hoy en tu agenda» (entrevistas) → grilla «¿Qué necesitas?»: Asesor/a del hogar, Cuidador/a infantil, Cuidado de adulto mayor, Banquetero para un evento, Clases («Desde marzo» en F1, activa en F2), Gasfíter y Electricista (desde F3) → CTA «Publicar» |
 | **Explorar** | **Personas:** sugeridas para su aviso, con selector de publicación. Si aún no publica, `EmptyState` con «Publicar aviso para tu hogar». **No ve Empleos ni Turnos** salvo que también tenga `trabajo` activa. Clases desde F2 y Servicios desde F3 (§1.4) |
 | **Actividad** | **Agenda** · **Mis publicaciones:** avisos del hogar con sus postulantes |
 | **Mensajes** | Chip de contexto «Empleo · Asesora del hogar». En la conversación, la familia aparece como «Familia en Ñuñoa · Carolina» (nombre de pila de quien publica) |
@@ -1165,7 +1165,7 @@ El teléfono **siempre pasa por Supabase Auth**, nunca por `update_my_private()`
 | Quiero trabajar | Ofrecer mis servicios | Gasfíter, electricista, mecánico, fotógrafo… | `IconTool` | `ofrecer_servicios` | `add_capability('servicios')` en `borrador` | F1–F2: `Badge` info «Reservas desde junio». F3: sin badge |
 | Quiero trabajar | Dar clases particulares | Matemática, inglés, PAES, música… | `IconBook` | `dar_clases` | `add_capability('clases')` en `borrador` | F1: `Badge` «Reservas desde marzo». F2: sin badge |
 | Quiero contratar o aprender | Contratar para mi empresa o negocio | Publica empleos y turnos | `IconBuilding` | `contratar_organizacion` | Agrega `organizacion` a `queue`. La organización se crea en O1 | F1 |
-| Quiero contratar o aprender | Contratar para mi hogar | Asesora del hogar, niñera, cuidadora, banquetero para un evento | `IconHouseHeart` | `contratar_hogar` | `add_capability('hogar')` en `borrador`. La organización hogar se crea en H1 | F1 |
+| Quiero contratar o aprender | Contratar para mi hogar | Asesor/a del hogar, cuidador/a infantil, cuidado de adulto mayor, banquetero/a para un evento | `IconHouseHeart` | `contratar_hogar` | `add_capability('hogar')` en `borrador`. La organización hogar se crea en H1 | F1 |
 | Quiero contratar o aprender | Tomar clases | Para ti o para tus hijos | `IconGraduation` | `tomar_clases` | `add_capability('aprendo')` en `borrador` | **Oculta hasta F2** |
 
 - **Lo que se guarda** [alineado con base de datos §1.1, Ajuste A3]:
@@ -1351,7 +1351,7 @@ ONB-T5 se retira del onboarding para que ningún caso de Trabajo pase de 6 panta
 
 | Campo | Control | Obligatoriedad | Valores | Se guarda en |
 |---|---|---|---|---|
-| ¿Qué necesitas? | `OptionCard` único en 3 grupos. **Permanente:** Asesora del hogar (puertas adentro, puertas afuera o por días) · Niñera · Cuidado de adulto mayor · Chofer particular. **Evento en casa:** Banquetero o garzón para un evento. **Arreglo puntual:** Gasfíter, electricista u otro arreglo (con `Badge` «Desde junio» hasta F3) | Obligatorio | `asesora_hogar`, `ninera`, `adulto_mayor`, `chofer`, `evento`, `arreglo` | `onboarding_progress.draft.hogar_need` (lo usa ONB-99 y precarga PUBL-04 o PUBL-03) |
+| ¿Qué necesitas? | `OptionCard` único en 3 grupos. **Permanente:** Asesor/a del hogar (puertas adentro, puertas afuera o por días) · Cuidador/a infantil · Cuidado de adulto mayor · Chofer particular. **Evento en casa:** Banquetero o garzón para un evento. **Arreglo puntual:** Gasfíter, electricista u otro arreglo (con `Badge` «Desde junio» hasta F3) | Obligatorio | `asesora_hogar`, `ninera`, `adulto_mayor`, `chofer`, `evento`, `arreglo` | `onboarding_progress.draft.hogar_need` (lo usa ONB-99 y precarga PUBL-04 o PUBL-03) |
 | ¿Qué arreglo? | `ChipGroup` único: Gasfitería · Electricidad · Otro arreglo | «(opcional)». Solo si eligió «Arreglo puntual» antes de F3 | `gasfiter`, `electricista`, sin oficio | `launch_waitlist(person_id, vertical='servicio', category_id, comuna_id)` [Ajuste A22] |
 | ¿Quiénes viven en tu hogar? | 3 `Checkbox`: «Hay niños», «Hay un adulto mayor», «Hay mascotas» | — (sin marcar = no) | bool | `household_profiles.has_children`, `has_elderly`, `has_pets` |
 
@@ -1370,7 +1370,7 @@ ONB-T5 se retira del onboarding para que ningún caso de Trabajo pase de 6 panta
 
 | Paso de PUBL-04 | Qué se precarga | Qué se pregunta |
 |---|---|---|
-| 1 · Tipo y puertas | El tipo, desde `draft.hogar_need`, se muestra como fila de resumen («Asesora del hogar») con el enlace «Cambiar» | Solo `live_in` (puertas adentro, puertas afuera o por días) |
+| 1 · Tipo y puertas | El tipo, desde `draft.hogar_need`, se muestra como fila de resumen («Asesor/a del hogar») con el enlace «Cambiar» | Solo `live_in` (puertas adentro, puertas afuera o por días) |
 | 2 · Días y horario | — | Días, horario y jornada |
 | 3 · Tareas y contexto | El contexto, desde `household_profiles`, se muestra como resumen («Hay niños · Hay mascotas») con «Cambiar» | Solo las tareas (`tasks`) y, si hay niños, sus edades (`child_ages`) |
 | 4 · Sueldo y vista previa | — | Sueldo líquido (validado contra el ingreso mínimo) y vista previa |
@@ -1686,7 +1686,7 @@ Cada criterio se verifica en un APK de staging, en un Android de gama media, en 
 
 **Bloque Trabajo**
 - **QA-13:** T1 no permite más de 3 oficios y exige exactamente 1 principal.
-- **QA-14:** Buscar «nana» devuelve Asesora del hogar (`asesora-hogar`) y Niñera (`ninera`). «OS10» devuelve Guardia de seguridad (`guardia-seguridad`). «chasquilla» devuelve Maestro/a multiservicio (`maestro-multiservicio`). «grua» (sin tilde) devuelve Operador/a de grúa horquilla (`operador-grua-horquilla`). «profe» devuelve Profesor/a de aula (`profesor-aula`).
+- **QA-14:** Buscar «nana» devuelve Asesor/a del hogar (`asesora-hogar`) y Cuidador/a infantil (`ninera`). «OS10» devuelve Guardia de seguridad (`guardia-seguridad`). «chasquilla» devuelve Maestro/a multiservicio (`maestro-multiservicio`). «grua» (sin tilde) devuelve Operador/a de grúa horquilla (`operador-grua-horquilla`). «profe» devuelve Profesor/a de aula (`profesor-aula`).
 - **QA-15:** Un guardia **nunca ve** tecnologías ni «nivel profesional TI» en ningún paso. Un desarrollador sí ve tecnologías en T4.
 - **QA-16:** Con solo `seeks_shifts`, T2 muestra la grilla y no las jornadas. Con empleo y turnos, T2 muestra ambas. En los dos casos N = 5.
 - **QA-17:** Una reponedora (Comercio: sin reglas de credenciales y solo el campo opcional `rotating_shifts`) no ve T4: después de T3 («Paso 4 de 5») llega directo a ONB-99. Un recepcionista se comporta igual.
