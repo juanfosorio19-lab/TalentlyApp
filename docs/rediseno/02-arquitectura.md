@@ -1596,7 +1596,7 @@ El mapeo tabla por tabla está en el spec §7.8, y el documento de base de datos
    2. Último bundle OTA v2 (`mandatory`), con la pantalla SYS-UPD. Con plan B y proyecto viejo caído, correo a los usuarios v2 con el enlace a Play.
    3. Si hay proyecto nuevo: migración de Auth y de Storage.
    4. Backfill idempotente y consultas de control.
-   5. Encender los flags de F1 (`vertical_empleo`, `vertical_turnos`, `vertical_hogar`, `preregistro_clases`, `preregistro_servicios`) para las comunas de lanzamiento.
+   5. Encender los flags de F1 (`vertical_empleo`, `vertical_turnos`, `vertical_hogar`, `preregistro_clases`, `preregistro_servicios`) para las 52 comunas de la Región Metropolitana (decisión del dueño, 2-10-2026).
    6. Liberar el AAB 3.0 en Play.
 4. **Primeras 48 horas**: monitoreo reforzado de Sentry, PostHog, la cola de verificación y el `pushed_at` de las notificaciones.
 5. **Rollback**:

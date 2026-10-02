@@ -1408,7 +1408,7 @@ Se agregan triggers de match y notificaciones en el servidor. El cliente pasa de
 
 **Criterio de salida**: mockups aprobados en el teléfono del dueño, esquema reproducible y advisors sin hallazgos altos.
 
-### 11.2 Fase 1 · MVP «Empleo + Turnos + Hogar» (diciembre de 2026 a febrero de 2027, 10–12 semanas; RM, 8 a 12 comunas)
+### 11.2 Fase 1 · MVP «Empleo + Turnos + Hogar» (diciembre de 2026 a febrero de 2027, 10–12 semanas; las 52 comunas de la RM)
 
 **Incluye**
 - `src/ui` completo y AppShell.
