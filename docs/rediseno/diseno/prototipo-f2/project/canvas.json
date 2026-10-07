@@ -1,0 +1,138 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-07T12:56:23Z"
+  },
+  "title": "Talently · Prototipo F2",
+  "launch": {
+    "view": "canvas",
+    "page": "indice"
+  },
+  "pages": [
+    {
+      "id": "indice",
+      "name": "Índice"
+    },
+    {
+      "id": "f6",
+      "name": "6 · Carolina reserva una clase"
+    },
+    {
+      "id": "apoyo",
+      "name": "Apoyo"
+    }
+  ],
+  "boards": {
+    "INDICE-F2.dc.html": {
+      "h": 1100,
+      "is_interactive": true,
+      "page": "indice",
+      "title": "Índice · Prototipo F2 · flujos y su pantalla de inicio · F2",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "EXP-03.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f6",
+      "title": "EXP-03 · Explorar · Clases · Carolina busca para Tomás (Escolar, Ñuñoa) · F2",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "DET-01-clase.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f6",
+      "title": "DET-01 · Detalle · Clase · Camila Fuentes = PRF-10 /u/camila?ver=clases · F2",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "RES-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f6",
+      "title": "RES-01 · Elegir horario · Carolina reserva para Tomás: jue 11 mar · 17:00 · Online · F2",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "RES-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f6",
+      "title": "RES-02 · Confirmar reserva (hoja): «Pagas directo a la profesora» · Tomás · jue 11 mar · 17:00 · F2",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "RES-03.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f6",
+      "title": "RES-03 · Reserva Solicitada · Snackbar «Le enviamos tu reserva a Camila» · Carolina para Tomás · F2",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "TabBar.dc.html": {
+      "h": 88,
+      "is_interactive": true,
+      "page": "apoyo",
+      "title": "BottomTabBar · compartida por las 5 pestañas",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    }
+  },
+  "order": [
+    "INDICE-F2.dc.html",
+    "EXP-03.dc.html",
+    "DET-01-clase.dc.html",
+    "RES-01.dc.html",
+    "RES-02.dc.html",
+    "RES-03.dc.html",
+    "TabBar.dc.html"
+  ],
+  "notes": {
+    "indice": {
+      "kind": "title1",
+      "maxW": 1280,
+      "page": "indice",
+      "text": "Prototipo F2 · índice con cada flujo y su pantalla de inicio · el flujo 6 (Clases) se recorre aquí; los demás, en el prototipo F1",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "f6": {
+      "kind": "title1",
+      "maxW": 2270,
+      "page": "f6",
+      "text": "Flujo 6 (F2) · Carolina reserva una clase para Tomás: EXP-03 → DET-01 (clase de Camila) → RES-01 (jue 11 mar · 17:00 · Online) → RES-02 (hoja: «Pagas directo a la profesora») → RES-03 Solicitada con Snackbar «Le enviamos tu reserva a Camila»",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "apoyo": {
+      "kind": "title1",
+      "maxW": 1200,
+      "page": "apoyo",
+      "text": "Apoyo · componentes del lienzo (TabBar)",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    }
+  },
+  "designSystems": [
+    {
+      "title": "Talently",
+      "namespace": "talently",
+      "artifact": "https://claude.ai/artifact/HFynWEZZGPxaarjKuVnHV1",
+      "version": "1791340822-3cfa",
+      "copiedAt": "2026-10-07T12:56:23Z"
+    }
+  ]
+}

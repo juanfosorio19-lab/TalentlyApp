@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>INI-01 · Inicio de Jorge, cuenta nueva · F1</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/talently/tokens.css">
+<link rel="stylesheet" href="ds/talently/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{tema}}" style="position: relative; width: {{ancho}}px; height: 844px; display: flex; flex-direction: column; overflow: hidden; background: var(--color-bg); color: var(--color-text); font-family: var(--font-sans);">
+<header class="{{appbarCls}}"><div class="tl-statusbar"><span>13:00</span><span></span></div><div class="tl-appbar__row"><h1 class="tl-appbar__title h1">Hola, Jorge</h1><div class="tl-appbar__actions"><button type="button" class="tl-iconbtn" aria-label="Notificaciones"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.1 16.8h11.8l-1.5-2.2V10a4.4 4.4 0 0 0-8.8 0v4.6l-1.5 2.2Z"></path><path d="M9.8 19.2a2.4 2.4 0 0 0 4.4 0"></path></g><circle cx="18.7" cy="5.3" r="2.3" fill="currentColor" fill-opacity=".45"></circle><path stroke="currentColor" stroke-width="1.2" stroke-linecap="round" d="M18.7 4v1.6M17.9 4.8h1.6"></path></svg></span></button></div></div></header>
+<main style="flex: 1; min-height: 0; overflow: hidden; padding: var(--space-2) var(--space-4) var(--space-4);"><div style="display: flex; flex-direction: column; gap: var(--space-6); margin-top: {{desplazar}};">
+<div class="tl-empty" style="padding: var(--space-8) var(--space-4);"><div class="tl-empty__icon"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.2" y="6.8" width="17.6" height="13" rx="2"></rect><path d="M8 6.8V5.4A2.4 2.4 0 0 1 10.4 3h3.2A2.4 2.4 0 0 1 16 5.4v1.4M3.2 11.4h17.6M10 11.4v2h4v-2"></path><path d="M6.2 15.6h5.2"></path></g></svg></span></div><h2 class="tl-empty__title h3">Aún no tienes actividad</h2><p class="tl-empty__text">Cuando postules a un empleo o tomes un turno, aquí verás tu agenda y sus novedades.</p><a class="tl-btn tl-btn--primary" style="text-decoration: none;" href="{{rEmpleos}}"><span class="tl-btn__label">Ver empleos cerca</span></a></div>
+<div class="tl-card" style="display: flex; align-items: flex-start; gap: var(--space-3);"><span class="tl-listitem__tile"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6.6A2.1 2.1 0 0 0 4.5 5.1v13.8A2.1 2.1 0 0 0 6.6 21h10.8a2.1 2.1 0 0 0 2.1-2.1V8.5L14 3Z"></path><path d="M14 3v4.1c0 .8.6 1.4 1.4 1.4h4.1M8.3 13h7.4M8.3 16.8h4.8"></path></g></svg></span></span><div style="flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1);"><p style="margin: 0; font: 600 16px/24px var(--font-sans);">Te falta la credencial SPD</p><span class="tl-badge tl-badge--warning">Obligatoria</span><p class="body" style="margin: 0; color: var(--color-text-2);">Sin ella no podrás ser confirmado en turnos de guardia.</p><div style="margin-top: var(--space-2);"><button type="button" class="tl-btn tl-btn--tonal tl-btn--sm"><span class="tl-btn__label">Subir credencial</span></button></div></div></div>
+</div></main>
+<dc-import name="TabBar" quien="jorge-nuevo" tema="{{tema}}" ancho="{{ancho}}" actual="0" mensajes="0" hint-size="390px,88px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"ancho":{"editor":"enum","options":["360","390","412"],"default":"390"},"desplazar":{"editor":"text","default":"0"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const v = this._rv();
+v.rEmpleos = 'EXP-01-lista.dc.html';
+const P = ["ACT-02", "ACT-02-desplazado", "ACT-02-jorge", "AUTH-01", "AUTH-02", "AUTH-03", "AUTH-08", "AUTH-08-codigo", "CFG-01", "CFG-01-cerrar-sesion", "DET-01-empleo", "DET-01-turno", "DET-01-turno--f9", "DET-01-turno-postulado", "DET-02", "DET-02-exito", "DET-03", "EXP-01", "EXP-01-lista", "EXP-02", "EXP-02-turnos-desplazado", "EXP-02-turnos-desplazado--f9", "FALTA-ACT-02-matias", "FALTA-DET-01-pedro", "FALTA-INI-01-rosa", "FALTA-MSG-01-marta", "GES-01-turno", "GES-02-hogar", "GES-04", "GES-04-postulados", "GES-04-sin-postulados", "INDICE-F1", "INI-01-carolina", "INI-01-jorge-nuevo", "INI-01-salir", "INI-02", "INI-02--f7", "INI-02-cambio", "MSG-01", "MSG-01-jorge", "MSG-02", "MSG-02b-adjuntar", "MSG-02b-compartir", "MSG-02b-familia", "MSG-02b-marta", "MSG-02b-no-disponible", "MSG-02b-pedido", "Main", "Main--f9", "NOT-01", "ONB-01", "ONB-03", "ONB-99", "ONB-T1", "ONB-T2", "ONB-T3", "ONB-T4", "ONB-T5", "PRC-01", "PRC-01-hogar", "PRF-01", "PRF-01--f11", "PRF-01-final", "PRF-12", "PRF-12-avisado", "PRF-12-desde-act", "PUBL-01", "PUBL-01-carolina", "PUBL-03-paso1", "PUBL-03-paso2", "PUBL-03-paso3", "PUBL-03-paso4", "PUBL-04-identidad", "PUBL-04-paso1", "PUBL-04-paso2", "PUBL-04-paso3", "PUBL-04-paso4", "PUBL-04-paso5", "PUBL-07-aviso-hogar", "PUBL-07-turno", "PUBL-08-turno", "PUBL-08-turno-pronto", "REV-01", "SHT-ACTOR", "TUR-01", "TabBar", "VER-02", "VER-02-dorso", "VER-02-frente", "VER-02-selfie"];
+for (const k in v) { const x = v[k]; if (typeof x === 'string' && /^[A-Za-z][\w-]*\.dc\.html$/.test(x) && !P.includes(x.slice(0, -8))) v[k] = undefined; }
+return v;
+}
+_rv() {
+const tema = this.props.tema ?? 'light';
+const sufijo = tema === 'dark' ? '-oscuro' : '';
+const d = String(this.props.desplazar ?? '0');
+const base = { tema, ancho: String(this.props.ancho ?? '390'), desplazar: d + 'px', appbarCls: 'tl-appbar' + (d !== '0' ? ' is-scrolled' : '') };
+return Object.assign(base, {  });
+}
+}
+</script>
+</body>
+</html>

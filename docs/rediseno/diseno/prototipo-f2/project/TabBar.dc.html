@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>BottomTabBar</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/talently/tokens.css">
+<link rel="stylesheet" href="ds/talently/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<nav data-theme="{{tema}}" class="tl-tabbar" aria-label="Navegación principal" style="width: {{ancho}}px; font-family: var(--font-sans); color: var(--color-text);">
+<a class="{{c0}}" href="{{h0}}" aria-current="{{a0}}"><span class="tl-tab__pill"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10.5 12 3.8l8.5 6.7v8.2a1.3 1.3 0 0 1-1.3 1.3H4.8a1.3 1.3 0 0 1-1.3-1.3v-8.2Z"></path><path d="M9 20v-5.5h6V20"></path></g></svg></span></span><span class="tab-label">Inicio</span></a>
+<a class="{{c1}}" href="{{h1}}" aria-current="{{a1}}"><span class="tl-tab__pill"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.3"></circle><path d="m15.5 15.5 5 5"></path></g><circle cx="10.7" cy="10.7" r="2.4" fill="currentColor" fill-opacity=".35"></circle></svg></span></span><span class="tab-label">Explorar</span></a>
+<a class="{{c2}}" href="{{h2}}" aria-current="{{a2}}"><span class="tl-tab__pill"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.2"></rect><path d="M8 3v4M16 3v4M3.5 10h17"></path></g><rect x="7" y="13.2" width="3.4" height="3.4" rx=".8" fill="currentColor" fill-opacity=".45"></rect></svg></span></span><span class="tab-label">Actividad</span></a>
+<a class="{{c3}}" href="{{h3}}" aria-current="{{a3}}" aria-label="{{mensajesLabel}}"><span class="tl-tab__pill"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.1 5.2h11.8a2.1 2.1 0 0 1 2.1 2.1v6.1a2.1 2.1 0 0 1-2.1 2.1H9.4l-3.9 3v-3H4.1A2.1 2.1 0 0 1 2 13.4V7.3a2.1 2.1 0 0 1 2.1-2.1Z"></path><path stroke-width="2.6" d="M8.1 9.9h.01M11.9 9.9h.01M15.7 9.9h.01"></path><path d="M13.5 17.1h5.1a2.1 2.1 0 0 1 2.1 2.1v2.1l-2.4-1.7h-4.8"></path></g></svg></span><sc-if value="{{hayMensajes}}" hint-placeholder-val="{{true}}"><span class="tl-tab__badge" aria-hidden="true">{{mensajes}}</span></sc-if></span><span class="tab-label">Mensajes</span></a>
+<a class="{{c4}}" href="{{h4}}" aria-current="{{a4}}"><span class="tl-tab__pill"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7.4" r="3.4"></circle><path d="M5 20c.75-4 3.1-6 7-6s6.25 2 7 6"></path></g><circle cx="12" cy="7.4" r="1.15" fill="currentColor" fill-opacity=".5"></circle></svg></span></span><span class="tab-label">Perfil</span></a>
+</nav>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"ancho":{"editor":"enum","options":["360","390","412"],"default":"390"},"actual":{"editor":"enum","options":["0","1","2","3","4"],"default":"0"},"mensajes":{"editor":"text","default":"3"},"actor":{"editor":"enum","options":["persona","organizacion"],"default":"persona"},"quien":{"editor":"text","default":""},"$preview":{"width":390,"height":88}}'>
+class Component extends DCLogic {
+renderVals() {
+const v = this._rv();
+const P = ["DET-01-clase", "EXP-03", "INDICE-F2", "RES-01", "RES-02", "RES-03", "TabBar"];
+for (const k in v) { const x = v[k]; if (typeof x === 'string' && /^[A-Za-z][\w-]*\.dc\.html$/.test(x) && !P.includes(x.slice(0, -8))) v[k] = undefined; }
+return v;
+}
+_rv() {
+const actual = String(this.props.actual ?? '0');
+const mensajes = String(this.props.mensajes ?? '3');
+const v = {};
+for (let i = 0; i < 5; i++) {
+v['c' + i] = actual === String(i) ? 'tl-tab is-active' : 'tl-tab';
+v['a' + i] = actual === String(i) ? 'page' : undefined;
+}
+const org = (this.props.actor ?? 'persona') === 'organizacion';
+const tema = this.props.tema ?? 'light';
+const sufijo = tema === 'dark' ? '-oscuro' : '';
+const Q = { matias: ['Main', 'EXP-02', 'ACT-01', 'MSG-01', null], 'jorge-nuevo': ['INI-01-jorge-nuevo', 'EXP-01-lista', 'ACT-02-vacia', 'MSG-01-vacio', null], jorge: [null, 'EXP-01-lista', 'ACT-02-jorge', 'MSG-01-jorge', 'PRF-01'], pedro: ['INI-01-pedro', 'EXP-01', null, null, null], carolina: ['INI-01-carolina', null, 'ACT-03-carolina', null, 'PRF-01-carolina-hogar'], 'carolina-f2': ['INI-01-carolina-aprendo', 'EXP-03', null, null, 'PRF-01-carolina'] };
+const rutas = org ? ['INI-02', null, 'ACT-01-rosa', null, 'PRF-02'] : (Q[this.props.quien || 'matias'] || Q.matias);
+for (let i = 0; i < 5; i++) { v['h' + i] = rutas[i] ? rutas[i] + sufijo + '.dc.html' : undefined; }
+v.tema = tema;
+v.ancho = String(this.props.ancho ?? '390');
+v.mensajes = mensajes;
+v.hayMensajes = mensajes !== '' && mensajes !== '0';
+v.mensajesLabel = v.hayMensajes ? 'Mensajes, ' + mensajes + ' sin leer' : 'Mensajes';
+return v;
+}
+}
+</script>
+</body>
+</html>

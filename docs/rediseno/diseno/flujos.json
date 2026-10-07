@@ -1,0 +1,2778 @@
+{
+ "sistema_de_diseno": "https://claude.ai/artifact/HFynWEZZGPxaarjKuVnHV1",
+ "version_ds": "1791340822-3cfa",
+ "prototipos": {
+  "f1": {
+   "lienzo": "https://claude.ai/artifact/2wvNGwsBWh5F4c5jZkTpgh",
+   "paginas": [
+    {
+     "id": "indice",
+     "nombre": "Índice",
+     "descripcion": "Prototipo F1 · índice con cada flujo y su pantalla de inicio · los flujos 1 a 5 y 7 a 11 (el 6 es F2 y está en el prototipo F2)",
+     "tableros": [
+      "INDICE-F1"
+     ]
+    },
+    {
+     "id": "f1",
+     "nombre": "1 · Onboarding de Jorge",
+     "descripcion": "Flujo 1 · Onboarding de Jorge (guardia): AUTH-01 → AUTH-02 → AUTH-03 → ONB-01 → ONB-03 → ONB-T1 a T5 → ONB-99 → INI-01 · en AUTH-02 marca la casilla de términos; en AUTH-03 toca las casillas del código; en ONB-01 elige Empleo y Turnos",
+     "tableros": [
+      "AUTH-01",
+      "AUTH-02",
+      "AUTH-03",
+      "ONB-01",
+      "ONB-03",
+      "ONB-T1",
+      "ONB-T2",
+      "ONB-T3",
+      "ONB-T4",
+      "ONB-T5",
+      "ONB-99",
+      "INI-01-jorge-nuevo"
+     ]
+    },
+    {
+     "id": "f2",
+     "nombre": "2 · Matías toma un turno",
+     "descripcion": "Flujo 2 · Matías toma un turno: INI-01 → EXP-02 → borde derecho (scroll) → DET-01 (Garzones para matrimonio) → AUTH-08 (número y código) → Snackbar «Postulaste al turno» → ACT-02 (falta la de Matías) → TUR-01 (confirmado) → salto de tiempo en la barra de estado → REV-01",
+     "tableros": [
+      "Main",
+      "EXP-02",
+      "EXP-02-turnos-desplazado",
+      "DET-01-turno",
+      "AUTH-08",
+      "AUTH-08-codigo",
+      "DET-01-turno-postulado",
+      "FALTA-ACT-02-matias",
+      "TUR-01",
+      "REV-01"
+     ]
+    },
+    {
+     "id": "f3",
+     "nombre": "3 · Pedro postula y hace match",
+     "descripcion": "Flujo 3 · Pedro postula a un empleo y hace match: EXP-01 (deck de Pedro) → DET-01 de Pedro (falta; sigue la cadena de Jorge) → DET-01 (empleo) → DET-02 → Snackbar → salto de tiempo → DET-03 ¡Hicieron match! → MSG-02 → chip del empleo → PRC-01",
+     "tableros": [
+      "EXP-01",
+      "FALTA-DET-01-pedro",
+      "DET-01-empleo",
+      "DET-02",
+      "DET-02-exito",
+      "DET-03",
+      "MSG-02",
+      "PRC-01"
+     ]
+    },
+    {
+     "id": "f4",
+     "nombre": "4 · Rosa publica un turno",
+     "descripcion": "Flujo 4 · Rosa publica un turno y confirma cupos: INI-02 → PUBL-01 (Turno) → PUBL-03 pasos 1 a 4 → PUBL-08 paso 5 (tocar Premium «Pronto» muestra el Snackbar; publica como Clásica) → PUBL-07 → GES-01 → Ver cupos → GES-04 sin postulados → salto de tiempo en la barra de estado → Postulados → Confirmar a mis favoritos → Confirmados",
+     "tableros": [
+      "INI-02",
+      "PUBL-01",
+      "PUBL-03-paso1",
+      "PUBL-03-paso2",
+      "PUBL-03-paso3",
+      "PUBL-03-paso4",
+      "PUBL-08-turno",
+      "PUBL-08-turno-pronto",
+      "PUBL-07-turno",
+      "GES-01-turno",
+      "GES-04-sin-postulados",
+      "GES-04-postulados",
+      "GES-04"
+     ]
+    },
+    {
+     "id": "f5",
+     "nombre": "5 · Carolina publica su aviso",
+     "descripcion": "Flujo 5 · Carolina publica su aviso del hogar: INI-01 (hogar) → Publicar → PUBL-01 (Aviso para mi hogar) → PUBL-04 pasos 1 a 4 → paso 5 (PUBL-08, Clásica) → verifica tu identidad → VER-02 (cédula y selfie) → PUBL-07 → GES-02 → Marta → PRC-01 con el checklist legal «Para contratar como corresponde»",
+     "tableros": [
+      "INI-01-carolina",
+      "PUBL-01-carolina",
+      "PUBL-04-paso1",
+      "PUBL-04-paso2",
+      "PUBL-04-paso3",
+      "PUBL-04-paso4",
+      "PUBL-04-paso5",
+      "PUBL-04-identidad",
+      "VER-02",
+      "VER-02-frente",
+      "VER-02-dorso",
+      "VER-02-selfie",
+      "PUBL-07-aviso-hogar",
+      "GES-02-hogar",
+      "PRC-01-hogar"
+     ]
+    },
+    {
+     "id": "f7",
+     "nombre": "7 · Cambio de actor",
+     "descripcion": "Flujo 7 · Cambio de actor: INI-02 → SHT-ACTOR → Rosa Muñoz (su Inicio falta) → vuelve a Banquetería Rosa SpA → INI-02 · como Rosa Muñoz, NOT-01: tocar «Faltan 2 garzones…» de Banquetería Rosa SpA cambia de actor solo (INI-02 con el aviso)",
+     "tableros": [
+      "INI-02--f7",
+      "SHT-ACTOR",
+      "FALTA-INI-01-rosa",
+      "NOT-01",
+      "INI-02-cambio"
+     ]
+    },
+    {
+     "id": "f8",
+     "nombre": "8 · Perfil y configuración",
+     "descripcion": "Flujo 8 · Perfil y configuración: PRF-01 → IconGear → CFG-01 → «Cerrar sesión» → Dialog de confirmación → AUTH-01",
+     "tableros": [
+      "PRF-01",
+      "CFG-01",
+      "CFG-01-cerrar-sesion"
+     ]
+    },
+    {
+     "id": "f9",
+     "nombre": "9 · Botón atrás",
+     "descripcion": "Flujo 9 · Botón atrás (borde izquierdo = gesto atrás; la flecha del AppBar hace lo mismo): EXP-02 con scroll → DET-01 → atrás vuelve a EXP-02 en el mismo scroll · pestaña Mensajes → MSG-01 → atrás va a Inicio → en Inicio, atrás muestra el toast «Presiona atrás otra vez para salir»",
+     "tableros": [
+      "EXP-02-turnos-desplazado--f9",
+      "DET-01-turno--f9",
+      "MSG-01",
+      "Main--f9",
+      "INI-01-salir"
+     ]
+    },
+    {
+     "id": "f10",
+     "nombre": "10 · Marta comparte su certificado",
+     "descripcion": "Flujo 10 · Marta comparte su certificado de antecedentes: MSG-01 (falta la de Marta) → MSG-02 con Familia en Ñuñoa → Adjuntar del composer → MSG-02b (hoja) → tarjeta de sistema en la conversación → «Dejar de compartir» → tarjeta «Ya no está disponible» (vista por Familia en Ñuñoa)",
+     "tableros": [
+      "FALTA-MSG-01-marta",
+      "MSG-02b-pedido",
+      "MSG-02b-adjuntar",
+      "MSG-02b-compartir",
+      "MSG-02b-marta",
+      "MSG-02b-no-disponible"
+     ]
+    },
+    {
+     "id": "f11",
+     "nombre": "11 · Impulsa tu perfil",
+     "descripcion": "Flujo 11 · Jorge abre «Impulsa tu perfil»: PRF-01 → borde derecho (scroll) hasta el final → PRF-12 (con «Pronto») → «Avisarme cuando esté disponible» (Snackbar) · el mismo PRF-12 se abre desde ACT-02 (al final de la lista) › Impulsa tu perfil; atrás vuelve a cada origen en su scroll",
+     "tableros": [
+      "PRF-01--f11",
+      "PRF-01-final",
+      "PRF-12",
+      "PRF-12-avisado",
+      "ACT-02-jorge",
+      "ACT-02-desplazado",
+      "PRF-12-desde-act"
+     ]
+    },
+    {
+     "id": "apoyo",
+     "nombre": "Apoyo",
+     "descripcion": "Apoyo · pantallas a las que también se llega desde los flujos y componentes del lienzo (TabBar)",
+     "tableros": [
+      "ACT-02",
+      "EXP-01-lista",
+      "MSG-01-jorge",
+      "MSG-02b-familia",
+      "TabBar"
+     ]
+    }
+   ],
+   "pantallas": {
+    "INDICE-F1": {
+     "titulo": "Índice · Prototipo F1 · flujos y su pantalla de inicio · F1",
+     "pagina": "indice",
+     "tipo": "índice",
+     "lienzo_origen": null,
+     "captura": "capturas/f1/INDICE-F1.png",
+     "fuente": "prototipo-f1/project/INDICE-F1.dc.html",
+     "enlaces": [
+      {
+       "destino": "AUTH-01",
+       "etiqueta": "1Onboarding de Jorge (guardia)Empieza en AUTH-01 ·",
+       "visible": true
+      },
+      {
+       "destino": "Main",
+       "etiqueta": "2Matías toma un turnoEmpieza en INI-01 · Inicio de",
+       "visible": true
+      },
+      {
+       "destino": "EXP-01",
+       "etiqueta": "3Pedro postula a un empleo y hace matchEmpieza en ",
+       "visible": true
+      },
+      {
+       "destino": "INI-02",
+       "etiqueta": "4Rosa publica un turno y confirma cuposEmpieza en ",
+       "visible": true
+      },
+      {
+       "destino": "INI-01-carolina",
+       "etiqueta": "5Carolina publica su aviso del hogarEmpieza en INI",
+       "visible": true
+      },
+      {
+       "destino": "INI-02--f7",
+       "etiqueta": "7Cambio de actorEmpieza en INI-02 · Inicio de Banq",
+       "visible": true
+      },
+      {
+       "destino": "PRF-01",
+       "etiqueta": "8Perfil y configuraciónEmpieza en PRF-01 · Mi perf",
+       "visible": true
+      },
+      {
+       "destino": "EXP-02-turnos-desplazado--f9",
+       "etiqueta": "9Botón atrásEmpieza en EXP-02 · Turnos, con scroll",
+       "visible": true
+      },
+      {
+       "destino": "FALTA-MSG-01-marta",
+       "etiqueta": "10Marta comparte su certificado de antecedentesEmp",
+       "visible": true
+      },
+      {
+       "destino": "PRF-01--f11",
+       "etiqueta": "11Jorge abre «Impulsa tu perfil»Empieza en PRF-01 ",
+       "visible": true
+      }
+     ]
+    },
+    "AUTH-01": {
+     "titulo": "AUTH-01 · Bienvenida · F1",
+     "pagina": "f1",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/AUTH-01.png",
+     "fuente": "prototipo-f1/project/AUTH-01.dc.html",
+     "enlaces": [
+      {
+       "destino": "AUTH-02",
+       "etiqueta": "Crear cuenta",
+       "visible": true
+      }
+     ]
+    },
+    "AUTH-02": {
+     "titulo": "AUTH-02 · Crear cuenta · sin aceptar los Términos · F1",
+     "pagina": "f1",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/AUTH-02.png",
+     "fuente": "prototipo-f1/project/AUTH-02.dc.html",
+     "enlaces": [
+      {
+       "destino": "AUTH-01",
+       "etiqueta": "Volver",
+       "visible": true
+      }
+     ]
+    },
+    "AUTH-03": {
+     "titulo": "AUTH-03 · Revisa tu correo · F1",
+     "pagina": "f1",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/AUTH-03.png",
+     "fuente": "prototipo-f1/project/AUTH-03.dc.html",
+     "enlaces": [
+      {
+       "destino": "AUTH-02",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "ONB-01",
+       "etiqueta": "Prototipo: ingresar el código",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      }
+     ]
+    },
+    "ONB-01": {
+     "titulo": "ONB-01 · ¿Qué quieres hacer en Talently? · sin elegir · F1",
+     "pagina": "f1",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/ONB-01.png",
+     "fuente": "prototipo-f1/project/ONB-01.dc.html",
+     "enlaces": []
+    },
+    "ONB-03": {
+     "titulo": "ONB-03 · Tus datos · Jorge · Paso 1 de 6 · F1",
+     "pagina": "f1",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/ONB-03.png",
+     "fuente": "prototipo-f1/project/ONB-03.dc.html",
+     "enlaces": [
+      {
+       "destino": "ONB-01",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "ONB-T1",
+       "etiqueta": "Continuar",
+       "visible": true
+      }
+     ]
+    },
+    "ONB-T1": {
+     "titulo": "ONB-T1 · ¿En qué quieres trabajar? · Jorge · Paso 2 de 6 · F1",
+     "pagina": "f1",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/ONB-T1.png",
+     "fuente": "prototipo-f1/project/ONB-T1.dc.html",
+     "enlaces": [
+      {
+       "destino": "ONB-03",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "ONB-T2",
+       "etiqueta": "Continuar",
+       "visible": true
+      }
+     ]
+    },
+    "ONB-T2": {
+     "titulo": "ONB-T2 · ¿Qué tipo de trabajo buscas? · Jorge · Paso 3 de 6 · F1",
+     "pagina": "f1",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/ONB-T2.png",
+     "fuente": "prototipo-f1/project/ONB-T2.dc.html",
+     "enlaces": [
+      {
+       "destino": "ONB-T1",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "ONB-T3",
+       "etiqueta": "Continuar",
+       "visible": true
+      }
+     ]
+    },
+    "ONB-T3": {
+     "titulo": "ONB-T3 · ¿Cuánto esperas ganar? (opcional) · Jorge · Paso 4 de 6 · F1",
+     "pagina": "f1",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/ONB-T3.png",
+     "fuente": "prototipo-f1/project/ONB-T3.dc.html",
+     "enlaces": [
+      {
+       "destino": "ONB-T2",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "ONB-T4",
+       "etiqueta": "Continuar",
+       "visible": true
+      },
+      {
+       "destino": "ONB-T4",
+       "etiqueta": "Omitir",
+       "visible": true
+      }
+     ]
+    },
+    "ONB-T4": {
+     "titulo": "ONB-T4 · Requisitos de tu oficio · guardia · Jorge · Paso 5 de 6 · F1",
+     "pagina": "f1",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/ONB-T4.png",
+     "fuente": "prototipo-f1/project/ONB-T4.dc.html",
+     "enlaces": [
+      {
+       "destino": "ONB-T3",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "ONB-T5",
+       "etiqueta": "Continuar",
+       "visible": true
+      }
+     ]
+    },
+    "ONB-T5": {
+     "titulo": "ONB-T5 · Experiencia y CV · plantilla oficio · Jorge · Paso 6 de 6 · F1",
+     "pagina": "f1",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/ONB-T5.png",
+     "fuente": "prototipo-f1/project/ONB-T5.dc.html",
+     "enlaces": [
+      {
+       "destino": "ONB-T4",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "ONB-99",
+       "etiqueta": "Terminar",
+       "visible": true
+      },
+      {
+       "destino": "ONB-99",
+       "etiqueta": "Omitir",
+       "visible": true
+      }
+     ]
+    },
+    "ONB-99": {
+     "titulo": "ONB-99 · Listo · Jorge (le falta la credencial SPD) · F1",
+     "pagina": "f1",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/ONB-99.png",
+     "fuente": "prototipo-f1/project/ONB-99.dc.html",
+     "enlaces": [
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Ver empleos cerca",
+       "visible": true
+      },
+      {
+       "destino": "INI-01-jorge-nuevo",
+       "etiqueta": "Ir a Inicio",
+       "visible": true
+      }
+     ]
+    },
+    "INI-01-jorge-nuevo": {
+     "titulo": "INI-01 · Inicio de Jorge, cuenta nueva · F1",
+     "pagina": "f1",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/INI-01-jorge-nuevo.png",
+     "fuente": "prototipo-f1/project/INI-01-jorge-nuevo.dc.html",
+     "enlaces": [
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Ver empleos cerca",
+       "visible": true
+      },
+      {
+       "destino": "INI-01-jorge-nuevo",
+       "etiqueta": "Inicio",
+       "visible": true
+      },
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Explorar",
+       "visible": true
+      }
+     ]
+    },
+    "Main": {
+     "titulo": "INI-01 · Inicio de Matías · F1",
+     "pagina": "f2",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/Main.png",
+     "fuente": "prototipo-f1/project/Main.dc.html",
+     "enlaces": [
+      {
+       "destino": "INI-01-salir",
+       "etiqueta": "Prototipo: gesto atrás del sistema",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "EXP-02",
+       "etiqueta": "Ver todos",
+       "visible": true
+      },
+      {
+       "destino": "Main",
+       "etiqueta": "Inicio",
+       "visible": true
+      },
+      {
+       "destino": "EXP-02",
+       "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "MSG-01",
+       "etiqueta": "Mensajes, 3 sin leer",
+       "visible": true
+      }
+     ]
+    },
+    "EXP-02": {
+     "titulo": "EXP-02 · Explorar · Turnos · F1",
+     "pagina": "f2",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/EXP-02.png",
+     "fuente": "prototipo-f1/project/EXP-02.dc.html",
+     "enlaces": [
+      {
+       "destino": "EXP-02-turnos-desplazado",
+       "etiqueta": "Prototipo: desplazar",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "EXP-01",
+       "etiqueta": "Empleos",
+       "visible": true
+      },
+      {
+       "destino": "DET-01-turno",
+       "etiqueta": "Garzones para matrimonio",
+       "visible": false
+      },
+      {
+       "destino": "Main",
+       "etiqueta": "Inicio",
+       "visible": true
+      },
+      {
+       "destino": "EXP-02",
+       "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "MSG-01",
+       "etiqueta": "Mensajes, 3 sin leer",
+       "visible": true
+      }
+     ]
+    },
+    "EXP-02-turnos-desplazado": {
+     "titulo": "EXP-02 · Turnos · al hacer scroll: Este fin de semana · F1",
+     "pagina": "f2",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/EXP-02-turnos-desplazado.png",
+     "fuente": "prototipo-f1/project/EXP-02-turnos-desplazado.dc.html",
+     "enlaces": [
+      {
+       "destino": "EXP-02-turnos-desplazado",
+       "etiqueta": "Prototipo: desplazar",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "EXP-01",
+       "etiqueta": "Empleos",
+       "visible": true
+      },
+      {
+       "destino": "DET-01-turno",
+       "etiqueta": "Garzones para matrimonio",
+       "visible": true
+      },
+      {
+       "destino": "Main",
+       "etiqueta": "Inicio",
+       "visible": true
+      },
+      {
+       "destino": "EXP-02",
+       "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "MSG-01",
+       "etiqueta": "Mensajes, 3 sin leer",
+       "visible": true
+      }
+     ]
+    },
+    "DET-01-turno": {
+     "titulo": "DET-01 · Detalle · Turno · Garzones para matrimonio · Matías · F1",
+     "pagina": "f2",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/DET-01-turno.png",
+     "fuente": "prototipo-f1/project/DET-01-turno.dc.html",
+     "enlaces": [
+      {
+       "destino": "EXP-02-turnos-desplazado",
+       "etiqueta": "Prototipo: gesto atrás del sistema",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "EXP-02-turnos-desplazado",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "AUTH-08",
+       "etiqueta": "Tomar turno",
+       "visible": true
+      }
+     ]
+    },
+    "AUTH-08": {
+     "titulo": "AUTH-08 · Verificar teléfono · número (hoja sobre DET-01) · F1",
+     "pagina": "f2",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/AUTH-08.png",
+     "fuente": "prototipo-f1/project/AUTH-08.dc.html",
+     "enlaces": [
+      {
+       "destino": "DET-01-turno",
+       "etiqueta": "Prototipo: gesto atrás del sistema",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "EXP-02-turnos-desplazado",
+       "etiqueta": "Prototipo: gesto atrás del sistema",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "EXP-02-turnos-desplazado",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "AUTH-08",
+       "etiqueta": "Tomar turno",
+       "visible": true
+      },
+      {
+       "destino": "DET-01-turno",
+       "etiqueta": "Cerrar",
+       "visible": true
+      },
+      {
+       "destino": "AUTH-08-codigo",
+       "etiqueta": "Enviar código",
+       "visible": true
+      }
+     ]
+    },
+    "AUTH-08-codigo": {
+     "titulo": "AUTH-08 · Verificar teléfono · código (hoja sobre DET-01) · F1",
+     "pagina": "f2",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/AUTH-08-codigo.png",
+     "fuente": "prototipo-f1/project/AUTH-08-codigo.dc.html",
+     "enlaces": [
+      {
+       "destino": "DET-01-turno",
+       "etiqueta": "Prototipo: gesto atrás del sistema",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "EXP-02-turnos-desplazado",
+       "etiqueta": "Prototipo: gesto atrás del sistema",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "EXP-02-turnos-desplazado",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "AUTH-08",
+       "etiqueta": "Tomar turno",
+       "visible": true
+      },
+      {
+       "destino": "DET-01-turno",
+       "etiqueta": "Cerrar",
+       "visible": true
+      },
+      {
+       "destino": "DET-01-turno-postulado",
+       "etiqueta": "Prototipo: ingresar el código",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "AUTH-08",
+       "etiqueta": "Cambiar número",
+       "visible": true
+      }
+     ]
+    },
+    "DET-01-turno-postulado": {
+     "titulo": "DET-01 · Tomar turno con el teléfono verificado: Snackbar «Postulaste al turno» · Garzones para matrimonio · Matías · F1",
+     "pagina": "f2",
+     "tipo": "tablero del prototipo (envoltorio o alias de una pantalla aprobada)",
+     "lienzo_origen": null,
+     "captura": "capturas/f1/DET-01-turno-postulado.png",
+     "fuente": "prototipo-f1/project/DET-01-turno-postulado.dc.html",
+     "enlaces": [
+      {
+       "destino": "EXP-02-turnos-desplazado",
+       "etiqueta": "Prototipo: gesto atrás del sistema",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "EXP-02-turnos-desplazado",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "FALTA-ACT-02-matias",
+       "etiqueta": "Ver mis postulaciones",
+       "visible": true
+      }
+     ]
+    },
+    "FALTA-ACT-02-matias": {
+     "titulo": "ACT-02 · Postulaciones de Matías · falta en el diseño · F1",
+     "pagina": "f2",
+     "tipo": "falta en el diseño",
+     "lienzo_origen": null,
+     "captura": "capturas/f1/FALTA-ACT-02-matias.png",
+     "fuente": "prototipo-f1/project/FALTA-ACT-02-matias.dc.html",
+     "enlaces": [
+      {
+       "destino": "TUR-01",
+       "etiqueta": "Seguir con TUR-01 (turno confirmado)",
+       "visible": true
+      },
+      {
+       "destino": "DET-01-turno-postulado",
+       "etiqueta": "Volver al turno",
+       "visible": true
+      }
+     ]
+    },
+    "TUR-01": {
+     "titulo": "TUR-01 · Mi turno · Confirmado · Matías · F1",
+     "pagina": "f2",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/TUR-01.png",
+     "fuente": "prototipo-f1/project/TUR-01.dc.html",
+     "enlaces": [
+      {
+       "destino": "REV-01",
+       "etiqueta": "Prototipo: avanzar el tiempo",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "FALTA-ACT-02-matias",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "MSG-01",
+       "etiqueta": "Conversación con la organizaciónBanquetería Rosa S",
+       "visible": false
+      }
+     ]
+    },
+    "REV-01": {
+     "titulo": "REV-01 · Evaluación mutua · Matías evalúa a Banquetería Rosa SpA · F1",
+     "pagina": "f2",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/REV-01.png",
+     "fuente": "prototipo-f1/project/REV-01.dc.html",
+     "enlaces": [
+      {
+       "destino": "DET-01-turno",
+       "etiqueta": "Volver",
+       "visible": true
+      }
+     ]
+    },
+    "EXP-01": {
+     "titulo": "EXP-01 · Explorar · Empleos · Pedro · F1",
+     "pagina": "f3",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/EXP-01.png",
+     "fuente": "prototipo-f1/project/EXP-01.dc.html",
+     "enlaces": [
+      {
+       "destino": "EXP-02",
+       "etiqueta": "Turnos",
+       "visible": true
+      },
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Ver lista",
+       "visible": true
+      },
+      {
+       "destino": "FALTA-DET-01-pedro",
+       "etiqueta": "Mecánico/a automotriz",
+       "visible": true
+      },
+      {
+       "destino": "EXP-01",
+       "etiqueta": "Explorar",
+       "visible": true
+      }
+     ]
+    },
+    "FALTA-DET-01-pedro": {
+     "titulo": "DET-01 · Detalle del empleo de Pedro · falta en el diseño · F1",
+     "pagina": "f3",
+     "tipo": "falta en el diseño",
+     "lienzo_origen": null,
+     "captura": "capturas/f1/FALTA-DET-01-pedro.png",
+     "fuente": "prototipo-f1/project/FALTA-DET-01-pedro.dc.html",
+     "enlaces": [
+      {
+       "destino": "DET-01-empleo",
+       "etiqueta": "Seguir con la cadena de Jorge",
+       "visible": true
+      },
+      {
+       "destino": "EXP-01",
+       "etiqueta": "Volver al deck",
+       "visible": true
+      }
+     ]
+    },
+    "DET-01-empleo": {
+     "titulo": "DET-01 · Detalle · Empleo · Guardia de seguridad 4x4 · Jorge · F1",
+     "pagina": "f3",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/DET-01-empleo.png",
+     "fuente": "prototipo-f1/project/DET-01-empleo.dc.html",
+     "enlaces": [
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "No me interesa",
+       "visible": true
+      },
+      {
+       "destino": "DET-02",
+       "etiqueta": "Me interesa",
+       "visible": true
+      }
+     ]
+    },
+    "DET-02": {
+     "titulo": "DET-02 · Postular (hoja) · Guardia de seguridad 4x4 · F1",
+     "pagina": "f3",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/DET-02.png",
+     "fuente": "prototipo-f1/project/DET-02.dc.html",
+     "enlaces": [
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "No me interesa",
+       "visible": true
+      },
+      {
+       "destino": "DET-02",
+       "etiqueta": "Me interesa",
+       "visible": true
+      },
+      {
+       "destino": "DET-01-empleo",
+       "etiqueta": "Cerrar",
+       "visible": true
+      },
+      {
+       "destino": "DET-02-exito",
+       "etiqueta": "Postular",
+       "visible": true
+      }
+     ]
+    },
+    "DET-02-exito": {
+     "titulo": "DET-02 · Postulación enviada: Snackbar en el detalle · F1",
+     "pagina": "f3",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/DET-02-exito.png",
+     "fuente": "prototipo-f1/project/DET-02-exito.dc.html",
+     "enlaces": [
+      {
+       "destino": "DET-03",
+       "etiqueta": "Prototipo: avanzar el tiempo",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "PRC-01",
+       "etiqueta": "Ver mi postulación",
+       "visible": true
+      }
+     ]
+    },
+    "DET-03": {
+     "titulo": "DET-03 · ¡Hicieron match! · Jorge y Seguridad Andes Ltda. · F1",
+     "pagina": "f3",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/DET-03.png",
+     "fuente": "prototipo-f1/project/DET-03.dc.html",
+     "enlaces": [
+      {
+       "destino": "EXP-02",
+       "etiqueta": "Turnos",
+       "visible": true
+      },
+      {
+       "destino": "EXP-01",
+       "etiqueta": "Ver de a una",
+       "visible": true
+      },
+      {
+       "destino": "DET-01-empleo",
+       "etiqueta": "Guardia de seguridad 4x4",
+       "visible": true
+      },
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "ACT-02-jorge",
+       "etiqueta": "Actividad",
+       "visible": true
+      },
+      {
+       "destino": "MSG-01-jorge",
+       "etiqueta": "Mensajes, 1 sin leer",
+       "visible": true
+      },
+      {
+       "destino": "PRF-01",
+       "etiqueta": "Perfil",
+       "visible": true
+      },
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Seguir explorando",
+       "visible": true
+      },
+      {
+       "destino": "MSG-02",
+       "etiqueta": "Enviar mensaje",
+       "visible": true
+      }
+     ]
+    },
+    "MSG-02": {
+     "titulo": "MSG-02 · Conversación · Jorge y Seguridad Andes Ltda. · F1",
+     "pagina": "f3",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/MSG-02.png",
+     "fuente": "prototipo-f1/project/MSG-02.dc.html",
+     "enlaces": [
+      {
+       "destino": "MSG-01-jorge",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "PRC-01",
+       "etiqueta": "Empleo · Guardia 4x4",
+       "visible": true
+      }
+     ]
+    },
+    "PRC-01": {
+     "titulo": "PRC-01 · Proceso de empleo · Jorge · Guardia de seguridad 4x4 · F1",
+     "pagina": "f3",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/PRC-01.png",
+     "fuente": "prototipo-f1/project/PRC-01.dc.html",
+     "enlaces": [
+      {
+       "destino": "ACT-02-jorge",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "MSG-02",
+       "etiqueta": "Ver conversaciónSeguridad Andes Ltda.",
+       "visible": true
+      },
+      {
+       "destino": "DET-01-empleo",
+       "etiqueta": "Ver publicaciónGuardia de seguridad 4x4",
+       "visible": true
+      }
+     ]
+    },
+    "INI-02": {
+     "titulo": "INI-02 · Inicio de Banquetería Rosa SpA · F1",
+     "pagina": "f4",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/INI-02.png",
+     "fuente": "prototipo-f1/project/INI-02.dc.html",
+     "enlaces": [
+      {
+       "destino": "SHT-ACTOR",
+       "etiqueta": "Usar Talently como: Banquetería Rosa SpA",
+       "visible": true
+      },
+      {
+       "destino": "NOT-01",
+       "etiqueta": "Notificaciones, 2 sin leer",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-01",
+       "etiqueta": "Publicar",
+       "visible": true
+      },
+      {
+       "destino": "INI-02",
+       "etiqueta": "Inicio",
+       "visible": true
+      }
+     ]
+    },
+    "PUBL-01": {
+     "titulo": "PUBL-01 · ¿Qué quieres publicar? · Banquetería Rosa SpA · Empleo o Turno · F1",
+     "pagina": "f4",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas · M7 Contratar",
+     "captura": "capturas/f1/PUBL-01.png",
+     "fuente": "prototipo-f1/project/PUBL-01.dc.html",
+     "enlaces": [
+      {
+       "destino": "SHT-ACTOR",
+       "etiqueta": "Usar Talently como: Banquetería Rosa SpA",
+       "visible": true
+      },
+      {
+       "destino": "NOT-01",
+       "etiqueta": "Notificaciones, 2 sin leer",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-01",
+       "etiqueta": "Publicar",
+       "visible": true
+      },
+      {
+       "destino": "INI-02",
+       "etiqueta": "Inicio",
+       "visible": true
+      },
+      {
+       "destino": "INI-02",
+       "etiqueta": "Cerrar",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-03-paso1",
+       "etiqueta": "Continuar",
+       "visible": true
+      }
+     ]
+    },
+    "PUBL-03-paso1": {
+     "titulo": "PUBL-03 · Publicar turno · Paso 1 de 5 · Oficio y plantilla · Banquetería Rosa SpA · F1",
+     "pagina": "f4",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/PUBL-03-paso1.png",
+     "fuente": "prototipo-f1/project/PUBL-03-paso1.dc.html",
+     "enlaces": [
+      {
+       "destino": "PUBL-01",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-03-paso2",
+       "etiqueta": "Continuar",
+       "visible": true
+      }
+     ]
+    },
+    "PUBL-03-paso2": {
+     "titulo": "PUBL-03 · Paso 2 de 5 · Fechas y bloques · F1",
+     "pagina": "f4",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/PUBL-03-paso2.png",
+     "fuente": "prototipo-f1/project/PUBL-03-paso2.dc.html",
+     "enlaces": [
+      {
+       "destino": "PUBL-03-paso1",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-03-paso3",
+       "etiqueta": "Continuar",
+       "visible": true
+      }
+     ]
+    },
+    "PUBL-03-paso3": {
+     "titulo": "PUBL-03 · Paso 3 de 5 · Tarifa y contratación: boleta con su aviso · F1",
+     "pagina": "f4",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/PUBL-03-paso3.png",
+     "fuente": "prototipo-f1/project/PUBL-03-paso3.dc.html",
+     "enlaces": [
+      {
+       "destino": "PUBL-03-paso2",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-03-paso4",
+       "etiqueta": "Continuar",
+       "visible": true
+      }
+     ]
+    },
+    "PUBL-03-paso4": {
+     "titulo": "PUBL-03 · Paso 4 de 5 · Vista previa · F1",
+     "pagina": "f4",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/PUBL-03-paso4.png",
+     "fuente": "prototipo-f1/project/PUBL-03-paso4.dc.html",
+     "enlaces": [
+      {
+       "destino": "PUBL-03-paso3",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-08-turno",
+       "etiqueta": "Continuar",
+       "visible": true
+      }
+     ]
+    },
+    "PUBL-08-turno": {
+     "titulo": "PUBL-08 · Tipo de publicación · Turno · paso 5 de 5 · Banquetería Rosa SpA · F1",
+     "pagina": "f4",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/PUBL-08-turno.png",
+     "fuente": "prototipo-f1/project/PUBL-08-turno.dc.html",
+     "enlaces": [
+      {
+       "destino": "PUBL-03-paso4",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-08-turno-pronto",
+       "etiqueta": "Premium",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-07-turno",
+       "etiqueta": "Publicar",
+       "visible": true
+      }
+     ]
+    },
+    "PUBL-08-turno-pronto": {
+     "titulo": "PUBL-08 · Turno · Snackbar al tocar Premium · F1",
+     "pagina": "f4",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/PUBL-08-turno-pronto.png",
+     "fuente": "prototipo-f1/project/PUBL-08-turno-pronto.dc.html",
+     "enlaces": [
+      {
+       "destino": "PUBL-03-paso4",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-08-turno-pronto",
+       "etiqueta": "Premium",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-07-turno",
+       "etiqueta": "Publicar",
+       "visible": true
+      }
+     ]
+    },
+    "PUBL-07-turno": {
+     "titulo": "PUBL-07 · Publicada · Turno · Garzones fin de semana · Banquetería Rosa SpA · F1",
+     "pagina": "f4",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/PUBL-07-turno.png",
+     "fuente": "prototipo-f1/project/PUBL-07-turno.dc.html",
+     "enlaces": [
+      {
+       "destino": "GES-01-turno",
+       "etiqueta": "Ver publicación",
+       "visible": true
+      },
+      {
+       "destino": "INI-02",
+       "etiqueta": "Ir a Inicio",
+       "visible": true
+      }
+     ]
+    },
+    "GES-01-turno": {
+     "titulo": "GES-01 · Gestionar publicación · Turno recién publicado · Garzones fin de semana · Banquetería Rosa SpA · F1",
+     "pagina": "f4",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/GES-01-turno.png",
+     "fuente": "prototipo-f1/project/GES-01-turno.dc.html",
+     "enlaces": [
+      {
+       "destino": "GES-04-sin-postulados",
+       "etiqueta": "Ver cupos",
+       "visible": true
+      }
+     ]
+    },
+    "GES-04-sin-postulados": {
+     "titulo": "GES-04 · Cupos del turno · Sin postulados todavía · F1",
+     "pagina": "f4",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/GES-04-sin-postulados.png",
+     "fuente": "prototipo-f1/project/GES-04-sin-postulados.dc.html",
+     "enlaces": [
+      {
+       "destino": "GES-04-postulados",
+       "etiqueta": "Prototipo: avanzar el tiempo",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "GES-04",
+       "etiqueta": "Confirmados",
+       "visible": true
+      }
+     ]
+    },
+    "GES-04-postulados": {
+     "titulo": "GES-04 · Cupos del turno · Postulados · F1",
+     "pagina": "f4",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/GES-04-postulados.png",
+     "fuente": "prototipo-f1/project/GES-04-postulados.dc.html",
+     "enlaces": [
+      {
+       "destino": "GES-04",
+       "etiqueta": "Confirmados",
+       "visible": true
+      },
+      {
+       "destino": "GES-04",
+       "etiqueta": "Confirmar a mis favoritos (2)",
+       "visible": true
+      }
+     ]
+    },
+    "GES-04": {
+     "titulo": "GES-04 · Cupos del turno · Confirmados · Banquetería Rosa SpA · F1",
+     "pagina": "f4",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/GES-04.png",
+     "fuente": "prototipo-f1/project/GES-04.dc.html",
+     "enlaces": [
+      {
+       "destino": "GES-04-postulados",
+       "etiqueta": "Postulados",
+       "visible": true
+      }
+     ]
+    },
+    "INI-01-carolina": {
+     "titulo": "INI-01 · Inicio de Carolina (hogar) · F1",
+     "pagina": "f5",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/INI-01-carolina.png",
+     "fuente": "prototipo-f1/project/INI-01-carolina.dc.html",
+     "enlaces": [
+      {
+       "destino": "PUBL-01-carolina",
+       "etiqueta": "Publicar",
+       "visible": true
+      },
+      {
+       "destino": "INI-01-carolina",
+       "etiqueta": "Inicio",
+       "visible": true
+      }
+     ]
+    },
+    "PUBL-01-carolina": {
+     "titulo": "PUBL-01 · ¿Qué quieres publicar? · Carolina (hogar) · Aviso para mi hogar o Turno para un evento · F1",
+     "pagina": "f5",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/PUBL-01-carolina.png",
+     "fuente": "prototipo-f1/project/PUBL-01-carolina.dc.html",
+     "enlaces": [
+      {
+       "destino": "PUBL-01-carolina",
+       "etiqueta": "Publicar",
+       "visible": true
+      },
+      {
+       "destino": "INI-01-carolina",
+       "etiqueta": "Inicio",
+       "visible": true
+      },
+      {
+       "destino": "INI-01-carolina",
+       "etiqueta": "Cerrar",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-04-paso1",
+       "etiqueta": "Continuar",
+       "visible": true
+      }
+     ]
+    },
+    "PUBL-04-paso1": {
+     "titulo": "PUBL-04 · Aviso para mi hogar · Paso 1 de 5 · Tipo · Familia en Ñuñoa · F1",
+     "pagina": "f5",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/PUBL-04-paso1.png",
+     "fuente": "prototipo-f1/project/PUBL-04-paso1.dc.html",
+     "enlaces": [
+      {
+       "destino": "PUBL-01-carolina",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-04-paso2",
+       "etiqueta": "Continuar",
+       "visible": true
+      }
+     ]
+    },
+    "PUBL-04-paso2": {
+     "titulo": "PUBL-04 · Paso 2 de 5 · Días y horario · F1",
+     "pagina": "f5",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/PUBL-04-paso2.png",
+     "fuente": "prototipo-f1/project/PUBL-04-paso2.dc.html",
+     "enlaces": [
+      {
+       "destino": "PUBL-04-paso1",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-04-paso3",
+       "etiqueta": "Continuar",
+       "visible": true
+      }
+     ]
+    },
+    "PUBL-04-paso3": {
+     "titulo": "PUBL-04 · Paso 3 de 5 · Tareas y contexto: hay niños · F1",
+     "pagina": "f5",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/PUBL-04-paso3.png",
+     "fuente": "prototipo-f1/project/PUBL-04-paso3.dc.html",
+     "enlaces": [
+      {
+       "destino": "PUBL-04-paso2",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-04-paso4",
+       "etiqueta": "Continuar",
+       "visible": true
+      }
+     ]
+    },
+    "PUBL-04-paso4": {
+     "titulo": "PUBL-04 · Paso 4 de 5 · Sueldo y vista previa · F1",
+     "pagina": "f5",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/PUBL-04-paso4.png",
+     "fuente": "prototipo-f1/project/PUBL-04-paso4.dc.html",
+     "enlaces": [
+      {
+       "destino": "PUBL-04-paso3",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-04-paso5",
+       "etiqueta": "Continuar",
+       "visible": true
+      }
+     ]
+    },
+    "PUBL-04-paso5": {
+     "titulo": "PUBL-04 · Paso 5 de 5 · Tipo de publicación (PUBL-08) · primer aviso del hogar: Clásica marcada · F1",
+     "pagina": "f5",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/PUBL-04-paso5.png",
+     "fuente": "prototipo-f1/project/PUBL-04-paso5.dc.html",
+     "enlaces": [
+      {
+       "destino": "PUBL-04-paso4",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-04-identidad",
+       "etiqueta": "Publicar",
+       "visible": true
+      }
+     ]
+    },
+    "PUBL-04-identidad": {
+     "titulo": "PUBL-04 · Al publicar: verifica tu identidad (hoja, entrada a VER-02) · Familia en Ñuñoa · F1",
+     "pagina": "f5",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/PUBL-04-identidad.png",
+     "fuente": "prototipo-f1/project/PUBL-04-identidad.dc.html",
+     "enlaces": [
+      {
+       "destino": "PUBL-04-paso4",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-04-identidad",
+       "etiqueta": "Publicar",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-04-paso5",
+       "etiqueta": "Cerrar",
+       "visible": true
+      },
+      {
+       "destino": "VER-02",
+       "etiqueta": "Verificar ahora",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-04-paso5",
+       "etiqueta": "Ahora no",
+       "visible": true
+      }
+     ]
+    },
+    "VER-02": {
+     "titulo": "VER-02 · Verificar identidad · antes de empezar: ejemplos, «Verificarte es gratis» y ayuda por WhatsApp · Jorge · F1",
+     "pagina": "f5",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas · M8 Perfil y cuenta",
+     "captura": "capturas/f1/VER-02.png",
+     "fuente": "prototipo-f1/project/VER-02.dc.html",
+     "enlaces": [
+      {
+       "destino": "PUBL-04-identidad",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "VER-02-frente",
+       "etiqueta": "Comenzar",
+       "visible": true
+      }
+     ]
+    },
+    "VER-02-frente": {
+     "titulo": "VER-02 · Paso 1 de 3 · Cédula por delante, con guía de encuadre y ejemplo · F1",
+     "pagina": "f5",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas · M8 Perfil y cuenta",
+     "captura": "capturas/f1/VER-02-frente.png",
+     "fuente": "prototipo-f1/project/VER-02-frente.dc.html",
+     "enlaces": [
+      {
+       "destino": "VER-02",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "VER-02-dorso",
+       "etiqueta": "Tomar foto",
+       "visible": true
+      }
+     ]
+    },
+    "VER-02-dorso": {
+     "titulo": "VER-02 · Paso 2 de 3 · Cédula por detrás · F1",
+     "pagina": "f5",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas · M8 Perfil y cuenta",
+     "captura": "capturas/f1/VER-02-dorso.png",
+     "fuente": "prototipo-f1/project/VER-02-dorso.dc.html",
+     "enlaces": [
+      {
+       "destino": "VER-02-frente",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "VER-02-selfie",
+       "etiqueta": "Tomar foto",
+       "visible": true
+      }
+     ]
+    },
+    "VER-02-selfie": {
+     "titulo": "VER-02 · Paso 3 de 3 · Selfie con guía ovalada · F1",
+     "pagina": "f5",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas · M8 Perfil y cuenta",
+     "captura": "capturas/f1/VER-02-selfie.png",
+     "fuente": "prototipo-f1/project/VER-02-selfie.dc.html",
+     "enlaces": [
+      {
+       "destino": "VER-02-dorso",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-07-aviso-hogar",
+       "etiqueta": "Tomar selfie",
+       "visible": true
+      }
+     ]
+    },
+    "PUBL-07-aviso-hogar": {
+     "titulo": "PUBL-07 · Aviso del hogar en revisión: identidad y primera publicación · Familia en Ñuñoa · F1",
+     "pagina": "f5",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/PUBL-07-aviso-hogar.png",
+     "fuente": "prototipo-f1/project/PUBL-07-aviso-hogar.dc.html",
+     "enlaces": [
+      {
+       "destino": "GES-02-hogar",
+       "etiqueta": "Ver publicación",
+       "visible": true
+      },
+      {
+       "destino": "INI-01-carolina",
+       "etiqueta": "Ir a Inicio",
+       "visible": true
+      }
+     ]
+    },
+    "GES-02-hogar": {
+     "titulo": "GES-02 · Postulantes · Aviso del hogar con niños · Familia en Ñuñoa · F1",
+     "pagina": "f5",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/GES-02-hogar.png",
+     "fuente": "prototipo-f1/project/GES-02-hogar.dc.html",
+     "enlaces": [
+      {
+       "destino": "PRC-01-hogar",
+       "etiqueta": "Marta Huanca",
+       "visible": true
+      },
+      {
+       "destino": "MSG-02b-familia",
+       "etiqueta": "Ver conversación",
+       "visible": true
+      }
+     ]
+    },
+    "PRC-01-hogar": {
+     "titulo": "PRC-01 · Familia en Ñuñoa marca «Contratado»: «Para contratar como corresponde» · lun 14 dic · F1",
+     "pagina": "f5",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/PRC-01-hogar.png",
+     "fuente": "prototipo-f1/project/PRC-01-hogar.dc.html",
+     "enlaces": [
+      {
+       "destino": "GES-02-hogar",
+       "etiqueta": "Volver",
+       "visible": true
+      }
+     ]
+    },
+    "INI-02--f7": {
+     "titulo": "INI-02 · Inicio de Banquetería Rosa SpA · inicio o paso del flujo 7 (mismo tablero) · F1",
+     "pagina": "f7",
+     "tipo": "tablero del prototipo (envoltorio o alias de una pantalla aprobada)",
+     "lienzo_origen": null,
+     "captura": "capturas/f1/INI-02--f7.png",
+     "fuente": "prototipo-f1/project/INI-02--f7.dc.html",
+     "enlaces": [
+      {
+       "destino": "SHT-ACTOR",
+       "etiqueta": "Usar Talently como: Banquetería Rosa SpA",
+       "visible": true
+      },
+      {
+       "destino": "NOT-01",
+       "etiqueta": "Notificaciones, 2 sin leer",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-01",
+       "etiqueta": "Publicar",
+       "visible": true
+      },
+      {
+       "destino": "INI-02",
+       "etiqueta": "Inicio",
+       "visible": true
+      }
+     ]
+    },
+    "SHT-ACTOR": {
+     "titulo": "SHT-ACTOR · Usar Talently como (Rosa) · F1",
+     "pagina": "f7",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/SHT-ACTOR.png",
+     "fuente": "prototipo-f1/project/SHT-ACTOR.dc.html",
+     "enlaces": [
+      {
+       "destino": "SHT-ACTOR",
+       "etiqueta": "Usar Talently como: Banquetería Rosa SpA",
+       "visible": true
+      },
+      {
+       "destino": "NOT-01",
+       "etiqueta": "Notificaciones, 2 sin leer",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-01",
+       "etiqueta": "Publicar",
+       "visible": true
+      },
+      {
+       "destino": "INI-02",
+       "etiqueta": "Inicio",
+       "visible": true
+      },
+      {
+       "destino": "INI-02",
+       "etiqueta": "Cerrar",
+       "visible": true
+      },
+      {
+       "destino": "FALTA-INI-01-rosa",
+       "etiqueta": "RMRosa MuñozTú, con todos tus perfilesTiene noveda",
+       "visible": true
+      },
+      {
+       "destino": "INI-02",
+       "etiqueta": "BRBanquetería Rosa SpAOrganización · San Miguel",
+       "visible": true
+      }
+     ]
+    },
+    "FALTA-INI-01-rosa": {
+     "titulo": "INI-01 · Inicio de Rosa Muñoz como persona · falta en el diseño · F1",
+     "pagina": "f7",
+     "tipo": "falta en el diseño",
+     "lienzo_origen": null,
+     "captura": "capturas/f1/FALTA-INI-01-rosa.png",
+     "fuente": "prototipo-f1/project/FALTA-INI-01-rosa.dc.html",
+     "enlaces": [
+      {
+       "destino": "SHT-ACTOR",
+       "etiqueta": "Volver a Banquetería Rosa SpA",
+       "visible": true
+      },
+      {
+       "destino": "NOT-01",
+       "etiqueta": "Abrir Notificaciones como Rosa Muñoz",
+       "visible": true
+      }
+     ]
+    },
+    "NOT-01": {
+     "titulo": "NOT-01 · Notificaciones (Rosa como Rosa Muñoz) · F1",
+     "pagina": "f7",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/NOT-01.png",
+     "fuente": "prototipo-f1/project/NOT-01.dc.html",
+     "enlaces": [
+      {
+       "destino": "INI-02",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "INI-02-cambio",
+       "etiqueta": "Faltan 2 garzones para el turno del vie 11 dic · 1",
+       "visible": true
+      }
+     ]
+    },
+    "INI-02-cambio": {
+     "titulo": "INI-02 · Cambio de actor al tocar una notificación · F1",
+     "pagina": "f7",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/INI-02-cambio.png",
+     "fuente": "prototipo-f1/project/INI-02-cambio.dc.html",
+     "enlaces": [
+      {
+       "destino": "SHT-ACTOR",
+       "etiqueta": "Usar Talently como: Banquetería Rosa SpA",
+       "visible": true
+      },
+      {
+       "destino": "NOT-01",
+       "etiqueta": "Notificaciones, 1 sin leer",
+       "visible": true
+      },
+      {
+       "destino": "PUBL-01",
+       "etiqueta": "Publicar",
+       "visible": true
+      },
+      {
+       "destino": "INI-02",
+       "etiqueta": "Inicio",
+       "visible": true
+      }
+     ]
+    },
+    "PRF-01": {
+     "titulo": "PRF-01 · Mi perfil · Jorge · perfil Trabajo · F1",
+     "pagina": "f8",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas · M8 Perfil y cuenta",
+     "captura": "capturas/f1/PRF-01.png",
+     "fuente": "prototipo-f1/project/PRF-01.dc.html",
+     "enlaces": [
+      {
+       "destino": "PRF-01-final",
+       "etiqueta": "Prototipo: desplazar",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "CFG-01",
+       "etiqueta": "Configuración",
+       "visible": true
+      },
+      {
+       "destino": "PRF-12",
+       "etiqueta": "Impulsa tu perfilMás organizaciones verán tu perfi",
+       "visible": false
+      },
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "ACT-02-jorge",
+       "etiqueta": "Actividad",
+       "visible": true
+      },
+      {
+       "destino": "MSG-01-jorge",
+       "etiqueta": "Mensajes, 1 sin leer",
+       "visible": true
+      },
+      {
+       "destino": "PRF-01",
+       "etiqueta": "Perfil",
+       "visible": true
+      }
+     ]
+    },
+    "CFG-01": {
+     "titulo": "CFG-01 · Configuración · Jorge: solo ajustes de la cuenta, con Cerrar sesión y Eliminar cuenta al final y la versión al pie · F1",
+     "pagina": "f8",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas · M8 Perfil y cuenta",
+     "captura": "capturas/f1/CFG-01.png",
+     "fuente": "prototipo-f1/project/CFG-01.dc.html",
+     "enlaces": [
+      {
+       "destino": "PRF-01",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "CFG-01-cerrar-sesion",
+       "etiqueta": "Cerrar sesión",
+       "visible": true
+      }
+     ]
+    },
+    "CFG-01-cerrar-sesion": {
+     "titulo": "CFG-01 · Cerrar sesión: Dialog de confirmación · F1",
+     "pagina": "f8",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas · M8 Perfil y cuenta",
+     "captura": "capturas/f1/CFG-01-cerrar-sesion.png",
+     "fuente": "prototipo-f1/project/CFG-01-cerrar-sesion.dc.html",
+     "enlaces": [
+      {
+       "destino": "PRF-01",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "CFG-01-cerrar-sesion",
+       "etiqueta": "Cerrar sesión",
+       "visible": true
+      },
+      {
+       "destino": "CFG-01",
+       "etiqueta": "Cerrar",
+       "visible": true
+      },
+      {
+       "destino": "CFG-01",
+       "etiqueta": "Cancelar",
+       "visible": true
+      },
+      {
+       "destino": "AUTH-01",
+       "etiqueta": "Cerrar sesión",
+       "visible": true
+      }
+     ]
+    },
+    "EXP-02-turnos-desplazado--f9": {
+     "titulo": "EXP-02 · Turnos · al hacer scroll: Este fin de semana · inicio o paso del flujo 9 (mismo tablero) · F1",
+     "pagina": "f9",
+     "tipo": "tablero del prototipo (envoltorio o alias de una pantalla aprobada)",
+     "lienzo_origen": null,
+     "captura": "capturas/f1/EXP-02-turnos-desplazado--f9.png",
+     "fuente": "prototipo-f1/project/EXP-02-turnos-desplazado--f9.dc.html",
+     "enlaces": [
+      {
+       "destino": "EXP-02-turnos-desplazado",
+       "etiqueta": "Prototipo: desplazar",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "EXP-01",
+       "etiqueta": "Empleos",
+       "visible": true
+      },
+      {
+       "destino": "DET-01-turno",
+       "etiqueta": "Garzones para matrimonio",
+       "visible": true
+      },
+      {
+       "destino": "Main",
+       "etiqueta": "Inicio",
+       "visible": true
+      },
+      {
+       "destino": "EXP-02",
+       "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "MSG-01",
+       "etiqueta": "Mensajes, 3 sin leer",
+       "visible": true
+      }
+     ]
+    },
+    "DET-01-turno--f9": {
+     "titulo": "DET-01 · Detalle · Turno · Garzones para matrimonio · Matías · inicio o paso del flujo 9 (mismo tablero) · F1",
+     "pagina": "f9",
+     "tipo": "tablero del prototipo (envoltorio o alias de una pantalla aprobada)",
+     "lienzo_origen": null,
+     "captura": "capturas/f1/DET-01-turno--f9.png",
+     "fuente": "prototipo-f1/project/DET-01-turno--f9.dc.html",
+     "enlaces": [
+      {
+       "destino": "EXP-02-turnos-desplazado",
+       "etiqueta": "Prototipo: gesto atrás del sistema",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "EXP-02-turnos-desplazado",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "AUTH-08",
+       "etiqueta": "Tomar turno",
+       "visible": true
+      }
+     ]
+    },
+    "MSG-01": {
+     "titulo": "MSG-01 · Mensajes de Matías · F1",
+     "pagina": "f9",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/MSG-01.png",
+     "fuente": "prototipo-f1/project/MSG-01.dc.html",
+     "enlaces": [
+      {
+       "destino": "Main",
+       "etiqueta": "Prototipo: gesto atrás del sistema",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "Main",
+       "etiqueta": "Inicio",
+       "visible": true
+      },
+      {
+       "destino": "EXP-02",
+       "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "MSG-01",
+       "etiqueta": "Mensajes, 3 sin leer",
+       "visible": true
+      }
+     ]
+    },
+    "Main--f9": {
+     "titulo": "INI-01 · Inicio de Matías · inicio o paso del flujo 9 (mismo tablero) · F1",
+     "pagina": "f9",
+     "tipo": "tablero del prototipo (envoltorio o alias de una pantalla aprobada)",
+     "lienzo_origen": null,
+     "captura": "capturas/f1/Main--f9.png",
+     "fuente": "prototipo-f1/project/Main--f9.dc.html",
+     "enlaces": [
+      {
+       "destino": "INI-01-salir",
+       "etiqueta": "Prototipo: gesto atrás del sistema",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "EXP-02",
+       "etiqueta": "Ver todos",
+       "visible": true
+      },
+      {
+       "destino": "Main",
+       "etiqueta": "Inicio",
+       "visible": true
+      },
+      {
+       "destino": "EXP-02",
+       "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "MSG-01",
+       "etiqueta": "Mensajes, 3 sin leer",
+       "visible": true
+      }
+     ]
+    },
+    "INI-01-salir": {
+     "titulo": "INI-01 · Toast «Presiona atrás otra vez para salir» · F1",
+     "pagina": "f9",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/INI-01-salir.png",
+     "fuente": "prototipo-f1/project/INI-01-salir.dc.html",
+     "enlaces": [
+      {
+       "destino": "INI-01-salir",
+       "etiqueta": "Prototipo: gesto atrás del sistema",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "EXP-02",
+       "etiqueta": "Ver todos",
+       "visible": true
+      },
+      {
+       "destino": "Main",
+       "etiqueta": "Inicio",
+       "visible": true
+      },
+      {
+       "destino": "EXP-02",
+       "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "MSG-01",
+       "etiqueta": "Mensajes, 3 sin leer",
+       "visible": true
+      }
+     ]
+    },
+    "FALTA-MSG-01-marta": {
+     "titulo": "MSG-01 · Mensajes de Marta · falta en el diseño · F1",
+     "pagina": "f10",
+     "tipo": "falta en el diseño",
+     "lienzo_origen": null,
+     "captura": "capturas/f1/FALTA-MSG-01-marta.png",
+     "fuente": "prototipo-f1/project/FALTA-MSG-01-marta.dc.html",
+     "enlaces": [
+      {
+       "destino": "MSG-02b-pedido",
+       "etiqueta": "Abrir la conversación",
+       "visible": true
+      },
+      {
+       "destino": "INDICE-F1",
+       "etiqueta": "Volver al índice",
+       "visible": true
+      }
+     ]
+    },
+    "MSG-02b-pedido": {
+     "titulo": "MSG-02b · La familia pide el certificado por texto · Marta ve «Compartirlo es voluntario» · F1",
+     "pagina": "f10",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/MSG-02b-pedido.png",
+     "fuente": "prototipo-f1/project/MSG-02b-pedido.dc.html",
+     "enlaces": [
+      {
+       "destino": "FALTA-MSG-01-marta",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "MSG-02b-adjuntar",
+       "etiqueta": "Adjuntar",
+       "visible": true
+      }
+     ]
+    },
+    "MSG-02b-adjuntar": {
+     "titulo": "MSG-02b · Adjuntar · Marta · F1",
+     "pagina": "f10",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/MSG-02b-adjuntar.png",
+     "fuente": "prototipo-f1/project/MSG-02b-adjuntar.dc.html",
+     "enlaces": [
+      {
+       "destino": "FALTA-MSG-01-marta",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "MSG-02b-adjuntar",
+       "etiqueta": "Adjuntar",
+       "visible": true
+      },
+      {
+       "destino": "MSG-02b-pedido",
+       "etiqueta": "Cerrar",
+       "visible": true
+      },
+      {
+       "destino": "MSG-02b-compartir",
+       "etiqueta": "Compartir certificado de antecedentesCompartirlo e",
+       "visible": true
+      }
+     ]
+    },
+    "MSG-02b-compartir": {
+     "titulo": "MSG-02b · Compartir certificado de antecedentes (hoja) · Marta · F1",
+     "pagina": "f10",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/MSG-02b-compartir.png",
+     "fuente": "prototipo-f1/project/MSG-02b-compartir.dc.html",
+     "enlaces": [
+      {
+       "destino": "FALTA-MSG-01-marta",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "MSG-02b-adjuntar",
+       "etiqueta": "Adjuntar",
+       "visible": true
+      },
+      {
+       "destino": "MSG-02b-pedido",
+       "etiqueta": "Cerrar",
+       "visible": true
+      },
+      {
+       "destino": "MSG-02b-marta",
+       "etiqueta": "Compartir",
+       "visible": true
+      }
+     ]
+    },
+    "MSG-02b-marta": {
+     "titulo": "MSG-02b · Certificado compartido · lo ve Marta · F1",
+     "pagina": "f10",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/MSG-02b-marta.png",
+     "fuente": "prototipo-f1/project/MSG-02b-marta.dc.html",
+     "enlaces": [
+      {
+       "destino": "FALTA-MSG-01-marta",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "MSG-02b-no-disponible",
+       "etiqueta": "Dejar de compartir",
+       "visible": true
+      },
+      {
+       "destino": "MSG-02b-adjuntar",
+       "etiqueta": "Adjuntar",
+       "visible": true
+      }
+     ]
+    },
+    "MSG-02b-no-disponible": {
+     "titulo": "MSG-02b · Certificado que ya no está disponible · lo ve Familia en Ñuñoa · F1",
+     "pagina": "f10",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/MSG-02b-no-disponible.png",
+     "fuente": "prototipo-f1/project/MSG-02b-no-disponible.dc.html",
+     "enlaces": []
+    },
+    "PRF-01--f11": {
+     "titulo": "PRF-01 · Mi perfil · Jorge · perfil Trabajo · inicio o paso del flujo 11 (mismo tablero) · F1",
+     "pagina": "f11",
+     "tipo": "tablero del prototipo (envoltorio o alias de una pantalla aprobada)",
+     "lienzo_origen": null,
+     "captura": "capturas/f1/PRF-01--f11.png",
+     "fuente": "prototipo-f1/project/PRF-01--f11.dc.html",
+     "enlaces": [
+      {
+       "destino": "PRF-01-final",
+       "etiqueta": "Prototipo: desplazar",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "CFG-01",
+       "etiqueta": "Configuración",
+       "visible": true
+      },
+      {
+       "destino": "PRF-12",
+       "etiqueta": "Impulsa tu perfilMás organizaciones verán tu perfi",
+       "visible": false
+      },
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "ACT-02-jorge",
+       "etiqueta": "Actividad",
+       "visible": true
+      },
+      {
+       "destino": "MSG-01-jorge",
+       "etiqueta": "Mensajes, 1 sin leer",
+       "visible": true
+      },
+      {
+       "destino": "PRF-01",
+       "etiqueta": "Perfil",
+       "visible": true
+      }
+     ]
+    },
+    "PRF-01-final": {
+     "titulo": "PRF-01 · Mi perfil · Jorge · Trabajo, al final: CV y accesos (Agregar un perfil, Verificación, Mis perfiles, Impulsa tu perfil) · F1",
+     "pagina": "f11",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas · M8 Perfil y cuenta",
+     "captura": "capturas/f1/PRF-01-final.png",
+     "fuente": "prototipo-f1/project/PRF-01-final.dc.html",
+     "enlaces": [
+      {
+       "destino": "PRF-01-final",
+       "etiqueta": "Prototipo: desplazar",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "CFG-01",
+       "etiqueta": "Configuración",
+       "visible": true
+      },
+      {
+       "destino": "PRF-12",
+       "etiqueta": "Impulsa tu perfilMás organizaciones verán tu perfi",
+       "visible": true
+      },
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "ACT-02-jorge",
+       "etiqueta": "Actividad",
+       "visible": true
+      },
+      {
+       "destino": "MSG-01-jorge",
+       "etiqueta": "Mensajes, 1 sin leer",
+       "visible": true
+      },
+      {
+       "destino": "PRF-01",
+       "etiqueta": "Perfil",
+       "visible": true
+      }
+     ]
+    },
+    "PRF-12": {
+     "titulo": "PRF-12 · Impulsa tu perfil · Jorge · «Pronto» en lugar de los precios · F1 y F2",
+     "pagina": "f11",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas · M8 Perfil y cuenta",
+     "captura": "capturas/f1/PRF-12.png",
+     "fuente": "prototipo-f1/project/PRF-12.dc.html",
+     "enlaces": [
+      {
+       "destino": "PRF-01-final",
+       "etiqueta": "Volver",
+       "visible": true
+      }
+     ]
+    },
+    "PRF-12-avisado": {
+     "titulo": "PRF-12 · Impulsa tu perfil · al tocar «Avisarme cuando esté disponible»: Snackbar «Te avisaremos» · F1 y F2",
+     "pagina": "f11",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas · M8 Perfil y cuenta",
+     "captura": "capturas/f1/PRF-12-avisado.png",
+     "fuente": "prototipo-f1/project/PRF-12-avisado.dc.html",
+     "enlaces": [
+      {
+       "destino": "PRF-01-final",
+       "etiqueta": "Volver",
+       "visible": true
+      }
+     ]
+    },
+    "ACT-02-jorge": {
+     "titulo": "ACT-02 · Postulaciones de Jorge · F1",
+     "pagina": "f11",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/ACT-02-jorge.png",
+     "fuente": "prototipo-f1/project/ACT-02-jorge.dc.html",
+     "enlaces": [
+      {
+       "destino": "ACT-02-desplazado",
+       "etiqueta": "Prototipo: desplazar",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "PRC-01",
+       "etiqueta": "SAGuardia de seguridad 4x4Seguridad Andes Ltda. · ",
+       "visible": true
+      },
+      {
+       "destino": "PRF-12-desde-act",
+       "etiqueta": "Impulsa tu perfilMás organizaciones verán tu perfi",
+       "visible": false
+      },
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "ACT-02-jorge",
+       "etiqueta": "Actividad",
+       "visible": true
+      },
+      {
+       "destino": "MSG-01-jorge",
+       "etiqueta": "Mensajes, 1 sin leer",
+       "visible": true
+      },
+      {
+       "destino": "PRF-01",
+       "etiqueta": "Perfil",
+       "visible": true
+      }
+     ]
+    },
+    "ACT-02-desplazado": {
+     "titulo": "ACT-02 · Postulaciones de Jorge, al final de la lista · F1",
+     "pagina": "f11",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/ACT-02-desplazado.png",
+     "fuente": "prototipo-f1/project/ACT-02-desplazado.dc.html",
+     "enlaces": [
+      {
+       "destino": "ACT-02-desplazado",
+       "etiqueta": "Prototipo: desplazar",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "PRC-01",
+       "etiqueta": "SAGuardia de seguridad 4x4Seguridad Andes Ltda. · ",
+       "visible": false
+      },
+      {
+       "destino": "PRF-12-desde-act",
+       "etiqueta": "Impulsa tu perfilMás organizaciones verán tu perfi",
+       "visible": true
+      },
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "ACT-02-jorge",
+       "etiqueta": "Actividad",
+       "visible": true
+      },
+      {
+       "destino": "MSG-01-jorge",
+       "etiqueta": "Mensajes, 1 sin leer",
+       "visible": true
+      },
+      {
+       "destino": "PRF-01",
+       "etiqueta": "Perfil",
+       "visible": true
+      }
+     ]
+    },
+    "PRF-12-desde-act": {
+     "titulo": "PRF-12 · Impulsa tu perfil abierto desde ACT-02: el mismo tablero, atrás vuelve a Actividad en el mismo scroll · Jorge · F1",
+     "pagina": "f11",
+     "tipo": "tablero del prototipo (envoltorio o alias de una pantalla aprobada)",
+     "lienzo_origen": null,
+     "captura": "capturas/f1/PRF-12-desde-act.png",
+     "fuente": "prototipo-f1/project/PRF-12-desde-act.dc.html",
+     "enlaces": [
+      {
+       "destino": "ACT-02-desplazado",
+       "etiqueta": "Volver",
+       "visible": true
+      }
+     ]
+    },
+    "ACT-02": {
+     "titulo": "ACT-02 · Postulaciones de Jorge · F1",
+     "pagina": "apoyo",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/ACT-02.png",
+     "fuente": "prototipo-f1/project/ACT-02.dc.html",
+     "enlaces": [
+      {
+       "destino": "ACT-02-desplazado",
+       "etiqueta": "Prototipo: desplazar",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "PRC-01",
+       "etiqueta": "SAGuardia de seguridad 4x4Seguridad Andes Ltda. · ",
+       "visible": true
+      },
+      {
+       "destino": "PRF-12-desde-act",
+       "etiqueta": "Impulsa tu perfilMás organizaciones verán tu perfi",
+       "visible": false
+      },
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "ACT-02-jorge",
+       "etiqueta": "Actividad",
+       "visible": true
+      },
+      {
+       "destino": "MSG-01-jorge",
+       "etiqueta": "Mensajes, 1 sin leer",
+       "visible": true
+      },
+      {
+       "destino": "PRF-01",
+       "etiqueta": "Perfil",
+       "visible": true
+      }
+     ]
+    },
+    "EXP-01-lista": {
+     "titulo": "EXP-01 · Explorar · Empleos · Vista lista · Jorge · F1",
+     "pagina": "apoyo",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/EXP-01-lista.png",
+     "fuente": "prototipo-f1/project/EXP-01-lista.dc.html",
+     "enlaces": [
+      {
+       "destino": "EXP-02",
+       "etiqueta": "Turnos",
+       "visible": true
+      },
+      {
+       "destino": "EXP-01",
+       "etiqueta": "Ver de a una",
+       "visible": true
+      },
+      {
+       "destino": "DET-01-empleo",
+       "etiqueta": "Guardia de seguridad 4x4",
+       "visible": true
+      },
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "ACT-02-jorge",
+       "etiqueta": "Actividad",
+       "visible": true
+      },
+      {
+       "destino": "MSG-01-jorge",
+       "etiqueta": "Mensajes, 1 sin leer",
+       "visible": true
+      },
+      {
+       "destino": "PRF-01",
+       "etiqueta": "Perfil",
+       "visible": true
+      }
+     ]
+    },
+    "MSG-01-jorge": {
+     "titulo": "MSG-01 · Mensajes de Jorge · Nuevos matches · F1",
+     "pagina": "apoyo",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/MSG-01-jorge.png",
+     "fuente": "prototipo-f1/project/MSG-01-jorge.dc.html",
+     "enlaces": [
+      {
+       "destino": "MSG-02",
+       "etiqueta": "Seguridad Andes Ltda., Empleo · Guardia 4x4, hace ",
+       "visible": true
+      },
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "ACT-02-jorge",
+       "etiqueta": "Actividad",
+       "visible": true
+      },
+      {
+       "destino": "MSG-01-jorge",
+       "etiqueta": "Mensajes, 1 sin leer",
+       "visible": true
+      },
+      {
+       "destino": "PRF-01",
+       "etiqueta": "Perfil",
+       "visible": true
+      }
+     ]
+    },
+    "MSG-02b-familia": {
+     "titulo": "MSG-02b · Certificado compartido · lo ve Familia en Ñuñoa · F1",
+     "pagina": "apoyo",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/MSG-02b-familia.png",
+     "fuente": "prototipo-f1/project/MSG-02b-familia.dc.html",
+     "enlaces": []
+    },
+    "TabBar": {
+     "titulo": "BottomTabBar · compartida por las 5 pestañas",
+     "pagina": "apoyo",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/TabBar.png",
+     "fuente": "prototipo-f1/project/TabBar.dc.html",
+     "enlaces": [
+      {
+       "destino": "Main",
+       "etiqueta": "Inicio",
+       "visible": true
+      },
+      {
+       "destino": "EXP-02",
+       "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "MSG-01",
+       "etiqueta": "Mensajes, 3 sin leer",
+       "visible": true
+      }
+     ]
+    }
+   }
+  },
+  "f2": {
+   "lienzo": "https://claude.ai/artifact/9W4VNPLMDGKxjDxTRQn73L",
+   "paginas": [
+    {
+     "id": "indice",
+     "nombre": "Índice",
+     "descripcion": "Prototipo F2 · índice con cada flujo y su pantalla de inicio · el flujo 6 (Clases) se recorre aquí; los demás, en el prototipo F1",
+     "tableros": [
+      "INDICE-F2"
+     ]
+    },
+    {
+     "id": "f6",
+     "nombre": "6 · Carolina reserva una clase",
+     "descripcion": "Flujo 6 (F2) · Carolina reserva una clase para Tomás: EXP-03 → DET-01 (clase de Camila) → RES-01 (jue 11 mar · 17:00 · Online) → RES-02 (hoja: «Pagas directo a la profesora») → RES-03 Solicitada con Snackbar «Le enviamos tu reserva a Camila»",
+     "tableros": [
+      "EXP-03",
+      "DET-01-clase",
+      "RES-01",
+      "RES-02",
+      "RES-03"
+     ]
+    },
+    {
+     "id": "apoyo",
+     "nombre": "Apoyo",
+     "descripcion": "Apoyo · componentes del lienzo (TabBar)",
+     "tableros": [
+      "TabBar"
+     ]
+    }
+   ],
+   "pantallas": {
+    "INDICE-F2": {
+     "titulo": "Índice · Prototipo F2 · flujos y su pantalla de inicio · F2",
+     "pagina": "indice",
+     "tipo": "índice",
+     "lienzo_origen": null,
+     "captura": "capturas/f2/INDICE-F2.png",
+     "fuente": "prototipo-f2/project/INDICE-F2.dc.html",
+     "enlaces": [
+      {
+       "destino": "EXP-03",
+       "etiqueta": "6Carolina reserva una clase para TomásEmpieza en E",
+       "visible": true
+      }
+     ]
+    },
+    "EXP-03": {
+     "titulo": "EXP-03 · Explorar · Clases · Carolina busca para Tomás (Escolar, Ñuñoa) · F2",
+     "pagina": "f6",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas · M9 Clases",
+     "captura": "capturas/f2/EXP-03.png",
+     "fuente": "prototipo-f2/project/EXP-03.dc.html",
+     "enlaces": [
+      {
+       "destino": "DET-01-clase",
+       "etiqueta": "Matemática y PAES M1",
+       "visible": true
+      },
+      {
+       "destino": "RES-01",
+       "etiqueta": "Ver horarios",
+       "visible": true
+      },
+      {
+       "destino": "EXP-03",
+       "etiqueta": "Explorar",
+       "visible": true
+      }
+     ]
+    },
+    "DET-01-clase": {
+     "titulo": "DET-01 · Detalle · Clase · Camila Fuentes = PRF-10 /u/camila?ver=clases · F2",
+     "pagina": "f6",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas · M9 Clases",
+     "captura": "capturas/f2/DET-01-clase.png",
+     "fuente": "prototipo-f2/project/DET-01-clase.dc.html",
+     "enlaces": [
+      {
+       "destino": "EXP-03",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "RES-01",
+       "etiqueta": "Ver 14 días",
+       "visible": false
+      },
+      {
+       "destino": "RES-01",
+       "etiqueta": "16:00",
+       "visible": false
+      },
+      {
+       "destino": "RES-01",
+       "etiqueta": "17:00",
+       "visible": false
+      },
+      {
+       "destino": "RES-01",
+       "etiqueta": "18:00",
+       "visible": false
+      },
+      {
+       "destino": "RES-01",
+       "etiqueta": "Reservar clase",
+       "visible": true
+      }
+     ]
+    },
+    "RES-01": {
+     "titulo": "RES-01 · Elegir horario · Carolina reserva para Tomás: jue 11 mar · 17:00 · Online · F2",
+     "pagina": "f6",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas · M9 Clases",
+     "captura": "capturas/f2/RES-01.png",
+     "fuente": "prototipo-f2/project/RES-01.dc.html",
+     "enlaces": [
+      {
+       "destino": "DET-01-clase",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "RES-02",
+       "etiqueta": "Continuar",
+       "visible": true
+      }
+     ]
+    },
+    "RES-02": {
+     "titulo": "RES-02 · Confirmar reserva (hoja): «Pagas directo a la profesora» · Tomás · jue 11 mar · 17:00 · F2",
+     "pagina": "f6",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas · M9 Clases",
+     "captura": "capturas/f2/RES-02.png",
+     "fuente": "prototipo-f2/project/RES-02.dc.html",
+     "enlaces": [
+      {
+       "destino": "DET-01-clase",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "RES-02",
+       "etiqueta": "Continuar",
+       "visible": true
+      },
+      {
+       "destino": "RES-01",
+       "etiqueta": "Cerrar",
+       "visible": true
+      },
+      {
+       "destino": "RES-03",
+       "etiqueta": "Confirmar reserva",
+       "visible": true
+      }
+     ]
+    },
+    "RES-03": {
+     "titulo": "RES-03 · Reserva Solicitada · Snackbar «Le enviamos tu reserva a Camila» · Carolina para Tomás · F2",
+     "pagina": "f6",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas · M9 Clases",
+     "captura": "capturas/f2/RES-03.png",
+     "fuente": "prototipo-f2/project/RES-03.dc.html",
+     "enlaces": [
+      {
+       "destino": "DET-01-clase",
+       "etiqueta": "Volver",
+       "visible": true
+      }
+     ]
+    },
+    "TabBar": {
+     "titulo": "BottomTabBar · compartida por las 5 pestañas",
+     "pagina": "apoyo",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f2/TabBar.png",
+     "fuente": "prototipo-f2/project/TabBar.dc.html",
+     "enlaces": []
+    }
+   }
+  }
+ }
+}

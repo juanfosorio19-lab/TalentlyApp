@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>INI-01 · Inicio de Rosa Muñoz como persona · falta en el diseño · F1</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/talently/tokens.css">
+<link rel="stylesheet" href="ds/talently/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{tema}}" style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--color-surface); color: var(--color-text); font-family: var(--font-sans);">
+<div style="display: flex; flex-direction: column; gap: var(--space-4); height: 100%; box-sizing: border-box; padding: var(--space-10) var(--space-5) var(--space-6); border: 2px dashed var(--color-warning);">
+<span class="tl-badge tl-badge--warning" style="align-self: flex-start;">Falta en el diseño</span>
+<h1 class="h1" style="margin: 0;">INI-01 · Inicio de Rosa Muñoz</h1>
+<p class="body" style="margin: 0; color: var(--color-text-2);">Al elegir «Rosa Muñoz» en SHT-ACTOR se abre su Inicio como persona. No está diseñado, y tampoco SHT-ACTOR con Rosa Muñoz marcada.</p>
+<h2 class="overline" style="margin: var(--space-2) 0 0; color: var(--color-text-2);">Lo que existe hoy</h2>
+<ul class="tl-list"><li><div class="tl-listitem tl-listitem--multiline"><span class="tl-listitem__body"><span class="tl-listitem__title">SHT-ACTOR · Usar Talently como</span><span class="tl-listitem__sub">Sobre INI-02, con Banquetería Rosa SpA marcada</span></span></div></li><li><div class="tl-listitem tl-listitem--multiline"><span class="tl-listitem__body"><span class="tl-listitem__title">NOT-01 · Notificaciones</span><span class="tl-listitem__sub">Rosa como Rosa Muñoz, con avisos de Banquetería Rosa SpA</span></span></div></li></ul>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: var(--space-2);">
+<a class="tl-btn tl-btn--primary tl-btn--lg tl-btn--block" href="{{rSeguir}}" style="text-decoration: none;"><span class="tl-btn__label">Volver a Banquetería Rosa SpA</span></a>
+<a class="tl-btn tl-btn--outline tl-btn--lg tl-btn--block" href="{{rOtro}}" style="text-decoration: none;"><span class="tl-btn__label">Abrir Notificaciones como Rosa Muñoz</span></a>
+<p class="caption" style="margin: 0; text-align: center; color: var(--color-text-2);">Tablero del prototipo: no es una pantalla de la app.</p>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { tema: this.props.tema ?? 'light', rSeguir: 'SHT-ACTOR.dc.html', rOtro: 'NOT-01.dc.html' };
+}
+}
+</script>
+</body>
+</html>

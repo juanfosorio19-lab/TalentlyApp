@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>AUTH-02 · Crear cuenta</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/talently/tokens.css">
+<link rel="stylesheet" href="ds/talently/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{tema}}" class="tl-steplayout" style="position: relative; width: 390px; height: 844px; display: flex; flex-direction: column; overflow: hidden; background: var(--color-bg); color: var(--color-text); font-family: var(--font-sans);">
+<header class="tl-appbar tl-appbar--standard"><div class="tl-statusbar"><span>13:00</span><span></span></div><div class="tl-appbar__row"><div><a class="tl-iconbtn tl-backbtn" href="{{rBienvenida}}" aria-label="Volver"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12H4.5M10.5 6l-6 6 6 6"></path></g></svg></span></a></div><span></span><div class="tl-appbar__actions"></div></div></header>
+<main class="tl-steplayout__body">
+<h1 class="tl-steplayout__title h1">Crea tu cuenta</h1>
+<p class="tl-steplayout__sub">Para trabajar, contratar o aprender.</p>
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<label class="tl-choice"><span class="tl-checkbox"><input type="checkbox" id="a2-terminos" checked="{{acepta}}" onChange="{{alternar}}"><span class="tl-checkbox__box"><span class="tl-icon tl-icon--16" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.6 4.5 4.4L19 7.4"></path></g></svg></span></span></span><span class="tl-choice__text">Acepto los <a class="tl-link" href="#">Términos</a> y la <a class="tl-link" href="#">Política de privacidad</a></span></label>
+<a class="{{googleCls}}" href="{{rGoogle}}" aria-disabled="{{googleDis}}" style="text-decoration: none;"><span class="tl-btn__logo tl-btn__logo--ph" aria-hidden="true"></span><span class="tl-btn__label">Continuar con Google</span></a>
+<p class="tl-divider" style="margin: 4px 0;">o</p>
+<div class="tl-field"><label class="tl-field__label" for="a2-nombre">Nombre y apellido</label><div class="tl-field__control"><input class="tl-field__input" id="a2-nombre" value="{{nombre}}" autocomplete="name" inputmode="text"></div></div>
+<div class="{{correoCls}}"><label class="tl-field__label" for="a2-correo">Correo</label><div class="tl-field__control"><input class="tl-field__input" id="a2-correo" value="{{correo}}" autocomplete="email" inputmode="email" aria-describedby="a2-correo-e" aria-invalid="{{correoInv}}"></div><div class="tl-field__foot"><span class="tl-field__error" id="a2-correo-e"><span class="tl-icon tl-icon--16" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.5a2 2 0 0 1 3.4 0l7 12.2a2 2 0 0 1-1.7 3H5a2 2 0 0 1-1.7-3l7-12.2Z"></path><path d="M12 9.6v4"></path><path stroke-width="2.6" d="M12 16.7h.01"></path></g></svg></span><span><sc-if value="{{errFormato}}" hint-placeholder-val="{{false}}">Ingresa un correo válido, como nombre@correo.cl</sc-if><sc-if value="{{errRegistrado}}" hint-placeholder-val="{{false}}">Ya existe una cuenta con este correo. <a class="tl-link" href="{{rLogin}}">Iniciar sesión</a></sc-if></span></span></div></div>
+<div class="{{claveCls}}"><label class="tl-field__label" for="a2-clave">Contraseña</label><div class="tl-field__control"><input class="tl-field__input" id="a2-clave" type="{{claveTipo}}" value="{{clave}}" autocomplete="new-password" aria-describedby="a2-clave-r" aria-invalid="{{claveInv}}"><button type="button" class="tl-iconbtn tl-field__toggle" aria-label="{{ojoLabel}}" aria-pressed="{{ojoPressed}}" onClick="{{verClave}}"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.6 12S6 5.6 12 5.6 21.4 12 21.4 12 18 18.4 12 18.4 2.6 12 2.6 12Z"></path><circle cx="12" cy="12" r="3.1"></circle></g><circle cx="12" cy="12" r="1.3" fill="currentColor" fill-opacity=".45"></circle></svg></span></button></div><ul class="tl-rules" id="a2-clave-r" aria-live="polite"><li class="{{r0}}"><span class="tl-rules__mark"><sc-if value="{{r0met}}" hint-placeholder-val="{{false}}"><span class="tl-icon tl-icon--16" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.6 4.5 4.4L19 7.4"></path></g></svg></span></sc-if><sc-if value="{{r0miss}}" hint-placeholder-val="{{false}}"><span class="tl-icon tl-icon--16" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.5a2 2 0 0 1 3.4 0l7 12.2a2 2 0 0 1-1.7 3H5a2 2 0 0 1-1.7-3l7-12.2Z"></path><path d="M12 9.6v4"></path><path stroke-width="2.6" d="M12 16.7h.01"></path></g></svg></span></sc-if></span>8 caracteres o más<span class="tl-vh">: {{r0txt}}</span></li><li class="{{r1}}"><span class="tl-rules__mark"><sc-if value="{{r1met}}" hint-placeholder-val="{{false}}"><span class="tl-icon tl-icon--16" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.6 4.5 4.4L19 7.4"></path></g></svg></span></sc-if><sc-if value="{{r1miss}}" hint-placeholder-val="{{false}}"><span class="tl-icon tl-icon--16" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.5a2 2 0 0 1 3.4 0l7 12.2a2 2 0 0 1-1.7 3H5a2 2 0 0 1-1.7-3l7-12.2Z"></path><path d="M12 9.6v4"></path><path stroke-width="2.6" d="M12 16.7h.01"></path></g></svg></span></sc-if></span>Una mayúscula<span class="tl-vh">: {{r1txt}}</span></li><li class="{{r2}}"><span class="tl-rules__mark"><sc-if value="{{r2met}}" hint-placeholder-val="{{false}}"><span class="tl-icon tl-icon--16" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.6 4.5 4.4L19 7.4"></path></g></svg></span></sc-if><sc-if value="{{r2miss}}" hint-placeholder-val="{{false}}"><span class="tl-icon tl-icon--16" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.5a2 2 0 0 1 3.4 0l7 12.2a2 2 0 0 1-1.7 3H5a2 2 0 0 1-1.7-3l7-12.2Z"></path><path d="M12 9.6v4"></path><path stroke-width="2.6" d="M12 16.7h.01"></path></g></svg></span></sc-if></span>Un número o símbolo<span class="tl-vh">: {{r2txt}}</span></li></ul></div>
+</div>
+</main>
+<div class="tl-ctabar"><a class="{{ctaCls}}" href="{{rCta}}" aria-disabled="{{ctaDis}}" aria-busy="{{ctaBusy}}" style="text-decoration: none;"><span class="tl-btn__label">Crear cuenta</span><span class="tl-btn__spinner tl-spinner" aria-hidden="true"></span></a></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"estado":{"editor":"enum","options":["sinAceptar","lista","errorCampo","correoRegistrado","cargando"],"default":"sinAceptar"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const v = this._rv();
+const P = ["ACT-02", "ACT-02-desplazado", "ACT-02-jorge", "AUTH-01", "AUTH-02", "AUTH-03", "AUTH-08", "AUTH-08-codigo", "CFG-01", "CFG-01-cerrar-sesion", "DET-01-empleo", "DET-01-turno", "DET-01-turno--f9", "DET-01-turno-postulado", "DET-02", "DET-02-exito", "DET-03", "EXP-01", "EXP-01-lista", "EXP-02", "EXP-02-turnos-desplazado", "EXP-02-turnos-desplazado--f9", "FALTA-ACT-02-matias", "FALTA-DET-01-pedro", "FALTA-INI-01-rosa", "FALTA-MSG-01-marta", "GES-01-turno", "GES-02-hogar", "GES-04", "GES-04-postulados", "GES-04-sin-postulados", "INDICE-F1", "INI-01-carolina", "INI-01-jorge-nuevo", "INI-01-salir", "INI-02", "INI-02--f7", "INI-02-cambio", "MSG-01", "MSG-01-jorge", "MSG-02", "MSG-02b-adjuntar", "MSG-02b-compartir", "MSG-02b-familia", "MSG-02b-marta", "MSG-02b-no-disponible", "MSG-02b-pedido", "Main", "Main--f9", "NOT-01", "ONB-01", "ONB-03", "ONB-99", "ONB-T1", "ONB-T2", "ONB-T3", "ONB-T4", "ONB-T5", "PRC-01", "PRC-01-hogar", "PRF-01", "PRF-01--f11", "PRF-01-final", "PRF-12", "PRF-12-avisado", "PRF-12-desde-act", "PUBL-01", "PUBL-01-carolina", "PUBL-03-paso1", "PUBL-03-paso2", "PUBL-03-paso3", "PUBL-03-paso4", "PUBL-04-identidad", "PUBL-04-paso1", "PUBL-04-paso2", "PUBL-04-paso3", "PUBL-04-paso4", "PUBL-04-paso5", "PUBL-07-aviso-hogar", "PUBL-07-turno", "PUBL-08-turno", "PUBL-08-turno-pronto", "REV-01", "SHT-ACTOR", "TUR-01", "TabBar", "VER-02", "VER-02-dorso", "VER-02-frente", "VER-02-selfie"];
+for (const k in v) { const x = v[k]; if (typeof x === 'string' && /^[A-Za-z][\w-]*\.dc\.html$/.test(x) && !P.includes(x.slice(0, -8))) v[k] = undefined; }
+return v;
+}
+_rv() {
+const tema = this.props.tema ?? 'light';
+const sufijo = tema === 'dark' ? '-oscuro' : '';
+const estado = this.props.estado ?? 'sinAceptar';
+const st = this.state || {};
+const acepta = st.acepta ?? (estado !== 'sinAceptar');
+const ver = st.ver ?? false;
+const lleno = estado !== 'sinAceptar';
+const cargando = estado === 'cargando';
+const errFormato = estado === 'errorCampo';
+const errRegistrado = estado === 'correoRegistrado';
+const reglas = !lleno ? ['', '', ''] : (errFormato ? ['met', 'missing', 'met'] : ['met', 'met', 'met']);
+const txt = { met: 'cumplido', missing: 'falta', '': 'pendiente' };
+const v = { tema, acepta, cargando, errFormato, errRegistrado,
+  rBienvenida: 'AUTH-01' + sufijo + '.dc.html', rLogin: 'AUTH-04' + sufijo + '.dc.html',
+  alternar: () => this.setState({ acepta: !acepta }), verClave: () => this.setState({ ver: !ver }),
+  nombre: lleno ? 'Matías Rojas' : '', correo: errFormato ? 'matias.rojas@correo' : (lleno ? 'matias.rojas@correo.cl' : ''),
+  correoCls: (errFormato || errRegistrado) ? 'tl-field is-error' : 'tl-field', correoInv: (errFormato || errRegistrado) ? 'true' : undefined,
+  clave: !lleno ? '' : (errFormato ? 'garzon2026' : 'Garzon2026'), claveTipo: ver ? 'text' : 'password',
+  ojoLabel: ver ? 'Ocultar contraseña' : 'Mostrar contraseña', ojoPressed: ver ? 'true' : 'false',
+  claveCls: errFormato ? 'tl-field is-error' : 'tl-field', claveInv: errFormato ? 'true' : undefined,
+  googleDis: (!acepta || cargando) ? 'true' : undefined,
+  googleCls: 'tl-btn tl-btn--outline tl-btn--lg tl-btn--block' + ((!acepta || cargando) ? ' is-disabled' : ''),
+  rGoogle: (!acepta || cargando) ? undefined : 'AUTH-07' + sufijo + '.dc.html',
+  ctaCls: 'tl-btn tl-btn--primary tl-btn--lg tl-btn--block' + (cargando ? ' is-loading' : ''),
+  ctaDis: acepta ? undefined : 'true', ctaBusy: cargando ? 'true' : undefined,
+  rCta: (acepta && !cargando && !errFormato && !errRegistrado) ? 'AUTH-03' + sufijo + '.dc.html' : undefined };
+reglas.forEach((r, i) => { v['r' + i] = 'tl-rules__item' + (r ? ' is-' + r : ''); v['r' + i + 'met'] = r === 'met'; v['r' + i + 'miss'] = r === 'missing'; v['r' + i + 'txt'] = txt[r]; });
+return v;
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1085 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-07T12:55:16Z"
+  },
+  "title": "Talently · Prototipo F1",
+  "launch": {
+    "view": "canvas",
+    "page": "indice"
+  },
+  "pages": [
+    {
+      "id": "indice",
+      "name": "Índice"
+    },
+    {
+      "id": "f1",
+      "name": "1 · Onboarding de Jorge"
+    },
+    {
+      "id": "f2",
+      "name": "2 · Matías toma un turno"
+    },
+    {
+      "id": "f3",
+      "name": "3 · Pedro postula y hace match"
+    },
+    {
+      "id": "f4",
+      "name": "4 · Rosa publica un turno"
+    },
+    {
+      "id": "f5",
+      "name": "5 · Carolina publica su aviso"
+    },
+    {
+      "id": "f7",
+      "name": "7 · Cambio de actor"
+    },
+    {
+      "id": "f8",
+      "name": "8 · Perfil y configuración"
+    },
+    {
+      "id": "f9",
+      "name": "9 · Botón atrás"
+    },
+    {
+      "id": "f10",
+      "name": "10 · Marta comparte su certificado"
+    },
+    {
+      "id": "f11",
+      "name": "11 · Impulsa tu perfil"
+    },
+    {
+      "id": "apoyo",
+      "name": "Apoyo"
+    }
+  ],
+  "boards": {
+    "INDICE-F1.dc.html": {
+      "h": 1100,
+      "is_interactive": true,
+      "page": "indice",
+      "title": "Índice · Prototipo F1 · flujos y su pantalla de inicio · F1",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "AUTH-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f1",
+      "title": "AUTH-01 · Bienvenida · F1",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "AUTH-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f1",
+      "title": "AUTH-02 · Crear cuenta · sin aceptar los Términos · F1",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "AUTH-03.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f1",
+      "title": "AUTH-03 · Revisa tu correo · F1",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "ONB-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f1",
+      "title": "ONB-01 · ¿Qué quieres hacer en Talently? · sin elegir · F1",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "ONB-03.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f1",
+      "title": "ONB-03 · Tus datos · Jorge · Paso 1 de 6 · F1",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "ONB-T1.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f1",
+      "title": "ONB-T1 · ¿En qué quieres trabajar? · Jorge · Paso 2 de 6 · F1",
+      "w": 390,
+      "x": 2350,
+      "y": 0
+    },
+    "ONB-T2.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f1",
+      "title": "ONB-T2 · ¿Qué tipo de trabajo buscas? · Jorge · Paso 3 de 6 · F1",
+      "w": 390,
+      "x": 2820,
+      "y": 0
+    },
+    "ONB-T3.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f1",
+      "title": "ONB-T3 · ¿Cuánto esperas ganar? (opcional) · Jorge · Paso 4 de 6 · F1",
+      "w": 390,
+      "x": 3290,
+      "y": 0
+    },
+    "ONB-T4.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f1",
+      "title": "ONB-T4 · Requisitos de tu oficio · guardia · Jorge · Paso 5 de 6 · F1",
+      "w": 390,
+      "x": 0,
+      "y": 1044
+    },
+    "ONB-T5.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f1",
+      "title": "ONB-T5 · Experiencia y CV · plantilla oficio · Jorge · Paso 6 de 6 · F1",
+      "w": 390,
+      "x": 470,
+      "y": 1044
+    },
+    "ONB-99.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f1",
+      "title": "ONB-99 · Listo · Jorge (le falta la credencial SPD) · F1",
+      "w": 390,
+      "x": 940,
+      "y": 1044
+    },
+    "INI-01-jorge-nuevo.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f1",
+      "title": "INI-01 · Inicio de Jorge, cuenta nueva · F1",
+      "w": 390,
+      "x": 1410,
+      "y": 1044
+    },
+    "Main.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f2",
+      "title": "INI-01 · Inicio de Matías · F1",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "EXP-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f2",
+      "title": "EXP-02 · Explorar · Turnos · F1",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "EXP-02-turnos-desplazado.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f2",
+      "title": "EXP-02 · Turnos · al hacer scroll: Este fin de semana · F1",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "DET-01-turno.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f2",
+      "title": "DET-01 · Detalle · Turno · Garzones para matrimonio · Matías · F1",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "AUTH-08.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f2",
+      "title": "AUTH-08 · Verificar teléfono · número (hoja sobre DET-01) · F1",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "AUTH-08-codigo.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f2",
+      "title": "AUTH-08 · Verificar teléfono · código (hoja sobre DET-01) · F1",
+      "w": 390,
+      "x": 2350,
+      "y": 0
+    },
+    "DET-01-turno-postulado.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f2",
+      "title": "DET-01 · Tomar turno con el teléfono verificado: Snackbar «Postulaste al turno» · Garzones para matrimonio · Matías · F1",
+      "w": 390,
+      "x": 2820,
+      "y": 0
+    },
+    "FALTA-ACT-02-matias.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f2",
+      "title": "ACT-02 · Postulaciones de Matías · falta en el diseño · F1",
+      "w": 390,
+      "x": 3290,
+      "y": 0
+    },
+    "TUR-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f2",
+      "title": "TUR-01 · Mi turno · Confirmado · Matías · F1",
+      "w": 390,
+      "x": 0,
+      "y": 1044
+    },
+    "REV-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f2",
+      "title": "REV-01 · Evaluación mutua · Matías evalúa a Banquetería Rosa SpA · F1",
+      "w": 390,
+      "x": 470,
+      "y": 1044
+    },
+    "EXP-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f3",
+      "title": "EXP-01 · Explorar · Empleos · Pedro · F1",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "FALTA-DET-01-pedro.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f3",
+      "title": "DET-01 · Detalle del empleo de Pedro · falta en el diseño · F1",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "DET-01-empleo.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f3",
+      "title": "DET-01 · Detalle · Empleo · Guardia de seguridad 4x4 · Jorge · F1",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "DET-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f3",
+      "title": "DET-02 · Postular (hoja) · Guardia de seguridad 4x4 · F1",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "DET-02-exito.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f3",
+      "title": "DET-02 · Postulación enviada: Snackbar en el detalle · F1",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "DET-03.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f3",
+      "title": "DET-03 · ¡Hicieron match! · Jorge y Seguridad Andes Ltda. · F1",
+      "w": 390,
+      "x": 2350,
+      "y": 0
+    },
+    "MSG-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f3",
+      "title": "MSG-02 · Conversación · Jorge y Seguridad Andes Ltda. · F1",
+      "w": 390,
+      "x": 2820,
+      "y": 0
+    },
+    "PRC-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f3",
+      "title": "PRC-01 · Proceso de empleo · Jorge · Guardia de seguridad 4x4 · F1",
+      "w": 390,
+      "x": 3290,
+      "y": 0
+    },
+    "INI-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f4",
+      "title": "INI-02 · Inicio de Banquetería Rosa SpA · F1",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "PUBL-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f4",
+      "title": "PUBL-01 · ¿Qué quieres publicar? · Banquetería Rosa SpA · Empleo o Turno · F1",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "PUBL-03-paso1.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f4",
+      "title": "PUBL-03 · Publicar turno · Paso 1 de 5 · Oficio y plantilla · Banquetería Rosa SpA · F1",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "PUBL-03-paso2.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f4",
+      "title": "PUBL-03 · Paso 2 de 5 · Fechas y bloques · F1",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "PUBL-03-paso3.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f4",
+      "title": "PUBL-03 · Paso 3 de 5 · Tarifa y contratación: boleta con su aviso · F1",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "PUBL-03-paso4.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f4",
+      "title": "PUBL-03 · Paso 4 de 5 · Vista previa · F1",
+      "w": 390,
+      "x": 2350,
+      "y": 0
+    },
+    "PUBL-08-turno.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f4",
+      "title": "PUBL-08 · Tipo de publicación · Turno · paso 5 de 5 · Banquetería Rosa SpA · F1",
+      "w": 390,
+      "x": 2820,
+      "y": 0
+    },
+    "PUBL-08-turno-pronto.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f4",
+      "title": "PUBL-08 · Turno · Snackbar al tocar Premium · F1",
+      "w": 390,
+      "x": 3290,
+      "y": 0
+    },
+    "PUBL-07-turno.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f4",
+      "title": "PUBL-07 · Publicada · Turno · Garzones fin de semana · Banquetería Rosa SpA · F1",
+      "w": 390,
+      "x": 0,
+      "y": 1044
+    },
+    "GES-01-turno.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f4",
+      "title": "GES-01 · Gestionar publicación · Turno recién publicado · Garzones fin de semana · Banquetería Rosa SpA · F1",
+      "w": 390,
+      "x": 470,
+      "y": 1044
+    },
+    "GES-04-sin-postulados.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f4",
+      "title": "GES-04 · Cupos del turno · Sin postulados todavía · F1",
+      "w": 390,
+      "x": 940,
+      "y": 1044
+    },
+    "GES-04-postulados.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f4",
+      "title": "GES-04 · Cupos del turno · Postulados · F1",
+      "w": 390,
+      "x": 1410,
+      "y": 1044
+    },
+    "GES-04.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f4",
+      "title": "GES-04 · Cupos del turno · Confirmados · Banquetería Rosa SpA · F1",
+      "w": 390,
+      "x": 1880,
+      "y": 1044
+    },
+    "INI-01-carolina.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f5",
+      "title": "INI-01 · Inicio de Carolina (hogar) · F1",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "PUBL-01-carolina.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f5",
+      "title": "PUBL-01 · ¿Qué quieres publicar? · Carolina (hogar) · Aviso para mi hogar o Turno para un evento · F1",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "PUBL-04-paso1.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f5",
+      "title": "PUBL-04 · Aviso para mi hogar · Paso 1 de 5 · Tipo · Familia en Ñuñoa · F1",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "PUBL-04-paso2.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f5",
+      "title": "PUBL-04 · Paso 2 de 5 · Días y horario · F1",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "PUBL-04-paso3.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f5",
+      "title": "PUBL-04 · Paso 3 de 5 · Tareas y contexto: hay niños · F1",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "PUBL-04-paso4.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f5",
+      "title": "PUBL-04 · Paso 4 de 5 · Sueldo y vista previa · F1",
+      "w": 390,
+      "x": 2350,
+      "y": 0
+    },
+    "PUBL-04-paso5.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f5",
+      "title": "PUBL-04 · Paso 5 de 5 · Tipo de publicación (PUBL-08) · primer aviso del hogar: Clásica marcada · F1",
+      "w": 390,
+      "x": 2820,
+      "y": 0
+    },
+    "PUBL-04-identidad.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f5",
+      "title": "PUBL-04 · Al publicar: verifica tu identidad (hoja, entrada a VER-02) · Familia en Ñuñoa · F1",
+      "w": 390,
+      "x": 3290,
+      "y": 0
+    },
+    "VER-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f5",
+      "title": "VER-02 · Verificar identidad · antes de empezar: ejemplos, «Verificarte es gratis» y ayuda por WhatsApp · Jorge · F1",
+      "w": 390,
+      "x": 0,
+      "y": 1044
+    },
+    "VER-02-frente.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f5",
+      "title": "VER-02 · Paso 1 de 3 · Cédula por delante, con guía de encuadre y ejemplo · F1",
+      "w": 390,
+      "x": 470,
+      "y": 1044
+    },
+    "VER-02-dorso.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f5",
+      "title": "VER-02 · Paso 2 de 3 · Cédula por detrás · F1",
+      "w": 390,
+      "x": 940,
+      "y": 1044
+    },
+    "VER-02-selfie.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f5",
+      "title": "VER-02 · Paso 3 de 3 · Selfie con guía ovalada · F1",
+      "w": 390,
+      "x": 1410,
+      "y": 1044
+    },
+    "PUBL-07-aviso-hogar.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f5",
+      "title": "PUBL-07 · Aviso del hogar en revisión: identidad y primera publicación · Familia en Ñuñoa · F1",
+      "w": 390,
+      "x": 1880,
+      "y": 1044
+    },
+    "GES-02-hogar.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f5",
+      "title": "GES-02 · Postulantes · Aviso del hogar con niños · Familia en Ñuñoa · F1",
+      "w": 390,
+      "x": 2350,
+      "y": 1044
+    },
+    "PRC-01-hogar.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f5",
+      "title": "PRC-01 · Familia en Ñuñoa marca «Contratado»: «Para contratar como corresponde» · lun 14 dic · F1",
+      "w": 390,
+      "x": 2820,
+      "y": 1044
+    },
+    "INI-02--f7.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f7",
+      "title": "INI-02 · Inicio de Banquetería Rosa SpA · inicio o paso del flujo 7 (mismo tablero) · F1",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "SHT-ACTOR.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f7",
+      "title": "SHT-ACTOR · Usar Talently como (Rosa) · F1",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "FALTA-INI-01-rosa.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f7",
+      "title": "INI-01 · Inicio de Rosa Muñoz como persona · falta en el diseño · F1",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "NOT-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f7",
+      "title": "NOT-01 · Notificaciones (Rosa como Rosa Muñoz) · F1",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "INI-02-cambio.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f7",
+      "title": "INI-02 · Cambio de actor al tocar una notificación · F1",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "PRF-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f8",
+      "title": "PRF-01 · Mi perfil · Jorge · perfil Trabajo · F1",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "CFG-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f8",
+      "title": "CFG-01 · Configuración · Jorge: solo ajustes de la cuenta, con Cerrar sesión y Eliminar cuenta al final y la versión al pie · F1",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "CFG-01-cerrar-sesion.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f8",
+      "title": "CFG-01 · Cerrar sesión: Dialog de confirmación · F1",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "EXP-02-turnos-desplazado--f9.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f9",
+      "title": "EXP-02 · Turnos · al hacer scroll: Este fin de semana · inicio o paso del flujo 9 (mismo tablero) · F1",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "DET-01-turno--f9.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f9",
+      "title": "DET-01 · Detalle · Turno · Garzones para matrimonio · Matías · inicio o paso del flujo 9 (mismo tablero) · F1",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "MSG-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f9",
+      "title": "MSG-01 · Mensajes de Matías · F1",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "Main--f9.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f9",
+      "title": "INI-01 · Inicio de Matías · inicio o paso del flujo 9 (mismo tablero) · F1",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "INI-01-salir.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f9",
+      "title": "INI-01 · Toast «Presiona atrás otra vez para salir» · F1",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "FALTA-MSG-01-marta.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f10",
+      "title": "MSG-01 · Mensajes de Marta · falta en el diseño · F1",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "MSG-02b-pedido.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f10",
+      "title": "MSG-02b · La familia pide el certificado por texto · Marta ve «Compartirlo es voluntario» · F1",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "MSG-02b-adjuntar.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f10",
+      "title": "MSG-02b · Adjuntar · Marta · F1",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "MSG-02b-compartir.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f10",
+      "title": "MSG-02b · Compartir certificado de antecedentes (hoja) · Marta · F1",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "MSG-02b-marta.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f10",
+      "title": "MSG-02b · Certificado compartido · lo ve Marta · F1",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "MSG-02b-no-disponible.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f10",
+      "title": "MSG-02b · Certificado que ya no está disponible · lo ve Familia en Ñuñoa · F1",
+      "w": 390,
+      "x": 2350,
+      "y": 0
+    },
+    "PRF-01--f11.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f11",
+      "title": "PRF-01 · Mi perfil · Jorge · perfil Trabajo · inicio o paso del flujo 11 (mismo tablero) · F1",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "PRF-01-final.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f11",
+      "title": "PRF-01 · Mi perfil · Jorge · Trabajo, al final: CV y accesos (Agregar un perfil, Verificación, Mis perfiles, Impulsa tu perfil) · F1",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "PRF-12.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f11",
+      "title": "PRF-12 · Impulsa tu perfil · Jorge · «Pronto» en lugar de los precios · F1 y F2",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "PRF-12-avisado.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f11",
+      "title": "PRF-12 · Impulsa tu perfil · al tocar «Avisarme cuando esté disponible»: Snackbar «Te avisaremos» · F1 y F2",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "ACT-02-jorge.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f11",
+      "title": "ACT-02 · Postulaciones de Jorge · F1",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "ACT-02-desplazado.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f11",
+      "title": "ACT-02 · Postulaciones de Jorge, al final de la lista · F1",
+      "w": 390,
+      "x": 2350,
+      "y": 0
+    },
+    "PRF-12-desde-act.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f11",
+      "title": "PRF-12 · Impulsa tu perfil abierto desde ACT-02: el mismo tablero, atrás vuelve a Actividad en el mismo scroll · Jorge · F1",
+      "w": 390,
+      "x": 2820,
+      "y": 0
+    },
+    "ACT-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "apoyo",
+      "title": "ACT-02 · Postulaciones de Jorge · F1",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "EXP-01-lista.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "apoyo",
+      "title": "EXP-01 · Explorar · Empleos · Vista lista · Jorge · F1",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "MSG-01-jorge.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "apoyo",
+      "title": "MSG-01 · Mensajes de Jorge · Nuevos matches · F1",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "MSG-02b-familia.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "apoyo",
+      "title": "MSG-02b · Certificado compartido · lo ve Familia en Ñuñoa · F1",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "TabBar.dc.html": {
+      "h": 88,
+      "is_interactive": true,
+      "page": "apoyo",
+      "title": "BottomTabBar · compartida por las 5 pestañas",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    }
+  },
+  "order": [
+    "INDICE-F1.dc.html",
+    "AUTH-01.dc.html",
+    "AUTH-02.dc.html",
+    "AUTH-03.dc.html",
+    "ONB-01.dc.html",
+    "ONB-03.dc.html",
+    "ONB-T1.dc.html",
+    "ONB-T2.dc.html",
+    "ONB-T3.dc.html",
+    "ONB-T4.dc.html",
+    "ONB-T5.dc.html",
+    "ONB-99.dc.html",
+    "INI-01-jorge-nuevo.dc.html",
+    "Main.dc.html",
+    "EXP-02.dc.html",
+    "EXP-02-turnos-desplazado.dc.html",
+    "DET-01-turno.dc.html",
+    "AUTH-08.dc.html",
+    "AUTH-08-codigo.dc.html",
+    "DET-01-turno-postulado.dc.html",
+    "FALTA-ACT-02-matias.dc.html",
+    "TUR-01.dc.html",
+    "REV-01.dc.html",
+    "EXP-01.dc.html",
+    "FALTA-DET-01-pedro.dc.html",
+    "DET-01-empleo.dc.html",
+    "DET-02.dc.html",
+    "DET-02-exito.dc.html",
+    "DET-03.dc.html",
+    "MSG-02.dc.html",
+    "PRC-01.dc.html",
+    "INI-02.dc.html",
+    "PUBL-01.dc.html",
+    "PUBL-03-paso1.dc.html",
+    "PUBL-03-paso2.dc.html",
+    "PUBL-03-paso3.dc.html",
+    "PUBL-03-paso4.dc.html",
+    "PUBL-08-turno.dc.html",
+    "PUBL-08-turno-pronto.dc.html",
+    "PUBL-07-turno.dc.html",
+    "GES-01-turno.dc.html",
+    "GES-04-sin-postulados.dc.html",
+    "GES-04-postulados.dc.html",
+    "GES-04.dc.html",
+    "INI-01-carolina.dc.html",
+    "PUBL-01-carolina.dc.html",
+    "PUBL-04-paso1.dc.html",
+    "PUBL-04-paso2.dc.html",
+    "PUBL-04-paso3.dc.html",
+    "PUBL-04-paso4.dc.html",
+    "PUBL-04-paso5.dc.html",
+    "PUBL-04-identidad.dc.html",
+    "VER-02.dc.html",
+    "VER-02-frente.dc.html",
+    "VER-02-dorso.dc.html",
+    "VER-02-selfie.dc.html",
+    "PUBL-07-aviso-hogar.dc.html",
+    "GES-02-hogar.dc.html",
+    "PRC-01-hogar.dc.html",
+    "INI-02--f7.dc.html",
+    "SHT-ACTOR.dc.html",
+    "FALTA-INI-01-rosa.dc.html",
+    "NOT-01.dc.html",
+    "INI-02-cambio.dc.html",
+    "PRF-01.dc.html",
+    "CFG-01.dc.html",
+    "CFG-01-cerrar-sesion.dc.html",
+    "EXP-02-turnos-desplazado--f9.dc.html",
+    "DET-01-turno--f9.dc.html",
+    "MSG-01.dc.html",
+    "Main--f9.dc.html",
+    "INI-01-salir.dc.html",
+    "FALTA-MSG-01-marta.dc.html",
+    "MSG-02b-pedido.dc.html",
+    "MSG-02b-adjuntar.dc.html",
+    "MSG-02b-compartir.dc.html",
+    "MSG-02b-marta.dc.html",
+    "MSG-02b-no-disponible.dc.html",
+    "PRF-01--f11.dc.html",
+    "PRF-01-final.dc.html",
+    "PRF-12.dc.html",
+    "PRF-12-avisado.dc.html",
+    "ACT-02-jorge.dc.html",
+    "ACT-02-desplazado.dc.html",
+    "PRF-12-desde-act.dc.html",
+    "ACT-02.dc.html",
+    "EXP-01-lista.dc.html",
+    "MSG-01-jorge.dc.html",
+    "MSG-02b-familia.dc.html",
+    "TabBar.dc.html"
+  ],
+  "notes": {
+    "indice": {
+      "kind": "title1",
+      "maxW": 1280,
+      "page": "indice",
+      "text": "Prototipo F1 · índice con cada flujo y su pantalla de inicio · los flujos 1 a 5 y 7 a 11 (el 6 es F2 y está en el prototipo F2)",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "f1": {
+      "kind": "title1",
+      "maxW": 3680,
+      "page": "f1",
+      "text": "Flujo 1 · Onboarding de Jorge (guardia): AUTH-01 → AUTH-02 → AUTH-03 → ONB-01 → ONB-03 → ONB-T1 a T5 → ONB-99 → INI-01 · en AUTH-02 marca la casilla de términos; en AUTH-03 toca las casillas del código; en ONB-01 elige Empleo y Turnos",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "f2": {
+      "kind": "title1",
+      "maxW": 3680,
+      "page": "f2",
+      "text": "Flujo 2 · Matías toma un turno: INI-01 → EXP-02 → borde derecho (scroll) → DET-01 (Garzones para matrimonio) → AUTH-08 (número y código) → Snackbar «Postulaste al turno» → ACT-02 (falta la de Matías) → TUR-01 (confirmado) → salto de tiempo en la barra de estado → REV-01",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "f3": {
+      "kind": "title1",
+      "maxW": 3680,
+      "page": "f3",
+      "text": "Flujo 3 · Pedro postula a un empleo y hace match: EXP-01 (deck de Pedro) → DET-01 de Pedro (falta; sigue la cadena de Jorge) → DET-01 (empleo) → DET-02 → Snackbar → salto de tiempo → DET-03 ¡Hicieron match! → MSG-02 → chip del empleo → PRC-01",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "f4": {
+      "kind": "title1",
+      "maxW": 3680,
+      "page": "f4",
+      "text": "Flujo 4 · Rosa publica un turno y confirma cupos: INI-02 → PUBL-01 (Turno) → PUBL-03 pasos 1 a 4 → PUBL-08 paso 5 (tocar Premium «Pronto» muestra el Snackbar; publica como Clásica) → PUBL-07 → GES-01 → Ver cupos → GES-04 sin postulados → salto de tiempo en la barra de estado → Postulados → Confirmar a mis favoritos → Confirmados",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "f5": {
+      "kind": "title1",
+      "maxW": 3680,
+      "page": "f5",
+      "text": "Flujo 5 · Carolina publica su aviso del hogar: INI-01 (hogar) → Publicar → PUBL-01 (Aviso para mi hogar) → PUBL-04 pasos 1 a 4 → paso 5 (PUBL-08, Clásica) → verifica tu identidad → VER-02 (cédula y selfie) → PUBL-07 → GES-02 → Marta → PRC-01 con el checklist legal «Para contratar como corresponde»",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "f7": {
+      "kind": "title1",
+      "maxW": 2270,
+      "page": "f7",
+      "text": "Flujo 7 · Cambio de actor: INI-02 → SHT-ACTOR → Rosa Muñoz (su Inicio falta) → vuelve a Banquetería Rosa SpA → INI-02 · como Rosa Muñoz, NOT-01: tocar «Faltan 2 garzones…» de Banquetería Rosa SpA cambia de actor solo (INI-02 con el aviso)",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "f8": {
+      "kind": "title1",
+      "maxW": 1330,
+      "page": "f8",
+      "text": "Flujo 8 · Perfil y configuración: PRF-01 → IconGear → CFG-01 → «Cerrar sesión» → Dialog de confirmación → AUTH-01",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "f9": {
+      "kind": "title1",
+      "maxW": 2270,
+      "page": "f9",
+      "text": "Flujo 9 · Botón atrás (borde izquierdo = gesto atrás; la flecha del AppBar hace lo mismo): EXP-02 con scroll → DET-01 → atrás vuelve a EXP-02 en el mismo scroll · pestaña Mensajes → MSG-01 → atrás va a Inicio → en Inicio, atrás muestra el toast «Presiona atrás otra vez para salir»",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "f10": {
+      "kind": "title1",
+      "maxW": 2740,
+      "page": "f10",
+      "text": "Flujo 10 · Marta comparte su certificado de antecedentes: MSG-01 (falta la de Marta) → MSG-02 con Familia en Ñuñoa → Adjuntar del composer → MSG-02b (hoja) → tarjeta de sistema en la conversación → «Dejar de compartir» → tarjeta «Ya no está disponible» (vista por Familia en Ñuñoa)",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "f11": {
+      "kind": "title1",
+      "maxW": 3210,
+      "page": "f11",
+      "text": "Flujo 11 · Jorge abre «Impulsa tu perfil»: PRF-01 → borde derecho (scroll) hasta el final → PRF-12 (con «Pronto») → «Avisarme cuando esté disponible» (Snackbar) · el mismo PRF-12 se abre desde ACT-02 (al final de la lista) › Impulsa tu perfil; atrás vuelve a cada origen en su scroll",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "apoyo": {
+      "kind": "title1",
+      "maxW": 2270,
+      "page": "apoyo",
+      "text": "Apoyo · pantallas a las que también se llega desde los flujos y componentes del lienzo (TabBar)",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    }
+  },
+  "designSystems": [
+    {
+      "title": "Talently",
+      "namespace": "talently",
+      "artifact": "https://claude.ai/artifact/HFynWEZZGPxaarjKuVnHV1",
+      "version": "1791340822-3cfa",
+      "copiedAt": "2026-10-07T12:55:16Z"
+    }
+  ]
+}

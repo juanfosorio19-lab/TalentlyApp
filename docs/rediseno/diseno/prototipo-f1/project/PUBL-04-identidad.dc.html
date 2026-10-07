@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>PUBL-04 · Al publicar: verifica tu identidad (hoja, entrada a VER-02) · Familia en Ñuñoa · F1</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/talently/tokens.css">
+<link rel="stylesheet" href="ds/talently/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{tema}}" style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--color-bg); color: var(--color-text); font-family: var(--font-sans);">
+<dc-import name="PUBL-04-paso5" tema="{{tema}}" hint-size="390px,844px"></dc-import>
+<a class="tl-scrim" href="{{rCerrar}}" aria-label="Cerrar"></a>
+<div class="tl-sheet" role="dialog" aria-modal="true" aria-labelledby="idh-t">
+<div class="tl-sheet__handle" aria-hidden="true"></div>
+<div class="tl-sheet__head"><h2 class="h2" id="idh-t">Verifica tu identidad para publicar tu aviso</h2><a class="tl-iconbtn" href="{{rCerrar}}" aria-label="Cerrar"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 9 6 6M15 9l-6 6"></path></g></svg></span></a></div>
+<div class="tl-sheet__body"><p class="body-l" style="margin: 0 0 var(--space-4);">Quienes postulen van a trabajar en tu casa. Por eso pedimos verificar a quien publica: es una foto de tu cédula y una selfie, y es gratis.</p><ul class="tl-pub__facts" style="gap: var(--space-2); margin: 0 0 var(--space-3);"><li class="tl-pub__fact tl-pub__fact--ok"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.6 4.5 4.4L19 7.4"></path></g></svg></span><span>Tu teléfono está verificado</span></li><li class="tl-pub__fact"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 11v5.4"></path><path stroke-width="2.6" d="M12 7.8h.01"></path></g></svg></span><span>Falta verificar tu identidad</span></li></ul><p class="caption" style="margin: 0; display: flex; gap: var(--space-2); color: var(--color-text-2);"><span>Tu aviso queda guardado mientras tanto.</span></p></div>
+<div class="tl-sheet__foot" style="border-top: 0;"><div style="display: grid; gap: var(--space-2); width: 100%;"><a class="tl-btn tl-btn--primary tl-btn--lg tl-btn--block" href="{{rVerif}}" style="text-decoration: none;"><span class="tl-btn__label">Verificar ahora</span></a><a class="tl-btn tl-btn--ghost tl-btn--lg tl-btn--block" href="{{rCerrar}}" style="text-decoration: none;"><span class="tl-btn__label">Ahora no</span></a></div></div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const v = this._rv();
+v.rVerif = 'VER-02.dc.html';
+const P = ["ACT-02", "ACT-02-desplazado", "ACT-02-jorge", "AUTH-01", "AUTH-02", "AUTH-03", "AUTH-08", "AUTH-08-codigo", "CFG-01", "CFG-01-cerrar-sesion", "DET-01-empleo", "DET-01-turno", "DET-01-turno--f9", "DET-01-turno-postulado", "DET-02", "DET-02-exito", "DET-03", "EXP-01", "EXP-01-lista", "EXP-02", "EXP-02-turnos-desplazado", "EXP-02-turnos-desplazado--f9", "FALTA-ACT-02-matias", "FALTA-DET-01-pedro", "FALTA-INI-01-rosa", "FALTA-MSG-01-marta", "GES-01-turno", "GES-02-hogar", "GES-04", "GES-04-postulados", "GES-04-sin-postulados", "INDICE-F1", "INI-01-carolina", "INI-01-jorge-nuevo", "INI-01-salir", "INI-02", "INI-02--f7", "INI-02-cambio", "MSG-01", "MSG-01-jorge", "MSG-02", "MSG-02b-adjuntar", "MSG-02b-compartir", "MSG-02b-familia", "MSG-02b-marta", "MSG-02b-no-disponible", "MSG-02b-pedido", "Main", "Main--f9", "NOT-01", "ONB-01", "ONB-03", "ONB-99", "ONB-T1", "ONB-T2", "ONB-T3", "ONB-T4", "ONB-T5", "PRC-01", "PRC-01-hogar", "PRF-01", "PRF-01--f11", "PRF-01-final", "PRF-12", "PRF-12-avisado", "PRF-12-desde-act", "PUBL-01", "PUBL-01-carolina", "PUBL-03-paso1", "PUBL-03-paso2", "PUBL-03-paso3", "PUBL-03-paso4", "PUBL-04-identidad", "PUBL-04-paso1", "PUBL-04-paso2", "PUBL-04-paso3", "PUBL-04-paso4", "PUBL-04-paso5", "PUBL-07-aviso-hogar", "PUBL-07-turno", "PUBL-08-turno", "PUBL-08-turno-pronto", "REV-01", "SHT-ACTOR", "TUR-01", "TabBar", "VER-02", "VER-02-dorso", "VER-02-frente", "VER-02-selfie"];
+for (const k in v) { const x = v[k]; if (typeof x === 'string' && /^[A-Za-z][\w-]*\.dc\.html$/.test(x) && !P.includes(x.slice(0, -8))) v[k] = undefined; }
+return v;
+}
+_rv() {
+const tema = this.props.tema ?? 'light';
+const sufijo = tema === 'dark' ? '-oscuro' : '';
+return { tema, rCerrar: 'PUBL-04-paso5' + sufijo + '.dc.html', rVerif: 'PUBL-07-aviso-hogar' + sufijo + '.dc.html' };
+}
+}
+</script>
+</body>
+</html>

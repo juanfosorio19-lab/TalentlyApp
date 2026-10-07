@@ -12,6 +12,7 @@ Fecha: 1 de octubre de 2026. Rama: `claude/pending-items-review-akh8cv`.
 | 02 | [Arquitectura](02-arquitectura.md) | Diagramas de contexto, contenedores y secuencias; estructura de carpetas; 15 decisiones técnicas (ADR); plan de migración por fases. |
 | 03 | [Base de datos](03-base-de-datos.md) | Diagramas ER por dominio, máquinas de estado, enums, diccionario de datos, RLS, funciones y triggers, Storage, migración desde el esquema actual y semillas. |
 | 04 | [Perfiles y onboarding](04-perfiles-y-onboarding.md) | Fichas de los 6 perfiles, taxonomía de oficios con atributos y credenciales, flujos de onboarding pantalla por pantalla, reglas de progreso y criterios de QA. |
+| — | [Diseño de Claude Design](diseno/REVISION.md) | Prototipos F1 y F2 aprobados (97 pantallas), sistema de diseño en tokens, capturas y revisión. |
 | 05 | [Spec maestro](05-spec-maestro.md) | Fuente única de verdad que usan los otros cuatro documentos (nombres canónicos de perfiles, tablas, pantallas e íconos). |
 
 ### Anexos: estado actual

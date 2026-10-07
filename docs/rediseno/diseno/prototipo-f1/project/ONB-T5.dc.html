@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>ONB-T5 · Experiencia y CV</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/talently/tokens.css">
+<link rel="stylesheet" href="ds/talently/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{tema}}" class="tl-steplayout" style="position: relative; width: 390px; height: 844px; display: flex; flex-direction: column; overflow: hidden; background: var(--color-bg); color: var(--color-text); font-family: var(--font-sans);">
+<header class="tl-appbar tl-appbar--standard"><div class="tl-statusbar"><span>13:00</span><span></span></div><div class="tl-appbar__row"><div><a class="tl-iconbtn tl-backbtn" href="{{rVolver}}" aria-label="Volver"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12H4.5M10.5 6l-6 6 6 6"></path></g></svg></span></a></div><h1 class="tl-appbar__title h3">Paso 6 de 6</h1><div class="tl-appbar__actions"><button type="button" class="tl-iconbtn" aria-label="Opciones del registro"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></g><circle cx="6" cy="12" r="1.7" fill="currentColor"></circle><circle cx="12" cy="12" r="1.7" fill="currentColor"></circle><circle cx="18" cy="12" r="1.7" fill="currentColor"></circle></svg></span></button></div></div></header>
+<div class="tl-progress" role="progressbar" aria-valuemin="0" aria-valuemax="6" aria-valuenow="6" aria-label="Paso 6 de 6"><div class="tl-progress__bar" style="width: 100%;"></div></div>
+<main class="tl-steplayout__body">
+<h1 class="tl-steplayout__title h1">{{titulo}}</h1>
+<p class="tl-steplayout__sub">{{sub}}</p>
+<sc-if value="{{esOficio}}" hint-placeholder-val="{{true}}"><h2 class="h3" style="margin: 0 0 var(--space-4);">Tu último trabajo</h2><div style="display: flex; flex-direction: column; gap: var(--space-4);"><div class="tl-field"><label class="tl-field__label" for="t5-emp">Empleador</label><div class="tl-field__control"><input class="tl-field__input" id="t5-emp" value="{{empleador}}" placeholder="Empresa, condominio o persona" autocomplete="organization" inputmode="text"></div></div><div class="tl-field"><label class="tl-field__label" for="t5-cargo">Cargo</label><div class="tl-field__control"><input class="tl-field__input" id="t5-cargo" value="{{cargo}}" placeholder="" autocomplete="organization-title" inputmode="text"></div></div><div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3);"><div class="tl-field"><label class="tl-field__label" for="t5-desde">Desde</label><div class="tl-field__control"><input class="tl-field__input" id="t5-desde" value="{{desde}}" placeholder="MM/AAAA" autocomplete="off" inputmode="numeric"></div></div><div class="{{hastaCls}}"><label class="tl-field__label" for="t5-hasta">Hasta</label><div class="tl-field__control"><input class="tl-field__input" id="t5-hasta" value="{{hasta}}" placeholder="MM/AAAA" autocomplete="off" inputmode="numeric" disabled="{{actual}}"></div></div></div><label class="tl-choice"><span class="{{cbCls}}"><input type="checkbox" id="t5-actual" checked="{{actual}}" onChange="{{tgActual}}"><span class="tl-checkbox__box"><span class="tl-icon tl-icon--16" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.6 4.5 4.4L19 7.4"></path></g></svg></span></span></span><span class="tl-choice__text">Trabajo aquí actualmente</span></label></div><p class="body" style="margin: var(--space-4) 0 0; color: var(--color-text-2);">Puedes agregar más trabajos desde tu perfil.</p></sc-if>
+<sc-if value="{{esProfesional}}" hint-placeholder-val="{{false}}"><sc-if value="{{cvVacio}}" hint-placeholder-val="{{true}}"><div class="tl-doc tl-doc--empty"><div class="tl-doc__body"><span class="tl-doc__name">Tu CV</span><span class="tl-doc__meta"><span class="tl-badge">Recomendado</span>Solo PDF, hasta 10 MB</span></div><div class="tl-upload-actions"><a class="tl-btn tl-btn--outline" href="{{rSubiendo}}" style="text-decoration: none;"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5V4M7.4 8.6 12 4l4.6 4.6M4 15v3.2A1.8 1.8 0 0 0 5.8 20h12.4a1.8 1.8 0 0 0 1.8-1.8V15"></path></g></svg></span><span class="tl-btn__label">Subir CV en PDF</span></a></div></div></sc-if><sc-if value="{{cvSubiendo}}" hint-placeholder-val="{{false}}"><div class="tl-doc"><span class="tl-listitem__tile"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6.6A2.1 2.1 0 0 0 4.5 5.1v13.8A2.1 2.1 0 0 0 6.6 21h10.8a2.1 2.1 0 0 0 2.1-2.1V8.5L14 3Z"></path><path d="M14 3v4.1c0 .8.6 1.4 1.4 1.4h4.1M8.3 13h7.4M8.3 16.8h4.8"></path></g></svg></span></span><div class="tl-doc__body"><span class="tl-doc__name">CV Camila Fuentes.pdf</span><div class="tl-progress" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" aria-label="Subiendo CV"><div class="tl-progress__bar" style="width: 45%;"></div></div><span class="tl-doc__meta" aria-live="polite">Subiendo… 45 %</span></div><a class="tl-iconbtn" href="{{rVacio}}" aria-label="Cancelar subida"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 9 6 6M15 9l-6 6"></path></g></svg></span></a></div></sc-if><sc-if value="{{cvSubido}}" hint-placeholder-val="{{false}}"><div class="tl-doc"><span class="tl-listitem__tile"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6.6A2.1 2.1 0 0 0 4.5 5.1v13.8A2.1 2.1 0 0 0 6.6 21h10.8a2.1 2.1 0 0 0 2.1-2.1V8.5L14 3Z"></path><path d="M14 3v4.1c0 .8.6 1.4 1.4 1.4h4.1M8.3 13h7.4M8.3 16.8h4.8"></path></g></svg></span></span><div class="tl-doc__body"><span class="tl-doc__name">CV Camila Fuentes.pdf</span><span class="tl-doc__meta">240 KB</span></div><a class="tl-iconbtn" href="{{rVacio}}" aria-label="Quitar archivo"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.8h16M9.4 6.8V5.1c0-.6.5-1.1 1.1-1.1h3c.6 0 1.1.5 1.1 1.1v1.7M6 6.8l.9 12.3a2 2 0 0 0 2 1.9h6.2a2 2 0 0 0 2-1.9L18 6.8M10.2 10.8v6M13.8 10.8v6"></path></g></svg></span></a></div></sc-if><p class="body" style="margin: var(--space-4) 0 0; color: var(--color-text-2);">Lo verán solo los colegios y organizaciones a los que postules.</p></sc-if>
+</main>
+<div class="tl-ctabar"><a class="{{ctaCls}}" href="{{rCta}}" aria-disabled="{{ctaDis}}" style="text-decoration: none;"><span class="tl-btn__label">Terminar</span></a><a class="tl-btn tl-btn--ghost tl-btn--lg tl-btn--block" href="{{rFin}}" style="text-decoration: none;"><span class="tl-btn__label">Omitir</span></a></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"plantilla":{"editor":"enum","options":["oficio","profesional"],"default":"oficio"},"cv":{"editor":"enum","options":["vacio","subiendo","subido"],"default":"vacio"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const v = this._rv();
+const P = ["ACT-02", "ACT-02-desplazado", "ACT-02-jorge", "AUTH-01", "AUTH-02", "AUTH-03", "AUTH-08", "AUTH-08-codigo", "CFG-01", "CFG-01-cerrar-sesion", "DET-01-empleo", "DET-01-turno", "DET-01-turno--f9", "DET-01-turno-postulado", "DET-02", "DET-02-exito", "DET-03", "EXP-01", "EXP-01-lista", "EXP-02", "EXP-02-turnos-desplazado", "EXP-02-turnos-desplazado--f9", "FALTA-ACT-02-matias", "FALTA-DET-01-pedro", "FALTA-INI-01-rosa", "FALTA-MSG-01-marta", "GES-01-turno", "GES-02-hogar", "GES-04", "GES-04-postulados", "GES-04-sin-postulados", "INDICE-F1", "INI-01-carolina", "INI-01-jorge-nuevo", "INI-01-salir", "INI-02", "INI-02--f7", "INI-02-cambio", "MSG-01", "MSG-01-jorge", "MSG-02", "MSG-02b-adjuntar", "MSG-02b-compartir", "MSG-02b-familia", "MSG-02b-marta", "MSG-02b-no-disponible", "MSG-02b-pedido", "Main", "Main--f9", "NOT-01", "ONB-01", "ONB-03", "ONB-99", "ONB-T1", "ONB-T2", "ONB-T3", "ONB-T4", "ONB-T5", "PRC-01", "PRC-01-hogar", "PRF-01", "PRF-01--f11", "PRF-01-final", "PRF-12", "PRF-12-avisado", "PRF-12-desde-act", "PUBL-01", "PUBL-01-carolina", "PUBL-03-paso1", "PUBL-03-paso2", "PUBL-03-paso3", "PUBL-03-paso4", "PUBL-04-identidad", "PUBL-04-paso1", "PUBL-04-paso2", "PUBL-04-paso3", "PUBL-04-paso4", "PUBL-04-paso5", "PUBL-07-aviso-hogar", "PUBL-07-turno", "PUBL-08-turno", "PUBL-08-turno-pronto", "REV-01", "SHT-ACTOR", "TUR-01", "TabBar", "VER-02", "VER-02-dorso", "VER-02-frente", "VER-02-selfie"];
+for (const k in v) { const x = v[k]; if (typeof x === 'string' && /^[A-Za-z][\w-]*\.dc\.html$/.test(x) && !P.includes(x.slice(0, -8))) v[k] = undefined; }
+return v;
+}
+_rv() {
+const tema = this.props.tema ?? 'light';
+const sufijo = tema === 'dark' ? '-oscuro' : '';
+const prof = (this.props.plantilla ?? 'oficio') === 'profesional';
+const cv = this.props.cv ?? 'vacio';
+const actual = (this.state || {}).actual ?? false;
+const subiendo = prof && cv === 'subiendo';
+const fin = 'ONB-99' + sufijo + '.dc.html';
+return { tema, esOficio: !prof, esProfesional: prof,
+  titulo: 'Experiencia y CV',
+  sub: 'Opcional. Ayuda a que te elijan.',
+  empleador: 'Condominio Los Peumos', cargo: 'Guardia de seguridad', desde: '03/2021', hasta: actual ? '' : '10/2026',
+  actual, cbCls: 'tl-checkbox' + (actual ? ' is-checked' : ''), hastaCls: 'tl-field' + (actual ? ' is-disabled' : ''),
+  tgActual: () => this.setState({ actual: !actual }),
+  cvVacio: prof && cv === 'vacio', cvSubiendo: subiendo, cvSubido: prof && cv === 'subido',
+  rSubiendo: 'ONB-T5-cv-subiendo' + sufijo + '.dc.html', rVacio: 'ONB-T5-cv' + sufijo + '.dc.html',
+  ctaCls: 'tl-btn tl-btn--primary tl-btn--lg tl-btn--block' + (subiendo ? ' is-disabled' : ''),
+  ctaDis: subiendo ? 'true' : undefined, rCta: subiendo ? undefined : fin, rFin: fin,
+  rVolver: (prof ? 'ONB-T3' : 'ONB-T4') + sufijo + '.dc.html' };
+}
+}
+</script>
+</body>
+</html>
