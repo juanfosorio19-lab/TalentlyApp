@@ -31,8 +31,16 @@ export interface MoneyFieldProps
     value: number | null;
     /** En cada tecla, con el monto ya limpio (sin puntos). */
     onChange: (next: number | null) => void;
-    /** Unidad elegida. Con `a_convenir` no hay monto: el campo queda vacío («Sin monto») y no se escribe. */
+    /**
+     * Unidad elegida. Con `a_convenir` no hay monto: el campo queda vacío
+     * («Sin monto»), de solo lectura, y no se escribe.
+     */
     unit: PayUnit;
+    /**
+     * Al elegir en la hoja. Al pasar a `a_convenir` con monto, antes llega
+     * `onChange(null)`: esta es la última llamada y trae el estado final, así
+     * que un padre que guarda `{ amount, unit }` junto no la pisa.
+     */
     onUnitChange: (next: PayUnit) => void;
     /** Unidades que se ofrecen en la hoja; por defecto, todo el diccionario. */
     units?: readonly PayUnit[];
@@ -69,6 +77,7 @@ export function MoneyField({
     portal,
     id,
     disabled,
+    readOnly,
     placeholder = '0',
     className,
     'aria-describedby': ariaDescribedBy,
@@ -91,7 +100,16 @@ export function MoneyField({
         const caret = input.selectionStart ?? raw.length;
         const allDigits = raw.replace(/\D/g, '');
         const zeros = (allDigits.match(/^0+(?=\d)/)?.[0] ?? '').length;
-        const digits = allDigits.slice(zeros, zeros + MAX_DIGITS);
+        const digits = allDigits.slice(zeros);
+        if (digits.length > MAX_DIGITS) {
+            // Lleno: se rechaza lo escrito (o pegado) en vez de recortar el
+            // monto por el final; el texto y el cursor vuelven a como estaban.
+            const prev = value === null ? '' : groupThousands(value);
+            const back = Math.min(prev.length, Math.max(0, caret - (raw.length - prev.length)));
+            input.value = prev;
+            input.setSelectionRange(back, back);
+            return;
+        }
         const next = digits === '' ? null : Number(digits);
         const text = next === null ? '' : groupThousands(next);
         let keep = Math.max(0, raw.slice(0, caret).replace(/\D/g, '').length - zeros);
@@ -105,9 +123,11 @@ export function MoneyField({
         onChange(next);
     };
 
+    // El monto se borra antes y la unidad va al final: si el padre guarda los
+    // dos juntos y copia el valor anterior en cada llamada, gana el último.
     const chooseUnit = (next: PayUnit) => {
-        onUnitChange(next);
         if (next === 'a_convenir' && value !== null) onChange(null);
+        onUnitChange(next);
     };
 
     return (
@@ -131,7 +151,10 @@ export function MoneyField({
                         placeholder={negotiable ? 'Sin monto' : placeholder}
                         value={negotiable || value === null ? '' : groupThousands(value)}
                         onChange={onInput}
-                        disabled={disabled || negotiable}
+                        disabled={disabled}
+                        // A convenir: sin monto, pero no deshabilitado (se ve y se enfoca como un
+                        // campo; el lector dice «solo lectura» y el placeholder «Sin monto»).
+                        readOnly={readOnly || negotiable}
                         aria-invalid={isError || undefined}
                         aria-describedby={describedBy(isError ? errorId : help ? helpId : undefined, ariaDescribedBy)}
                         {...rest}

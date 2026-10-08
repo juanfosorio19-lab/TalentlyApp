@@ -1,14 +1,15 @@
 import { Fragment, useId, type ComponentPropsWithRef, type ReactNode } from 'react';
 import { formatAmount, type PayUnit } from '../Amount';
-import { ChipGroup, type ChipGroupOption } from '../ChipGroup';
+import type { ChipGroupOption } from '../ChipGroup';
 import { cx } from '../cx';
-import type { IconComponent } from '../icons';
+import { IconAlert, type IconComponent } from '../icons';
 import { MoneyField } from '../MoneyField';
 import { Select } from '../Select';
 import type { SheetPickerOption } from '../SheetPicker';
 import { Skeleton, SkeletonGroup } from '../Skeleton';
 import { Switch } from '../Switch';
 import { FieldFoot, TextField } from '../TextField';
+import { DynamicChips } from './DynamicChips';
 
 /**
  * - `edit`: onboarding, perfil y publicar («¿qué te sirve?», «¿qué necesitas?»).
@@ -195,11 +196,21 @@ function readText(field: DynamicField, v: DynamicValue | undefined): string {
     }
 }
 
+/** «Para clases PAES» → «para clases PAES»: solo la primera letra, sin tocar siglas ni nombres. */
+function lowerFirst(text: string): string {
+    return text.charAt(0).toLowerCase() + text.slice(1);
+}
+
 /**
  * Los campos propios de cada oficio o materia (`attribute_schemas`), iguales
  * en onboarding, publicar, filtros y detalle: mismas etiquetas, mismo orden,
- * mismos íconos. Compone ChipGroup, Select, TextField, MoneyField y Switch.
- * El `widget: segmented` del schema se dibuja como chips de elección única.
+ * mismos íconos. Compone chips (marcado de ChipGroup), Select, TextField,
+ * MoneyField y Switch. El `widget: segmented` del schema se dibuja como chips
+ * de elección única (`role="radiogroup"`).
+ *
+ * Brecha: `input[type=date]` en tema oscuro dibuja el ícono nativo del
+ * calendario oscuro sobre oscuro porque tokens.css y bundle.css no declaran
+ * `color-scheme` por tema (falta `[data-theme="dark"] { color-scheme: dark }`).
  */
 export function DynamicFields({
     title,
@@ -227,7 +238,7 @@ export function DynamicFields({
 
     if (loading) {
         return (
-            <SkeletonGroup className={cx('tl-dyn', className)} label={`Cargando los datos ${title.toLowerCase()}…`} {...rest}>
+            <SkeletonGroup className={cx('tl-dyn', className)} label={`Cargando los datos ${lowerFirst(title)}…`} {...rest}>
                 {head}
                 {[0, 1].map((i) => (
                     <div key={i} className="tl-chipgroup" aria-hidden="true">
@@ -288,26 +299,23 @@ export function DynamicFields({
         const id = `${idBase}-${field.key}`;
         switch (field.kind) {
             case 'chips': {
-                const multiple = filter || field.multiple;
-                const current = asList(v);
-                const common = {
-                    // ChipGroup no tiene «(opcional)» aparte: va en el texto de la etiqueta.
-                    label: optional ? `${label} (opcional)` : label,
-                    options: field.options,
-                    value: current,
-                    error,
-                    disabled,
-                    onChange: (next: string[]) => {
-                        if (multiple) return set(field.key, next);
-                        // Elección única: el chip tocado reemplaza al anterior; volver a tocarlo lo quita solo si es opcional.
-                        const added = next.find((x) => !current.includes(x));
-                        set(field.key, added ?? (field.optional ? null : (current[0] ?? null)));
-                    },
-                };
-                return multiple && field.max && !filter ? (
-                    <ChipGroup {...common} max={field.max.count} maxNote={field.max.note} />
+                const common = { label, optional, options: field.options, error, disabled };
+                return filter || field.multiple ? (
+                    <DynamicChips
+                        {...common}
+                        multiple
+                        value={asList(v)}
+                        onChange={(next) => set(field.key, next)}
+                        max={filter ? undefined : field.max}
+                    />
                 ) : (
-                    <ChipGroup {...common} />
+                    // Elección única: volver a tocar la elegida la quita solo si es opcional.
+                    <DynamicChips
+                        {...common}
+                        value={asList(v)[0] ?? null}
+                        onChange={(next) => set(field.key, next)}
+                        clearable={field.optional}
+                    />
                 );
             }
             case 'select':
@@ -382,15 +390,28 @@ export function DynamicFields({
                 );
             }
             case 'switch':
+                // La fila no tiene pie propio: el error va al pie de un `tl-group`, como en Checkbox.
                 return (
-                    <Switch
-                        id={id}
-                        label={label}
-                        description={field.help}
-                        checked={v === true}
-                        onChange={(e) => set(field.key, e.target.checked)}
-                        disabled={disabled}
-                    />
+                    <div className={cx('tl-group', error ? 'is-error' : undefined)}>
+                        <Switch
+                            id={id}
+                            label={label}
+                            description={field.help}
+                            checked={v === true}
+                            onChange={(e) => set(field.key, e.target.checked)}
+                            disabled={disabled}
+                            aria-invalid={error ? true : undefined}
+                            aria-describedby={error ? `${id}-e` : undefined}
+                        />
+                        {error && (
+                            <div className="tl-field__foot">
+                                <span className="tl-field__error" id={`${id}-e`}>
+                                    <IconAlert size={16} />
+                                    <span>{error}</span>
+                                </span>
+                            </div>
+                        )}
+                    </div>
                 );
             case 'date':
                 return (
@@ -412,7 +433,12 @@ export function DynamicFields({
                 // Etiqueta arriba, la pieza de la pantalla y, si hay, ayuda o error al pie (como un campo).
                 const labelId = `${id}-l`;
                 return (
-                    <div className={cx('tl-field', error ? 'is-error' : undefined)} role="group" aria-labelledby={labelId}>
+                    <div
+                        className={cx('tl-field', error ? 'is-error' : undefined)}
+                        role="group"
+                        aria-labelledby={labelId}
+                        aria-describedby={error ? `${id}-e` : field.help ? `${id}-h` : undefined}
+                    >
                         <span className="tl-field__label" id={labelId}>
                             {label}
                             {optional && (

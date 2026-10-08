@@ -149,7 +149,7 @@ function Detail() {
     );
 }
 
-// Garzón, turno (PUBL-03): chips, chips de elección única (widget segmented), switch, número, monto, lista larga y fecha.
+// Garzón, turno (PUBL-03): chips, chips de elección única (widget segmented), switch, número, monto, lista larga, fecha y texto.
 const garzon: DynamicField[] = [
     {
         key: 'event_types',
@@ -198,6 +198,16 @@ const garzon: DynamicField[] = [
         icon: IconLocation,
     },
     { key: 'date', kind: 'date', label: 'Fecha del evento', shortLabel: 'Fecha', icon: IconCalendar },
+    {
+        key: 'notes',
+        kind: 'text',
+        label: 'Indicaciones para el equipo',
+        shortLabel: 'Indicaciones',
+        optional: true,
+        placeholder: 'Ej.: Llegar 30 min antes',
+        maxLength: 80,
+        icon: IconInfo,
+    },
 ];
 
 /** Publicar un turno de garzón (Banquetería Rosa SpA) y cómo se lee en el detalle. */
@@ -210,10 +220,11 @@ function Publish() {
         pay: { amount: 35000, unit: 'turno' },
         comuna: 'vitacura',
         date: '2026-12-12',
+        notes: 'Llegar 30 min antes, con zapatos negros',
     });
     return (
         <>
-            <DemoFrame height={760}>
+            <DemoFrame height={860}>
                 <div className="tl-app-screen__content">
                     <DynamicFields
                         title="Para garzón o garzona"

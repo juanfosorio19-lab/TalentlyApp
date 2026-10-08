@@ -10,7 +10,6 @@ import {
 import { BottomSheet } from '../BottomSheet';
 import { Button } from '../Button';
 import { CheckboxGroup } from '../Checkbox';
-import { EmptyState } from '../EmptyState';
 import { IconSearch, type IconComponent } from '../icons';
 import { RadioGroup } from '../Radio';
 import { SearchField } from '../SearchField';
@@ -155,7 +154,20 @@ function rowLabel<T extends string>({ option, text }: Match<T>): ReactNode {
 /**
  * Hoja inferior para elegir de una lista larga (comuna, oficio, materia,
  * unidad): BottomSheet con SearchField fijo arriba y filas Radio a la derecha.
- * En elección única, elegir cierra la hoja; en múltiple, cierra «Listo».
+ * En elección única, elegir (toque, Espacio o Enter) cierra la hoja; las
+ * flechas solo recorren la lista sin cambiar el valor. En múltiple, cierra «Listo».
+ *
+ * Brechas de bundle.css (no se escriben aquí):
+ * - Fila presionada y con foco: el sistema pide capa al 8 % sobre toda la fila
+ *   y el anillo de foco en la fila completa (decisiones.md, «Presionado»;
+ *   preview `.rowstate.is-pressed`, `.strip.rf`). bundle.css solo tiene el halo
+ *   y el anillo del círculo (`.tl-choice:active .tl-radio__box::before`,
+ *   `input:focus-visible + .tl-radio__box`). Falta, por ejemplo,
+ *   `.tl-choice--row:active::before` al 8 % y `.tl-choice--row:has(input:focus-visible)`.
+ * - «Sin resultados»: el preview usa un bloque compacto propio (ícono suelto de
+ *   40 en `color-text-3`, sin el círculo de 72 de EmptyState, y Button ghost sm).
+ *   Se arma con las clases `tl-empty*` que hay; falta el color `color-text-3`
+ *   del ícono y el espaciado del preview (una variante compacta de `tl-empty`).
  */
 export function SheetPicker<T extends string = string>(props: SheetPickerProps<T>) {
     const {
@@ -246,6 +258,32 @@ function useScrollToChosen(groupRef: RefObject<HTMLElement | null>) {
     }, [groupRef]);
 }
 
+/** «Sin resultados» del preview: ícono suelto, título, qué probar y «Borrar búsqueda» (ghost sm). */
+function NoResults({
+    icon: Icon,
+    rawQuery,
+    text,
+    onClearSearch,
+}: {
+    icon: IconComponent;
+    rawQuery: string;
+    text: ReactNode;
+    onClearSearch: () => void;
+}) {
+    return (
+        <div className="tl-empty">
+            <div className="tl-stack tl-stack--3 tl-stack--center">
+                <Icon size={40} />
+                <h3 className="tl-empty__title h3">No encontramos «{rawQuery}»</h3>
+            </div>
+            <p className="tl-empty__text">{text}</p>
+            <Button variant="ghost" size="sm" onClick={onClearSearch}>
+                Borrar búsqueda
+            </Button>
+        </div>
+    );
+}
+
 function PickerList<T extends string>({
     picker,
     query,
@@ -256,29 +294,25 @@ function PickerList<T extends string>({
     onClearSearch,
 }: PickerListProps<T>) {
     const groupRef = useRef<HTMLFieldSetElement>(null);
-    // Cómo llegó el último cambio: con flechas no se cierra (solo se recorre la lista).
-    const via = useRef<'pointer' | 'arrow' | 'key'>('pointer');
+    // Si el cambio que viene llega por una flecha: el radio nativo se marca al
+    // moverse, pero eso solo recorre la lista (ni elige ni cierra).
+    const arrow = useRef(false);
     useScrollToChosen(groupRef);
 
     const matches = search(picker.options, query);
+    const none = query !== '' && matches.length === 0;
     const chosenCount = picker.multiple ? picker.value.length : 0;
     const counter = picker.multiple && picker.max !== undefined ? `${chosenCount} de ${picker.max}` : undefined;
-    const lead = query ? `${matches.length} ${matches.length === 1 ? 'resultado' : 'resultados'}` : groupLabel;
-    const head = [lead, counter].filter(Boolean).join(' · ');
+    const results = query ? `${matches.length} ${matches.length === 1 ? 'resultado' : 'resultados'}` : undefined;
+    const head = [results ?? groupLabel, counter].filter(Boolean).join(' · ');
+    // Región viva siempre presente (aunque no haya rótulo visible): dice cuántos
+    // resultados hay al escribir, «Sin resultados» y el contador «2 de 3».
+    const live = [none ? `Sin resultados para «${rawQuery}»` : results, counter].filter(Boolean).join(' · ');
 
-    if (query && matches.length === 0) {
-        return (
-            <EmptyState
-                icon={emptyIcon}
-                title={`No encontramos «${rawQuery}»`}
-                text={emptyText}
-                action={{ label: 'Borrar búsqueda', size: 'sm', onClick: onClearSearch }}
-            />
-        );
-    }
-
-    let list: ReactNode;
-    if (picker.multiple) {
+    let list: ReactNode = null;
+    if (none) {
+        list = <NoResults icon={emptyIcon} rawQuery={rawQuery} text={emptyText} onClearSearch={onClearSearch} />;
+    } else if (picker.multiple) {
         const { value, onChange, max } = picker;
         const atMax = max !== undefined && value.length >= max;
         const visible = new Set<T>(matches.map((m) => m.option.value));
@@ -307,7 +341,10 @@ function PickerList<T extends string>({
         );
     } else {
         const { value, onChange, onClose, options } = picker;
+        // El grupo es controlado: con flechas el foco avanza, pero el radio
+        // vuelve a la opción elegida porque no se llama a onChange.
         const pick = (next: T) => {
+            if (arrow.current) return;
             if (next !== value) onChange(next);
         };
         const onKeyDown = (e: KeyboardEvent<HTMLFieldSetElement>) => {
@@ -316,16 +353,21 @@ function PickerList<T extends string>({
                 // Enter elige la fila con foco y cierra, como un toque.
                 const option = options.find((o) => o.value === target.value);
                 e.preventDefault();
+                arrow.current = false;
                 if (option) pick(option.value);
                 onClose();
                 return;
             }
-            via.current = e.key.startsWith('Arrow') ? 'arrow' : 'key';
+            arrow.current = e.key.startsWith('Arrow');
+        };
+        // El change (y el click) de la flecha llegan antes de soltarla.
+        const onKeyUp = () => {
+            arrow.current = false;
         };
         // Tocar una fila (también la ya elegida) o marcarla con Espacio cierra la hoja.
         const onClick = (e: MouseEvent<HTMLFieldSetElement>) => {
             const target = e.target;
-            if (target instanceof HTMLInputElement && target.type === 'radio' && via.current !== 'arrow') onClose();
+            if (target instanceof HTMLInputElement && target.type === 'radio' && !arrow.current) onClose();
         };
         list = (
             <RadioGroup<T>
@@ -336,10 +378,9 @@ function PickerList<T extends string>({
                 options={matches.map((m) => ({ value: m.option.value, label: rowLabel(m), description: m.option.description }))}
                 value={value}
                 onChange={pick}
-                onPointerDown={() => {
-                    via.current = 'pointer';
-                }}
+                onPointerDown={onKeyUp}
                 onKeyDown={onKeyDown}
+                onKeyUp={onKeyUp}
                 onClick={onClick}
             />
         );
@@ -347,8 +388,12 @@ function PickerList<T extends string>({
 
     return (
         <>
-            {head && (
-                <p className="tl-sheet__group overline" aria-live="polite">
+            <p className="tl-vh" aria-live="polite">
+                {live}
+            </p>
+            {head && !none && (
+                // Al buscar, repite lo que ya dijo la región viva.
+                <p className="tl-sheet__group overline" aria-hidden={query ? true : undefined}>
                     {head}
                 </p>
             )}

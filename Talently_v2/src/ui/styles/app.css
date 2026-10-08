@@ -79,9 +79,9 @@ button, input, textarea, select { font: inherit; }
    <body> y se anclan a la pantalla. La página no scrollea bajo un velo. Un velo que
    llega después de una hoja o diálogo abierto sube al nivel modal: así la capa nueva
    (también modal, pero después en el DOM) queda sobre él y la de abajo se oscurece. */
-body > .tl-scrim, body > .tl-sheet, body > .tl-dialog, body > .tl-snackbar { position: fixed; }
+body > .tl-scrim, body > .tl-sheet, body > .tl-dialog, body > .tl-match, body > .tl-snackbar { position: fixed; }
 body:has(> .tl-scrim) { overflow: hidden; }
-body > .tl-sheet ~ .tl-scrim, body > .tl-dialog ~ .tl-scrim { z-index: var(--z-modal); }
+body > .tl-sheet ~ .tl-scrim, body > .tl-dialog ~ .tl-scrim, body > .tl-match ~ .tl-scrim { z-index: var(--z-modal); }
 
 /* B8 · Pie de hoja sin barra de gestos (navegación de 3 botones o navegador): mínimo space-3. */
 .tl-sheet { padding-bottom: max(var(--layout-gesture-bar), var(--space-3)); }
@@ -105,6 +105,10 @@ body > .tl-sheet ~ .tl-scrim, body > .tl-dialog ~ .tl-scrim { z-index: var(--z-m
 .tl-dialog { animation: tl-layer-fade var(--duration-base) var(--ease-standard); transition: opacity var(--duration-base) var(--ease-standard); }
 .tl-dialog.is-closing { opacity: 0; }
 .tl-sheet__handle, .tl-sheet__head { touch-action: none; }
+/* MatchModal entra una vez con duration-slow y ease-spring (README); la escala .92 la confirma diseño. */
+@keyframes tl-match-in { from { opacity: 0; transform: translateY(-50%) scale(.92); } }
+.tl-match { animation: tl-match-in var(--duration-slow) var(--ease-spring); transition: opacity var(--duration-slow) var(--ease-standard); }
+.tl-match.is-closing { opacity: 0; }
 
 /* B11 · Fotos reales en la galería y en la cámara (MediaUploader): llenan su marco. */
 .tl-gallery__item > img, .tl-capture__shot > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -137,6 +141,10 @@ body > .tl-sheet ~ .tl-scrim, body > .tl-dialog ~ .tl-scrim { z-index: var(--z-m
 
 /* B17 · Card tocable como enlace. */
 a.tl-card--action { text-decoration: none; }
+
+/* B18 · Controles nativos (calendario de input[type=date], barras de scroll) siguen el tema. */
+:root, [data-theme="light"] { color-scheme: light; }
+[data-theme="dark"] { color-scheme: dark; }
 
 /* Alineación de pilas (Stack align): cabecera centrada de un perfil, del esqueleto de perfil. */
 .tl-stack--start { align-items: flex-start; }
