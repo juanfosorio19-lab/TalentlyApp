@@ -1,0 +1,9 @@
+/* Actividad (ACT-01 a ACT-03, TUR-01): lo mínimo que src/ui aún no trae, solo
+   con tokens y sin medidas propias (pedido en requests: rótulo Overline de un
+   grupo de lista y fila «rótulo + valor» con ícono). */
+
+/* Texto sin el margen por defecto del navegador (h1, h2, p). */
+.act-text { margin: 0; }
+
+/* Texto secundario: rótulos Overline («Empleos», «Turnos»), captions y bajadas. */
+.act-muted { margin: 0; color: var(--color-text-2); }

@@ -1,0 +1,33 @@
+/* Perfil y configuración: solo maquetación y tonos de texto, siempre con tokens.
+   src/ui no trae utilidades de tono de texto ni filas «rótulo + valor» (pedidas en
+   «requests»); cuando existan, este archivo se borra. */
+
+/* PRF-01 y PRF-02: el contenido parte a 8 del AppBar (main del prototipo). */
+.prf-content { padding-top: var(--space-2); }
+
+/* Tonos y pesos de texto sobre las clases de tokens.css (.body, .caption…). */
+.prf-muted { color: var(--color-text-2); }
+.prf-strong { font-weight: 600; }
+.prf-flush { margin: 0; }
+.prf-grow { flex: 1; min-width: 0; }
+
+/* «Así te ven»: nombre bajo el avatar, insignias y notas que bajan de línea centradas. */
+.prf-name { margin: var(--space-1) 0 0; }
+.prf-wrap { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); }
+.prf-wrap--loose { gap: var(--space-2) var(--space-4); margin-top: var(--space-1); }
+
+/* «Mis perfiles»: rótulo y «Ver cómo me ven» en la misma línea. */
+.prf-tabs > .tl-chipgroup__head { align-items: center; margin-bottom: var(--space-2); }
+
+/* Ícono de 20 al inicio de una fila «rótulo + valor» de una sección. */
+.prf-icon { flex: none; display: inline-flex; color: var(--color-text-2); }
+
+/* Nota con candado al pie de una sección («La ven solo organizaciones…»). */
+.prf-note { display: flex; gap: var(--space-2); margin: var(--space-3) 0 0; color: var(--color-text-2); }
+.prf-foot { margin: var(--space-3) 0 0; color: var(--color-text-2); }
+
+/* PRF-12: los tres hechos, separados 12. */
+.prf-facts { gap: var(--space-3); margin: 0; }
+
+/* CFG-01: versión al pie, una sola vez. */
+.prf-version { margin: var(--space-2) 0 0; text-align: center; color: var(--color-text-3); }
