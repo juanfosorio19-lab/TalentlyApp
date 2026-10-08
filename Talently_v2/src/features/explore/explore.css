@@ -1,0 +1,51 @@
+/* Explorar · maquetación mínima con tokens (lo que src/ui/Layout y app.css no
+   cubren). Sin colores, medidas ni sombras propias: solo la estructura de
+   EXP-01, EXP-02 y EXP-05 del prototipo F1. */
+
+/* Cabecera bajo el AppBar: SegmentedControl y fila de chips. Queda fija
+   mientras la lista pasa por debajo (EXP-02-turnos-desplazado). Va un nivel
+   bajo el AppBar para que su sombra (is-scrolled) se vea encima. */
+.explore-head {
+  position: sticky;
+  top: calc(var(--layout-status-bar) + var(--layout-appbar));
+  z-index: calc(var(--z-sticky) - 1);
+  background: var(--color-bg);
+  padding: var(--space-2) 0 var(--space-3);
+}
+.explore-head__inner {
+  max-width: var(--layout-content-max);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.explore-head__pad { padding: 0 var(--space-4); }
+
+/* Fila de chips con scroll horizontal (comuna, oficios, publicación). */
+.explore-chips {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding: 0 var(--space-4);
+  scrollbar-width: none;
+}
+.explore-chips::-webkit-scrollbar { display: none; }
+.explore-chips > * { flex: none; }
+
+/* El contenido empieza justo bajo la cabecera: ella ya deja su espacio. */
+.tl-app-screen__content.explore-body { padding-top: 0; }
+
+/* «Ofertas cerca de Macul» · «Ver lista». */
+.explore-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.explore-bar__text { margin: 0; color: var(--color-text-2); }
+
+/* Encabezado de día de EXP-02 («HOY», «MAÑANA»…). */
+.explore-day__title { margin: 0; color: var(--color-text-2); }
+
+/* EmptyState centrado en el alto que queda (como el prototipo). */
+.explore-empty { flex: 1; display: flex; align-items: center; justify-content: center; padding: var(--space-6) 0; }

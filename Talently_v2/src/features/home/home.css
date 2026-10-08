@@ -1,0 +1,15 @@
+/* Inicio y notificaciones: solo maquetación, con tokens. Sin colores, tipografía
+   ni sombras: eso lo ponen los componentes de src/ui. */
+
+/* INI-02: KPIs en una grilla de 2 (como la del prototipo, separación 12). */
+.home-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+
+/* SHT-ACTOR: el nombre ocupa el ancho; el punto de no leído queda junto al radio. */
+.home-actor__text { flex: 1; min-width: 0; }
+
+/* SHT-ACTOR: «Crear organización» alineada con los avatares (la fila trae su padding de 16). */
+.home-sheet-list { margin: var(--space-1) calc(-1 * var(--space-4)) 0; }
+.home-sheet-note { margin: var(--space-2) 0 0; }
+
+/* NOT-01: el primer grupo va pegado a «Marcar todas como leídas». */
+.home-notifs > section:first-child > .tl-agenda__day { margin-top: var(--space-2); }

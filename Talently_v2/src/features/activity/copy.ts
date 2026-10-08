@@ -23,6 +23,9 @@ export const copy = {
         emptyWorker: 'Cuando te confirmen un turno o te citen a una entrevista, lo verás aquí con su fecha y hora.',
         emptyOrg: 'Cuando publiques un turno, lo verás aquí por fecha, con sus cupos cubiertos.',
         emptyOther: 'Cuando agendes una entrevista, la verás aquí con su fecha y hora.',
+        /** Persona sin perfiles (INI-01-rosa): «Agregar un perfil», como en Inicio. */
+        emptyNoProfiles: 'Agrega un perfil para buscar trabajo o contratar para tu hogar. Aquí verás tus turnos y entrevistas.',
+        addProfile: 'Agregar un perfil',
         seeShifts: 'Ver turnos cerca',
         seeJobs: 'Ver empleos cerca',
         weekEmptyTitle: 'Nada agendado esta semana',
@@ -47,8 +50,6 @@ export const copy = {
         emptyTitle: 'Aún no tienes publicaciones',
         emptyText: 'Lo que publiques aparece aquí, con sus postulantes y su estado.',
         goHome: 'Ir a Inicio',
-        summaryTitle: 'Tu publicación',
-        close: 'Cerrar',
     },
 
     shift: {

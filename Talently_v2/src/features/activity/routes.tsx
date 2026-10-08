@@ -1,10 +1,10 @@
-// Rutas del feature (las compone src/app/router.tsx).
-// STUB: lo reemplaza la construcción de las pantallas; conserva tabRoutes y stackRoutes.
+// Rutas del feature Actividad (las compone src/app/router.tsx).
+// Pestaña: /actividad?seg=agenda|postulaciones|publicaciones (ACT-01, ACT-02, ACT-03).
+// Apilada: /turnos/:assignmentId (TUR-01 · Mi turno).
 import type { RouteObject } from 'react-router-dom';
-import { PlaceholderScreen } from '../../app/system/PlaceholderScreen';
+import { ActivityScreen } from './screens/ActivityScreen';
+import { MyShiftScreen } from './screens/MyShiftScreen';
 
-export const tabRoutes: RouteObject[] = [{ path: 'actividad', element: <PlaceholderScreen tab title="Actividad" screenId="ACT-01" /> }];
+export const tabRoutes: RouteObject[] = [{ path: 'actividad', element: <ActivityScreen /> }];
 
-export const stackRoutes: RouteObject[] = [
-    { path: 'turnos/:assignmentId', element: <PlaceholderScreen title="Mi turno" screenId="TUR-01" /> },
-];
+export const stackRoutes: RouteObject[] = [{ path: 'turnos/:assignmentId', element: <MyShiftScreen /> }];
