@@ -25,6 +25,7 @@ export function IconButton({
     count,
     type = 'button',
     className,
+    onClick,
     ...rest
 }: IconButtonProps) {
     return (
@@ -40,6 +41,7 @@ export function IconButton({
             aria-label={label}
             aria-pressed={selected === undefined ? undefined : selected}
             aria-busy={loading || undefined}
+            onClick={loading ? undefined : onClick}
             {...rest}
         >
             <Icon />

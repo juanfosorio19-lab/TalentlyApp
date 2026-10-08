@@ -13,8 +13,26 @@ export function DemoSection({ title, children }: { title: string; children: Reac
 }
 
 /** Fila que envuelve: para variantes lado a lado. */
-export function DemoRow({ children, column, className }: { children: ReactNode; column?: boolean; className?: string }) {
-    return <div className={cx('dev-row', column && 'dev-row--column', className)}>{children}</div>;
+export function DemoRow({
+    children,
+    column,
+    end,
+    tight,
+    className,
+}: {
+    children: ReactNode;
+    column?: boolean;
+    /** Alinea abajo (rótulos en una sola línea bajo muestras de distinto alto). */
+    end?: boolean;
+    /** Separación de 8 en vez de 16. */
+    tight?: boolean;
+    className?: string;
+}) {
+    return (
+        <div className={cx('dev-row', column && 'dev-row--column', end && 'dev-row--end', tight && 'dev-row--tight', className)}>
+            {children}
+        </div>
+    );
 }
 
 /** Rótulo pequeño bajo una muestra («presionado», «deshabilitado»). */
@@ -42,6 +60,19 @@ export function DemoFrame({ width = 390, height, children }: { width?: 360 | 390
     return (
         <div className="dev-frame" style={style}>
             {children}
+        </div>
+    );
+}
+
+/**
+ * Estado que el componente no tiene, con su motivo (como `.na` en los
+ * preview.html del sistema): «No aplica» + por qué.
+ */
+export function DemoNotApplicable({ state, children }: { state?: string; children: ReactNode }) {
+    return (
+        <div className="dev-na">
+            <span className="tl-badge">No aplica</span>
+            <span>{state ? <><strong>{state}:</strong> {children}</> : children}</span>
         </div>
     );
 }

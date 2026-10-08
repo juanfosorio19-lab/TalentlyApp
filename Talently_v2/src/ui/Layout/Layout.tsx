@@ -6,11 +6,18 @@ export interface StackProps extends ComponentPropsWithRef<'div'> {
     gap?: 1 | 2 | 3 | 4 | 6;
     /** En fila, centrado verticalmente. */
     row?: boolean;
+    /** Alineación de los hijos en el eje cruzado (por defecto, estirados). */
+    align?: 'center' | 'end';
 }
 
 /** Pila vertical (o fila) con separación del sistema. Solo maqueta: no dibuja nada. */
-export function Stack({ gap = 3, row, className, ...rest }: StackProps) {
-    return <div className={cx('tl-stack', `tl-stack--${gap}`, row && 'tl-stack--row', className)} {...rest} />;
+export function Stack({ gap = 3, row, align, className, ...rest }: StackProps) {
+    return (
+        <div
+            className={cx('tl-stack', `tl-stack--${gap}`, row && 'tl-stack--row', align && `tl-stack--${align}`, className)}
+            {...rest}
+        />
+    );
 }
 
 export interface ScreenSectionProps extends Omit<ComponentPropsWithRef<'section'>, 'title'> {

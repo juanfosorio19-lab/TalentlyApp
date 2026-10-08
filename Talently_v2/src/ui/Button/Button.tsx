@@ -44,6 +44,7 @@ export function Button({
     loadingLabel,
     type = 'button',
     className,
+    onClick,
     ...rest
 }: ButtonProps) {
     return (
@@ -58,6 +59,11 @@ export function Button({
                 className,
             )}
             aria-busy={loading || undefined}
+            // Mientras carga, la etiqueta queda oculta (visibility: hidden en bundle.css):
+            // el nombre accesible pasa a decir qué está pasando («Enviando postulación…»).
+            aria-label={loading && loadingLabel ? loadingLabel : undefined}
+            // is-loading solo bloquea el puntero: Enter y Espacio tampoco deben repetir la acción.
+            onClick={loading ? undefined : onClick}
             {...rest}
         >
             {logo === true ? (
@@ -69,10 +75,7 @@ export function Button({
             <span className="tl-btn__label">{children}</span>
             {IconEnd && <IconEnd />}
             {loading && (
-                <>
-                    <span className={cx('tl-btn__spinner tl-spinner', size === 'sm' && 'tl-spinner--16')} aria-hidden="true" />
-                    {loadingLabel && <span className="tl-vh">{loadingLabel}</span>}
-                </>
+                <span className={cx('tl-btn__spinner tl-spinner', size === 'sm' && 'tl-spinner--16')} aria-hidden="true" />
             )}
         </button>
     );

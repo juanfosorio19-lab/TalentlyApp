@@ -43,3 +43,37 @@ button, input, textarea, select { font: inherit; }
 .tl-screen-section__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 36px; }
 .tl-screen-section__title { margin: 0; min-width: 0; }
 .tl-screen-section__head .tl-btn { flex: none; }
+
+/* =====================================================================
+   Brechas del sistema de diseño
+   Lo que bundle.css (Claude Design) todavía no cubre y la app necesita.
+   Cada regla está anotada en docs/rediseno/diseno/BRECHAS.md para pedirla
+   a Claude Design; cuando llegue en una entrega nueva (npm run ds:sync),
+   se borra de aquí. Solo tokens.
+   ===================================================================== */
+
+/* B1 · SearchField: el WebView de Android dibuja su propia X junto a «Borrar búsqueda». */
+.tl-search__input::-webkit-search-cancel-button,
+.tl-search__input::-webkit-search-decoration { -webkit-appearance: none; appearance: none; }
+
+/* B2 · LegalDocument: el preview quita el margen del H1 y del rótulo del índice en línea. */
+.tl-legal > header > h1 { margin: 0; }
+.tl-legal__index > .overline { margin: 0; color: var(--color-text-2); }
+
+/* B3 · Lista sin borde ni fondo, dentro de una hoja («Verificación de …»). */
+.tl-list--flat { border: 0; border-radius: 0; background: transparent; }
+
+/* B4 · Nota bajo las estrellas al calificar («4 de 5 · Muy bien»). */
+.tl-stars__note { display: flex; align-items: center; gap: var(--space-2); margin: var(--space-1) 0 0; font: 500 12px/16px var(--font-sans); color: var(--color-text-2); }
+
+/* B5 · Leyenda de un grupo de OptionCard: el preview la separa 12 de la primera tarjeta. */
+.tl-optgroup > .tl-group__label { margin-bottom: var(--space-3); }
+
+/* B6 · Hero de Bienvenida (AUTH-01): gradient-brand en claro, gradient-hero-dark en oscuro. */
+:root, [data-theme="light"] { --tl-hero-bg: var(--gradient-brand); }
+[data-theme="dark"] { --tl-hero-bg: var(--gradient-hero-dark); }
+.tl-hero { background: var(--tl-hero-bg); color: var(--color-on-primary); }
+
+/* Alineación de pilas (Stack align): cabecera centrada de un perfil, del esqueleto de perfil. */
+.tl-stack--center { align-items: center; text-align: center; }
+.tl-stack--end { align-items: flex-end; }
