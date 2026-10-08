@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import type { DemoModule } from '../catalog/types';
 import { DemoFrame, DemoRow, DemoSection } from '../catalog/demo';
-import { cx } from '../cx';
-import { IconBell, IconCheck, IconFilter } from '../icons';
+import { ChipGroup } from '../ChipGroup';
+import { IconBell, IconFilter } from '../icons';
 import { IconButton } from '../IconButton/IconButton';
 import { Banner } from './Banner';
 
@@ -25,33 +25,21 @@ function ExploreAppBar() {
     );
 }
 
-// Marcado mínimo de ChipGroup (lo construye otro grupo).
-const CONTRACTS = ['Plazo fijo', 'Por obra', 'Part time', 'Boleta de honorarios', 'Boleta de terceros'];
+const CONTRACTS = ['Plazo fijo', 'Por obra', 'Part time', 'Boleta de honorarios', 'Boleta de terceros'].map((c) => ({
+    value: c,
+    label: c,
+}));
 
+/** «Forma de contratación»: se elige una; el Banner educativo explica la elegida. */
 function ContractChips() {
-    const [value, setValue] = useState('Boleta de honorarios');
+    const [value, setValue] = useState<string[]>(['Boleta de honorarios']);
     return (
-        <div className="tl-chipgroup" role="group" aria-label="Forma de contratación">
-            <div className="tl-chipgroup__head">
-                <span className="tl-chipgroup__label">Forma de contratación</span>
-            </div>
-            <div className="tl-chipgroup__chips">
-                {CONTRACTS.map((c) => (
-                    <button
-                        key={c}
-                        type="button"
-                        className={cx('tl-chip', value === c && 'is-selected')}
-                        aria-pressed={value === c}
-                        onClick={() => setValue(c)}
-                    >
-                        <span className="tl-chip__check">
-                            <IconCheck size={16} />
-                        </span>
-                        {c}
-                    </button>
-                ))}
-            </div>
-        </div>
+        <ChipGroup
+            label="Forma de contratación"
+            options={CONTRACTS}
+            value={value}
+            onChange={(next) => setValue(next.filter((v) => !value.includes(v)))}
+        />
     );
 }
 

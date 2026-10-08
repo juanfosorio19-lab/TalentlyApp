@@ -1,11 +1,23 @@
 import type { ReactNode } from 'react';
 import type { DemoModule } from '../catalog/types';
-import { DemoFrame, DemoRow, DemoSection } from '../catalog/demo';
+import { DemoFrame, DemoLabel, DemoRow, DemoSection } from '../catalog/demo';
+import { BrandLogo } from '../BrandLogo';
 import { Button } from '../Button/Button';
+import { CtaBar } from '../CtaBar';
 import { cx } from '../cx';
-import { IconCalendar, IconChat, IconHome, IconPerson, IconSearch } from '../icons';
+import {
+    IconCalendar,
+    IconChat,
+    IconHome,
+    IconOffers,
+    IconPeople,
+    IconPerson,
+    IconReport,
+    IconSearch,
+    IconShield,
+} from '../icons';
 import { Snackbar } from './Snackbar';
-import { SnackbarProvider, useSnackbar } from './SnackbarProvider';
+import { SnackbarOutlet, SnackbarProvider, useSnackbar } from './SnackbarProvider';
 
 const noop = () => {};
 
@@ -56,6 +68,78 @@ function TabBar() {
                 </a>
             ))}
         </nav>
+    );
+}
+
+// Marcado mínimo del WebShell con la SideNav en riel (lo construye otro grupo):
+// a 1024, donde se verifica el backoffice, la SideNav es el riel de 104.
+const SECTIONS = [
+    ['Verificaciones', IconShield],
+    ['Organizaciones', IconPeople],
+    ['Publicaciones', IconOffers],
+    ['Reportes', IconReport],
+    ['Usuarios y auditoría', IconPerson],
+] as const;
+
+function WebShell({ children }: { children: ReactNode }) {
+    return (
+        <div className="dev-frame" style={{ width: 1024 }}>
+            <div className="tl-web tl-web--rail">
+                <nav className="tl-sidenav tl-sidenav--rail" aria-label="Backoffice">
+                    <div className="tl-sidenav__brand">
+                        <BrandLogo size="sm" />
+                        <span className="tl-sidenav__brand-text">
+                            <span className="tl-sidenav__brand-name">Talently</span>
+                        </span>
+                    </div>
+                    <ul className="tl-sidenav__list">
+                        {SECTIONS.map(([label, Icon]) => (
+                            <li key={label}>
+                                <a
+                                    className="tl-sidenav__item"
+                                    href="#Snackbar"
+                                    aria-current={label === 'Verificaciones' ? 'page' : undefined}
+                                >
+                                    <span className="tl-sidenav__icon">
+                                        <Icon />
+                                    </span>
+                                    <span className="tl-sidenav__label">{label}</span>
+                                    <span className="tl-sidenav__short">{label}</span>
+                                </a>
+                            </li>
+                        ))}
+                    </ul>
+                </nav>
+                <div className="tl-web__main">
+                    <div className="tl-web__body">
+                        <ScreenBehind count={2} />
+                    </div>
+                </div>
+                {children}
+            </div>
+        </div>
+    );
+}
+
+/** Un paso con CTA fijo: el aviso va en el `SnackbarOutlet` de la CtaBar, justo encima del botón. */
+function LiveCtaStep() {
+    const { show } = useSnackbar();
+    const fail = () =>
+        show({
+            message: 'No pudimos guardar este paso.',
+            tone: 'error',
+            action: { label: 'Reintentar', onAction: () => show({ message: 'Guardamos tus cambios', tone: 'success' }) },
+        });
+    return (
+        <>
+            <ScreenBehind count={2} />
+            <CtaBar>
+                <SnackbarOutlet />
+                <Button size="lg" block onClick={fail}>
+                    Continuar
+                </Button>
+            </CtaBar>
+        </>
     );
 }
 
@@ -152,10 +236,18 @@ const demo: DemoModule = {
                 </span>
             </DemoSection>
             <DemoSection title="Web (backoffice, M11) · abajo a la izquierda del contenido">
-                <DemoFrame width={412} height={200}>
-                    <ScreenBehind count={1} />
-                    <Snackbar message="Verificaste Eventos del Valle SpA" tone="success" placement="web" />
-                </DemoFrame>
+                <WebShell>
+                    <Snackbar
+                        message="Aprobaste la credencial SPD de Andrés Carrasco"
+                        tone="success"
+                        placement="web"
+                        action={{ label: 'Deshacer', onAction: noop }}
+                    />
+                </WebShell>
+                <DemoLabel>
+                    Escritorio a 1024 con la SideNav en riel: el aviso es hijo directo de .tl-web y se alinea con el contenido, nunca
+                    sobre la SideNav. Con claro y oscuro lado a lado el marco se ajusta al panel; desmárcalo para verlo a tamaño real.
+                </DemoLabel>
             </DemoSection>
             <DemoSection title="Probar: useSnackbar() · el nuevo reemplaza al anterior">
                 <DemoFrame height={420}>
@@ -166,6 +258,16 @@ const demo: DemoModule = {
                         <TabBar />
                     </SnackbarProvider>
                 </DemoFrame>
+            </DemoSection>
+            <DemoSection title="Probar: con CTA fijo va estático encima del botón (SnackbarOutlet)">
+                <DemoFrame height={420}>
+                    <SnackbarProvider portal={false}>
+                        <LiveCtaStep />
+                    </SnackbarProvider>
+                </DemoFrame>
+                <DemoLabel>
+                    «Continuar» simula que guardar falla. Una hoja con pie (BottomSheet) trae su propio SnackbarOutlet sobre el pie.
+                </DemoLabel>
             </DemoSection>
             <DemoSection title="Estados">
                 <State name="Default">

@@ -162,6 +162,8 @@ function SheetLayer({
     };
 
     const height = dragHeight ?? expandedHeight;
+    // Mientras el dedo la mueve, la hoja sigue al dedo sin transición (app.css B10).
+    const dragging = offset !== 0 || dragHeight !== null;
     const style: CSSProperties | undefined =
         offset || height !== null
             ? { transform: offset ? `translateY(${offset}px)` : undefined, height: height ?? undefined }
@@ -172,7 +174,7 @@ function SheetLayer({
             <div className={cx('tl-scrim', closing && 'is-closing')} aria-hidden="true" inert={closing} onClick={onClose} />
             <div
                 ref={sheetRef}
-                className={cx('tl-sheet', closing && 'is-closing', className)}
+                className={cx('tl-sheet', dragging && 'is-dragging', closing && 'is-closing', className)}
                 role="dialog"
                 aria-modal={modal || undefined}
                 aria-labelledby={titleId}

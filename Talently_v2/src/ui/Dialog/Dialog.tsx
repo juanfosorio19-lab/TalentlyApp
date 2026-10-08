@@ -145,14 +145,15 @@ function DialogLayer({
                     </>
                 )}
                 <div className="tl-dialog__actions">
-                    <Button ref={cancelRef} variant="ghost" onClick={close} aria-disabled={loading || undefined}>
+                    <Button ref={cancelRef} variant="ghost" onClick={close}>
                         {cancelLabel}
                     </Button>
                     <Button
                         variant={destructive ? 'danger' : 'primary'}
-                        // `is-loading` solo corta el puntero: Enter y Espacio también se ignoran.
+                        // `is-loading` solo corta el puntero: sin handler, Enter y Espacio tampoco confirman.
+                        // (Sin aria-disabled: bundle.css lo pinta como deshabilitado y taparía el estado
+                        // cargando; Button ya pone aria-busy.)
                         onClick={loading ? undefined : onConfirm}
-                        aria-disabled={loading || undefined}
                         loading={loading}
                         loadingLabel={loadingLabel}
                         disabled={confirmDisabled}

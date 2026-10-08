@@ -74,6 +74,38 @@ button, input, textarea, select { font: inherit; }
 [data-theme="dark"] { --tl-hero-bg: var(--gradient-hero-dark); }
 .tl-hero { background: var(--tl-hero-bg); color: var(--color-on-primary); }
 
+/* B7 · Capas con portal (BottomSheet, Dialog, MatchModal, Snackbar). bundle.css las
+   posiciona con absolute pensando en el marco del mockup; en la app van directo en
+   <body> y se anclan a la pantalla. La página no scrollea bajo un velo. Un velo que
+   llega después de una hoja o diálogo abierto sube al nivel modal: así la capa nueva
+   (también modal, pero después en el DOM) queda sobre él y la de abajo se oscurece. */
+body > .tl-scrim, body > .tl-sheet, body > .tl-dialog, body > .tl-snackbar { position: fixed; }
+body:has(> .tl-scrim) { overflow: hidden; }
+body > .tl-sheet ~ .tl-scrim, body > .tl-dialog ~ .tl-scrim { z-index: var(--z-modal); }
+
+/* B8 · Pie de hoja sin barra de gestos (navegación de 3 botones o navegador): mínimo space-3. */
+.tl-sheet { padding-bottom: max(var(--layout-gesture-bar), var(--space-3)); }
+
+/* B9 · Snackbar fijo dentro de una hoja con pie (SnackbarOutlet): con margen lateral. */
+.tl-sheet > .tl-snackbar--static { margin: 0 var(--space-4) var(--space-3); }
+
+/* B10 · Movimiento de capas (README BottomSheet: «abre y cierra con duration-slow»).
+   Los componentes ponen is-closing y esperan el fin de la transición antes de
+   desmontar; con «reducir movimiento» bundle.css deja todo en 0 ms. */
+@keyframes tl-layer-fade { from { opacity: 0; } }
+@keyframes tl-sheet-rise { from { transform: translateY(100%); } }
+.tl-scrim { animation: tl-layer-fade var(--duration-slow) var(--ease-standard); transition: opacity var(--duration-slow) var(--ease-standard); }
+.tl-scrim.is-closing { opacity: 0; }
+.tl-sheet {
+  animation: tl-sheet-rise var(--duration-slow) var(--ease-standard);
+  transition: transform var(--duration-slow) var(--ease-standard), height var(--duration-slow) var(--ease-standard);
+}
+.tl-sheet.is-dragging { transition: none; }
+.tl-sheet.is-closing { transform: translateY(100%); }
+.tl-dialog { animation: tl-layer-fade var(--duration-base) var(--ease-standard); transition: opacity var(--duration-base) var(--ease-standard); }
+.tl-dialog.is-closing { opacity: 0; }
+.tl-sheet__handle, .tl-sheet__head { touch-action: none; }
+
 /* Alineación de pilas (Stack align): cabecera centrada de un perfil, del esqueleto de perfil. */
 .tl-stack--center { align-items: center; text-align: center; }
 .tl-stack--end { align-items: flex-end; }

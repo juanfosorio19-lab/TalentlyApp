@@ -21,12 +21,15 @@ oscuro, y actualiza bundle.css, el README del componente y decisiones.md».
 | B4 | RatingStars | Nota bajo las estrellas al calificar («4 de 5 · Muy bien») y ayuda de deshabilitado. | `.tl-stars__note` (12/16 500, margin-top space-1, color-text-2) |
 | B5 | OptionCard | La leyenda del grupo queda a 4 px de la primera tarjeta; el preview la separa 12 en línea. | `.tl-optgroup > .tl-group__label { margin-bottom: space-3 }` |
 | B6 | Bienvenida (AUTH-01) | No hay clase para el hero: gradient-brand en claro y gradient-hero-dark en oscuro. | `.tl-hero` con `--tl-hero-bg` por tema |
-| B7 | Capas | `.tl-scrim`, `.tl-sheet`, `.tl-dialog` y `.tl-snackbar` usan `position: absolute` pensando en el marco del mockup. En la app van en un portal y deben anclarse a la pantalla; además, un Dialog sobre una hoja abierta debe oscurecer la hoja. | Contenedor `.tl-layer` (fijo, a pantalla completa, un contexto de apilamiento por capa) |
+| B7 | Capas | `.tl-scrim`, `.tl-sheet`, `.tl-dialog` y `.tl-snackbar` usan `position: absolute` pensando en el marco del mockup. En la app van en un portal en `<body>`: se abrían fuera de la pantalla después de hacer scroll, y un Dialog sobre una hoja no la oscurecía. | `body > .tl-…{ position: fixed }`, sin scroll bajo el velo y el velo de la segunda capa al nivel `z-modal` |
+| B8 | BottomSheet | Con navegación de 3 botones (o en el navegador) el safe area inferior es 0 y las acciones del pie quedan pegadas al borde. | `padding-bottom: max(barra de gestos, space-3)` |
+| B9 | Snackbar | El Snackbar fijo (`--static`) dentro de una hoja con pie va de borde a borde. | `.tl-sheet > .tl-snackbar--static { margin: 0 space-4 space-3 }` |
+| B10 | Capas | Sin transiciones de apertura y cierre ni estado de arrastre. | Velo y diálogo con fundido, hoja que sube y baja con `duration-slow`, `.is-closing`, `.is-dragging` sin transición y `touch-action: none` en el asa |
 
 ## Pendientes en el sistema (sin regla provisoria)
 
-- **Movimiento de capas**: transiciones de apertura y cierre de BottomSheet, Dialog y velo (`duration-slow`, `ease-standard`), estado de arrastre sin transición (`.tl-sheet.is-dragging`), `touch-action: none` en el asa y la cabecera, y la hoja expandida.
-- **Pie de la hoja sin barra de gestos**: con navegación de 3 botones de Android el safe area inferior es 0 y las acciones del pie quedan pegadas al borde. Definir un mínimo.
+- **Hoja expandida**: falta una clase para la hoja abierta a todo el alto (hoy se fija el alto en línea al arrastrar hacia arriba).
+- **Radio con avatar**: la fila `tl-choice--row` de «Usar Talently como» necesita un Avatar antes del texto.
 - **Logo con id de gradiente únicos**: decisiones.md (M1 · L2 punto 2) dice que varias copias del logo pueden compartir sus id de gradiente. En Chromium no es así: si la primera copia queda oculta (`display: none`), todas las demás desaparecen. En código, BrandLogo vuelve únicos los id por copia; conviene corregir la decisión.
 - **ActionPair al arrastrar el deck**: el estado presionado solo existe como `.is-pressed`. Un selector propio (por ejemplo `.tl-ap[data-dragging]`) evitaría forzar la clase desde la lógica.
 - **Esqueletos**: las plantillas del preview usan clases locales (`.skrow`, `.skcol`, `.skcard`, `.skchips`, `.skprof`). Conviene llevarlas al sistema (`.tl-skel-row`, `.tl-skel-stack`, `.tl-skel-profile`).
