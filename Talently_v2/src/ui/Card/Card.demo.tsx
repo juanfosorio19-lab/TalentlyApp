@@ -76,16 +76,21 @@ const demo: DemoModule = {
                             <span className="tl-listitem__tile">
                                 <IconShield />
                             </span>
-                            <Stack gap={1}>
-                                <span className="button-lg">Verificación de tu organización</span>
-                                <div>
-                                    <VerificationBadge status="review" onClick={noop}>
-                                        Verificación en revisión
-                                    </VerificationBadge>
-                                </div>
-                                <span className="tl-listitem__sub">
-                                    Hasta verificar: 1 publicación activa; los turnos se publican cuando te verifiquemos.
-                                </span>
+                            {/* Como el preview: 4 entre título e insignia, 8 hasta el texto y 12 hasta el botón. */}
+                            <Stack gap={3}>
+                                <Stack gap={2}>
+                                    <Stack gap={1}>
+                                        <span className="button-lg">Verificación de tu organización</span>
+                                        <div>
+                                            <VerificationBadge status="review" onClick={noop}>
+                                                Verificación en revisión
+                                            </VerificationBadge>
+                                        </div>
+                                    </Stack>
+                                    <span className="tl-listitem__sub">
+                                        Hasta verificar: 1 publicación activa; los turnos se publican cuando te verifiquemos.
+                                    </span>
+                                </Stack>
                                 <div>
                                     <Button variant="tonal" size="sm" onClick={noop}>
                                         Ver mi verificación

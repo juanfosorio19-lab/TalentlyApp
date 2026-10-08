@@ -28,8 +28,12 @@ interface StepLayoutBaseProps extends Omit<ComponentPropsWithRef<'div'>, 'title'
     subtitle?: ReactNode;
     /** El contenido del paso (ChipGroup, campos, MediaUploader…). */
     children?: ReactNode;
-    /** BackButton = paso anterior (o salir, con su confirmación). La app pasa `useGoBack()` o su propio paso atrás. */
-    onBack: () => void;
+    /**
+     * BackButton = paso anterior (o salir, con su confirmación). La app pasa `useGoBack()` o su propio
+     * paso atrás. Sin él no hay BackButton: solo en ONB-01 del primer onboarding, que no tiene
+     * pantalla anterior (ahí el atrás de Android avisa y sale de la app).
+     */
+    onBack?: () => void;
     backLabel?: string;
     /** CTA fijo «Continuar» (primary lg). */
     onContinue: MouseEventHandler<HTMLButtonElement>;
@@ -56,11 +60,15 @@ export interface StepLayoutWizardProps extends StepLayoutBaseProps {
     menuLabel?: string;
 }
 
-/** Acceso (AUTH-02 a AUTH-06): la misma plantilla sin barra ni menú; el AppBar lleva solo el BackButton. */
+/**
+ * Sin barra ni «Paso X de N». Acceso (AUTH-02 a AUTH-06): sin menú; el AppBar lleva solo el
+ * BackButton. ONB-01 del primer onboarding: sin barra (N todavía no existe), sin BackButton (no
+ * hay pantalla anterior) y con el menú ⋯ del onboarding («Cerrar sesión», «Eliminar cuenta»).
+ */
 export interface StepLayoutAccessProps extends StepLayoutBaseProps {
     progress?: undefined;
-    onMenu?: undefined;
-    menuLabel?: undefined;
+    onMenu?: MouseEventHandler<HTMLButtonElement>;
+    menuLabel?: string;
 }
 
 export type StepLayoutProps = StepLayoutWizardProps | StepLayoutAccessProps;
@@ -110,13 +118,27 @@ export function StepLayout({
         const el = bodyRef.current;
         if (!el || typeof ResizeObserver === 'undefined') return;
         const observer = new ResizeObserver(measure);
+        const observeChildren = () => {
+            for (const child of Array.from(el.children)) observer.observe(child);
+        };
         observer.observe(el);
-        for (const child of Array.from(el.children)) observer.observe(child);
-        return () => observer.disconnect();
+        observeChildren();
+        // Un hijo directo que aparece después (un Banner, un campo condicional) también cuenta.
+        const mutations = typeof MutationObserver === 'undefined' ? null : new MutationObserver(() => {
+            observeChildren();
+            measure();
+        });
+        mutations?.observe(el, { childList: true });
+        return () => {
+            observer.disconnect();
+            mutations?.disconnect();
+        };
     }, [measure, step]);
 
-    // Al entrar a un paso, el foco va al título (sin mover el scroll).
+    // Cada paso abre arriba, con el H1 a la vista (el cuerpo se reutiliza entre pasos y guardaría
+    // el scroll del anterior), y el foco va al título. scrollTop y no scrollTo: jsdom no lo tiene.
     useEffect(() => {
+        if (bodyRef.current) bodyRef.current.scrollTop = 0;
         if (focusTitle) titleRef.current?.focus({ preventScroll: true });
     }, [focusTitle, step]);
 
@@ -132,9 +154,7 @@ export function StepLayout({
                 onBack={onBack}
                 backLabel={backLabel}
                 scrolled={edges.scrolled}
-                actions={
-                    progress && <IconButton icon={IconMore} label={menuLabel} aria-haspopup="dialog" onClick={onMenu} />
-                }
+                actions={onMenu && <IconButton icon={IconMore} label={menuLabel} aria-haspopup="dialog" onClick={onMenu} />}
             />
             {progress && (
                 <div

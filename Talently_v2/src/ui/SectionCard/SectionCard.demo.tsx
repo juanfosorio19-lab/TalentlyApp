@@ -31,17 +31,20 @@ const demo: DemoModule = {
                     </Stack>
                 </SectionCard>
                 <SectionCard title="Credenciales" onAdd={noop}>
+                    {/* Título y línea separados por 4, como el .kv del preview. */}
                     <SectionRow icon={IconDocument}>
-                        <span className="tl-listitem__body">
+                        <Stack gap={1}>
                             <span className="button-lg">Certificado de manipulación de alimentos</span>
                             <span className="tl-listitem__sub">Subido el 2 dic</span>
-                        </span>
+                        </Stack>
                     </SectionRow>
                     <SectionRow icon={IconDocument}>
-                        <span className="tl-listitem__body">
+                        <Stack gap={1}>
                             <span className="button-lg">Certificado de antecedentes</span>
-                            <Badge status="Recomendado" />
-                        </span>
+                            <div>
+                                <Badge status="Recomendado" />
+                            </div>
+                        </Stack>
                     </SectionRow>
                 </SectionCard>
             </DemoSection>

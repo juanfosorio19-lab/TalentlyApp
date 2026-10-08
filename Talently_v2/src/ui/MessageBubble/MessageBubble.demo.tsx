@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import type { DemoModule } from '../catalog/types';
 import { DemoFrame, DemoLabel, DemoNotApplicable, DemoSection } from '../catalog/demo';
-import { Avatar } from '../Avatar';
+import { AppBar } from '../AppBar';
 import { ContextChip, ContextChipBar } from '../ContextChip';
-import { IconMore } from '../icons';
-import { BackButton, IconButton } from '../IconButton';
 import { Stack } from '../Layout';
 import { Chat, ChatDay, MessageBubble, type MessageStatus } from './MessageBubble';
 
 const ROSA = 'Banquetería Rosa SpA';
+
+const noop = () => {};
 
 /** Conversación de Matías con Banquetería Rosa SpA (MSG-02, F1). «Reintentar» reenvía de verdad. */
 function Conversation() {
@@ -21,22 +21,12 @@ function Conversation() {
 
     return (
         <DemoFrame width={390}>
-            {/* AppBar de conversación (lo arma AppBar en las pantallas). */}
-            <header className="tl-appbar tl-appbar--chat">
-                <div className="tl-appbar__row">
-                    <BackButton />
-                    <a className="tl-appbar__who" href="#perfil" aria-label={`Ver perfil de ${ROSA}`}>
-                        <Avatar name={ROSA} kind="org" verified />
-                        <span className="tl-appbar__who-text">
-                            <span className="tl-appbar__name">{ROSA}</span>
-                            <span className="tl-appbar__meta">Organización verificada</span>
-                        </span>
-                    </a>
-                    <div className="tl-appbar__actions">
-                        <IconButton icon={IconMore} label="Más opciones" />
-                    </div>
-                </div>
-            </header>
+            <AppBar
+                variant="chat"
+                peer={{ name: ROSA, kind: 'org', verified: true, meta: 'Organización verificada', href: '#perfil' }}
+                onBack={noop}
+                onMore={noop}
+            />
             <ContextChipBar>
                 <ContextChip kind="turno" title="Garzón" detail="sáb 12 dic" />
             </ContextChipBar>
@@ -71,7 +61,7 @@ const demo: DemoModule = {
         <>
             <DemoSection title="Conversación · Matías y Banquetería Rosa SpA (F1)">
                 <Conversation />
-                <DemoLabel>Probar: «Reintentar» pasa a «Enviando…» y luego a «Enviado».</DemoLabel>
+                <DemoLabel>Probar: «Reintentar» pasa a «Enviando…» y luego a «Enviado»; con teclado, el foco queda en la burbuja.</DemoLabel>
             </DemoSection>
             <DemoSection title="Sin conexión · el mensaje queda en cola (M5)">
                 <Stack gap={2}>
@@ -101,7 +91,8 @@ const demo: DemoModule = {
             </DemoSection>
             <DemoSection title="Foco">
                 <DemoNotApplicable>
-                    La conversación se recorre mensaje a mensaje con lector de pantalla; no hay foco visual en la burbuja.
+                    La conversación se recorre mensaje a mensaje con lector de pantalla; la burbuja no está en el orden de tabulación. Solo
+                    si «Reintentar» tenía el foco, este pasa a la burbuja propia cuando el botón se va.
                 </DemoNotApplicable>
             </DemoSection>
             <DemoSection title="Seleccionado">

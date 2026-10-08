@@ -27,6 +27,7 @@ describe('teléfonos chilenos', () => {
         '$35.000.000 al año',
         'Mi RUT es 12.345.678-9',
         'RUT 9.876.543-2',
+        'Mi RUT es 21456789-3',
         'Emitido el 30-11-2026',
         'Nos vemos el 12/12/2026 a las 17:30',
         'De 18.00 - 23.30',

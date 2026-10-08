@@ -7,7 +7,7 @@ export interface StackProps extends ComponentPropsWithRef<'div'> {
     /** En fila, centrado verticalmente. */
     row?: boolean;
     /** Alineación de los hijos en el eje cruzado (por defecto, estirados). */
-    align?: 'center' | 'end';
+    align?: 'start' | 'center' | 'end';
 }
 
 /** Pila vertical (o fila) con separación del sistema. Solo maqueta: no dibuja nada. */

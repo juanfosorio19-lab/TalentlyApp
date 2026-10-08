@@ -143,16 +143,17 @@ const demo: DemoModule = {
 
             <DemoSection title="Transparente · íconos sobre círculo color-surface al 90 %">
                 <Example caption="Sobre una foto (F3 · galería de un servicio)" height={260}>
-                    {/* Una foto real nunca es de stock: en el catálogo, el recuadro rayado de la galería. */}
-                    <div className="tl-capture__shot">
-                        <span>Foto del trabajo, subida por el prestador</span>
-                    </div>
+                    {/* El AppBar va antes de la foto en el DOM: la foto pasa por debajo. */}
                     <AppBar
                         variant="transparent"
                         title="Gasfitería e instalación de gas"
                         onBack={noop}
                         actions={<>{share}{save}</>}
                     />
+                    {/* Una foto real nunca es de stock: en el catálogo, el recuadro rayado de la galería. */}
+                    <div className="tl-capture__shot">
+                        <span>Foto del trabajo, subida por el prestador</span>
+                    </div>
                 </Example>
                 <Example caption="Transparente después del scroll · pasa a standard" height={72}>
                     <AppBar

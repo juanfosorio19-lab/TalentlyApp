@@ -20,7 +20,7 @@ button, input, textarea, select { font: inherit; }
 /* Pantalla de la app: una columna que ocupa el alto visible; el contenido
    scrollea entre el AppBar (sticky) y la TabBar o el CTA fijo (sticky). */
 .tl-app-screen {
-  display: flex; flex-direction: column; min-height: 100%;
+  display: flex; flex-direction: column; min-height: 100%; overflow-x: clip;
   background: var(--color-bg); color: var(--color-text);
 }
 .tl-app-screen__body { flex: 1; min-width: 0; }
@@ -119,6 +119,26 @@ body > .tl-sheet ~ .tl-scrim, body > .tl-dialog ~ .tl-scrim { z-index: var(--z-m
 .tl-event::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--color-text); opacity: 0; pointer-events: none; }
 .tl-event:active::before, .tl-event.is-pressed::before { opacity: .08; }
 
+/* B14 · AppBar transparente (DET-01): bundle.css lo deja en absolute (marco del mockup);
+   con el scroll de la ventana se iría con la foto y nunca mostraría is-scrolled. En la app
+   queda pegado arriba y la cabecera pasa por debajo. El header va antes de la foto. */
+.tl-app-screen > .tl-appbar--transparent {
+  position: sticky; top: 0;
+  margin-bottom: calc(-1 * (var(--layout-status-bar) + var(--layout-appbar)));
+}
+
+/* B15 · Deck: mientras el dedo arrastra, la tarjeta lo sigue sin transición y sin la capa
+   de presionado de la tarjeta. */
+.tl-deck__card.is-dragging { transition: none; }
+.tl-deck__card.is-dragging::before { opacity: 0; }
+
+/* B16 · El H1 de un paso (StepLayout) recibe el foco por código al entrar: sin contorno. */
+.tl-steplayout__title:focus { outline: 0; }
+
+/* B17 · Card tocable como enlace. */
+a.tl-card--action { text-decoration: none; }
+
 /* Alineación de pilas (Stack align): cabecera centrada de un perfil, del esqueleto de perfil. */
+.tl-stack--start { align-items: flex-start; }
 .tl-stack--center { align-items: center; text-align: center; }
 .tl-stack--end { align-items: flex-end; }

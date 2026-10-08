@@ -39,13 +39,23 @@ export interface AppBarLargeProps extends AppBarCommonProps {
 }
 
 export interface AppBarStandardProps extends AppBarCommonProps {
-    /** `transparent`: sin título hasta el scroll y con los íconos sobre un círculo `color-surface` al 90 %. */
+    /**
+     * `transparent`: sobre una foto o la cabecera de un detalle (DET-01). Sin título hasta el scroll
+     * y con los íconos sobre un círculo `color-surface` al 90 %; con `scrolled`, pasa a standard con
+     * título. Va como primer hijo de la pantalla, antes de la foto en el DOM: la foto pasa por debajo.
+     * Ojo: bundle.css lo deja en `position: absolute` (no sticky), así que con scroll de ventana sube
+     * junto con la foto hasta que app.css lo fije arriba (brecha anotada para BRECHAS.md).
+     */
     variant: 'standard' | 'transparent';
     /** H3 centrado que se corta con «…». Sin título (acceso, AUTH-02 a AUTH-06), solo el BackButton. */
     title?: ReactNode;
     titleAs?: AppBarTitleTag;
-    /** Obligatorio: la app pasa `useGoBack()` (vuelve a la pantalla de origen, como el atrás de Android). */
-    onBack: () => void;
+    /**
+     * La app pasa `useGoBack()` (vuelve a la pantalla de origen, como el atrás de Android). Sin él no
+     * hay BackButton, y la columna de 92 queda vacía: solo en la primera pantalla de un flujo, que no
+     * tiene pantalla anterior (ONB-01 del primer onboarding, vía StepLayout).
+     */
+    onBack?: () => void;
     backLabel?: string;
     /** Hasta 2 IconButton («Compartir», «Guardar», «Más opciones»). */
     actions?: ReactNode;
@@ -147,9 +157,7 @@ export function AppBar(props: AppBarProps) {
             >
                 <div className="tl-statusbar" aria-hidden="true" />
                 <div className="tl-appbar__row">
-                    <div>
-                        <BackButton label={backLabel} onClick={onBack} />
-                    </div>
+                    <div>{onBack && <BackButton label={backLabel} onClick={onBack} />}</div>
                     {title != null && title !== '' ? (
                         <Title className="tl-appbar__title h3">{title}</Title>
                     ) : (

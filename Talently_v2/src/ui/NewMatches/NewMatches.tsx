@@ -2,7 +2,6 @@ import type { ComponentPropsWithRef, MouseEvent } from 'react';
 import { Avatar, type AvatarKind } from '../Avatar';
 import { contextChipText, PUBLICATION_TYPES, type ContextChipContent } from '../ContextChip';
 import { cx } from '../cx';
-import { ScreenSection } from '../Layout';
 
 export interface NewMatch {
     /** Identificador del match (la `key` de la fila). */
@@ -82,10 +81,13 @@ export interface NewMatchesProps extends Omit<ComponentPropsWithRef<'section'>, 
  * pantalla. Con el primer mensaje, el match sale de aquí y pasa a la lista de
  * conversaciones. Sin matches nuevos no se muestra: nunca una fila vacía ni «0».
  */
-export function NewMatches({ matches, onOpen, ...rest }: NewMatchesProps) {
+export function NewMatches({ matches, onOpen, className, ...rest }: NewMatchesProps) {
     if (matches.length === 0) return null;
+    // Como el preview: H2 y 8 hasta la fila. ScreenSection no sirve aquí: su cabecera mide 36 (para un
+    // Button sm) y bajaría la fila 8. Solo clases existentes: pila de 8 y el título sin margen.
     return (
-        <ScreenSection title={`Nuevos matches (${matches.length})`} {...rest}>
+        <section className={cx('tl-stack tl-stack--2', className)} {...rest}>
+            <h2 className="h2 tl-screen-section__title">{`Nuevos matches (${matches.length})`}</h2>
             <ul className="tl-newmatches">
                 {matches.map((m) => (
                     <li key={m.id}>
@@ -93,6 +95,6 @@ export function NewMatches({ matches, onOpen, ...rest }: NewMatchesProps) {
                     </li>
                 ))}
             </ul>
-        </ScreenSection>
+        </section>
     );
 }

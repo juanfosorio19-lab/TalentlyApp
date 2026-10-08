@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { DemoModule } from '../catalog/types';
 import { DemoFrame, DemoLabel, DemoNotApplicable, DemoRow, DemoSection } from '../catalog/demo';
 import { Chat, MessageBubble } from '../MessageBubble';
-import { CertificateCard, InterviewCard, QuoteCard, type QuoteState } from './SystemCard';
+import { CertificateCard, InterviewCard, QuoteCard, type QuoteAction, type QuoteState } from './SystemCard';
 
 const noop = () => {};
 
@@ -16,26 +16,37 @@ const QUOTE = {
     validUntil: 'dom 20 jun',
 } as const;
 
-/** Cotización de verdad: «Aceptar» carga y pasa a «Aceptado»; «Rechazar» la deja vencida para pedir otra. */
-function LiveQuote() {
-    const [state, setState] = useState<QuoteState>('open');
-    const [loading, setLoading] = useState<'accept' | 'reject' | 'request' | undefined>();
-    const run = (action: 'accept' | 'reject' | 'request', next: QuoteState) => () => {
+/**
+ * Cotización de verdad. Abierta: «Aceptar» carga y pasa a «Aceptado»; «Rechazar» carga y vuelve a
+ * abierta (rechazar no la vence: en la app, SRV-02 pide el motivo en una hoja). Vencida: «Pedir nueva
+ * cotización» carga y llega una nueva, abierta.
+ */
+function LiveQuote({ initial }: { initial: QuoteState }) {
+    const [state, setState] = useState<QuoteState>(initial);
+    const [loading, setLoading] = useState<QuoteAction | undefined>();
+    const [result, setResult] = useState(initial === 'expired' ? 'La cotización venció.' : 'Esperando tu respuesta.');
+    const timer = useRef<number | undefined>(undefined);
+    useEffect(() => () => window.clearTimeout(timer.current), []);
+    const run = (action: QuoteAction, next: QuoteState, done: string) => () => {
         setLoading(action);
-        window.setTimeout(() => {
+        timer.current = window.setTimeout(() => {
             setLoading(undefined);
             setState(next);
+            setResult(done);
         }, 900);
     };
     return (
-        <QuoteCard
-            {...QUOTE}
-            state={state}
-            loading={loading}
-            onReject={run('reject', 'expired')}
-            onAccept={run('accept', 'accepted')}
-            onRequestNew={run('request', 'open')}
-        />
+        <DemoRow column>
+            <QuoteCard
+                {...QUOTE}
+                state={state}
+                loading={loading}
+                onReject={run('reject', 'open', 'Rechazaste la cotización.')}
+                onAccept={run('accept', 'accepted', 'Aceptaste la cotización: se abre el pago.')}
+                onRequestNew={run('request', 'open', 'Llegó una cotización nueva.')}
+            />
+            <span className="caption dev-label">{result}</span>
+        </DemoRow>
     );
 }
 
@@ -95,7 +106,12 @@ const demo: DemoModule = {
                 </DemoLabel>
             </DemoSection>
             <DemoSection title="Probar: aceptar, rechazar y pedir otra">
-                <LiveQuote />
+                <DemoRow column>
+                    <DemoLabel>Abierta · «Aceptar» o «Rechazar»</DemoLabel>
+                    <LiveQuote initial="open" />
+                    <DemoLabel>Vencida · «Pedir nueva cotización»</DemoLabel>
+                    <LiveQuote initial="expired" />
+                </DemoRow>
             </DemoSection>
             <DemoSection title="Default">
                 <DemoLabel>Mostrado arriba.</DemoLabel>

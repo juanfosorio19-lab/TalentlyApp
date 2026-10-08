@@ -111,7 +111,15 @@ export function Composer({
     }
 
     const text = value.trim();
-    const shownNotice = hasContactInfo(value) ? <Banner tone="warning">{SAFETY_NOTICE}</Banner> : notice;
+    const unsafe = hasContactInfo(value);
+    // El Banner nace ya escrito y así no se anuncia: lo anuncia la región viva de abajo (aria-live="off" evita el doble aviso).
+    const shownNotice = unsafe ? (
+        <Banner tone="warning" aria-live="off">
+            {SAFETY_NOTICE}
+        </Banner>
+    ) : (
+        notice
+    );
 
     const send = () => {
         if (!text || sending) return;
@@ -134,6 +142,11 @@ export function Composer({
                 </div>
             )}
             <div className={cx('tl-composer', className)}>
+                {/* Región viva montada siempre (TalkBack y VoiceOver iOS no leen una que entra al DOM ya llena). Va
+                    dentro de la barra para no romper `.tl-composer__notice + .tl-composer`; `.tl-vh` no ocupa lugar. */}
+                <span className="tl-vh" role="status">
+                    {unsafe ? SAFETY_NOTICE : ''}
+                </span>
                 {onAttach && <IconButton icon={IconAttach} label="Adjuntar" onClick={onAttach} {...attachProps} />}
                 <label className="tl-composer__field">
                     <span className="tl-vh">{label}</span>

@@ -72,6 +72,14 @@ describe('AppBar', () => {
         expect(onBack).toHaveBeenCalledTimes(1);
     });
 
+    it('standard sin onBack (ONB-01): sin BackButton, pero conserva las 3 columnas', () => {
+        render(<AppBar variant="standard" actions={<button type="button">Más</button>} />);
+        const row = document.querySelector('.tl-appbar__row')!;
+        expect(row.children).toHaveLength(3);
+        expect(row.children[0]!.childElementCount).toBe(0);
+        expect(document.querySelector('.tl-backbtn')).toBeNull();
+    });
+
     it('chat: el nombre es un enlace al perfil público', () => {
         render(
             <AppBar

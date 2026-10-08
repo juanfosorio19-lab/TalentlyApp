@@ -38,9 +38,53 @@ describe('ListItem: la fila es un elemento tocable real', () => {
     });
 
     it('con controles adentro (quitar) es un div, aunque reciba href: nunca un botón dentro de otro', () => {
+        const error = vi.spyOn(console, 'error').mockImplementation(() => {});
         render(<ListItem title="Certificado.pdf" href="/x" onRemove={() => {}} />);
         expect(row().tagName).toBe('DIV');
         expect(row().querySelector('button')!.getAttribute('aria-label')).toBe('Quitar Certificado.pdf');
+        // Sin chevron: el div no navega, así que no promete hacerlo. Y avisa en desarrollo.
+        expect(row().querySelector('.tl-listitem__end > .tl-icon')).toBeNull();
+        expect(error).toHaveBeenCalledWith(expect.stringContaining('ListItem: una fila con controles adentro no navega'));
+        error.mockRestore();
+    });
+
+    it('persona: siempre un div, aunque reciba onClick y un Button al final', () => {
+        const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const onClick = vi.fn();
+        render(<ListItem variant="person" title="Martín Silva" onClick={onClick} end={<button type="button">Confirmar</button>} />);
+        expect(row().tagName).toBe('DIV');
+        expect(row().querySelector('button button')).toBeNull();
+        expect(row().querySelector('.tl-listitem__end > .tl-icon')).toBeNull();
+        expect(error).not.toHaveBeenCalledWith(expect.stringContaining('cannot be a descendant'));
+        error.mockRestore();
+    });
+
+    it('con Switch: tocar la fila no repite onClick y cambia el Switch una vez', () => {
+        const onChange = vi.fn();
+        render(<ListItem title="Avisarme de turnos nuevos" toggle={{ defaultChecked: true, onChange }} />);
+        act(() => row().querySelector<HTMLElement>('.tl-listitem__title')!.click());
+        expect(onChange).toHaveBeenCalledTimes(1);
+        expect(row().querySelector<HTMLInputElement>('input[role="switch"]')!.checked).toBe(false);
+    });
+
+    it('dos canales cargando: ningún Switch cambia mientras se guarda', () => {
+        const onChange = vi.fn();
+        render(
+            <ListItem
+                title="Mensajes"
+                loading
+                channels={[
+                    { label: 'Mensajes en el teléfono', defaultChecked: true, onChange },
+                    { label: 'Mensajes por correo', onChange },
+                ]}
+            />,
+        );
+        const inputs = row().querySelectorAll<HTMLInputElement>('input[role="switch"]');
+        act(() => inputs.forEach((input) => input.click()));
+        expect(onChange).not.toHaveBeenCalled();
+        expect(inputs[0]!.checked).toBe(true);
+        expect(inputs[1]!.checked).toBe(false);
+        expect(inputs[1]!.getAttribute('aria-busy')).toBe('true');
     });
 
     it('con Switch es un label y el Switch se llama como la fila', () => {

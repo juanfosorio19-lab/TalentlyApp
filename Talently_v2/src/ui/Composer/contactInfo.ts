@@ -28,6 +28,7 @@ const DIGIT_RUN = /(?<![\p{L}\p{N}$])\+?\(?\d[\d\s().-]*\d(?![\p{L}\p{N}])/gu;
 const NOT_PHONE = [
     /^\d{1,3}(?:\.\d{3})+(?:,\d+)?$/, // monto con punto de miles: 650.000, 35.000.000
     /^\d{1,2}\.\d{3}\.\d{3}-?\d?$/, // RUT: 12.345.678-9
+    /^\d{7,8}-\d$/, // RUT sin puntos: 21456789-3 (los de 20 a 26 millones tienen 9 cifras desde el 2, como un fijo)
     /^\d{1,2}[-.]\d{1,2}[-.]\d{2,4}$/, // fecha: 30-11-2026, 12.12.26
     /^\d{1,2}[.:]\d{2}\s*-\s*\d{1,2}[.:]\d{2}$/, // horario: 18.00 - 23.30
 ];

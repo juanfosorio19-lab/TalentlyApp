@@ -165,7 +165,7 @@ export function PublicationCardDeck({
         const card = top;
         const el = topRef.current;
         // La salida dura lo que la transición de `.tl-deck__card` (duration-slow). No se lee
-        // transitionDuration porque durante el arrastre la tarjeta lleva `transition: none`.
+        // transitionDuration porque durante el arrastre la tarjeta lleva `.is-dragging` (sin transición, app.css B15).
         const ms = el ? parseFloat(getComputedStyle(el).getPropertyValue('--duration-slow')) || 0 : 0;
         const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
         const finish = () => {
@@ -240,13 +240,7 @@ export function PublicationCardDeck({
     let dragStyle: CSSProperties | undefined;
     if (active) {
         const tilt = Math.max(-1, Math.min(1, active.dx / (Math.max(active.width, 1) * THRESHOLD))) * MAX_TILT;
-        dragStyle = {
-            transform: `translateX(${active.dx}px) rotate(${tilt}deg)`,
-            // Mientras el dedo arrastra, sin transición (si no, la tarjeta se queda atrás).
-            // Provisorio: no es un valor calculado; bundle.css no trae `.tl-deck__card.is-dragging
-            // { transition: none }` (brecha). Cuando lo traiga, va la clase y se borra esta línea.
-            transition: active.phase === 'drag' ? 'none' : undefined,
-        };
+        dragStyle = { transform: `translateX(${active.dx}px) rotate(${tilt}deg)` };
     }
     // Provisorio hasta que bundle.css estire la tarjeta al alto disponible (ver `cardMinHeight`).
     const minHeight: CSSProperties | undefined = cardMinHeight ? { minHeight: cardMinHeight } : undefined;
@@ -266,7 +260,7 @@ export function PublicationCardDeck({
                                 {...data}
                                 variant="deck"
                                 ref={topRef}
-                                className={cx(side && `is-drag-${side}`, cardClassName)}
+                                className={cx(side && `is-drag-${side}`, active?.phase === 'drag' && 'is-dragging', cardClassName)}
                                 style={{ ...minHeight, ...dragStyle }}
                                 onPointerDown={onPointerDown}
                                 onPointerMove={onPointerMove}

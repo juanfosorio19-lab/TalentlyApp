@@ -1,4 +1,4 @@
-import type { ComponentPropsWithRef, ReactNode } from 'react';
+import type { ComponentPropsWithRef, MouseEvent, ReactNode } from 'react';
 import { Button } from '../Button';
 import { cx } from '../cx';
 import { IconAlert, IconClock } from '../icons';
@@ -21,7 +21,12 @@ export interface MessageBubbleProps extends Omit<ComponentPropsWithRef<'div'>, '
     time: string;
     /** Solo en mensajes propios. Sin estado, la meta muestra solo la hora. */
     status?: MessageStatus;
-    /** «Reintentar» de un mensaje que no se envió. Sin handler no se muestra el botón. */
+    /**
+     * «Reintentar» de un mensaje que no se envió. Sin handler no se muestra el
+     * botón. Con «Enviando…» el botón se va: si tenía el foco (teclado, lector
+     * de pantalla), el foco pasa a la burbuja y no cae en `<body>`. Para eso la
+     * pantalla mantiene la `key` del mensaje al reenviarlo.
+     */
     onRetry?: () => void;
     /**
      * Quién lo escribió, solo para lectores de pantalla (la conversación se
@@ -53,6 +58,13 @@ export function MessageBubble({
     const state = own ? status : undefined;
     const who = sender ?? (own ? 'Tú' : undefined);
 
+    const retry = (e: MouseEvent<HTMLButtonElement>) => {
+        const button = e.currentTarget;
+        // El botón se desmonta con «Enviando…»: si tenía el foco, lo toma la burbuja (tabIndex -1).
+        if (button === document.activeElement) button.closest<HTMLElement>('.tl-msg')?.focus({ preventScroll: true });
+        onRetry?.();
+    };
+
     let meta: ReactNode;
     if (state === 'sending') {
         meta = (
@@ -67,7 +79,7 @@ export function MessageBubble({
                 <IconAlert size={16} />
                 <span>No se envió</span>
                 {onRetry && (
-                    <Button variant="ghost" size="sm" onClick={onRetry}>
+                    <Button variant="ghost" size="sm" onClick={retry}>
                         Reintentar
                     </Button>
                 )}
@@ -92,8 +104,11 @@ export function MessageBubble({
                 own && 'tl-msg--own',
                 state === 'error' && 'tl-msg--error',
                 state === 'queued' && 'tl-msg--queued',
+                // Fuera del orden de tabulación; solo recibe el foco al dejar «Reintentar» (foco oficial).
+                own && 'tl-focus',
                 className,
             )}
+            tabIndex={own ? -1 : undefined}
             {...rest}
         >
             <div className="tl-bubble">

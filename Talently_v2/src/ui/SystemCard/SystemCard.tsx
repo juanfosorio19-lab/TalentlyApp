@@ -287,7 +287,8 @@ export function QuoteCard({
                 Pedir nueva cotización
             </Button>
         );
-    } else if (state === 'open') {
+    } else if (state === 'open' && (onReject || onAccept)) {
+        // Sin handlers no hay acciones: un fragmento vacío dibujaría `.tl-syscard__actions` vacío con su margen.
         actions = (
             <>
                 {onReject && (
