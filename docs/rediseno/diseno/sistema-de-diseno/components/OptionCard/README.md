@@ -1,0 +1,11 @@
+# OptionCard
+
+Tarjeta de elección grande y tocable, para onboarding, publicar y filtros importantes. Modos single (radio) y multi (checkbox), con un solo indicador: círculo de 22 a la derecha.
+
+- Marcado: `label.tl-option` > `input` + `.tl-option__bg` + `.tl-option__tile` (ícono 40, `radius-md`, `color-primary-subtle`) + `.tl-option__body` (título 16/600 y línea de ejemplo 14 en `color-text-2`, Badge opcional) + `.tl-option__ind`. Grupo: `fieldset.tl-optgroup` (o `--grid` para 2 columnas; la tarjeta lleva `tl-option--grid`).
+- Borde 1,5, `radius-lg`, padding 16. Seleccionada: borde `color-primary-text`, fondo `color-primary-subtle`, título y ejemplo en `color-on-primary-subtle`, el tile pasa a `color-surface` y el círculo se rellena de `color-primary` con check en `color-on-primary`.
+- El indicador es el mismo en single y multi: no hay otros indicadores de selección en tarjetas (hoy hay 6).
+- Presionado: capa al 8 %. Foco: contorno 2 px `color-primary-text` + halo. Error del grupo: bordes `color-danger-text` y mensaje al pie. Deshabilitado: `color-surface-2` y textos `color-text-disabled`.
+- Lo no lanzado se muestra solo como pre-registro, con su Badge info («Reservas desde marzo», «Reservas desde junio»).
+- Plan (M7, PUBL-08): `tl-option--grid.tl-option--plan` en una grilla de 2, Clásica y Premium lado a lado. Suma `.tl-option__price` (Amount: «Gratis», «$14.990 por 30 días», «$9.990 por turno»; en F3 la Clásica dice su límite «Gratis: 1 empleo activo y 3 turnos al mes») y `.tl-option__list` (lo que incluye, con viñetas, nunca con checks; la primera línea de Premium es el PromotedBadge «Destacado»). Antes de F3, Premium va `is-disabled` con `aria-disabled` y el Badge neutral «Pronto» en lugar del precio: se ve deshabilitada, lo que incluye sigue legible y tocarla muestra el Snackbar «Te avisaremos cuando puedas destacar tus publicaciones».
+- Atajo (M4): `a.tl-option.tl-option--link` sin `input` ni círculo, en la grilla «¿Qué necesitas?» del Inicio del hogar. Navega, no elige: abre Publicar con esa necesidad ya puesta (Asesor/a del hogar, Cuidador/a infantil o de adulto mayor → aviso del hogar; Banquetero/a para un evento → turno para un evento) y, desde F2, «Clases» abre Explorar · Clases. Mismo tile, título, borde, presionado y foco; no tiene seleccionado ni deshabilitado. Un frame F1 no muestra «Clases».

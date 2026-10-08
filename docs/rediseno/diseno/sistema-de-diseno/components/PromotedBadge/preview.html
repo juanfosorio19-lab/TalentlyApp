@@ -1,0 +1,54 @@
+<!-- @dsCard group="L5 · Estados y dominio" height=1100 width=960 subtitle="«Destacado» para todo lo pagado · «Pronto» antes de F3" -->
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>PromotedBadge</title>
+<style>
+  html, body { margin:0; background:var(--color-bg); }
+  .ds { display:grid; grid-template-columns:1fr 1fr; font-family:var(--font-sans); }
+  .ds-panel { background:var(--color-bg); color:var(--color-text); padding:var(--space-6); min-width:0; }
+  .ds-theme { display:flex; align-items:center; gap:var(--space-2); margin:0 0 var(--space-4); color:var(--color-text-2); }
+  .ds-theme i { width:12px; height:12px; border-radius:var(--radius-full); border:1px solid var(--color-border-strong); background:var(--color-surface); }
+  .ds-sec { margin:var(--space-6) 0 var(--space-3); color:var(--color-text-2); }
+  .ds-sec:first-of-type { margin-top:0; }
+  .mono { font-variant-numeric: tabular-nums; }
+  .g { display:inline-flex; align-items:center; height:20px; padding:0 var(--space-2); border-radius:var(--radius-full); font-size:11px; line-height:16px; font-weight:600; white-space:nowrap; vertical-align:1px; margin-left:var(--space-1); }
+  .g.ok   { background:var(--color-success-subtle); color:var(--color-success-text); }
+  .g.bad  { background:var(--color-danger-subtle);  color:var(--color-danger-text); }
+  .g.warn { background:var(--color-warning-subtle); color:var(--color-warning-text); }
+  .g.mute { background:var(--color-surface-2);      color:var(--color-text-2); }
+
+  .sec { margin:var(--space-8) 0 var(--space-3); color:var(--color-text-2); }
+  .sec:first-of-type { margin-top:0; }
+  .st { padding:var(--space-4) 0; border-top:1px solid var(--color-border); }
+  .sec + .st { border-top:0; padding-top:0; }
+  .st-n { margin:0 0 var(--space-3); color:var(--color-text-2); }
+  .st-c { display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-3); }
+  .st-c.col { flex-direction:column; align-items:stretch; gap:var(--space-4); }
+  .na { display:flex; align-items:flex-start; gap:var(--space-2); font-size:13px; line-height:18px; font-weight:500; color:var(--color-text-2); }
+  .na .tl-badge { flex:none; }
+  .cap { margin:var(--space-2) 0 0; font-size:12px; line-height:16px; font-weight:500; color:var(--color-text-3); }
+  .grid3 { display:grid; grid-template-columns:repeat(3, 1fr); gap:var(--space-3); align-items:center; }
+  code { font-family:inherit; font-weight:600; }
+  .colh { font-size:12px; line-height:16px; font-weight:600; color:var(--color-text-3); }
+
+  .frame { position:relative; width:390px; overflow:hidden; border:1px solid var(--color-border); border-radius:var(--radius-lg); background:var(--color-bg); }
+  .frame.tall { height:600px; } .frame.mid { height:460px; } .frame.bar { height:auto; }
+  .ft { margin:var(--space-6) 0 var(--space-2); font-size:12px; line-height:16px; font-weight:600; color:var(--color-text-3); }
+  .ft:first-child { margin-top:0; }
+  .ph { display:flex; flex-direction:column; gap:var(--space-3); padding:var(--space-4); }
+  .ph i { display:block; height:72px; border:1px solid var(--color-border); border-radius:var(--radius-lg); background:var(--color-surface); }
+  .ph i.s { height:40px; }
+  .phase { display:flex; align-items:center; gap:var(--space-2); margin-bottom:var(--space-2); font-size:12px; line-height:16px; font-weight:500; color:var(--color-text-2); }
+
+</style>
+</head>
+<body>
+<div class="ds">
+<section class="ds-panel" data-theme="light"><p class="ds-theme overline"><i></i>Claro</p><p class="sec overline">PromotedBadge · pill de 24 · color-surface · borde 1 color-border-strong · texto 12/600 color-text-2 · ícono impulso de 14</p><div class="st-c"><span class="tl-promoted"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 17.2 5.6-5.6 3.8 3.8 7.4-7.4M14.8 8h5.5v5.5"/></g></svg></span>Destacado</span></div><p class="sec overline">Antes de que se pueda comprar (F1 y F2) · Badge neutral «Pronto»</p><ul class="tl-list"><li><div class="tl-listitem"><span class="tl-listitem__tile"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 17.2 5.6-5.6 3.8 3.8 7.4-7.4M14.8 8h5.5v5.5"/></g></svg></span></span><span class="tl-listitem__body"><span class="tl-listitem__title">Impulsa tu perfil</span><span class="tl-listitem__sub">Aparece antes en las búsquedas de tu oficio</span></span><span class="tl-listitem__end"><span class="tl-badge">Pronto</span></span></div></li><li><div class="tl-listitem"><span class="tl-listitem__tile"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 17.2 5.6-5.6 3.8 3.8 7.4-7.4M14.8 8h5.5v5.5"/></g></svg></span></span><span class="tl-listitem__body"><span class="tl-listitem__title">Publicación Premium</span><span class="tl-listitem__sub">Tu publicación con la etiqueta «Destacado»</span></span><span class="tl-listitem__end"><span class="tl-badge">Pronto</span></span></div></li></ul><p class="cap">En F1 y F2 se muestran con «Pronto» en lugar del precio y no se pueden comprar. La compra llega en F3.</p><p class="sec overline">Estados</p><div class="st"><p class="st-n overline">Default</p><p class="cap" style="margin:0">Mostrado arriba.</p></div><div class="st"><p class="st-n overline">Presionado</p><div class="na"><span class="tl-badge">No aplica</span><span>No se toca.</span></div></div><div class="st"><p class="st-n overline">Foco</p><div class="na"><span class="tl-badge">No aplica</span><span>No recibe foco.</span></div></div><div class="st"><p class="st-n overline">Seleccionado</p><div class="na"><span class="tl-badge">No aplica</span><span>No se marca.</span></div></div><div class="st"><p class="st-n overline">Deshabilitado</p><div class="na"><span class="tl-badge">No aplica</span><span>No aplica.</span></div></div><div class="st"><p class="st-n overline">Error</p><div class="na"><span class="tl-badge">No aplica</span><span>No aplica.</span></div></div><div class="st"><p class="st-n overline">Cargando</p><div class="na"><span class="tl-badge">No aplica</span><span>No aplica.</span></div></div></section>
+<section class="ds-panel" data-theme="dark"><p class="ds-theme overline"><i></i>Oscuro</p><p class="sec overline">PromotedBadge · pill de 24 · color-surface · borde 1 color-border-strong · texto 12/600 color-text-2 · ícono impulso de 14</p><div class="st-c"><span class="tl-promoted"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 17.2 5.6-5.6 3.8 3.8 7.4-7.4M14.8 8h5.5v5.5"/></g></svg></span>Destacado</span></div><p class="sec overline">Antes de que se pueda comprar (F1 y F2) · Badge neutral «Pronto»</p><ul class="tl-list"><li><div class="tl-listitem"><span class="tl-listitem__tile"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 17.2 5.6-5.6 3.8 3.8 7.4-7.4M14.8 8h5.5v5.5"/></g></svg></span></span><span class="tl-listitem__body"><span class="tl-listitem__title">Impulsa tu perfil</span><span class="tl-listitem__sub">Aparece antes en las búsquedas de tu oficio</span></span><span class="tl-listitem__end"><span class="tl-badge">Pronto</span></span></div></li><li><div class="tl-listitem"><span class="tl-listitem__tile"><span class="tl-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 17.2 5.6-5.6 3.8 3.8 7.4-7.4M14.8 8h5.5v5.5"/></g></svg></span></span><span class="tl-listitem__body"><span class="tl-listitem__title">Publicación Premium</span><span class="tl-listitem__sub">Tu publicación con la etiqueta «Destacado»</span></span><span class="tl-listitem__end"><span class="tl-badge">Pronto</span></span></div></li></ul><p class="cap">En F1 y F2 se muestran con «Pronto» en lugar del precio y no se pueden comprar. La compra llega en F3.</p><p class="sec overline">Estados</p><div class="st"><p class="st-n overline">Default</p><p class="cap" style="margin:0">Mostrado arriba.</p></div><div class="st"><p class="st-n overline">Presionado</p><div class="na"><span class="tl-badge">No aplica</span><span>No se toca.</span></div></div><div class="st"><p class="st-n overline">Foco</p><div class="na"><span class="tl-badge">No aplica</span><span>No recibe foco.</span></div></div><div class="st"><p class="st-n overline">Seleccionado</p><div class="na"><span class="tl-badge">No aplica</span><span>No se marca.</span></div></div><div class="st"><p class="st-n overline">Deshabilitado</p><div class="na"><span class="tl-badge">No aplica</span><span>No aplica.</span></div></div><div class="st"><p class="st-n overline">Error</p><div class="na"><span class="tl-badge">No aplica</span><span>No aplica.</span></div></div><div class="st"><p class="st-n overline">Cargando</p><div class="na"><span class="tl-badge">No aplica</span><span>No aplica.</span></div></div></section>
+</div>
+
+</body>
+</html>

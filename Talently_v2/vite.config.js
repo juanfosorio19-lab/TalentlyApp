@@ -12,6 +12,13 @@ try {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  // Dos entradas: index.html es la app actual (la que viaja por OTA al APK);
+  // v3.html es el rediseño (Talently 3.0), aislado hasta que reemplace a la actual.
+  build: {
+    rollupOptions: {
+      input: { main: 'index.html', v3: 'v3.html' },
+    },
+  },
   define: {
     __BUILD_COMMIT__: JSON.stringify(buildCommit),
     __BUILD_DATE__: JSON.stringify(new Date().toISOString().slice(0, 10)),

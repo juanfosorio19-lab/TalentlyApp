@@ -1,0 +1,63 @@
+<!-- @dsCard group="L2 · Marca e íconos" height=710 width=960 subtitle="Los 14 de la sección 10.3, tal cual · text, text-3 y primary-text" -->
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Íconos oficiales</title>
+<style>
+  html, body { margin:0; background:var(--color-bg); }
+  .ds { display:grid; grid-template-columns:1fr 1fr; font-family:var(--font-sans); }
+  .ds-panel { background:var(--color-bg); color:var(--color-text); padding:var(--space-6); min-width:0; }
+  .ds-theme { display:flex; align-items:center; gap:var(--space-2); margin:0 0 var(--space-4); color:var(--color-text-2); }
+  .ds-theme i { width:12px; height:12px; border-radius:var(--radius-full); border:1px solid var(--color-border-strong); background:var(--color-surface); }
+  .ds-sec { margin:var(--space-6) 0 var(--space-3); color:var(--color-text-2); }
+  .ds-sec:first-of-type { margin-top:0; }
+  .mono { font-variant-numeric: tabular-nums; }
+  .g { display:inline-flex; align-items:center; height:20px; padding:0 var(--space-2); border-radius:var(--radius-full); font-size:11px; line-height:16px; font-weight:600; white-space:nowrap; vertical-align:1px; margin-left:var(--space-1); }
+  .g.ok   { background:var(--color-success-subtle); color:var(--color-success-text); }
+  .g.bad  { background:var(--color-danger-subtle);  color:var(--color-danger-text); }
+  .g.warn { background:var(--color-warning-subtle); color:var(--color-warning-text); }
+  .g.mute { background:var(--color-surface-2);      color:var(--color-text-2); }
+
+  .legend { display:flex; gap:var(--space-4); margin:0 0 var(--space-4); font-size:12px; line-height:16px; font-weight:500; color:var(--color-text-2); }
+  .legend span { display:inline-flex; align-items:center; gap:var(--space-1); }
+  .legend i { width:12px; height:12px; border-radius:var(--radius-full); }
+  .isec { margin:var(--space-6) 0 var(--space-3); color:var(--color-text-2); }
+  .isec:first-of-type { margin-top:0; }
+  .igrid { display:grid; grid-template-columns:repeat(3, 1fr); gap:var(--space-3); }
+  .ic { background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-md); padding:var(--space-3); min-width:0; position:relative; }
+  .ic.hl { border:1.5px solid var(--color-primary-text); }
+  .ic-row { display:flex; gap:var(--space-3); margin-bottom:var(--space-2); }
+  .ic-row span { display:inline-flex; width:24px; height:24px; }
+  .ic-row svg { width:24px; height:24px; display:block; }
+  .ic-n { font-size:12px; line-height:16px; font-weight:600; color:var(--color-text); }
+  .ic-u { font-size:12px; line-height:16px; font-weight:500; color:var(--color-text-3); margin-top:2px; }
+  .ic-t { margin-top:var(--space-2); }
+  .ic .g { margin-left:0; }
+
+</style>
+</head>
+<body>
+<div class="ds">
+<section class="ds-panel" data-theme="light"><p class="ds-theme overline"><i></i>Claro</p><div class="sheet"></div></section>
+<section class="ds-panel" data-theme="dark"><p class="ds-theme overline"><i></i>Oscuro</p><div class="sheet"></div></section>
+</div>
+<script>var ICONS = {"IconBell": "<svg width=\"24\" height=\"24\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\"><g stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6.1 16.8h11.8l-1.5-2.2V10a4.4 4.4 0 0 0-8.8 0v4.6l-1.5 2.2Z\"/><path d=\"M9.8 19.2a2.4 2.4 0 0 0 4.4 0\"/></g><circle cx=\"18.7\" cy=\"5.3\" r=\"2.3\" fill=\"currentColor\" fill-opacity=\".45\"/><path stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" d=\"M18.7 4v1.6M17.9 4.8h1.6\"/></svg>", "IconChat": "<svg width=\"24\" height=\"24\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\"><g stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4.1 5.2h11.8a2.1 2.1 0 0 1 2.1 2.1v6.1a2.1 2.1 0 0 1-2.1 2.1H9.4l-3.9 3v-3H4.1A2.1 2.1 0 0 1 2 13.4V7.3a2.1 2.1 0 0 1 2.1-2.1Z\"/><path stroke-width=\"2.6\" d=\"M8.1 9.9h.01M11.9 9.9h.01M15.7 9.9h.01\"/><path d=\"M13.5 17.1h5.1a2.1 2.1 0 0 1 2.1 2.1v2.1l-2.4-1.7h-4.8\"/></g></svg>", "IconClose": "<svg width=\"24\" height=\"24\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\"><g stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 9 6 6M15 9l-6 6\"/></g></svg>", "IconCloseCircle": "<svg width=\"24\" height=\"24\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\"><g stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 9 6 6M15 9l-6 6\"/><circle cx=\"12\" cy=\"12\" r=\"8.5\"/></g></svg>", "IconFilter": "<svg width=\"24\" height=\"24\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\"><g stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 7h7M15 7h5M4 12h3M11 12h9M4 17h7M15 17h5\"/><circle cx=\"13\" cy=\"7\" r=\"2\" fill=\"var(--color-surface)\"/><circle cx=\"9\" cy=\"12\" r=\"2\" fill=\"var(--color-surface)\"/><circle cx=\"13\" cy=\"17\" r=\"2\" fill=\"var(--color-surface)\"/></g></svg>", "IconHeart": "<svg width=\"24\" height=\"24\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\"><g stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path fill=\"currentColor\" fill-opacity=\".22\" d=\"M12 20.2s-7.5-4.5-7.5-10A4.1 4.1 0 0 1 8.6 6a4.4 4.4 0 0 1 3.4 1.7A4.4 4.4 0 0 1 15.4 6a4.1 4.1 0 0 1 4.1 4.2c0 5.5-7.5 10-7.5 10Z\"/></g></svg>", "IconHome": "<svg width=\"24\" height=\"24\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\"><g stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3.5 10.5 12 3.8l8.5 6.7v8.2a1.3 1.3 0 0 1-1.3 1.3H4.8a1.3 1.3 0 0 1-1.3-1.3v-8.2Z\"/><path d=\"M9 20v-5.5h6V20\"/></g></svg>", "IconLike": "<svg width=\"24\" height=\"24\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\"><g stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path fill=\"currentColor\" fill-opacity=\".2\" d=\"M7.4 10.2v9.1h9.1c1.1 0 1.9-.6 2.2-1.6l1.2-4.6a2 2 0 0 0-1.9-2.5h-3.1l.7-3.1c.3-1.4-.8-2.7-2.2-2.7L9.1 10.2H7.4Z\"/><path d=\"M4 10.2h3.4v9.1H4z\"/></g></svg>", "IconMatchHeart": "<svg width=\"24\" height=\"24\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\"><g stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path fill=\"currentColor\" fill-opacity=\".18\" d=\"M12 20.2s-7.1-4.2-7.1-9.2A3.9 3.9 0 0 1 8.8 7a4.1 4.1 0 0 1 3.2 1.6A4.1 4.1 0 0 1 15.2 7a3.9 3.9 0 0 1 3.9 4c0 5-7.1 9.2-7.1 9.2Z\"/><path d=\"m9.3 12.1 1.7 1.7 3.7-3.8\"/></g></svg>", "IconMatches": "<svg width=\"24\" height=\"24\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\"><g stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3.4\" y=\"4.2\" width=\"8.6\" height=\"11.8\" rx=\"1.8\"/><rect x=\"12\" y=\"7.2\" width=\"8.6\" height=\"11.8\" rx=\"1.8\"/><path d=\"M5.5 12.4c.65-1.15 3.7-1.15 4.35 0\"/><path d=\"M14.1 15.4c.65-1.15 3.7-1.15 4.35 0\"/></g><circle cx=\"7.7\" cy=\"8.1\" r=\"1.45\" fill=\"currentColor\"/><circle cx=\"16.3\" cy=\"11.1\" r=\"1.45\" fill=\"currentColor\" fill-opacity=\".55\"/><path d=\"m15.9 5.8.45.9.99.14-.72.7.17.99-.89-.47-.89.47.17-.99-.72-.7.99-.14.45-.9Z\" fill=\"currentColor\" fill-opacity=\".55\"/></svg>", "IconMore": "<svg width=\"24\" height=\"24\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\"><g stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></g><circle cx=\"6\" cy=\"12\" r=\"1.7\" fill=\"currentColor\"/><circle cx=\"12\" cy=\"12\" r=\"1.7\" fill=\"currentColor\"/><circle cx=\"18\" cy=\"12\" r=\"1.7\" fill=\"currentColor\"/></svg>", "IconOffers": "<svg width=\"24\" height=\"24\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\"><g stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3.2\" y=\"6.8\" width=\"17.6\" height=\"13\" rx=\"2\"/><path d=\"M8 6.8V5.4A2.4 2.4 0 0 1 10.4 3h3.2A2.4 2.4 0 0 1 16 5.4v1.4M3.2 11.4h17.6M10 11.4v2h4v-2\"/><path d=\"M6.2 15.6h5.2\"/></g></svg>", "IconPerson": "<svg width=\"24\" height=\"24\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\"><g stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"7.4\" r=\"3.4\"/><path d=\"M5 20c.75-4 3.1-6 7-6s6.25 2 7 6\"/></g><circle cx=\"12\" cy=\"7.4\" r=\"1.15\" fill=\"currentColor\" fill-opacity=\".5\"/></svg>", "IconSearch": "<svg width=\"24\" height=\"24\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\"><g stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"10.7\" cy=\"10.7\" r=\"6.3\"/><path d=\"m15.5 15.5 5 5\"/></g><circle cx=\"10.7\" cy=\"10.7\" r=\"2.4\" fill=\"currentColor\" fill-opacity=\".35\"/></svg>"};
+var SECTIONS = [{"title": "Oficiales · copia exacta de la sección 10.3", "items": [{"n": "IconHome", "label": "IconHome", "u": "Inicio (pestaña)"}, {"n": "IconOffers", "label": "IconOffers", "u": "Tipo Empleo"}, {"n": "IconSearch", "label": "IconSearch", "u": "Explorar y buscar"}, {"n": "IconChat", "label": "IconChat", "u": "Mensajes (pestaña)"}, {"n": "IconPerson", "label": "IconPerson", "u": "Perfil (pestaña)"}, {"n": "IconMatches", "label": "IconMatches", "u": "Nuevos matches"}, {"n": "IconHeart", "label": "IconHeart", "u": "Guardar, favoritos"}, {"n": "IconMatchHeart", "label": "IconMatchHeart", "u": "«¡Hicieron match!»"}, {"n": "IconBell", "label": "IconBell", "u": "Notificaciones"}, {"n": "IconFilter", "label": "IconFilter", "u": "Sliders · solo Explorar", "hl": true, "tag": "Filtros", "tagTone": "ok"}, {"n": "IconClose", "label": "IconClose", "u": "Cerrar, No me interesa"}, {"n": "IconCloseCircle", "label": "IconCloseCircle", "u": "Cerrar, variante con círculo"}, {"n": "IconLike", "label": "IconLike", "u": "Me interesa"}, {"n": "IconMore", "label": "IconMore", "u": "Menú de opciones"}]}];
+
+var COLORS = ['color-text','color-text-3','color-primary-text'];
+function cell(it){
+  var row = COLORS.map(function(c){ return '<span style="color:var(--' + c + ')">' + ICONS[it.n] + '</span>'; }).join('');
+  var tag = it.tag ? '<div class="ic-t"><span class="g ' + (it.tagTone || 'mute') + '">' + it.tag + '</span></div>' : '';
+  return '<div class="ic' + (it.hl ? ' hl' : '') + '"><div class="ic-row">' + row + '</div><div class="ic-n">' + it.label.replace(/([a-z])([A-Z])/g, '$1<wbr>$2') + '</div><div class="ic-u">' + it.u + '</div>' + tag + '</div>';
+}
+document.querySelectorAll('.ds-panel').forEach(function(panel){
+  var html = '<div class="legend">' + COLORS.map(function(c){ return '<span><i style="background:var(--' + c + ')"></i>' + c.replace('color-','') + '</span>'; }).join('') + '</div>';
+  SECTIONS.forEach(function(s){
+    html += '<p class="isec overline">' + s.title + '</p><div class="igrid">' + s.items.map(cell).join('') + '</div>';
+  });
+  panel.querySelector('.sheet').innerHTML = html;
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,465 @@
+<!-- @dsCard group="L2 · Marca e íconos" height=930 width=960 subtitle="Dos variantes × sm 32 · md 56 · lg 72, sobre fondo, tarjeta y hero" -->
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>BrandLogo</title>
+<style>
+  html, body { margin:0; background:var(--color-bg); }
+  .ds { display:grid; grid-template-columns:1fr 1fr; font-family:var(--font-sans); }
+  .ds-panel { background:var(--color-bg); color:var(--color-text); padding:var(--space-6); min-width:0; }
+  .ds-theme { display:flex; align-items:center; gap:var(--space-2); margin:0 0 var(--space-4); color:var(--color-text-2); }
+  .ds-theme i { width:12px; height:12px; border-radius:var(--radius-full); border:1px solid var(--color-border-strong); background:var(--color-surface); }
+  .ds-sec { margin:var(--space-6) 0 var(--space-3); color:var(--color-text-2); }
+  .ds-sec:first-of-type { margin-top:0; }
+  .mono { font-variant-numeric: tabular-nums; }
+  .g { display:inline-flex; align-items:center; height:20px; padding:0 var(--space-2); border-radius:var(--radius-full); font-size:11px; line-height:16px; font-weight:600; white-space:nowrap; vertical-align:1px; margin-left:var(--space-1); }
+  .g.ok   { background:var(--color-success-subtle); color:var(--color-success-text); }
+  .g.bad  { background:var(--color-danger-subtle);  color:var(--color-danger-text); }
+  .g.warn { background:var(--color-warning-subtle); color:var(--color-warning-text); }
+  .g.mute { background:var(--color-surface-2);      color:var(--color-text-2); }
+
+  .lsec { margin:var(--space-6) 0 var(--space-3); color:var(--color-text-2); }
+  .lsec:first-of-type { margin-top:0; }
+  .lgrid { display:grid; grid-template-columns:112px 1fr; gap:var(--space-3) var(--space-4); align-items:center; }
+  .lab b { display:block; font-size:13px; line-height:18px; font-weight:600; color:var(--color-text); }
+  .lab span { display:block; font-size:12px; line-height:16px; font-weight:500; color:var(--color-text-3); margin-bottom:var(--space-1); }
+  .lab .g { margin-left:0; display:inline-flex; width:auto; }
+  .lab span.g { display:inline-flex; }
+  .strip { display:flex; align-items:flex-end; gap:var(--space-6); padding:var(--space-4); border-radius:var(--radius-lg); min-height:104px; }
+  .strip.on-bg { background:var(--color-bg); border:1px solid var(--color-border); }
+  .strip.on-surface { background:var(--color-surface); border:1px solid var(--color-border); }
+  .hero { display:grid; grid-template-rows:repeat(2, 104px); border-radius:var(--radius-lg); overflow:hidden; }
+  .hero .strip { border-radius:0; min-height:0; }
+  .sizes { display:grid; grid-template-columns:112px 1fr; gap:var(--space-4); margin-top:var(--space-2); }
+  .sizes div { display:flex; gap:var(--space-6); padding-left:var(--space-4); }
+  .sizes span { font-size:12px; line-height:16px; font-weight:500; color:var(--color-text-3); white-space:nowrap; }
+  .tl-logo { display:inline-block; flex:none; }
+  .tl-logo svg { display:block; width:100%; height:100%; }
+  .tl-logo--sm { width:32px; height:32px; } .tl-logo--md { width:56px; height:56px; } .tl-logo--lg { width:72px; height:72px; }
+  .w-sm { width:32px; } .w-md { width:56px; } .w-lg { width:72px; }
+
+</style>
+</head>
+<body>
+<div class="ds">
+<section class="ds-panel" data-theme="light"><p class="ds-theme overline"><i></i>Claro</p><p class="lsec overline">Sobre el fondo · color-bg</p><div class="lgrid"><div class="lab"><b>Con tile</b><span>Sección 10.1</span><span class="g ok">Usar</span></div><div class="strip on-bg"><span class="tl-logo tl-logo--sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tl-bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+    <linearGradient id="tl-t" x1="180" y1="180" x2="850" y2="850" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E6DBFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="url(#tl-bg)"/>
+  <g transform="translate(143.36 143.36) scale(30.72)">
+    <path d="M4.5 5.25A1.25 1.25 0 0 1 5.75 4h12.5a1.25 1.25 0 0 1 .99 2.01l-2.05 2.6a1.25 1.25 0 0 1-.98.49H13.75v8.52c0 .39-.18.76-.49 1L11 20.22a1.25 1.25 0 0 1-2.03-.98V9.1H6.15A1.65 1.65 0 0 1 4.5 7.45V5.25Z" fill="url(#tl-t)"/>
+  </g>
+</svg></span><span class="tl-logo tl-logo--md"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tl-bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+    <linearGradient id="tl-t" x1="180" y1="180" x2="850" y2="850" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E6DBFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="url(#tl-bg)"/>
+  <g transform="translate(143.36 143.36) scale(30.72)">
+    <path d="M4.5 5.25A1.25 1.25 0 0 1 5.75 4h12.5a1.25 1.25 0 0 1 .99 2.01l-2.05 2.6a1.25 1.25 0 0 1-.98.49H13.75v8.52c0 .39-.18.76-.49 1L11 20.22a1.25 1.25 0 0 1-2.03-.98V9.1H6.15A1.65 1.65 0 0 1 4.5 7.45V5.25Z" fill="url(#tl-t)"/>
+  </g>
+</svg></span><span class="tl-logo tl-logo--lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tl-bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+    <linearGradient id="tl-t" x1="180" y1="180" x2="850" y2="850" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E6DBFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="url(#tl-bg)"/>
+  <g transform="translate(143.36 143.36) scale(30.72)">
+    <path d="M4.5 5.25A1.25 1.25 0 0 1 5.75 4h12.5a1.25 1.25 0 0 1 .99 2.01l-2.05 2.6a1.25 1.25 0 0 1-.98.49H13.75v8.52c0 .39-.18.76-.49 1L11 20.22a1.25 1.25 0 0 1-2.03-.98V9.1H6.15A1.65 1.65 0 0 1 4.5 7.45V5.25Z" fill="url(#tl-t)"/>
+  </g>
+</svg></span></div><div class="lab"><b>Sin tile</b><span>Sección 10.2</span><span class="g ok">Usar</span></div><div class="strip on-bg"><span class="tl-logo tl-logo--sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="tm" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.2 5.2C4.2 4.54 4.74 4 5.4 4h13.2c.77 0 1.2.88.73 1.49l-2.14 2.77a1.5 1.5 0 0 1-1.18.58H13.8v8.86c0 .45-.2.87-.55 1.14l-2.16 1.68c-.79.61-1.93.05-1.930-.95V8.84H6.1c-1.05 0-1.9-.85-1.9-1.9V5.2Z" fill="url(#tm)"/>
+</svg></span><span class="tl-logo tl-logo--md"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="tm" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.2 5.2C4.2 4.54 4.74 4 5.4 4h13.2c.77 0 1.2.88.73 1.49l-2.14 2.77a1.5 1.5 0 0 1-1.18.58H13.8v8.86c0 .45-.2.87-.55 1.14l-2.16 1.68c-.79.61-1.93.05-1.930-.95V8.84H6.1c-1.05 0-1.9-.85-1.9-1.9V5.2Z" fill="url(#tm)"/>
+</svg></span><span class="tl-logo tl-logo--lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="tm" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.2 5.2C4.2 4.54 4.74 4 5.4 4h13.2c.77 0 1.2.88.73 1.49l-2.14 2.77a1.5 1.5 0 0 1-1.18.58H13.8v8.86c0 .45-.2.87-.55 1.14l-2.16 1.68c-.79.61-1.93.05-1.930-.95V8.84H6.1c-1.05 0-1.9-.85-1.9-1.9V5.2Z" fill="url(#tm)"/>
+</svg></span></div></div><div class="sizes"><span></span><div><span class="w-sm">sm 32</span><span class="w-md">md 56</span><span class="w-lg">lg 72</span></div></div><p class="lsec overline">Sobre una tarjeta · color-surface</p><div class="lgrid"><div class="lab"><b>Con tile</b><span class="g ok">Usar</span></div><div class="strip on-surface"><span class="tl-logo tl-logo--sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tl-bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+    <linearGradient id="tl-t" x1="180" y1="180" x2="850" y2="850" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E6DBFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="url(#tl-bg)"/>
+  <g transform="translate(143.36 143.36) scale(30.72)">
+    <path d="M4.5 5.25A1.25 1.25 0 0 1 5.75 4h12.5a1.25 1.25 0 0 1 .99 2.01l-2.05 2.6a1.25 1.25 0 0 1-.98.49H13.75v8.52c0 .39-.18.76-.49 1L11 20.22a1.25 1.25 0 0 1-2.03-.98V9.1H6.15A1.65 1.65 0 0 1 4.5 7.45V5.25Z" fill="url(#tl-t)"/>
+  </g>
+</svg></span><span class="tl-logo tl-logo--md"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tl-bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+    <linearGradient id="tl-t" x1="180" y1="180" x2="850" y2="850" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E6DBFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="url(#tl-bg)"/>
+  <g transform="translate(143.36 143.36) scale(30.72)">
+    <path d="M4.5 5.25A1.25 1.25 0 0 1 5.75 4h12.5a1.25 1.25 0 0 1 .99 2.01l-2.05 2.6a1.25 1.25 0 0 1-.98.49H13.75v8.52c0 .39-.18.76-.49 1L11 20.22a1.25 1.25 0 0 1-2.03-.98V9.1H6.15A1.65 1.65 0 0 1 4.5 7.45V5.25Z" fill="url(#tl-t)"/>
+  </g>
+</svg></span><span class="tl-logo tl-logo--lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tl-bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+    <linearGradient id="tl-t" x1="180" y1="180" x2="850" y2="850" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E6DBFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="url(#tl-bg)"/>
+  <g transform="translate(143.36 143.36) scale(30.72)">
+    <path d="M4.5 5.25A1.25 1.25 0 0 1 5.75 4h12.5a1.25 1.25 0 0 1 .99 2.01l-2.05 2.6a1.25 1.25 0 0 1-.98.49H13.75v8.52c0 .39-.18.76-.49 1L11 20.22a1.25 1.25 0 0 1-2.03-.98V9.1H6.15A1.65 1.65 0 0 1 4.5 7.45V5.25Z" fill="url(#tl-t)"/>
+  </g>
+</svg></span></div><div class="lab"><b>Sin tile</b><span class="g ok">Usar</span></div><div class="strip on-surface"><span class="tl-logo tl-logo--sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="tm" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.2 5.2C4.2 4.54 4.74 4 5.4 4h13.2c.77 0 1.2.88.73 1.49l-2.14 2.77a1.5 1.5 0 0 1-1.18.58H13.8v8.86c0 .45-.2.87-.55 1.14l-2.16 1.68c-.79.61-1.93.05-1.930-.95V8.84H6.1c-1.05 0-1.9-.85-1.9-1.9V5.2Z" fill="url(#tm)"/>
+</svg></span><span class="tl-logo tl-logo--md"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="tm" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.2 5.2C4.2 4.54 4.74 4 5.4 4h13.2c.77 0 1.2.88.73 1.49l-2.14 2.77a1.5 1.5 0 0 1-1.18.58H13.8v8.86c0 .45-.2.87-.55 1.14l-2.16 1.68c-.79.61-1.93.05-1.930-.95V8.84H6.1c-1.05 0-1.9-.85-1.9-1.9V5.2Z" fill="url(#tm)"/>
+</svg></span><span class="tl-logo tl-logo--lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="tm" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.2 5.2C4.2 4.54 4.74 4 5.4 4h13.2c.77 0 1.2.88.73 1.49l-2.14 2.77a1.5 1.5 0 0 1-1.18.58H13.8v8.86c0 .45-.2.87-.55 1.14l-2.16 1.68c-.79.61-1.93.05-1.930-.95V8.84H6.1c-1.05 0-1.9-.85-1.9-1.9V5.2Z" fill="url(#tm)"/>
+</svg></span></div></div><p class="lsec overline">Sobre el hero de Bienvenida · gradient-brand</p><div class="lgrid"><div><div class="lab" style="height:104px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start"><b>Con tile</b><span class="g ok">Usar</span></div><div class="lab" style="height:104px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start"><b>Sin tile</b><span>Desaparece sobre el gradiente</span><span class="g bad">No usar</span></div></div><div class="hero" style="background:var(--gradient-brand, linear-gradient(135deg,#6D4AFF 0%,#B48CFF 100%))"><div class="strip"><span class="tl-logo tl-logo--sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tl-bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+    <linearGradient id="tl-t" x1="180" y1="180" x2="850" y2="850" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E6DBFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="url(#tl-bg)"/>
+  <g transform="translate(143.36 143.36) scale(30.72)">
+    <path d="M4.5 5.25A1.25 1.25 0 0 1 5.75 4h12.5a1.25 1.25 0 0 1 .99 2.01l-2.05 2.6a1.25 1.25 0 0 1-.98.49H13.75v8.52c0 .39-.18.76-.49 1L11 20.22a1.25 1.25 0 0 1-2.03-.98V9.1H6.15A1.65 1.65 0 0 1 4.5 7.45V5.25Z" fill="url(#tl-t)"/>
+  </g>
+</svg></span><span class="tl-logo tl-logo--md"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tl-bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+    <linearGradient id="tl-t" x1="180" y1="180" x2="850" y2="850" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E6DBFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="url(#tl-bg)"/>
+  <g transform="translate(143.36 143.36) scale(30.72)">
+    <path d="M4.5 5.25A1.25 1.25 0 0 1 5.75 4h12.5a1.25 1.25 0 0 1 .99 2.01l-2.05 2.6a1.25 1.25 0 0 1-.98.49H13.75v8.52c0 .39-.18.76-.49 1L11 20.22a1.25 1.25 0 0 1-2.03-.98V9.1H6.15A1.65 1.65 0 0 1 4.5 7.45V5.25Z" fill="url(#tl-t)"/>
+  </g>
+</svg></span><span class="tl-logo tl-logo--lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tl-bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+    <linearGradient id="tl-t" x1="180" y1="180" x2="850" y2="850" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E6DBFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="url(#tl-bg)"/>
+  <g transform="translate(143.36 143.36) scale(30.72)">
+    <path d="M4.5 5.25A1.25 1.25 0 0 1 5.75 4h12.5a1.25 1.25 0 0 1 .99 2.01l-2.05 2.6a1.25 1.25 0 0 1-.98.49H13.75v8.52c0 .39-.18.76-.49 1L11 20.22a1.25 1.25 0 0 1-2.03-.98V9.1H6.15A1.65 1.65 0 0 1 4.5 7.45V5.25Z" fill="url(#tl-t)"/>
+  </g>
+</svg></span></div><div class="strip"><span class="tl-logo tl-logo--sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="tm" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.2 5.2C4.2 4.54 4.74 4 5.4 4h13.2c.77 0 1.2.88.73 1.49l-2.14 2.77a1.5 1.5 0 0 1-1.18.58H13.8v8.86c0 .45-.2.87-.55 1.14l-2.16 1.68c-.79.61-1.93.05-1.930-.95V8.84H6.1c-1.05 0-1.9-.85-1.9-1.9V5.2Z" fill="url(#tm)"/>
+</svg></span><span class="tl-logo tl-logo--md"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="tm" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.2 5.2C4.2 4.54 4.74 4 5.4 4h13.2c.77 0 1.2.88.73 1.49l-2.14 2.77a1.5 1.5 0 0 1-1.18.58H13.8v8.86c0 .45-.2.87-.55 1.14l-2.16 1.68c-.79.61-1.93.05-1.930-.95V8.84H6.1c-1.05 0-1.9-.85-1.9-1.9V5.2Z" fill="url(#tm)"/>
+</svg></span><span class="tl-logo tl-logo--lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="tm" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.2 5.2C4.2 4.54 4.74 4 5.4 4h13.2c.77 0 1.2.88.73 1.49l-2.14 2.77a1.5 1.5 0 0 1-1.18.58H13.8v8.86c0 .45-.2.87-.55 1.14l-2.16 1.68c-.79.61-1.93.05-1.930-.95V8.84H6.1c-1.05 0-1.9-.85-1.9-1.9V5.2Z" fill="url(#tm)"/>
+</svg></span></div></div></div><div class="sizes"><span></span><div><span class="w-sm">sm 32</span><span class="w-md">md 56</span><span class="w-lg">lg 72</span></div></div></section>
+<section class="ds-panel" data-theme="dark"><p class="ds-theme overline"><i></i>Oscuro</p><p class="lsec overline">Sobre el fondo · color-bg</p><div class="lgrid"><div class="lab"><b>Con tile</b><span>Sección 10.1</span><span class="g ok">Usar</span></div><div class="strip on-bg"><span class="tl-logo tl-logo--sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tl-bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+    <linearGradient id="tl-t" x1="180" y1="180" x2="850" y2="850" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E6DBFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="url(#tl-bg)"/>
+  <g transform="translate(143.36 143.36) scale(30.72)">
+    <path d="M4.5 5.25A1.25 1.25 0 0 1 5.75 4h12.5a1.25 1.25 0 0 1 .99 2.01l-2.05 2.6a1.25 1.25 0 0 1-.98.49H13.75v8.52c0 .39-.18.76-.49 1L11 20.22a1.25 1.25 0 0 1-2.03-.98V9.1H6.15A1.65 1.65 0 0 1 4.5 7.45V5.25Z" fill="url(#tl-t)"/>
+  </g>
+</svg></span><span class="tl-logo tl-logo--md"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tl-bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+    <linearGradient id="tl-t" x1="180" y1="180" x2="850" y2="850" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E6DBFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="url(#tl-bg)"/>
+  <g transform="translate(143.36 143.36) scale(30.72)">
+    <path d="M4.5 5.25A1.25 1.25 0 0 1 5.75 4h12.5a1.25 1.25 0 0 1 .99 2.01l-2.05 2.6a1.25 1.25 0 0 1-.98.49H13.75v8.52c0 .39-.18.76-.49 1L11 20.22a1.25 1.25 0 0 1-2.03-.98V9.1H6.15A1.65 1.65 0 0 1 4.5 7.45V5.25Z" fill="url(#tl-t)"/>
+  </g>
+</svg></span><span class="tl-logo tl-logo--lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tl-bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+    <linearGradient id="tl-t" x1="180" y1="180" x2="850" y2="850" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E6DBFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="url(#tl-bg)"/>
+  <g transform="translate(143.36 143.36) scale(30.72)">
+    <path d="M4.5 5.25A1.25 1.25 0 0 1 5.75 4h12.5a1.25 1.25 0 0 1 .99 2.01l-2.05 2.6a1.25 1.25 0 0 1-.98.49H13.75v8.52c0 .39-.18.76-.49 1L11 20.22a1.25 1.25 0 0 1-2.03-.98V9.1H6.15A1.65 1.65 0 0 1 4.5 7.45V5.25Z" fill="url(#tl-t)"/>
+  </g>
+</svg></span></div><div class="lab"><b>Sin tile</b><span>Sección 10.2</span><span class="g ok">Usar</span></div><div class="strip on-bg"><span class="tl-logo tl-logo--sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="tm" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.2 5.2C4.2 4.54 4.74 4 5.4 4h13.2c.77 0 1.2.88.73 1.49l-2.14 2.77a1.5 1.5 0 0 1-1.18.58H13.8v8.86c0 .45-.2.87-.55 1.14l-2.16 1.68c-.79.61-1.93.05-1.930-.95V8.84H6.1c-1.05 0-1.9-.85-1.9-1.9V5.2Z" fill="url(#tm)"/>
+</svg></span><span class="tl-logo tl-logo--md"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="tm" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.2 5.2C4.2 4.54 4.74 4 5.4 4h13.2c.77 0 1.2.88.73 1.49l-2.14 2.77a1.5 1.5 0 0 1-1.18.58H13.8v8.86c0 .45-.2.87-.55 1.14l-2.16 1.68c-.79.61-1.93.05-1.930-.95V8.84H6.1c-1.05 0-1.9-.85-1.9-1.9V5.2Z" fill="url(#tm)"/>
+</svg></span><span class="tl-logo tl-logo--lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="tm" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.2 5.2C4.2 4.54 4.74 4 5.4 4h13.2c.77 0 1.2.88.73 1.49l-2.14 2.77a1.5 1.5 0 0 1-1.18.58H13.8v8.86c0 .45-.2.87-.55 1.14l-2.16 1.68c-.79.61-1.93.05-1.930-.95V8.84H6.1c-1.05 0-1.9-.85-1.9-1.9V5.2Z" fill="url(#tm)"/>
+</svg></span></div></div><div class="sizes"><span></span><div><span class="w-sm">sm 32</span><span class="w-md">md 56</span><span class="w-lg">lg 72</span></div></div><p class="lsec overline">Sobre una tarjeta · color-surface</p><div class="lgrid"><div class="lab"><b>Con tile</b><span class="g ok">Usar</span></div><div class="strip on-surface"><span class="tl-logo tl-logo--sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tl-bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+    <linearGradient id="tl-t" x1="180" y1="180" x2="850" y2="850" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E6DBFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="url(#tl-bg)"/>
+  <g transform="translate(143.36 143.36) scale(30.72)">
+    <path d="M4.5 5.25A1.25 1.25 0 0 1 5.75 4h12.5a1.25 1.25 0 0 1 .99 2.01l-2.05 2.6a1.25 1.25 0 0 1-.98.49H13.75v8.52c0 .39-.18.76-.49 1L11 20.22a1.25 1.25 0 0 1-2.03-.98V9.1H6.15A1.65 1.65 0 0 1 4.5 7.45V5.25Z" fill="url(#tl-t)"/>
+  </g>
+</svg></span><span class="tl-logo tl-logo--md"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tl-bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+    <linearGradient id="tl-t" x1="180" y1="180" x2="850" y2="850" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E6DBFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="url(#tl-bg)"/>
+  <g transform="translate(143.36 143.36) scale(30.72)">
+    <path d="M4.5 5.25A1.25 1.25 0 0 1 5.75 4h12.5a1.25 1.25 0 0 1 .99 2.01l-2.05 2.6a1.25 1.25 0 0 1-.98.49H13.75v8.52c0 .39-.18.76-.49 1L11 20.22a1.25 1.25 0 0 1-2.03-.98V9.1H6.15A1.65 1.65 0 0 1 4.5 7.45V5.25Z" fill="url(#tl-t)"/>
+  </g>
+</svg></span><span class="tl-logo tl-logo--lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tl-bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+    <linearGradient id="tl-t" x1="180" y1="180" x2="850" y2="850" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E6DBFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="url(#tl-bg)"/>
+  <g transform="translate(143.36 143.36) scale(30.72)">
+    <path d="M4.5 5.25A1.25 1.25 0 0 1 5.75 4h12.5a1.25 1.25 0 0 1 .99 2.01l-2.05 2.6a1.25 1.25 0 0 1-.98.49H13.75v8.52c0 .39-.18.76-.49 1L11 20.22a1.25 1.25 0 0 1-2.03-.98V9.1H6.15A1.65 1.65 0 0 1 4.5 7.45V5.25Z" fill="url(#tl-t)"/>
+  </g>
+</svg></span></div><div class="lab"><b>Sin tile</b><span class="g ok">Usar</span></div><div class="strip on-surface"><span class="tl-logo tl-logo--sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="tm" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.2 5.2C4.2 4.54 4.74 4 5.4 4h13.2c.77 0 1.2.88.73 1.49l-2.14 2.77a1.5 1.5 0 0 1-1.18.58H13.8v8.86c0 .45-.2.87-.55 1.14l-2.16 1.68c-.79.61-1.93.05-1.930-.95V8.84H6.1c-1.05 0-1.9-.85-1.9-1.9V5.2Z" fill="url(#tm)"/>
+</svg></span><span class="tl-logo tl-logo--md"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="tm" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.2 5.2C4.2 4.54 4.74 4 5.4 4h13.2c.77 0 1.2.88.73 1.49l-2.14 2.77a1.5 1.5 0 0 1-1.18.58H13.8v8.86c0 .45-.2.87-.55 1.14l-2.16 1.68c-.79.61-1.93.05-1.930-.95V8.84H6.1c-1.05 0-1.9-.85-1.9-1.9V5.2Z" fill="url(#tm)"/>
+</svg></span><span class="tl-logo tl-logo--lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="tm" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.2 5.2C4.2 4.54 4.74 4 5.4 4h13.2c.77 0 1.2.88.73 1.49l-2.14 2.77a1.5 1.5 0 0 1-1.18.58H13.8v8.86c0 .45-.2.87-.55 1.14l-2.16 1.68c-.79.61-1.93.05-1.930-.95V8.84H6.1c-1.05 0-1.9-.85-1.9-1.9V5.2Z" fill="url(#tm)"/>
+</svg></span></div></div><p class="lsec overline">Sobre el hero de Bienvenida · gradient-hero-dark</p><div class="lgrid"><div><div class="lab" style="height:104px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start"><b>Con tile</b><span class="g ok">Usar</span></div><div class="lab" style="height:104px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start"><b>Sin tile</b><span>Bajo contraste: 2,47:1</span><span class="g bad">No usar</span></div></div><div class="hero" style="background:var(--gradient-hero-dark, linear-gradient(135deg,#35256F 0%,#0F0D16 100%))"><div class="strip"><span class="tl-logo tl-logo--sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tl-bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+    <linearGradient id="tl-t" x1="180" y1="180" x2="850" y2="850" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E6DBFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="url(#tl-bg)"/>
+  <g transform="translate(143.36 143.36) scale(30.72)">
+    <path d="M4.5 5.25A1.25 1.25 0 0 1 5.75 4h12.5a1.25 1.25 0 0 1 .99 2.01l-2.05 2.6a1.25 1.25 0 0 1-.98.49H13.75v8.52c0 .39-.18.76-.49 1L11 20.22a1.25 1.25 0 0 1-2.03-.98V9.1H6.15A1.65 1.65 0 0 1 4.5 7.45V5.25Z" fill="url(#tl-t)"/>
+  </g>
+</svg></span><span class="tl-logo tl-logo--md"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tl-bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+    <linearGradient id="tl-t" x1="180" y1="180" x2="850" y2="850" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E6DBFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="url(#tl-bg)"/>
+  <g transform="translate(143.36 143.36) scale(30.72)">
+    <path d="M4.5 5.25A1.25 1.25 0 0 1 5.75 4h12.5a1.25 1.25 0 0 1 .99 2.01l-2.05 2.6a1.25 1.25 0 0 1-.98.49H13.75v8.52c0 .39-.18.76-.49 1L11 20.22a1.25 1.25 0 0 1-2.03-.98V9.1H6.15A1.65 1.65 0 0 1 4.5 7.45V5.25Z" fill="url(#tl-t)"/>
+  </g>
+</svg></span><span class="tl-logo tl-logo--lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tl-bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+    <linearGradient id="tl-t" x1="180" y1="180" x2="850" y2="850" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E6DBFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="url(#tl-bg)"/>
+  <g transform="translate(143.36 143.36) scale(30.72)">
+    <path d="M4.5 5.25A1.25 1.25 0 0 1 5.75 4h12.5a1.25 1.25 0 0 1 .99 2.01l-2.05 2.6a1.25 1.25 0 0 1-.98.49H13.75v8.52c0 .39-.18.76-.49 1L11 20.22a1.25 1.25 0 0 1-2.03-.98V9.1H6.15A1.65 1.65 0 0 1 4.5 7.45V5.25Z" fill="url(#tl-t)"/>
+  </g>
+</svg></span></div><div class="strip"><span class="tl-logo tl-logo--sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="tm" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.2 5.2C4.2 4.54 4.74 4 5.4 4h13.2c.77 0 1.2.88.73 1.49l-2.14 2.77a1.5 1.5 0 0 1-1.18.58H13.8v8.86c0 .45-.2.87-.55 1.14l-2.16 1.68c-.79.61-1.93.05-1.930-.95V8.84H6.1c-1.05 0-1.9-.85-1.9-1.9V5.2Z" fill="url(#tm)"/>
+</svg></span><span class="tl-logo tl-logo--md"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="tm" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.2 5.2C4.2 4.54 4.74 4 5.4 4h13.2c.77 0 1.2.88.73 1.49l-2.14 2.77a1.5 1.5 0 0 1-1.18.58H13.8v8.86c0 .45-.2.87-.55 1.14l-2.16 1.68c-.79.61-1.93.05-1.930-.95V8.84H6.1c-1.05 0-1.9-.85-1.9-1.9V5.2Z" fill="url(#tm)"/>
+</svg></span><span class="tl-logo tl-logo--lg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="tm" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D4AFF"/>
+      <stop offset="1" stop-color="#B48CFF"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.2 5.2C4.2 4.54 4.74 4 5.4 4h13.2c.77 0 1.2.88.73 1.49l-2.14 2.77a1.5 1.5 0 0 1-1.18.58H13.8v8.86c0 .45-.2.87-.55 1.14l-2.16 1.68c-.79.61-1.93.05-1.930-.95V8.84H6.1c-1.05 0-1.9-.85-1.9-1.9V5.2Z" fill="url(#tm)"/>
+</svg></span></div></div></div><div class="sizes"><span></span><div><span class="w-sm">sm 32</span><span class="w-md">md 56</span><span class="w-lg">lg 72</span></div></div></section>
+</div>
+
+</body>
+</html>

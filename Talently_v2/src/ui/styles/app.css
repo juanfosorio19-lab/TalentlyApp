@@ -1,0 +1,31 @@
+/* Talently · app.css — se carga después de tokens.css y bundle.css.
+   Adapta el sistema de diseño (pensado para mockups 390 × 844 con status bar
+   y barra de gestos simuladas de 24 px) al dispositivo real. No define
+   colores, radios ni tipografía: eso vive solo en tokens.css y bundle.css. */
+
+/* Safe areas: Capacitor 8 inyecta --safe-area-inset-* inline en <html>
+   (pisa estos valores); en web quedan en env() o 0. Solo el AppBar compensa
+   el borde superior y solo la TabBar o el CTA fijo, el inferior. */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --layout-status-bar: var(--safe-area-inset-top);
+  --layout-gesture-bar: var(--safe-area-inset-bottom);
+}
+
+html, body, #root { height: 100%; }
+body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+button, input, textarea, select { font: inherit; }
+
+/* Pantalla de la app: una columna que ocupa el alto visible; el contenido
+   scrollea entre el AppBar (sticky) y la TabBar o el CTA fijo (sticky). */
+.tl-app-screen {
+  display: flex; flex-direction: column; min-height: 100%;
+  background: var(--color-bg); color: var(--color-text);
+}
+.tl-app-screen__body { flex: 1; min-width: 0; }
+.tl-app-screen__content {
+  width: 100%; max-width: var(--layout-content-max); margin: 0 auto;
+  padding: var(--space-4) var(--space-4) var(--space-6);
+  display: flex; flex-direction: column; gap: var(--space-6);
+}

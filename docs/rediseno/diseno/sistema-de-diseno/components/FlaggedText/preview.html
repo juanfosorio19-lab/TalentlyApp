@@ -1,0 +1,50 @@
+<!-- @dsCard group="L5 · Estados y dominio" height=1320 width=960 subtitle="Backoffice web · señales de moderación resaltadas y numeradas" -->
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>FlaggedText</title>
+<style>
+  html, body { margin:0; background:var(--color-bg); }
+  .ds { display:grid; grid-template-columns:1fr 1fr; font-family:var(--font-sans); }
+  .ds-panel { background:var(--color-bg); color:var(--color-text); padding:var(--space-6); min-width:0; }
+  .ds-theme { display:flex; align-items:center; gap:var(--space-2); margin:0 0 var(--space-4); color:var(--color-text-2); }
+  .ds-theme i { width:12px; height:12px; border-radius:var(--radius-full); border:1px solid var(--color-border-strong); background:var(--color-surface); }
+  .ds-sec { margin:var(--space-6) 0 var(--space-3); color:var(--color-text-2); }
+  .ds-sec:first-of-type { margin-top:0; }
+  .mono { font-variant-numeric: tabular-nums; }
+  .g { display:inline-flex; align-items:center; height:20px; padding:0 var(--space-2); border-radius:var(--radius-full); font-size:11px; line-height:16px; font-weight:600; white-space:nowrap; vertical-align:1px; margin-left:var(--space-1); }
+  .g.ok   { background:var(--color-success-subtle); color:var(--color-success-text); }
+  .g.bad  { background:var(--color-danger-subtle);  color:var(--color-danger-text); }
+  .g.warn { background:var(--color-warning-subtle); color:var(--color-warning-text); }
+  .g.mute { background:var(--color-surface-2);      color:var(--color-text-2); }
+
+  .sec { margin:var(--space-8) 0 var(--space-3); color:var(--color-text-2); }
+  .sec:first-of-type { margin-top:0; }
+  .st { padding:var(--space-4) 0; border-top:1px solid var(--color-border); }
+  .sec + .st { border-top:0; padding-top:0; }
+  .st-n { margin:0 0 var(--space-3); color:var(--color-text-2); }
+  .st-c { display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-3); }
+  .st-c.col { flex-direction:column; align-items:stretch; gap:var(--space-4); }
+  .na { display:flex; align-items:flex-start; gap:var(--space-2); font-size:13px; line-height:18px; font-weight:500; color:var(--color-text-2); }
+  .na .tl-badge { flex:none; }
+  .cap { margin:var(--space-2) 0 0; font-size:12px; line-height:16px; font-weight:500; color:var(--color-text-3); }
+  .grid3 { display:grid; grid-template-columns:repeat(3, 1fr); gap:var(--space-3); align-items:center; }
+  code { font-family:inherit; font-weight:600; }
+  .colh { font-size:12px; line-height:16px; font-weight:600; color:var(--color-text-3); }
+
+  .wf { position:relative; overflow:hidden; border:1px solid var(--color-border); border-radius:var(--radius-lg); background:var(--color-bg); }
+  .row { display:flex; gap:var(--space-4); align-items:flex-start; flex-wrap:wrap; }
+  .ft { margin:var(--space-6) 0 var(--space-2); font-size:12px; line-height:16px; font-weight:600; color:var(--color-text-3); }
+  .ft:first-child { margin-top:0; }
+
+</style>
+</head>
+<body>
+<div class="ds">
+<section class="ds-panel" data-theme="light"><p class="ds-theme overline"><i></i>Claro</p><p class="sec overline">Señales de moderación resaltadas en el texto</p><section class="tl-section"><div class="tl-section__head"><h2 class="tl-section__title h3">Descripción</h2></div><p class="body-l" style="margin:0">Buscamos operarios/as de bodega para inventario en Pudahuel. Para reservar tu cupo debes hacer un <mark class="tl-flag">depósito<span class="tl-flag__n" aria-label="señal 1">1</span></mark> de $10.000 por la credencial de acceso. Dudas al <mark class="tl-flag">+56 9 5555 0142<span class="tl-flag__n" aria-label="señal 2">2</span></mark> o inscríbete en <mark class="tl-flag">postula-bodegaexpress.cl<span class="tl-flag__n" aria-label="señal 3">3</span></mark>.</p></section><p class="sec overline">La lista de señales, con el mismo número</p><ul class="tl-list"><li><div class="tl-listitem tl-listitem--multiline"><span class="tl-listitem__tile tl-listitem__tile--warning" aria-label="Señal 1">1</span><span class="tl-listitem__body"><span class="tl-listitem__title">«depósito»</span><span class="tl-listitem__sub">Pide dinero: postular siempre es gratis.</span></span></div></li><li><div class="tl-listitem tl-listitem--multiline"><span class="tl-listitem__tile tl-listitem__tile--warning" aria-label="Señal 2">2</span><span class="tl-listitem__body"><span class="tl-listitem__title">Teléfono</span><span class="tl-listitem__sub">El contacto va por el chat de Talently.</span></span></div></li><li><div class="tl-listitem tl-listitem--multiline"><span class="tl-listitem__tile tl-listitem__tile--warning" aria-label="Señal 3">3</span><span class="tl-listitem__body"><span class="tl-listitem__title">Enlace</span><span class="tl-listitem__sub">Manda a inscribirse fuera de Talently.</span></span></div></li></ul><p class="cap">Señales: pedir apariencia, edad u otro dato que discrimina («buena presencia», «menores de 30 años»), pedir dinero («depósito»), teléfonos y enlaces para salir de Talently. La moderación automática las marca; quien modera decide.</p><p class="sec overline">Estados</p><div class="st"><p class="st-n overline">Default</p><p class="cap" style="margin:0">Mostrado arriba.</p></div><div class="st"><p class="st-n overline">Presionado</p><div class="na"><span class="tl-badge">No aplica</span><span>El resaltado no se toca; se lee.</span></div></div><div class="st"><p class="st-n overline">Foco</p><div class="na"><span class="tl-badge">No aplica</span><span>No recibe foco; el número de la señal tiene su nombre accesible («señal 1»).</span></div></div><div class="st"><p class="st-n overline">Seleccionado</p><div class="na"><span class="tl-badge">No aplica</span><span>No se marca.</span></div></div><div class="st"><p class="st-n overline">Deshabilitado</p><div class="na"><span class="tl-badge">No aplica</span><span>No aplica.</span></div></div><div class="st"><p class="st-n overline">Error</p><div class="na"><span class="tl-badge">No aplica</span><span>Si la moderación automática no corrió, no hay resaltado y la publicación igual pasa por la cola.</span></div></div><div class="st"><p class="st-n overline">Cargando</p><div class="na"><span class="tl-badge">No aplica</span><span>El texto carga con el resto del detalle, con Skeleton.</span></div></div></section>
+<section class="ds-panel" data-theme="dark"><p class="ds-theme overline"><i></i>Oscuro</p><p class="sec overline">Señales de moderación resaltadas en el texto</p><section class="tl-section"><div class="tl-section__head"><h2 class="tl-section__title h3">Descripción</h2></div><p class="body-l" style="margin:0">Buscamos operarios/as de bodega para inventario en Pudahuel. Para reservar tu cupo debes hacer un <mark class="tl-flag">depósito<span class="tl-flag__n" aria-label="señal 1">1</span></mark> de $10.000 por la credencial de acceso. Dudas al <mark class="tl-flag">+56 9 5555 0142<span class="tl-flag__n" aria-label="señal 2">2</span></mark> o inscríbete en <mark class="tl-flag">postula-bodegaexpress.cl<span class="tl-flag__n" aria-label="señal 3">3</span></mark>.</p></section><p class="sec overline">La lista de señales, con el mismo número</p><ul class="tl-list"><li><div class="tl-listitem tl-listitem--multiline"><span class="tl-listitem__tile tl-listitem__tile--warning" aria-label="Señal 1">1</span><span class="tl-listitem__body"><span class="tl-listitem__title">«depósito»</span><span class="tl-listitem__sub">Pide dinero: postular siempre es gratis.</span></span></div></li><li><div class="tl-listitem tl-listitem--multiline"><span class="tl-listitem__tile tl-listitem__tile--warning" aria-label="Señal 2">2</span><span class="tl-listitem__body"><span class="tl-listitem__title">Teléfono</span><span class="tl-listitem__sub">El contacto va por el chat de Talently.</span></span></div></li><li><div class="tl-listitem tl-listitem--multiline"><span class="tl-listitem__tile tl-listitem__tile--warning" aria-label="Señal 3">3</span><span class="tl-listitem__body"><span class="tl-listitem__title">Enlace</span><span class="tl-listitem__sub">Manda a inscribirse fuera de Talently.</span></span></div></li></ul><p class="cap">Señales: pedir apariencia, edad u otro dato que discrimina («buena presencia», «menores de 30 años»), pedir dinero («depósito»), teléfonos y enlaces para salir de Talently. La moderación automática las marca; quien modera decide.</p><p class="sec overline">Estados</p><div class="st"><p class="st-n overline">Default</p><p class="cap" style="margin:0">Mostrado arriba.</p></div><div class="st"><p class="st-n overline">Presionado</p><div class="na"><span class="tl-badge">No aplica</span><span>El resaltado no se toca; se lee.</span></div></div><div class="st"><p class="st-n overline">Foco</p><div class="na"><span class="tl-badge">No aplica</span><span>No recibe foco; el número de la señal tiene su nombre accesible («señal 1»).</span></div></div><div class="st"><p class="st-n overline">Seleccionado</p><div class="na"><span class="tl-badge">No aplica</span><span>No se marca.</span></div></div><div class="st"><p class="st-n overline">Deshabilitado</p><div class="na"><span class="tl-badge">No aplica</span><span>No aplica.</span></div></div><div class="st"><p class="st-n overline">Error</p><div class="na"><span class="tl-badge">No aplica</span><span>Si la moderación automática no corrió, no hay resaltado y la publicación igual pasa por la cola.</span></div></div><div class="st"><p class="st-n overline">Cargando</p><div class="na"><span class="tl-badge">No aplica</span><span>El texto carga con el resto del detalle, con Skeleton.</span></div></div></section>
+</div>
+
+</body>
+</html>

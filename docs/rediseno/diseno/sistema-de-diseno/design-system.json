@@ -1,0 +1,595 @@
+{
+ "v": 3,
+ "layout": "files",
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-10-04T20:23:00Z"
+ },
+ "title": "Talently",
+ "namespace": "Talently",
+ "libraries": [],
+ "sections": {},
+ "groups": [
+  "Logo",
+  "Iconos",
+  "Oficios",
+  "Clases"
+ ],
+ "assetGroups": {
+  "Logo": {
+   "name": "Logo",
+   "tile": "l",
+   "order": [
+    "talently-logo-tile.svg",
+    "talently-logo.svg"
+   ],
+   "files": {
+    "talently-logo-tile.svg": {
+     "name": "talently-logo-tile.svg",
+     "blob": "6a571484fed6eb6e5737b29e86ef5af5",
+     "size": 889,
+     "type": "image/svg+xml"
+    },
+    "talently-logo.svg": {
+     "name": "talently-logo.svg",
+     "blob": "8cfda51f830c3e34b80dd87b741d269a",
+     "size": 535,
+     "type": "image/svg+xml"
+    }
+   }
+  },
+  "Iconos": {
+   "name": "Iconos",
+   "tile": "s",
+   "order": [
+    "IconHome.svg",
+    "IconOffers.svg",
+    "IconSearch.svg",
+    "IconChat.svg",
+    "IconPerson.svg",
+    "IconMatches.svg",
+    "IconHeart.svg",
+    "IconMatchHeart.svg",
+    "IconBell.svg",
+    "IconFilter.svg",
+    "IconClose.svg",
+    "IconCloseCircle.svg",
+    "IconLike.svg",
+    "IconMore.svg",
+    "IconCalendar.svg",
+    "IconGear.svg",
+    "IconArrowLeft.svg",
+    "IconArrowRight.svg",
+    "IconChevronRight.svg",
+    "IconChevronDown.svg",
+    "IconClock.svg",
+    "IconLocation.svg",
+    "IconEdit.svg",
+    "IconAdd.svg",
+    "IconTrash.svg",
+    "IconCheck.svg",
+    "IconCamera.svg",
+    "IconUpload.svg",
+    "IconDocument.svg",
+    "IconLock.svg",
+    "IconEye.svg",
+    "IconMail.svg",
+    "IconPhone.svg",
+    "IconLogout.svg",
+    "IconHelp.svg",
+    "IconShield.svg",
+    "IconStar.svg",
+    "IconPeople.svg",
+    "IconMoney.svg",
+    "IconTool.svg",
+    "IconBook.svg",
+    "IconAlert.svg",
+    "IconInfo.svg",
+    "IconShare.svg",
+    "IconReport.svg",
+    "IconBlock.svg",
+    "IconBoost.svg",
+    "IconSend.svg",
+    "IconAttach.svg"
+   ],
+   "files": {
+    "IconHome.svg": {
+     "name": "IconHome.svg",
+     "blob": "9c2647c9de80acd4bba9f3750a683775",
+     "size": 306,
+     "type": "image/svg+xml"
+    },
+    "IconOffers.svg": {
+     "name": "IconOffers.svg",
+     "blob": "33e33e5e3127c455867b544766e37538",
+     "size": 372,
+     "type": "image/svg+xml"
+    },
+    "IconSearch.svg": {
+     "name": "IconSearch.svg",
+     "blob": "0ffdaaddab247f1dd6c3c42be12649ea",
+     "size": 334,
+     "type": "image/svg+xml"
+    },
+    "IconChat.svg": {
+     "name": "IconChat.svg",
+     "blob": "a6158e8df80c9977844db5b39ebd65c9",
+     "size": 465,
+     "type": "image/svg+xml"
+    },
+    "IconPerson.svg": {
+     "name": "IconPerson.svg",
+     "blob": "ffbd7d056f0a198d10a153930ee3002c",
+     "size": 346,
+     "type": "image/svg+xml"
+    },
+    "IconMatches.svg": {
+     "name": "IconMatches.svg",
+     "blob": "e2b2d6d8225435450a5db7595c9d1752",
+     "size": 686,
+     "type": "image/svg+xml"
+    },
+    "IconHeart.svg": {
+     "name": "IconHeart.svg",
+     "blob": "ac655d46dbaafd40a1d7df15362cab0c",
+     "size": 360,
+     "type": "image/svg+xml"
+    },
+    "IconMatchHeart.svg": {
+     "name": "IconMatchHeart.svg",
+     "blob": "f242b8bc04ea0f573d1bff6d287724c3",
+     "size": 402,
+     "type": "image/svg+xml"
+    },
+    "IconBell.svg": {
+     "name": "IconBell.svg",
+     "blob": "7b8a0e1ec62b850f5c24d0da7211e758",
+     "size": 487,
+     "type": "image/svg+xml"
+    },
+    "IconFilter.svg": {
+     "name": "IconFilter.svg",
+     "blob": "047233996a47fe62769ce5cdbe2788ed",
+     "size": 433,
+     "type": "image/svg+xml"
+    },
+    "IconClose.svg": {
+     "name": "IconClose.svg",
+     "blob": "6c0ace350f25950985002d8bdea15f20",
+     "size": 209,
+     "type": "image/svg+xml"
+    },
+    "IconCloseCircle.svg": {
+     "name": "IconCloseCircle.svg",
+     "blob": "561bed4d044b7305a88a69bff85a7657",
+     "size": 250,
+     "type": "image/svg+xml"
+    },
+    "IconLike.svg": {
+     "name": "IconLike.svg",
+     "blob": "b7ddde746b88513b095e637bd1aa65c9",
+     "size": 377,
+     "type": "image/svg+xml"
+    },
+    "IconMore.svg": {
+     "name": "IconMore.svg",
+     "blob": "b173279b577f64ea2dd07ac443cf982c",
+     "size": 355,
+     "type": "image/svg+xml"
+    },
+    "IconCalendar.svg": {
+     "name": "IconCalendar.svg",
+     "blob": "3ec568839fdb1a56e8befe7ef430be7c",
+     "size": 375,
+     "type": "image/svg+xml"
+    },
+    "IconGear.svg": {
+     "name": "IconGear.svg",
+     "blob": "a2441446669896637ef3233abc2a18c9",
+     "size": 669,
+     "type": "image/svg+xml"
+    },
+    "IconArrowLeft.svg": {
+     "name": "IconArrowLeft.svg",
+     "blob": "08179ab4aceec4c1614e2ae121d7b62e",
+     "size": 219,
+     "type": "image/svg+xml"
+    },
+    "IconArrowRight.svg": {
+     "name": "IconArrowRight.svg",
+     "blob": "4eff22af74230208745cd36502fe57ce",
+     "size": 216,
+     "type": "image/svg+xml"
+    },
+    "IconChevronRight.svg": {
+     "name": "IconChevronRight.svg",
+     "blob": "86c4e0f03a85f6c5259c95dffdd56df0",
+     "size": 215,
+     "type": "image/svg+xml"
+    },
+    "IconChevronDown.svg": {
+     "name": "IconChevronDown.svg",
+     "blob": "ded1132738bf89432b47d1d00205ad2d",
+     "size": 215,
+     "type": "image/svg+xml"
+    },
+    "IconClock.svg": {
+     "name": "IconClock.svg",
+     "blob": "06fbfa2a8e9bff82a7c7a9f14095d14f",
+     "size": 250,
+     "type": "image/svg+xml"
+    },
+    "IconLocation.svg": {
+     "name": "IconLocation.svg",
+     "blob": "3c12adcb9f7c4e8f20ef968d2480b684",
+     "size": 382,
+     "type": "image/svg+xml"
+    },
+    "IconEdit.svg": {
+     "name": "IconEdit.svg",
+     "blob": "7ce628a2dd56434a6677213447b8f875",
+     "size": 311,
+     "type": "image/svg+xml"
+    },
+    "IconAdd.svg": {
+     "name": "IconAdd.svg",
+     "blob": "d3f23a1a01e5b5fcd305e6d1fa18eb7f",
+     "size": 207,
+     "type": "image/svg+xml"
+    },
+    "IconTrash.svg": {
+     "name": "IconTrash.svg",
+     "blob": "f2ce7ec6f5f856c6aa1dcba9915ae671",
+     "size": 337,
+     "type": "image/svg+xml"
+    },
+    "IconCheck.svg": {
+     "name": "IconCheck.svg",
+     "blob": "9451ca543c1d1c6b1472cd30860614de",
+     "size": 213,
+     "type": "image/svg+xml"
+    },
+    "IconCamera.svg": {
+     "name": "IconCamera.svg",
+     "blob": "96f394250f735d9ff8a03e85aac66fed",
+     "size": 451,
+     "type": "image/svg+xml"
+    },
+    "IconUpload.svg": {
+     "name": "IconUpload.svg",
+     "blob": "0d4b22f9fa4a6202597aa58af5c4155f",
+     "size": 282,
+     "type": "image/svg+xml"
+    },
+    "IconDocument.svg": {
+     "name": "IconDocument.svg",
+     "blob": "3ad2493f08939c7b84c5219f4153c3c6",
+     "size": 359,
+     "type": "image/svg+xml"
+    },
+    "IconLock.svg": {
+     "name": "IconLock.svg",
+     "blob": "b222340450aba9b916903d41e6929259",
+     "size": 368,
+     "type": "image/svg+xml"
+    },
+    "IconEye.svg": {
+     "name": "IconEye.svg",
+     "blob": "0963dcf466d495772de3faa35d1f21b2",
+     "size": 379,
+     "type": "image/svg+xml"
+    },
+    "IconMail.svg": {
+     "name": "IconMail.svg",
+     "blob": "a396bea10137b449c84ad8eb372b6859",
+     "size": 276,
+     "type": "image/svg+xml"
+    },
+    "IconPhone.svg": {
+     "name": "IconPhone.svg",
+     "blob": "aec92c2a70b8ad29881dc3eb87828a42",
+     "size": 372,
+     "type": "image/svg+xml"
+    },
+    "IconLogout.svg": {
+     "name": "IconLogout.svg",
+     "blob": "dd29c167e326dfe02896364ab3b1615d",
+     "size": 284,
+     "type": "image/svg+xml"
+    },
+    "IconHelp.svg": {
+     "name": "IconHelp.svg",
+     "blob": "36086f7cc8502f8456011aa73bbf686f",
+     "size": 329,
+     "type": "image/svg+xml"
+    },
+    "IconShield.svg": {
+     "name": "IconShield.svg",
+     "blob": "3e91bc64590633e68be053bd7e147b9d",
+     "size": 437,
+     "type": "image/svg+xml"
+    },
+    "IconStar.svg": {
+     "name": "IconStar.svg",
+     "blob": "79ea1bfd95fd2122493e6be88a88f302",
+     "size": 472,
+     "type": "image/svg+xml"
+    },
+    "IconPeople.svg": {
+     "name": "IconPeople.svg",
+     "blob": "be17722b2b94f8919ca49d720ac0aef4",
+     "size": 434,
+     "type": "image/svg+xml"
+    },
+    "IconMoney.svg": {
+     "name": "IconMoney.svg",
+     "blob": "9313ef026f7b4861a2618a3b2b4e0f7d",
+     "size": 476,
+     "type": "image/svg+xml"
+    },
+    "IconTool.svg": {
+     "name": "IconTool.svg",
+     "blob": "13937ce8f0f683e599cdfbb31fe50210",
+     "size": 330,
+     "type": "image/svg+xml"
+    },
+    "IconBook.svg": {
+     "name": "IconBook.svg",
+     "blob": "3a123c4237fa089ac0e9ad27a7f34e46",
+     "size": 421,
+     "type": "image/svg+xml"
+    },
+    "IconAlert.svg": {
+     "name": "IconAlert.svg",
+     "blob": "fc9f89563760788b371c2b611dec5c57",
+     "size": 341,
+     "type": "image/svg+xml"
+    },
+    "IconInfo.svg": {
+     "name": "IconInfo.svg",
+     "blob": "cf35f6427b304bdf85596126f249853b",
+     "size": 290,
+     "type": "image/svg+xml"
+    },
+    "IconShare.svg": {
+     "name": "IconShare.svg",
+     "blob": "07245daed71f1ae7de6dca945b4059c1",
+     "size": 437,
+     "type": "image/svg+xml"
+    },
+    "IconReport.svg": {
+     "name": "IconReport.svg",
+     "blob": "233f77b075778538a06cea745a934d90",
+     "size": 321,
+     "type": "image/svg+xml"
+    },
+    "IconBlock.svg": {
+     "name": "IconBlock.svg",
+     "blob": "488088a90c69643ab47021f256649641",
+     "size": 242,
+     "type": "image/svg+xml"
+    },
+    "IconBoost.svg": {
+     "name": "IconBoost.svg",
+     "blob": "190e3486a0b589eea4183811ba175537",
+     "size": 239,
+     "type": "image/svg+xml"
+    },
+    "IconSend.svg": {
+     "name": "IconSend.svg",
+     "blob": "e861a9a1a0f0219703e679dd2c80bf61",
+     "size": 348,
+     "type": "image/svg+xml"
+    },
+    "IconAttach.svg": {
+     "name": "IconAttach.svg",
+     "blob": "29f73d4bbb0be118e35c1ba99f605aea",
+     "size": 302,
+     "type": "image/svg+xml"
+    }
+   }
+  },
+  "Oficios": {
+   "name": "Oficios",
+   "tile": "s",
+   "order": [
+    "IconJobTech.svg",
+    "IconJobAdmin.svg",
+    "IconJobRetail.svg",
+    "IconJobFoodEvents.svg",
+    "IconJobHomeCare.svg",
+    "IconJobSecurity.svg",
+    "IconJobConstruction.svg",
+    "IconJobIndustry.svg",
+    "IconJobTransport.svg",
+    "IconJobAutomotive.svg",
+    "IconJobEducation.svg",
+    "IconJobHealth.svg",
+    "IconJobCleaning.svg",
+    "IconJobAgroMining.svg",
+    "IconJobProfessional.svg",
+    "IconJobCreative.svg"
+   ],
+   "files": {
+    "IconJobTech.svg": {
+     "name": "IconJobTech.svg",
+     "blob": "10460a39687a8de4e01c317fa2d3d1fa",
+     "size": 418,
+     "type": "image/svg+xml"
+    },
+    "IconJobAdmin.svg": {
+     "name": "IconJobAdmin.svg",
+     "blob": "87878fe7e03eaf054aa9e666a32e364a",
+     "size": 338,
+     "type": "image/svg+xml"
+    },
+    "IconJobRetail.svg": {
+     "name": "IconJobRetail.svg",
+     "blob": "1c8b860d2bf1e4433f621775735faa08",
+     "size": 441,
+     "type": "image/svg+xml"
+    },
+    "IconJobFoodEvents.svg": {
+     "name": "IconJobFoodEvents.svg",
+     "blob": "6f557a13a9918e842ca24b88c00d8524",
+     "size": 360,
+     "type": "image/svg+xml"
+    },
+    "IconJobHomeCare.svg": {
+     "name": "IconJobHomeCare.svg",
+     "blob": "7e5e499c688f314c17ac92a830dadcb9",
+     "size": 566,
+     "type": "image/svg+xml"
+    },
+    "IconJobSecurity.svg": {
+     "name": "IconJobSecurity.svg",
+     "blob": "60e48efdc73b52fc87782420e77f1867",
+     "size": 388,
+     "type": "image/svg+xml"
+    },
+    "IconJobConstruction.svg": {
+     "name": "IconJobConstruction.svg",
+     "blob": "5926b4944f3dd0085cc3a8edaff873c0",
+     "size": 477,
+     "type": "image/svg+xml"
+    },
+    "IconJobIndustry.svg": {
+     "name": "IconJobIndustry.svg",
+     "blob": "6e9ba233563aadbcb7aa849931052519",
+     "size": 298,
+     "type": "image/svg+xml"
+    },
+    "IconJobTransport.svg": {
+     "name": "IconJobTransport.svg",
+     "blob": "65f5abaec464aaaf407089297be203c1",
+     "size": 409,
+     "type": "image/svg+xml"
+    },
+    "IconJobAutomotive.svg": {
+     "name": "IconJobAutomotive.svg",
+     "blob": "3f7a43137a57242cf69f44e9f874a6ee",
+     "size": 525,
+     "type": "image/svg+xml"
+    },
+    "IconJobEducation.svg": {
+     "name": "IconJobEducation.svg",
+     "blob": "c6144841738d67b70d8d8ed08d115d90",
+     "size": 412,
+     "type": "image/svg+xml"
+    },
+    "IconJobHealth.svg": {
+     "name": "IconJobHealth.svg",
+     "blob": "5d773c47262521222a1a580b5e916baf",
+     "size": 409,
+     "type": "image/svg+xml"
+    },
+    "IconJobCleaning.svg": {
+     "name": "IconJobCleaning.svg",
+     "blob": "7ece8aff7e50bc91833c41cc88c8ff9c",
+     "size": 557,
+     "type": "image/svg+xml"
+    },
+    "IconJobAgroMining.svg": {
+     "name": "IconJobAgroMining.svg",
+     "blob": "254356df12a84e6a537978bb954f217f",
+     "size": 352,
+     "type": "image/svg+xml"
+    },
+    "IconJobProfessional.svg": {
+     "name": "IconJobProfessional.svg",
+     "blob": "499a0b91d70c2335ef67d29c925c2824",
+     "size": 357,
+     "type": "image/svg+xml"
+    },
+    "IconJobCreative.svg": {
+     "name": "IconJobCreative.svg",
+     "blob": "50b0b89aa4fa74ca46de8198d78ab9cc",
+     "size": 390,
+     "type": "image/svg+xml"
+    }
+   }
+  },
+  "Clases": {
+   "name": "Clases",
+   "tile": "s",
+   "order": [
+    "IconClassSchool.svg",
+    "IconClassPaes.svg",
+    "IconClassUniversity.svg",
+    "IconClassLanguages.svg",
+    "IconClassMusic.svg",
+    "IconClassArt.svg",
+    "IconClassSports.svg",
+    "IconClassTrades.svg",
+    "IconClassSupport.svg"
+   ],
+   "files": {
+    "IconClassSchool.svg": {
+     "name": "IconClassSchool.svg",
+     "blob": "aedcaf2891815850a5fc71a9ca168370",
+     "size": 543,
+     "type": "image/svg+xml"
+    },
+    "IconClassPaes.svg": {
+     "name": "IconClassPaes.svg",
+     "blob": "b4b5b83caae87df35a2e791fe134a5ed",
+     "size": 488,
+     "type": "image/svg+xml"
+    },
+    "IconClassUniversity.svg": {
+     "name": "IconClassUniversity.svg",
+     "blob": "35114ef84faa85ef79972a0398ae7993",
+     "size": 376,
+     "type": "image/svg+xml"
+    },
+    "IconClassLanguages.svg": {
+     "name": "IconClassLanguages.svg",
+     "blob": "ee1f24d410fc0b70e8df09aeeedb814c",
+     "size": 479,
+     "type": "image/svg+xml"
+    },
+    "IconClassMusic.svg": {
+     "name": "IconClassMusic.svg",
+     "blob": "4804d3ab2e253b219945bb0e37023913",
+     "size": 477,
+     "type": "image/svg+xml"
+    },
+    "IconClassArt.svg": {
+     "name": "IconClassArt.svg",
+     "blob": "d81ed46baf9a365e31713c5e72f286dc",
+     "size": 596,
+     "type": "image/svg+xml"
+    },
+    "IconClassSports.svg": {
+     "name": "IconClassSports.svg",
+     "blob": "4e94bb3cbec2283bbb80ec6a8d8ffaec",
+     "size": 351,
+     "type": "image/svg+xml"
+    },
+    "IconClassTrades.svg": {
+     "name": "IconClassTrades.svg",
+     "blob": "f0d35fb3a3818bdfe8460f443560c939",
+     "size": 508,
+     "type": "image/svg+xml"
+    },
+    "IconClassSupport.svg": {
+     "name": "IconClassSupport.svg",
+     "blob": "9b2b77c6732bc798557810219fadbfe3",
+     "size": 446,
+     "type": "image/svg+xml"
+    }
+   }
+  }
+ },
+ "blobs": {},
+ "docs": {
+  "readme": "project/README.md",
+  "sections": []
+ },
+ "lastChange": {
+  "by": "Juan",
+  "at": "2026-10-05T13:56:55Z",
+  "via": "Claude (Cowork)",
+  "note": "M2 · Tonos de Banner: «Sin conexión» en info y «Por tu seguridad» en warning"
+ }
+}
