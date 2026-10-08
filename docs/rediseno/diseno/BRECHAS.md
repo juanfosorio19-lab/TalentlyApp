@@ -28,6 +28,10 @@ oscuro, y actualiza bundle.css, el README del componente y decisiones.md».
 | B11 | MediaUploader | Una foto real (`img`) en la galería o la cámara queda a su tamaño natural; solo existe la regla para `.tl-avatar > img`. Bloquea PUBL-06, SRV-01 y VER-02 con fotos reales. | `.tl-gallery__item > img, .tl-capture__shot > img { position: absolute; inset: 0; object-fit: cover }` |
 | B12 | MediaUploader | La galería deshabilitada (mientras guarda) se ve igual que la activa. | `[disabled]` con `color-surface-2` y `color-text-disabled` |
 | B13 | Agenda (`.tl-event`) | El evento es un botón sin estado presionado. | Capa al 8 % como las filas de lista |
+| B14 | AppBar transparente | Queda en `position: absolute`: en la app se va con el scroll y nunca muestra `is-scrolled`. | En la pantalla de la app, `sticky` con margen negativo para que la cabecera pase por debajo |
+| B15 | Deck | Falta el estado de arrastre: la tarjeta debe seguir al dedo sin transición y sin la capa de presionado. | `.tl-deck__card.is-dragging` |
+| B16 | StepLayout | El H1 del paso recibe el foco por código y muestra el contorno del navegador. | `.tl-steplayout__title:focus { outline: 0 }` |
+| B17 | Card | Una Card tocable que es enlace (`a.tl-card--action`) queda subrayada. | `text-decoration: none` |
 
 ## Pendientes en el sistema (sin regla provisoria)
 
@@ -35,6 +39,11 @@ oscuro, y actualiza bundle.css, el README del componente y decisiones.md».
 - **Vista Día con eventos que se cruzan**: falta una forma de poner dos bloques en el mismo horario (por ejemplo `.tl-dayview__event--half`); hoy los que se cruzan se listan bajo la grilla.
 - **Chip de acción**: un chip que navega (sin `aria-pressed` ni check), como los horarios de «Ver más» en SlotPicker.
 - **ARIA de los preview de SlotPicker**: `role="radiogroup"` con botones `aria-pressed` y `role="list"` con enlaces sin `listitem` no son válidos; en código se usó `role="group"`.
+- **Deck que llena el alto**: falta una regla para que `.tl-deck` estire la tarjeta entre el SegmentedControl y el ActionPair (hoy `cardMinHeight` en línea, como el preview).
+- **Skeleton sobre superficies elevadas**: en oscuro el brillo de `.tl-skel` sobre `color-surface-3` (tarjeta del deck) se ve manchado; falta una variante, y la forma de la tarjeta del deck sin CTA.
+- **Interior de Card y SectionCard**: `.cardhead`, `.cardmeta`, `.kv` y `.chips` son clases locales del preview; falta el título 16/24 600 de filas y tarjetas, el chip de solo lectura sin X y el nombre-enlace del postulante (GES-02).
+- **Cabecera de detalle**: la cabecera `color-surface-2` bajo el AppBar transparente (`.dhead` del preview) no tiene clase.
+- **ActionPair «No me interesa»**: el README dice IconClose; se usa IconClose (confirmar contra el preview del deck).
 - **Hoja expandida**: falta una clase para la hoja abierta a todo el alto (hoy se fija el alto en línea al arrastrar hacia arriba).
 - **Radio con avatar**: la fila `tl-choice--row` de «Usar Talently como» necesita un Avatar antes del texto.
 - **Logo con id de gradiente únicos**: decisiones.md (M1 · L2 punto 2) dice que varias copias del logo pueden compartir sus id de gradiente. En Chromium no es así: si la primera copia queda oculta (`display: none`), todas las demás desaparecen. En código, BrandLogo vuelve únicos los id por copia; conviene corregir la decisión.
