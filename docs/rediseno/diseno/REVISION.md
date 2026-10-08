@@ -1,5 +1,7 @@
 # Revisión de la entrega de Claude Design (M12)
 
+> **Versión 3 (8 de octubre de 2026): las 3 correcciones y las 13 variantes faltantes están hechas y verificadas.** Ver `CAMBIOS.md`. Ya no quedan tableros `FALTA-*`. La sección «Detalles a corregir» de abajo queda como historial.
+
 Fecha: 7 de octubre de 2026. Entrega: `talently-m12-prototipos.zip` (90 pantallas de F1 y 7 de F2, sistema de diseño y capturas).
 
 Lienzos originales en claude.ai (fuente de verdad del diseño):

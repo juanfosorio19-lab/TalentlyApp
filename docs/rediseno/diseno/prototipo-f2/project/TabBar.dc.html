@@ -41,7 +41,7 @@ v['a' + i] = actual === String(i) ? 'page' : undefined;
 const org = (this.props.actor ?? 'persona') === 'organizacion';
 const tema = this.props.tema ?? 'light';
 const sufijo = tema === 'dark' ? '-oscuro' : '';
-const Q = { matias: ['Main', 'EXP-02', 'ACT-01', 'MSG-01', null], 'jorge-nuevo': ['INI-01-jorge-nuevo', 'EXP-01-lista', 'ACT-02-vacia', 'MSG-01-vacio', null], jorge: [null, 'EXP-01-lista', 'ACT-02-jorge', 'MSG-01-jorge', 'PRF-01'], pedro: ['INI-01-pedro', 'EXP-01', null, null, null], carolina: ['INI-01-carolina', null, 'ACT-03-carolina', null, 'PRF-01-carolina-hogar'], 'carolina-f2': ['INI-01-carolina-aprendo', 'EXP-03', null, null, 'PRF-01-carolina'] };
+const Q = { matias: ['Main', 'EXP-02', 'ACT-02-matias', 'MSG-01', null], 'rosa-persona': ['INI-01-rosa', null, null, null, null], marta: [null, null, null, 'MSG-01-marta', null], 'jorge-nuevo': ['INI-01-jorge-nuevo', 'EXP-01-lista', 'ACT-02-vacia', 'MSG-01-vacio', null], jorge: [null, 'EXP-01-lista', 'ACT-02-jorge', 'MSG-01-jorge', 'PRF-01'], pedro: ['INI-01-pedro', 'EXP-01', null, null, null], carolina: ['INI-01-carolina', null, 'ACT-03-carolina', null, 'PRF-01-carolina-hogar'], 'carolina-f2': ['INI-01-carolina-aprendo', 'EXP-03', null, null, 'PRF-01-carolina'] };
 const rutas = org ? ['INI-02', null, 'ACT-01-rosa', null, 'PRF-02'] : (Q[this.props.quien || 'matias'] || Q.matias);
 for (let i = 0; i < 5; i++) { v['h' + i] = rutas[i] ? rutas[i] + sufijo + '.dc.html' : undefined; }
 v.tema = tema;

@@ -240,11 +240,11 @@
       "x": 2820,
       "y": 0
     },
-    "FALTA-ACT-02-matias.dc.html": {
+    "ACT-02-matias.dc.html": {
       "h": 844,
       "is_interactive": true,
       "page": "f2",
-      "title": "ACT-02 · Postulaciones de Matías · falta en el diseño · F1",
+      "title": "ACT-02 · Postulaciones de Matías: «Garzones para matrimonio» recién postulado · F1",
       "w": 390,
       "x": 3290,
       "y": 0
@@ -276,67 +276,58 @@
       "x": 0,
       "y": 0
     },
-    "FALTA-DET-01-pedro.dc.html": {
+    "DET-01-empleo-pedro.dc.html": {
       "h": 844,
       "is_interactive": true,
       "page": "f3",
-      "title": "DET-01 · Detalle del empleo de Pedro · falta en el diseño · F1",
+      "title": "DET-01 · Detalle · Empleo · Mecánico/a automotriz · Taller Los Aromos · Pedro · F1",
       "w": 390,
       "x": 470,
       "y": 0
     },
-    "DET-01-empleo.dc.html": {
+    "DET-02-pedro.dc.html": {
       "h": 844,
       "is_interactive": true,
       "page": "f3",
-      "title": "DET-01 · Detalle · Empleo · Guardia de seguridad 4x4 · Jorge · F1",
+      "title": "DET-02 · Postular (hoja) · Mecánico/a automotriz · Pedro · F1",
       "w": 390,
       "x": 940,
       "y": 0
     },
-    "DET-02.dc.html": {
+    "DET-02-exito-pedro.dc.html": {
       "h": 844,
       "is_interactive": true,
       "page": "f3",
-      "title": "DET-02 · Postular (hoja) · Guardia de seguridad 4x4 · F1",
+      "title": "DET-02 · Postulación enviada: Snackbar en el detalle · Pedro · F1",
       "w": 390,
       "x": 1410,
       "y": 0
     },
-    "DET-02-exito.dc.html": {
+    "DET-03-pedro.dc.html": {
       "h": 844,
       "is_interactive": true,
       "page": "f3",
-      "title": "DET-02 · Postulación enviada: Snackbar en el detalle · F1",
+      "title": "DET-03 · ¡Hicieron match! · Pedro y Taller Los Aromos · F1",
       "w": 390,
       "x": 1880,
       "y": 0
     },
-    "DET-03.dc.html": {
+    "MSG-02-pedro.dc.html": {
       "h": 844,
       "is_interactive": true,
       "page": "f3",
-      "title": "DET-03 · ¡Hicieron match! · Jorge y Seguridad Andes Ltda. · F1",
+      "title": "MSG-02 · Conversación · Pedro y Taller Los Aromos · F1",
       "w": 390,
       "x": 2350,
       "y": 0
     },
-    "MSG-02.dc.html": {
+    "PRC-01-pedro.dc.html": {
       "h": 844,
       "is_interactive": true,
       "page": "f3",
-      "title": "MSG-02 · Conversación · Jorge y Seguridad Andes Ltda. · F1",
+      "title": "PRC-01 · Proceso de empleo · Pedro · Mecánico/a automotriz · F1",
       "w": 390,
       "x": 2820,
-      "y": 0
-    },
-    "PRC-01.dc.html": {
-      "h": 844,
-      "is_interactive": true,
-      "page": "f3",
-      "title": "PRC-01 · Proceso de empleo · Jorge · Guardia de seguridad 4x4 · F1",
-      "w": 390,
-      "x": 3290,
       "y": 0
     },
     "INI-02.dc.html": {
@@ -438,20 +429,20 @@
       "x": 940,
       "y": 1044
     },
-    "GES-04-postulados.dc.html": {
+    "GES-04-finde-postulados.dc.html": {
       "h": 844,
       "is_interactive": true,
       "page": "f4",
-      "title": "GES-04 · Cupos del turno · Postulados · F1",
+      "title": "GES-04 · Cupos del turno · Postulados · Garzones fin de semana · sáb 19 dic · F1",
       "w": 390,
       "x": 1410,
       "y": 1044
     },
-    "GES-04.dc.html": {
+    "GES-04-finde.dc.html": {
       "h": 844,
       "is_interactive": true,
       "page": "f4",
-      "title": "GES-04 · Cupos del turno · Confirmados · Banquetería Rosa SpA · F1",
+      "title": "GES-04 · Cupos del turno · Confirmados 2/8 tras «Confirmar a mis favoritos», con Snackbar · Garzones fin de semana · F1",
       "w": 390,
       "x": 1880,
       "y": 1044
@@ -609,13 +600,22 @@
       "x": 470,
       "y": 0
     },
-    "FALTA-INI-01-rosa.dc.html": {
+    "INI-01-rosa.dc.html": {
       "h": 844,
       "is_interactive": true,
       "page": "f7",
-      "title": "INI-01 · Inicio de Rosa Muñoz como persona · falta en el diseño · F1",
+      "title": "INI-01 · Inicio de Rosa Muñoz como persona: aún sin perfiles · F1",
       "w": 390,
       "x": 940,
+      "y": 0
+    },
+    "SHT-ACTOR-persona.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f7",
+      "title": "SHT-ACTOR · Usar Talently como · Rosa Muñoz marcada (desde su Inicio) · F1",
+      "w": 390,
+      "x": 1410,
       "y": 0
     },
     "NOT-01.dc.html": {
@@ -624,7 +624,7 @@
       "page": "f7",
       "title": "NOT-01 · Notificaciones (Rosa como Rosa Muñoz) · F1",
       "w": 390,
-      "x": 1410,
+      "x": 1880,
       "y": 0
     },
     "INI-02-cambio.dc.html": {
@@ -633,7 +633,7 @@
       "page": "f7",
       "title": "INI-02 · Cambio de actor al tocar una notificación · F1",
       "w": 390,
-      "x": 1880,
+      "x": 2350,
       "y": 0
     },
     "PRF-01.dc.html": {
@@ -708,11 +708,11 @@
       "x": 1880,
       "y": 0
     },
-    "FALTA-MSG-01-marta.dc.html": {
+    "MSG-01-marta.dc.html": {
       "h": 844,
       "is_interactive": true,
       "page": "f10",
-      "title": "MSG-01 · Mensajes de Marta · falta en el diseño · F1",
+      "title": "MSG-01 · Mensajes de Marta · F1",
       "w": 390,
       "x": 0,
       "y": 0
@@ -753,13 +753,22 @@
       "x": 1880,
       "y": 0
     },
+    "MSG-02b-marta-no-disponible.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "f10",
+      "title": "MSG-02b · Certificado que ya no está disponible · lo ve Marta después de «Dejar de compartir» · F1",
+      "w": 390,
+      "x": 2350,
+      "y": 0
+    },
     "MSG-02b-no-disponible.dc.html": {
       "h": 844,
       "is_interactive": true,
       "page": "f10",
       "title": "MSG-02b · Certificado que ya no está disponible · lo ve Familia en Ñuñoa · F1",
       "w": 390,
-      "x": 2350,
+      "x": 2820,
       "y": 0
     },
     "PRF-01--f11.dc.html": {
@@ -834,13 +843,67 @@
       "x": 0,
       "y": 0
     },
+    "DET-01-empleo.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "apoyo",
+      "title": "DET-01 · Detalle · Empleo · Guardia de seguridad 4x4 · Jorge · F1",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "DET-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "apoyo",
+      "title": "DET-02 · Postular (hoja) · Guardia de seguridad 4x4 · F1",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "DET-02-exito.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "apoyo",
+      "title": "DET-02 · Postulación enviada: Snackbar en el detalle · F1",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "DET-03.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "apoyo",
+      "title": "DET-03 · ¡Hicieron match! · Jorge y Seguridad Andes Ltda. · F1",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
     "EXP-01-lista.dc.html": {
       "h": 844,
       "is_interactive": true,
       "page": "apoyo",
       "title": "EXP-01 · Explorar · Empleos · Vista lista · Jorge · F1",
       "w": 390,
-      "x": 470,
+      "x": 2350,
+      "y": 0
+    },
+    "GES-04.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "apoyo",
+      "title": "GES-04 · Cupos del turno · Confirmados · Banquetería Rosa SpA · F1",
+      "w": 390,
+      "x": 2820,
+      "y": 0
+    },
+    "GES-04-postulados.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "apoyo",
+      "title": "GES-04 · Cupos del turno · Postulados · F1",
+      "w": 390,
+      "x": 3290,
       "y": 0
     },
     "MSG-01-jorge.dc.html": {
@@ -849,8 +912,17 @@
       "page": "apoyo",
       "title": "MSG-01 · Mensajes de Jorge · Nuevos matches · F1",
       "w": 390,
-      "x": 940,
-      "y": 0
+      "x": 0,
+      "y": 1044
+    },
+    "MSG-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "apoyo",
+      "title": "MSG-02 · Conversación · Jorge y Seguridad Andes Ltda. · F1",
+      "w": 390,
+      "x": 470,
+      "y": 1044
     },
     "MSG-02b-familia.dc.html": {
       "h": 844,
@@ -858,8 +930,17 @@
       "page": "apoyo",
       "title": "MSG-02b · Certificado compartido · lo ve Familia en Ñuñoa · F1",
       "w": 390,
+      "x": 940,
+      "y": 1044
+    },
+    "PRC-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "apoyo",
+      "title": "PRC-01 · Proceso de empleo · Jorge · Guardia de seguridad 4x4 · F1",
+      "w": 390,
       "x": 1410,
-      "y": 0
+      "y": 1044
     },
     "TabBar.dc.html": {
       "h": 88,
@@ -868,7 +949,7 @@
       "title": "BottomTabBar · compartida por las 5 pestañas",
       "w": 390,
       "x": 1880,
-      "y": 0
+      "y": 1044
     }
   },
   "order": [
@@ -892,17 +973,16 @@
     "AUTH-08.dc.html",
     "AUTH-08-codigo.dc.html",
     "DET-01-turno-postulado.dc.html",
-    "FALTA-ACT-02-matias.dc.html",
+    "ACT-02-matias.dc.html",
     "TUR-01.dc.html",
     "REV-01.dc.html",
     "EXP-01.dc.html",
-    "FALTA-DET-01-pedro.dc.html",
-    "DET-01-empleo.dc.html",
-    "DET-02.dc.html",
-    "DET-02-exito.dc.html",
-    "DET-03.dc.html",
-    "MSG-02.dc.html",
-    "PRC-01.dc.html",
+    "DET-01-empleo-pedro.dc.html",
+    "DET-02-pedro.dc.html",
+    "DET-02-exito-pedro.dc.html",
+    "DET-03-pedro.dc.html",
+    "MSG-02-pedro.dc.html",
+    "PRC-01-pedro.dc.html",
     "INI-02.dc.html",
     "PUBL-01.dc.html",
     "PUBL-03-paso1.dc.html",
@@ -914,8 +994,8 @@
     "PUBL-07-turno.dc.html",
     "GES-01-turno.dc.html",
     "GES-04-sin-postulados.dc.html",
-    "GES-04-postulados.dc.html",
-    "GES-04.dc.html",
+    "GES-04-finde-postulados.dc.html",
+    "GES-04-finde.dc.html",
     "INI-01-carolina.dc.html",
     "PUBL-01-carolina.dc.html",
     "PUBL-04-paso1.dc.html",
@@ -933,7 +1013,8 @@
     "PRC-01-hogar.dc.html",
     "INI-02--f7.dc.html",
     "SHT-ACTOR.dc.html",
-    "FALTA-INI-01-rosa.dc.html",
+    "INI-01-rosa.dc.html",
+    "SHT-ACTOR-persona.dc.html",
     "NOT-01.dc.html",
     "INI-02-cambio.dc.html",
     "PRF-01.dc.html",
@@ -944,11 +1025,12 @@
     "MSG-01.dc.html",
     "Main--f9.dc.html",
     "INI-01-salir.dc.html",
-    "FALTA-MSG-01-marta.dc.html",
+    "MSG-01-marta.dc.html",
     "MSG-02b-pedido.dc.html",
     "MSG-02b-adjuntar.dc.html",
     "MSG-02b-compartir.dc.html",
     "MSG-02b-marta.dc.html",
+    "MSG-02b-marta-no-disponible.dc.html",
     "MSG-02b-no-disponible.dc.html",
     "PRF-01--f11.dc.html",
     "PRF-01-final.dc.html",
@@ -958,9 +1040,17 @@
     "ACT-02-desplazado.dc.html",
     "PRF-12-desde-act.dc.html",
     "ACT-02.dc.html",
+    "DET-01-empleo.dc.html",
+    "DET-02.dc.html",
+    "DET-02-exito.dc.html",
+    "DET-03.dc.html",
     "EXP-01-lista.dc.html",
+    "GES-04.dc.html",
+    "GES-04-postulados.dc.html",
     "MSG-01-jorge.dc.html",
+    "MSG-02.dc.html",
     "MSG-02b-familia.dc.html",
+    "PRC-01.dc.html",
     "TabBar.dc.html"
   ],
   "notes": {
@@ -986,16 +1076,16 @@
       "kind": "title1",
       "maxW": 3680,
       "page": "f2",
-      "text": "Flujo 2 · Matías toma un turno: INI-01 → EXP-02 → borde derecho (scroll) → DET-01 (Garzones para matrimonio) → AUTH-08 (número y código) → Snackbar «Postulaste al turno» → ACT-02 (falta la de Matías) → TUR-01 (confirmado) → salto de tiempo en la barra de estado → REV-01",
+      "text": "Flujo 2 · Matías toma un turno: INI-01 → EXP-02 → borde derecho (scroll) → DET-01 (Garzones para matrimonio, a 18 km) → AUTH-08 (número y código) → Snackbar «Postulaste al turno» → Ver mis postulaciones → ACT-02 de Matías → TUR-01 (confirmado) → salto de tiempo en la barra de estado → REV-01",
       "w": 240,
       "x": 0,
       "y": -300
     },
     "f3": {
       "kind": "title1",
-      "maxW": 3680,
+      "maxW": 3210,
       "page": "f3",
-      "text": "Flujo 3 · Pedro postula a un empleo y hace match: EXP-01 (deck de Pedro) → DET-01 de Pedro (falta; sigue la cadena de Jorge) → DET-01 (empleo) → DET-02 → Snackbar → salto de tiempo → DET-03 ¡Hicieron match! → MSG-02 → chip del empleo → PRC-01",
+      "text": "Flujo 3 · Pedro postula a un empleo y hace match: EXP-01 (deck) → DET-01 Mecánico/a automotriz · Taller Los Aromos → Me interesa → DET-02 → Postular → Snackbar → salto de tiempo en la barra de estado → DET-03 ¡Hicieron match! → MSG-02 → chip del empleo → PRC-01",
       "w": 240,
       "x": 0,
       "y": -300
@@ -1004,7 +1094,7 @@
       "kind": "title1",
       "maxW": 3680,
       "page": "f4",
-      "text": "Flujo 4 · Rosa publica un turno y confirma cupos: INI-02 → PUBL-01 (Turno) → PUBL-03 pasos 1 a 4 → PUBL-08 paso 5 (tocar Premium «Pronto» muestra el Snackbar; publica como Clásica) → PUBL-07 → GES-01 → Ver cupos → GES-04 sin postulados → salto de tiempo en la barra de estado → Postulados → Confirmar a mis favoritos → Confirmados",
+      "text": "Flujo 4 · Rosa publica un turno y confirma cupos: INI-02 → PUBL-01 (Turno) → PUBL-03 pasos 1 a 4 → PUBL-08 paso 5 (tocar Premium «Pronto» muestra el Snackbar; publica como Clásica) → PUBL-07 → GES-01 → Ver cupos → GES-04 sin postulados → salto de tiempo en la barra de estado → Postulados → Confirmar a mis favoritos → Confirmados 2/8 con Snackbar · todo en «Garzones fin de semana»",
       "w": 240,
       "x": 0,
       "y": -300
@@ -1020,9 +1110,9 @@
     },
     "f7": {
       "kind": "title1",
-      "maxW": 2270,
+      "maxW": 2740,
       "page": "f7",
-      "text": "Flujo 7 · Cambio de actor: INI-02 → SHT-ACTOR → Rosa Muñoz (su Inicio falta) → vuelve a Banquetería Rosa SpA → INI-02 · como Rosa Muñoz, NOT-01: tocar «Faltan 2 garzones…» de Banquetería Rosa SpA cambia de actor solo (INI-02 con el aviso)",
+      "text": "Flujo 7 · Cambio de actor: INI-02 → chip de actor → SHT-ACTOR → Rosa Muñoz → INI-01 de Rosa (persona) → chip de actor → SHT-ACTOR con Rosa marcada → Banquetería Rosa SpA → INI-02 · desde INI-01 de Rosa, la campana abre NOT-01: tocar «Faltan 2 garzones…» de Banquetería Rosa SpA cambia de actor solo (INI-02 con el Snackbar)",
       "w": 240,
       "x": 0,
       "y": -300
@@ -1047,9 +1137,9 @@
     },
     "f10": {
       "kind": "title1",
-      "maxW": 2740,
+      "maxW": 3210,
       "page": "f10",
-      "text": "Flujo 10 · Marta comparte su certificado de antecedentes: MSG-01 (falta la de Marta) → MSG-02 con Familia en Ñuñoa → Adjuntar del composer → MSG-02b (hoja) → tarjeta de sistema en la conversación → «Dejar de compartir» → tarjeta «Ya no está disponible» (vista por Familia en Ñuñoa)",
+      "text": "Flujo 10 · Marta comparte su certificado de antecedentes: MSG-01 de Marta → MSG-02 con Familia en Ñuñoa → Adjuntar del composer → MSG-02b (hoja) → tarjeta de sistema en la conversación → «Dejar de compartir» → tarjeta «Ya no está disponible» en la vista de Marta · al final, la misma tarjeta vista por Familia en Ñuñoa (referencia)",
       "w": 240,
       "x": 0,
       "y": -300
@@ -1065,9 +1155,9 @@
     },
     "apoyo": {
       "kind": "title1",
-      "maxW": 2270,
+      "maxW": 3680,
       "page": "apoyo",
-      "text": "Apoyo · pantallas a las que también se llega desde los flujos y componentes del lienzo (TabBar)",
+      "text": "Apoyo · pantallas a las que también se llega desde los flujos (cadena de empleo de Jorge desde EXP-01 en lista), GES-04 de «Garzones para matrimonio» como referencia y componentes del lienzo (TabBar)",
       "w": 240,
       "x": 0,
       "y": -300

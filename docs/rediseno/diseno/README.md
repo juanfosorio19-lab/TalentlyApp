@@ -1,6 +1,6 @@
 # Talently · M12 · Prototipos navegables F1 y F2
 
-Traspaso del diseño para el backend. Contiene las pantallas aprobadas en M1 a M11 que recorren los 11 flujos del prototipo, sin rediseñar, con su navegación cableada.
+Traspaso del diseño para el backend. Contiene las pantallas aprobadas en M1 a M11 que recorren los 11 flujos del prototipo, con su navegación cableada, y las variantes que completan cada flujo con los datos de su persona (versión 3).
 
 Fuente de verdad del diseño (lienzos en claude.ai):
 
@@ -13,7 +13,7 @@ Fuente de verdad del diseño (lienzos en claude.ai):
 ```
 README.md
 flujos.json                 flujos, tableros y enlaces resueltos de cada pantalla (legible por máquina)
-prototipo-f1/project/       90 tableros .dc.html + canvas.json + ds/talently (tokens.css, tokens.json, bundle.css, Inter)
+prototipo-f1/project/       99 tableros .dc.html + canvas.json + ds/talently (tokens.css, tokens.json, bundle.css, Inter)
 prototipo-f2/project/       7 tableros
 capturas/f1, capturas/f2    PNG de cada tablero (390 × 844; índices 1280 × 1100)
 ```
@@ -31,28 +31,39 @@ capturas/f1, capturas/f2    PNG de cada tablero (390 × 844; índices 1280 × 11
 | # | Flujo | Empieza en | Recorrido (IDs de tablero) |
 |---|---|---|---|
 | 1 | Onboarding de Jorge (guardia) | AUTH-01 | AUTH-01 → AUTH-02 → AUTH-03 → ONB-01 → ONB-03 → ONB-T1…T5 → ONB-99 → INI-01-jorge-nuevo |
-| 2 | Matías toma un turno | Main (INI-01 de Matías) | Main → EXP-02 → EXP-02-turnos-desplazado → DET-01-turno → AUTH-08 → AUTH-08-codigo → DET-01-turno-postulado → FALTA-ACT-02-matias → TUR-01 → REV-01 |
-| 3 | Pedro postula y hace match | EXP-01 | EXP-01 → FALTA-DET-01-pedro → DET-01-empleo → DET-02 → DET-02-exito → DET-03 → MSG-02 → PRC-01 |
-| 4 | Rosa publica un turno y confirma cupos | INI-02 | INI-02 → PUBL-01 → PUBL-03-paso1…4 → PUBL-08-turno → PUBL-08-turno-pronto → PUBL-07-turno → GES-01-turno → GES-04-sin-postulados → GES-04-postulados → GES-04 |
+| 2 | Matías toma un turno | Main (INI-01 de Matías) | Main → EXP-02 → EXP-02-turnos-desplazado → DET-01-turno → AUTH-08 → AUTH-08-codigo → DET-01-turno-postulado → ACT-02-matias → TUR-01 → REV-01 |
+| 3 | Pedro postula y hace match | EXP-01 | EXP-01 → DET-01-empleo-pedro → DET-02-pedro → DET-02-exito-pedro → DET-03-pedro → MSG-02-pedro → PRC-01-pedro |
+| 4 | Rosa publica un turno y confirma cupos | INI-02 | INI-02 → PUBL-01 → PUBL-03-paso1…4 → PUBL-08-turno → PUBL-08-turno-pronto → PUBL-07-turno → GES-01-turno → GES-04-sin-postulados → GES-04-finde-postulados → GES-04-finde |
 | 5 | Carolina publica su aviso del hogar | INI-01-carolina | INI-01-carolina → PUBL-01-carolina → PUBL-04-paso1…5 → PUBL-04-identidad → VER-02 → frente → dorso → selfie → PUBL-07-aviso-hogar → GES-02-hogar → PRC-01-hogar (checklist legal) |
 | 6 (F2) | Carolina reserva una clase para Tomás | EXP-03 | EXP-03 → DET-01-clase → RES-01 → RES-02 → RES-03 |
-| 7 | Cambio de actor | INI-02 | INI-02 → SHT-ACTOR → FALTA-INI-01-rosa → SHT-ACTOR → INI-02 · NOT-01 → INI-02-cambio |
+| 7 | Cambio de actor | INI-02 | INI-02 → SHT-ACTOR → INI-01-rosa → SHT-ACTOR-persona → INI-02 · INI-01-rosa → NOT-01 → INI-02-cambio |
 | 8 | Perfil y configuración | PRF-01 (Jorge) | PRF-01 → CFG-01 → CFG-01-cerrar-sesion → AUTH-01 |
 | 9 | Botón atrás | EXP-02-turnos-desplazado | EXP-02 con scroll → DET-01-turno → atrás → EXP-02 con scroll · MSG-01 → atrás → Main → atrás → INI-01-salir |
-| 10 | Marta comparte su certificado | FALTA-MSG-01-marta | MSG-02b-pedido → MSG-02b-adjuntar → MSG-02b-compartir → MSG-02b-marta → MSG-02b-no-disponible |
+| 10 | Marta comparte su certificado | MSG-01-marta | MSG-01-marta → MSG-02b-pedido → MSG-02b-adjuntar → MSG-02b-compartir → MSG-02b-marta → MSG-02b-marta-no-disponible (vista de Familia: MSG-02b-no-disponible) |
 | 11 | Impulsa tu perfil | PRF-01 (Jorge) | PRF-01 → PRF-01-final → PRF-12 (Avisarme) · ACT-02-jorge → ACT-02-desplazado → PRF-12-desde-act |
 
-## Pantallas y estados que faltan en el diseño
+## Notas de consistencia
 
-- Flujo 2: ACT-02 (Postulaciones) de Matías. «Garzones para matrimonio» pide identidad verificada (ruta aprobada: DET-01-identidad); el prototipo usa AUTH-08 como pide el flujo. TUR-01 y REV-01 son de otros turnos de Matías.
-- Flujo 3: DET-01, DET-02, DET-03, MSG-02 y PRC-01 de Pedro (existen solo para Jorge).
-- Flujo 4: GES-04 de «Garzones fin de semana» con postulados y el estado después de confirmar (7 de 8); GES-04 muestra «Garzones para matrimonio».
-- Flujo 7: INI-01 de Rosa Muñoz como persona y SHT-ACTOR con Rosa Muñoz marcada.
-- Flujo 10: MSG-01 de Marta y su vista después de «Dejar de compartir» (la tarjeta «Ya no está disponible» existe vista por Familia en Ñuñoa).
+- Flujo 2: «Garzones para matrimonio» pide identidad verificada (ruta aprobada: DET-01-identidad); el prototipo usa AUTH-08 como pide el flujo. TUR-01 y REV-01 son de otros turnos de Matías (cóctel corporativo del jue 10 dic y el turno del sáb 5 dic).
+- Flujo 5: el checklist legal está dentro de PRC-01-hogar («Para contratar como corresponde»); no hay pantalla aparte.
+- Para Matías (Maipú, radio 20 km), los turnos en Las Condes se muestran a 18 km.
+- La cadena de empleo de Jorge (DET-01-empleo … PRC-01) y GES-04 de «Garzones para matrimonio» siguen en la página Apoyo.
+
+## Variantes de la versión 3 (misma pantalla aprobada, otros datos)
+
+| Tablero | Base aprobada | Qué cambia |
+|---|---|---|
+| ACT-02-matias | ACT-02 | Postulaciones de Matías: cóctel corporativo (Confirmado), matrimonio y cena de fin de año (Postulado) |
+| DET-01-empleo-pedro, DET-02-pedro, DET-02-exito-pedro, DET-03-pedro, MSG-02-pedro, PRC-01-pedro | DET-01-empleo, DET-02, DET-02-exito, DET-03, MSG-02, PRC-01 | Mecánico/a automotriz en Taller Los Aromos (Macul, $750.000, Indefinido, Presencial); entrevista lun 14 dic · 09:00 |
+| GES-04-finde-postulados, GES-04-finde | GES-04-postulados, GES-04 | «Garzones fin de semana», sáb 19 dic, San Miguel: 0/8 con postulados y 2/8 tras «Confirmar a mis favoritos», con Snackbar |
+| INI-01-rosa | INI-01-jorge-nuevo | Inicio de Rosa Muñoz como persona, sin perfiles, con su chip de actor |
+| SHT-ACTOR-persona | SHT-ACTOR | Sobre INI-01-rosa, con Rosa Muñoz marcada y el punto de no leídos en Banquetería Rosa SpA |
+| MSG-01-marta | MSG-01 | Bandeja de Marta con la conversación de Familia en Ñuñoa |
+| MSG-02b-marta-no-disponible | MSG-02b-marta (estado nuevo «off») | Vista de Marta tras «Dejar de compartir»: la tarjeta «Ya no está disponible» |
 
 ## Solo del prototipo (no implementar)
 
-- `FALTA-*`: avisos de pantalla faltante. `INDICE-F1`, `INDICE-F2`: índices.
+- `INDICE-F1`, `INDICE-F2`: índices.
 - `*--f7`, `*--f9`, `*--f11`: alias de una pantalla ya incluida, para mostrarla en la página de otro flujo.
 - `DET-01-turno-postulado` y `PRF-12-desde-act`: envoltorios de estados aprobados (Snackbar «Postulaste al turno»; PRF-12 abierto desde Actividad).
 - Zonas invisibles con `aria-label` «Prototipo: …»: la hora de la barra de estado avanza el tiempo, el borde derecho pasa a la posición de scroll aprobada y el borde izquierdo es el gesto atrás de Android. En `flujos.json` llevan `"tipo": "zona del prototipo (no es UI)"`.

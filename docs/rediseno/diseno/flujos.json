@@ -35,7 +35,7 @@
     {
      "id": "f2",
      "nombre": "2 · Matías toma un turno",
-     "descripcion": "Flujo 2 · Matías toma un turno: INI-01 → EXP-02 → borde derecho (scroll) → DET-01 (Garzones para matrimonio) → AUTH-08 (número y código) → Snackbar «Postulaste al turno» → ACT-02 (falta la de Matías) → TUR-01 (confirmado) → salto de tiempo en la barra de estado → REV-01",
+     "descripcion": "Flujo 2 · Matías toma un turno: INI-01 → EXP-02 → borde derecho (scroll) → DET-01 (Garzones para matrimonio, a 18 km) → AUTH-08 (número y código) → Snackbar «Postulaste al turno» → Ver mis postulaciones → ACT-02 de Matías → TUR-01 (confirmado) → salto de tiempo en la barra de estado → REV-01",
      "tableros": [
       "Main",
       "EXP-02",
@@ -44,7 +44,7 @@
       "AUTH-08",
       "AUTH-08-codigo",
       "DET-01-turno-postulado",
-      "FALTA-ACT-02-matias",
+      "ACT-02-matias",
       "TUR-01",
       "REV-01"
      ]
@@ -52,22 +52,21 @@
     {
      "id": "f3",
      "nombre": "3 · Pedro postula y hace match",
-     "descripcion": "Flujo 3 · Pedro postula a un empleo y hace match: EXP-01 (deck de Pedro) → DET-01 de Pedro (falta; sigue la cadena de Jorge) → DET-01 (empleo) → DET-02 → Snackbar → salto de tiempo → DET-03 ¡Hicieron match! → MSG-02 → chip del empleo → PRC-01",
+     "descripcion": "Flujo 3 · Pedro postula a un empleo y hace match: EXP-01 (deck) → DET-01 Mecánico/a automotriz · Taller Los Aromos → Me interesa → DET-02 → Postular → Snackbar → salto de tiempo en la barra de estado → DET-03 ¡Hicieron match! → MSG-02 → chip del empleo → PRC-01",
      "tableros": [
       "EXP-01",
-      "FALTA-DET-01-pedro",
-      "DET-01-empleo",
-      "DET-02",
-      "DET-02-exito",
-      "DET-03",
-      "MSG-02",
-      "PRC-01"
+      "DET-01-empleo-pedro",
+      "DET-02-pedro",
+      "DET-02-exito-pedro",
+      "DET-03-pedro",
+      "MSG-02-pedro",
+      "PRC-01-pedro"
      ]
     },
     {
      "id": "f4",
      "nombre": "4 · Rosa publica un turno",
-     "descripcion": "Flujo 4 · Rosa publica un turno y confirma cupos: INI-02 → PUBL-01 (Turno) → PUBL-03 pasos 1 a 4 → PUBL-08 paso 5 (tocar Premium «Pronto» muestra el Snackbar; publica como Clásica) → PUBL-07 → GES-01 → Ver cupos → GES-04 sin postulados → salto de tiempo en la barra de estado → Postulados → Confirmar a mis favoritos → Confirmados",
+     "descripcion": "Flujo 4 · Rosa publica un turno y confirma cupos: INI-02 → PUBL-01 (Turno) → PUBL-03 pasos 1 a 4 → PUBL-08 paso 5 (tocar Premium «Pronto» muestra el Snackbar; publica como Clásica) → PUBL-07 → GES-01 → Ver cupos → GES-04 sin postulados → salto de tiempo en la barra de estado → Postulados → Confirmar a mis favoritos → Confirmados 2/8 con Snackbar · todo en «Garzones fin de semana»",
      "tableros": [
       "INI-02",
       "PUBL-01",
@@ -80,8 +79,8 @@
       "PUBL-07-turno",
       "GES-01-turno",
       "GES-04-sin-postulados",
-      "GES-04-postulados",
-      "GES-04"
+      "GES-04-finde-postulados",
+      "GES-04-finde"
      ]
     },
     {
@@ -109,11 +108,12 @@
     {
      "id": "f7",
      "nombre": "7 · Cambio de actor",
-     "descripcion": "Flujo 7 · Cambio de actor: INI-02 → SHT-ACTOR → Rosa Muñoz (su Inicio falta) → vuelve a Banquetería Rosa SpA → INI-02 · como Rosa Muñoz, NOT-01: tocar «Faltan 2 garzones…» de Banquetería Rosa SpA cambia de actor solo (INI-02 con el aviso)",
+     "descripcion": "Flujo 7 · Cambio de actor: INI-02 → chip de actor → SHT-ACTOR → Rosa Muñoz → INI-01 de Rosa (persona) → chip de actor → SHT-ACTOR con Rosa marcada → Banquetería Rosa SpA → INI-02 · desde INI-01 de Rosa, la campana abre NOT-01: tocar «Faltan 2 garzones…» de Banquetería Rosa SpA cambia de actor solo (INI-02 con el Snackbar)",
      "tableros": [
       "INI-02--f7",
       "SHT-ACTOR",
-      "FALTA-INI-01-rosa",
+      "INI-01-rosa",
+      "SHT-ACTOR-persona",
       "NOT-01",
       "INI-02-cambio"
      ]
@@ -143,13 +143,14 @@
     {
      "id": "f10",
      "nombre": "10 · Marta comparte su certificado",
-     "descripcion": "Flujo 10 · Marta comparte su certificado de antecedentes: MSG-01 (falta la de Marta) → MSG-02 con Familia en Ñuñoa → Adjuntar del composer → MSG-02b (hoja) → tarjeta de sistema en la conversación → «Dejar de compartir» → tarjeta «Ya no está disponible» (vista por Familia en Ñuñoa)",
+     "descripcion": "Flujo 10 · Marta comparte su certificado de antecedentes: MSG-01 de Marta → MSG-02 con Familia en Ñuñoa → Adjuntar del composer → MSG-02b (hoja) → tarjeta de sistema en la conversación → «Dejar de compartir» → tarjeta «Ya no está disponible» en la vista de Marta · al final, la misma tarjeta vista por Familia en Ñuñoa (referencia)",
      "tableros": [
-      "FALTA-MSG-01-marta",
+      "MSG-01-marta",
       "MSG-02b-pedido",
       "MSG-02b-adjuntar",
       "MSG-02b-compartir",
       "MSG-02b-marta",
+      "MSG-02b-marta-no-disponible",
       "MSG-02b-no-disponible"
      ]
     },
@@ -170,12 +171,20 @@
     {
      "id": "apoyo",
      "nombre": "Apoyo",
-     "descripcion": "Apoyo · pantallas a las que también se llega desde los flujos y componentes del lienzo (TabBar)",
+     "descripcion": "Apoyo · pantallas a las que también se llega desde los flujos (cadena de empleo de Jorge desde EXP-01 en lista), GES-04 de «Garzones para matrimonio» como referencia y componentes del lienzo (TabBar)",
      "tableros": [
       "ACT-02",
+      "DET-01-empleo",
+      "DET-02",
+      "DET-02-exito",
+      "DET-03",
       "EXP-01-lista",
+      "GES-04",
+      "GES-04-postulados",
       "MSG-01-jorge",
+      "MSG-02",
       "MSG-02b-familia",
+      "PRC-01",
       "TabBar"
      ]
     }
@@ -230,7 +239,7 @@
        "visible": true
       },
       {
-       "destino": "FALTA-MSG-01-marta",
+       "destino": "MSG-01-marta",
        "etiqueta": "10Marta comparte su certificado de antecedentesEmp",
        "visible": true
       },
@@ -506,6 +515,11 @@
        "visible": true
       },
       {
+       "destino": "ACT-02-matias",
+       "etiqueta": "Actividad",
+       "visible": true
+      },
+      {
        "destino": "MSG-01",
        "etiqueta": "Mensajes, 3 sin leer",
        "visible": true
@@ -547,6 +561,11 @@
        "visible": true
       },
       {
+       "destino": "ACT-02-matias",
+       "etiqueta": "Actividad",
+       "visible": true
+      },
+      {
        "destino": "MSG-01",
        "etiqueta": "Mensajes, 3 sin leer",
        "visible": true
@@ -585,6 +604,11 @@
       {
        "destino": "EXP-02",
        "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "ACT-02-matias",
+       "etiqueta": "Actividad",
        "visible": true
       },
       {
@@ -730,28 +754,43 @@
        "visible": true
       },
       {
-       "destino": "FALTA-ACT-02-matias",
+       "destino": "ACT-02-matias",
        "etiqueta": "Ver mis postulaciones",
        "visible": true
       }
      ]
     },
-    "FALTA-ACT-02-matias": {
-     "titulo": "ACT-02 · Postulaciones de Matías · falta en el diseño · F1",
+    "ACT-02-matias": {
+     "titulo": "ACT-02 · Postulaciones de Matías: «Garzones para matrimonio» recién postulado · F1",
      "pagina": "f2",
-     "tipo": "falta en el diseño",
+     "tipo": "tablero del prototipo (envoltorio o alias de una pantalla aprobada)",
      "lienzo_origen": null,
-     "captura": "capturas/f1/FALTA-ACT-02-matias.png",
-     "fuente": "prototipo-f1/project/FALTA-ACT-02-matias.dc.html",
+     "captura": "capturas/f1/ACT-02-matias.png",
+     "fuente": "prototipo-f1/project/ACT-02-matias.dc.html",
      "enlaces": [
       {
        "destino": "TUR-01",
-       "etiqueta": "Seguir con TUR-01 (turno confirmado)",
+       "etiqueta": "BRGarzones para cóctel corporativoBanquetería Rosa",
        "visible": true
       },
       {
-       "destino": "DET-01-turno-postulado",
-       "etiqueta": "Volver al turno",
+       "destino": "Main",
+       "etiqueta": "Inicio",
+       "visible": true
+      },
+      {
+       "destino": "EXP-02",
+       "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "ACT-02-matias",
+       "etiqueta": "Actividad",
+       "visible": true
+      },
+      {
+       "destino": "MSG-01",
+       "etiqueta": "Mensajes, 3 sin leer",
        "visible": true
       }
      ]
@@ -771,7 +810,7 @@
        "tipo": "zona del prototipo (no es UI)"
       },
       {
-       "destino": "FALTA-ACT-02-matias",
+       "destino": "ACT-02-matias",
        "etiqueta": "Volver",
        "visible": true
       },
@@ -816,7 +855,7 @@
        "visible": true
       },
       {
-       "destino": "FALTA-DET-01-pedro",
+       "destino": "DET-01-empleo-pedro",
        "etiqueta": "Mecánico/a automotriz",
        "visible": true
       },
@@ -827,119 +866,99 @@
       }
      ]
     },
-    "FALTA-DET-01-pedro": {
-     "titulo": "DET-01 · Detalle del empleo de Pedro · falta en el diseño · F1",
+    "DET-01-empleo-pedro": {
+     "titulo": "DET-01 · Detalle · Empleo · Mecánico/a automotriz · Taller Los Aromos · Pedro · F1",
      "pagina": "f3",
-     "tipo": "falta en el diseño",
+     "tipo": "tablero del prototipo (envoltorio o alias de una pantalla aprobada)",
      "lienzo_origen": null,
-     "captura": "capturas/f1/FALTA-DET-01-pedro.png",
-     "fuente": "prototipo-f1/project/FALTA-DET-01-pedro.dc.html",
+     "captura": "capturas/f1/DET-01-empleo-pedro.png",
+     "fuente": "prototipo-f1/project/DET-01-empleo-pedro.dc.html",
      "enlaces": [
       {
-       "destino": "DET-01-empleo",
-       "etiqueta": "Seguir con la cadena de Jorge",
+       "destino": "EXP-01",
+       "etiqueta": "Volver",
        "visible": true
       },
       {
        "destino": "EXP-01",
-       "etiqueta": "Volver al deck",
-       "visible": true
-      }
-     ]
-    },
-    "DET-01-empleo": {
-     "titulo": "DET-01 · Detalle · Empleo · Guardia de seguridad 4x4 · Jorge · F1",
-     "pagina": "f3",
-     "tipo": "copia de pantalla aprobada",
-     "lienzo_origen": "Talently · Pantallas",
-     "captura": "capturas/f1/DET-01-empleo.png",
-     "fuente": "prototipo-f1/project/DET-01-empleo.dc.html",
-     "enlaces": [
-      {
-       "destino": "EXP-01-lista",
-       "etiqueta": "Volver",
-       "visible": true
-      },
-      {
-       "destino": "EXP-01-lista",
        "etiqueta": "No me interesa",
        "visible": true
       },
       {
-       "destino": "DET-02",
+       "destino": "DET-02-pedro",
        "etiqueta": "Me interesa",
        "visible": true
       }
      ]
     },
-    "DET-02": {
-     "titulo": "DET-02 · Postular (hoja) · Guardia de seguridad 4x4 · F1",
+    "DET-02-pedro": {
+     "titulo": "DET-02 · Postular (hoja) · Mecánico/a automotriz · Pedro · F1",
      "pagina": "f3",
-     "tipo": "copia de pantalla aprobada",
-     "lienzo_origen": "Talently · Pantallas",
-     "captura": "capturas/f1/DET-02.png",
-     "fuente": "prototipo-f1/project/DET-02.dc.html",
+     "tipo": "tablero del prototipo (envoltorio o alias de una pantalla aprobada)",
+     "lienzo_origen": null,
+     "captura": "capturas/f1/DET-02-pedro.png",
+     "fuente": "prototipo-f1/project/DET-02-pedro.dc.html",
      "enlaces": [
       {
-       "destino": "EXP-01-lista",
+       "destino": "EXP-01",
        "etiqueta": "Volver",
        "visible": true
       },
       {
-       "destino": "EXP-01-lista",
+       "destino": "EXP-01",
        "etiqueta": "No me interesa",
        "visible": true
       },
       {
-       "destino": "DET-02",
+       "destino": "DET-02-pedro",
        "etiqueta": "Me interesa",
        "visible": true
       },
       {
-       "destino": "DET-01-empleo",
+       "destino": "DET-01-empleo-pedro",
        "etiqueta": "Cerrar",
        "visible": true
       },
       {
-       "destino": "DET-02-exito",
+       "destino": "DET-02-exito-pedro",
        "etiqueta": "Postular",
        "visible": true
       }
      ]
     },
-    "DET-02-exito": {
-     "titulo": "DET-02 · Postulación enviada: Snackbar en el detalle · F1",
+    "DET-02-exito-pedro": {
+     "titulo": "DET-02 · Postulación enviada: Snackbar en el detalle · Pedro · F1",
      "pagina": "f3",
-     "tipo": "copia de pantalla aprobada",
-     "lienzo_origen": "Talently · Pantallas",
-     "captura": "capturas/f1/DET-02-exito.png",
-     "fuente": "prototipo-f1/project/DET-02-exito.dc.html",
+     "tipo": "tablero del prototipo (envoltorio o alias de una pantalla aprobada)",
+     "lienzo_origen": null,
+     "captura": "capturas/f1/DET-02-exito-pedro.png",
+     "fuente": "prototipo-f1/project/DET-02-exito-pedro.dc.html",
      "enlaces": [
       {
-       "destino": "DET-03",
+       "destino": "DET-03-pedro",
        "etiqueta": "Prototipo: avanzar el tiempo",
        "visible": true,
        "tipo": "zona del prototipo (no es UI)"
       },
       {
-       "destino": "EXP-01-lista",
+       "destino": "EXP-01",
        "etiqueta": "Volver",
        "visible": true
       },
       {
-       "destino": "PRC-01",
+       "destino": "PRC-01-pedro",
        "etiqueta": "Ver mi postulación",
        "visible": true
       }
      ]
     },
-    "DET-03": {
-     "titulo": "DET-03 · ¡Hicieron match! · Jorge y Seguridad Andes Ltda. · F1",
+    "DET-03-pedro": {
+     "titulo": "DET-03 · ¡Hicieron match! · Pedro y Taller Los Aromos · F1",
      "pagina": "f3",
-     "tipo": "copia de pantalla aprobada",
-     "lienzo_origen": "Talently · Pantallas",
-     "captura": "capturas/f1/DET-03.png",
-     "fuente": "prototipo-f1/project/DET-03.dc.html",
+     "tipo": "tablero del prototipo (envoltorio o alias de una pantalla aprobada)",
+     "lienzo_origen": null,
+     "captura": "capturas/f1/DET-03-pedro.png",
+     "fuente": "prototipo-f1/project/DET-03-pedro.dc.html",
      "enlaces": [
       {
        "destino": "EXP-02",
@@ -947,88 +966,73 @@
        "visible": true
       },
       {
-       "destino": "EXP-01",
-       "etiqueta": "Ver de a una",
-       "visible": true
-      },
-      {
-       "destino": "DET-01-empleo",
-       "etiqueta": "Guardia de seguridad 4x4",
-       "visible": true
-      },
-      {
        "destino": "EXP-01-lista",
+       "etiqueta": "Ver lista",
+       "visible": true
+      },
+      {
+       "destino": "DET-01-empleo-pedro",
+       "etiqueta": "Mecánico/a automotriz",
+       "visible": true
+      },
+      {
+       "destino": "EXP-01",
        "etiqueta": "Explorar",
        "visible": true
       },
       {
-       "destino": "ACT-02-jorge",
-       "etiqueta": "Actividad",
-       "visible": true
-      },
-      {
-       "destino": "MSG-01-jorge",
-       "etiqueta": "Mensajes, 1 sin leer",
-       "visible": true
-      },
-      {
-       "destino": "PRF-01",
-       "etiqueta": "Perfil",
-       "visible": true
-      },
-      {
-       "destino": "EXP-01-lista",
+       "destino": "EXP-01",
        "etiqueta": "Seguir explorando",
        "visible": true
       },
       {
-       "destino": "MSG-02",
+       "destino": "MSG-02-pedro",
        "etiqueta": "Enviar mensaje",
        "visible": true
       }
      ]
     },
-    "MSG-02": {
-     "titulo": "MSG-02 · Conversación · Jorge y Seguridad Andes Ltda. · F1",
+    "MSG-02-pedro": {
+     "titulo": "MSG-02 · Conversación · Pedro y Taller Los Aromos · F1",
      "pagina": "f3",
-     "tipo": "copia de pantalla aprobada",
-     "lienzo_origen": "Talently · Pantallas",
-     "captura": "capturas/f1/MSG-02.png",
-     "fuente": "prototipo-f1/project/MSG-02.dc.html",
+     "tipo": "tablero del prototipo (envoltorio o alias de una pantalla aprobada)",
+     "lienzo_origen": null,
+     "captura": "capturas/f1/MSG-02-pedro.png",
+     "fuente": "prototipo-f1/project/MSG-02-pedro.dc.html",
      "enlaces": [
       {
-       "destino": "MSG-01-jorge",
+       "destino": "EXP-01",
        "etiqueta": "Volver",
        "visible": true
       },
       {
-       "destino": "PRC-01",
-       "etiqueta": "Empleo · Guardia 4x4",
+       "destino": "PRC-01-pedro",
+       "etiqueta": "Empleo · Mecánico/a automotriz",
        "visible": true
       }
      ]
     },
-    "PRC-01": {
-     "titulo": "PRC-01 · Proceso de empleo · Jorge · Guardia de seguridad 4x4 · F1",
+    "PRC-01-pedro": {
+     "titulo": "PRC-01 · Proceso de empleo · Pedro · Mecánico/a automotriz · F1",
      "pagina": "f3",
-     "tipo": "copia de pantalla aprobada",
-     "lienzo_origen": "Talently · Pantallas",
-     "captura": "capturas/f1/PRC-01.png",
-     "fuente": "prototipo-f1/project/PRC-01.dc.html",
+     "tipo": "tablero del prototipo (envoltorio o alias de una pantalla aprobada)",
+     "lienzo_origen": null,
+     "captura": "capturas/f1/PRC-01-pedro.png",
+     "fuente": "prototipo-f1/project/PRC-01-pedro.dc.html",
      "enlaces": [
       {
-       "destino": "ACT-02-jorge",
+       "destino": "MSG-02-pedro",
        "etiqueta": "Volver",
        "visible": true
       },
       {
-       "destino": "MSG-02",
-       "etiqueta": "Ver conversaciónSeguridad Andes Ltda.",
+       "destino": "MSG-02-pedro",
+       "etiqueta": "Ver conversaciónTaller Los Aromos",
        "visible": true
       },
       {
-       "destino": "DET-01-empleo",
-       "etiqueta": "Ver publicaciónGuardia de seguridad 4x4",
+       "destino": "DET-01-empleo-pedro",
+       "etiqueta": "Ver publicaciónMecánico/a automotriz",
        "visible": true
       }
      ]
@@ -1277,49 +1281,49 @@
      "fuente": "prototipo-f1/project/GES-04-sin-postulados.dc.html",
      "enlaces": [
       {
-       "destino": "GES-04-postulados",
+       "destino": "GES-04-finde-postulados",
        "etiqueta": "Prototipo: avanzar el tiempo",
        "visible": true,
        "tipo": "zona del prototipo (no es UI)"
       },
       {
-       "destino": "GES-04",
-       "etiqueta": "Confirmados",
+       "destino": "GES-01-turno",
+       "etiqueta": "Volver",
        "visible": true
       }
      ]
     },
-    "GES-04-postulados": {
-     "titulo": "GES-04 · Cupos del turno · Postulados · F1",
+    "GES-04-finde-postulados": {
+     "titulo": "GES-04 · Cupos del turno · Postulados · Garzones fin de semana · sáb 19 dic · F1",
      "pagina": "f4",
-     "tipo": "copia de pantalla aprobada",
-     "lienzo_origen": "Talently · Pantallas",
-     "captura": "capturas/f1/GES-04-postulados.png",
-     "fuente": "prototipo-f1/project/GES-04-postulados.dc.html",
+     "tipo": "tablero del prototipo (envoltorio o alias de una pantalla aprobada)",
+     "lienzo_origen": null,
+     "captura": "capturas/f1/GES-04-finde-postulados.png",
+     "fuente": "prototipo-f1/project/GES-04-finde-postulados.dc.html",
      "enlaces": [
       {
-       "destino": "GES-04",
-       "etiqueta": "Confirmados",
+       "destino": "GES-01-turno",
+       "etiqueta": "Volver",
        "visible": true
       },
       {
-       "destino": "GES-04",
+       "destino": "GES-04-finde",
        "etiqueta": "Confirmar a mis favoritos (2)",
        "visible": true
       }
      ]
     },
-    "GES-04": {
-     "titulo": "GES-04 · Cupos del turno · Confirmados · Banquetería Rosa SpA · F1",
+    "GES-04-finde": {
+     "titulo": "GES-04 · Cupos del turno · Confirmados 2/8 tras «Confirmar a mis favoritos», con Snackbar · Garzones fin de semana · F1",
      "pagina": "f4",
-     "tipo": "copia de pantalla aprobada",
-     "lienzo_origen": "Talently · Pantallas",
-     "captura": "capturas/f1/GES-04.png",
-     "fuente": "prototipo-f1/project/GES-04.dc.html",
+     "tipo": "tablero del prototipo (envoltorio o alias de una pantalla aprobada)",
+     "lienzo_origen": null,
+     "captura": "capturas/f1/GES-04-finde.png",
+     "fuente": "prototipo-f1/project/GES-04-finde.dc.html",
      "enlaces": [
       {
-       "destino": "GES-04-postulados",
-       "etiqueta": "Postulados",
+       "destino": "GES-01-turno",
+       "etiqueta": "Volver",
        "visible": true
       }
      ]
@@ -1708,7 +1712,7 @@
        "visible": true
       },
       {
-       "destino": "FALTA-INI-01-rosa",
+       "destino": "INI-01-rosa",
        "etiqueta": "RMRosa MuñozTú, con todos tus perfilesTiene noveda",
        "visible": true
       },
@@ -1719,22 +1723,67 @@
       }
      ]
     },
-    "FALTA-INI-01-rosa": {
-     "titulo": "INI-01 · Inicio de Rosa Muñoz como persona · falta en el diseño · F1",
+    "INI-01-rosa": {
+     "titulo": "INI-01 · Inicio de Rosa Muñoz como persona: aún sin perfiles · F1",
      "pagina": "f7",
-     "tipo": "falta en el diseño",
+     "tipo": "tablero del prototipo (envoltorio o alias de una pantalla aprobada)",
      "lienzo_origen": null,
-     "captura": "capturas/f1/FALTA-INI-01-rosa.png",
-     "fuente": "prototipo-f1/project/FALTA-INI-01-rosa.dc.html",
+     "captura": "capturas/f1/INI-01-rosa.png",
+     "fuente": "prototipo-f1/project/INI-01-rosa.dc.html",
      "enlaces": [
       {
-       "destino": "SHT-ACTOR",
-       "etiqueta": "Volver a Banquetería Rosa SpA",
+       "destino": "SHT-ACTOR-persona",
+       "etiqueta": "Usar Talently como: Rosa Muñoz",
        "visible": true
       },
       {
        "destino": "NOT-01",
-       "etiqueta": "Abrir Notificaciones como Rosa Muñoz",
+       "etiqueta": "Notificaciones, 2 sin leer",
+       "visible": true
+      },
+      {
+       "destino": "INI-01-rosa",
+       "etiqueta": "Inicio",
+       "visible": true
+      }
+     ]
+    },
+    "SHT-ACTOR-persona": {
+     "titulo": "SHT-ACTOR · Usar Talently como · Rosa Muñoz marcada (desde su Inicio) · F1",
+     "pagina": "f7",
+     "tipo": "tablero del prototipo (envoltorio o alias de una pantalla aprobada)",
+     "lienzo_origen": null,
+     "captura": "capturas/f1/SHT-ACTOR-persona.png",
+     "fuente": "prototipo-f1/project/SHT-ACTOR-persona.dc.html",
+     "enlaces": [
+      {
+       "destino": "SHT-ACTOR-persona",
+       "etiqueta": "Usar Talently como: Rosa Muñoz",
+       "visible": true
+      },
+      {
+       "destino": "NOT-01",
+       "etiqueta": "Notificaciones, 2 sin leer",
+       "visible": true
+      },
+      {
+       "destino": "INI-01-rosa",
+       "etiqueta": "Inicio",
+       "visible": true
+      },
+      {
+       "destino": "INI-01-rosa",
+       "etiqueta": "Cerrar",
+       "visible": true
+      },
+      {
+       "destino": "INI-01-rosa",
+       "etiqueta": "RMRosa MuñozTú, con todos tus perfiles",
+       "visible": true
+      },
+      {
+       "destino": "INI-02",
+       "etiqueta": "BRBanquetería Rosa SpAOrganización · San MiguelTie",
        "visible": true
       }
      ]
@@ -1748,7 +1797,7 @@
      "fuente": "prototipo-f1/project/NOT-01.dc.html",
      "enlaces": [
       {
-       "destino": "INI-02",
+       "destino": "INI-01-rosa",
        "etiqueta": "Volver",
        "visible": true
       },
@@ -1925,6 +1974,11 @@
        "visible": true
       },
       {
+       "destino": "ACT-02-matias",
+       "etiqueta": "Actividad",
+       "visible": true
+      },
+      {
        "destino": "MSG-01",
        "etiqueta": "Mensajes, 3 sin leer",
        "visible": true
@@ -1982,6 +2036,11 @@
        "visible": true
       },
       {
+       "destino": "ACT-02-matias",
+       "etiqueta": "Actividad",
+       "visible": true
+      },
+      {
        "destino": "MSG-01",
        "etiqueta": "Mensajes, 3 sin leer",
        "visible": true
@@ -2015,6 +2074,11 @@
       {
        "destino": "EXP-02",
        "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "ACT-02-matias",
+       "etiqueta": "Actividad",
        "visible": true
       },
       {
@@ -2054,28 +2118,33 @@
        "visible": true
       },
       {
+       "destino": "ACT-02-matias",
+       "etiqueta": "Actividad",
+       "visible": true
+      },
+      {
        "destino": "MSG-01",
        "etiqueta": "Mensajes, 3 sin leer",
        "visible": true
       }
      ]
     },
-    "FALTA-MSG-01-marta": {
-     "titulo": "MSG-01 · Mensajes de Marta · falta en el diseño · F1",
+    "MSG-01-marta": {
+     "titulo": "MSG-01 · Mensajes de Marta · F1",
      "pagina": "f10",
-     "tipo": "falta en el diseño",
+     "tipo": "tablero del prototipo (envoltorio o alias de una pantalla aprobada)",
      "lienzo_origen": null,
-     "captura": "capturas/f1/FALTA-MSG-01-marta.png",
-     "fuente": "prototipo-f1/project/FALTA-MSG-01-marta.dc.html",
+     "captura": "capturas/f1/MSG-01-marta.png",
+     "fuente": "prototipo-f1/project/MSG-01-marta.dc.html",
      "enlaces": [
       {
        "destino": "MSG-02b-pedido",
-       "etiqueta": "Abrir la conversación",
+       "etiqueta": "Familia en Ñuñoa, Empleo · Asesor/a del hogar, 10:",
        "visible": true
       },
       {
-       "destino": "INDICE-F1",
-       "etiqueta": "Volver al índice",
+       "destino": "MSG-01-marta",
+       "etiqueta": "Mensajes, 1 sin leer",
        "visible": true
       }
      ]
@@ -2089,7 +2158,7 @@
      "fuente": "prototipo-f1/project/MSG-02b-pedido.dc.html",
      "enlaces": [
       {
-       "destino": "FALTA-MSG-01-marta",
+       "destino": "MSG-01-marta",
        "etiqueta": "Volver",
        "visible": true
       },
@@ -2109,7 +2178,7 @@
      "fuente": "prototipo-f1/project/MSG-02b-adjuntar.dc.html",
      "enlaces": [
       {
-       "destino": "FALTA-MSG-01-marta",
+       "destino": "MSG-01-marta",
        "etiqueta": "Volver",
        "visible": true
       },
@@ -2139,7 +2208,7 @@
      "fuente": "prototipo-f1/project/MSG-02b-compartir.dc.html",
      "enlaces": [
       {
-       "destino": "FALTA-MSG-01-marta",
+       "destino": "MSG-01-marta",
        "etiqueta": "Volver",
        "visible": true
       },
@@ -2169,13 +2238,33 @@
      "fuente": "prototipo-f1/project/MSG-02b-marta.dc.html",
      "enlaces": [
       {
-       "destino": "FALTA-MSG-01-marta",
+       "destino": "MSG-01-marta",
        "etiqueta": "Volver",
        "visible": true
       },
       {
-       "destino": "MSG-02b-no-disponible",
+       "destino": "MSG-02b-marta-no-disponible",
        "etiqueta": "Dejar de compartir",
+       "visible": true
+      },
+      {
+       "destino": "MSG-02b-adjuntar",
+       "etiqueta": "Adjuntar",
+       "visible": true
+      }
+     ]
+    },
+    "MSG-02b-marta-no-disponible": {
+     "titulo": "MSG-02b · Certificado que ya no está disponible · lo ve Marta después de «Dejar de compartir» · F1",
+     "pagina": "f10",
+     "tipo": "tablero del prototipo (envoltorio o alias de una pantalla aprobada)",
+     "lienzo_origen": null,
+     "captura": "capturas/f1/MSG-02b-marta-no-disponible.png",
+     "fuente": "prototipo-f1/project/MSG-02b-marta-no-disponible.dc.html",
+     "enlaces": [
+      {
+       "destino": "MSG-01-marta",
+       "etiqueta": "Volver",
        "visible": true
       },
       {
@@ -2469,6 +2558,147 @@
       }
      ]
     },
+    "DET-01-empleo": {
+     "titulo": "DET-01 · Detalle · Empleo · Guardia de seguridad 4x4 · Jorge · F1",
+     "pagina": "apoyo",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/DET-01-empleo.png",
+     "fuente": "prototipo-f1/project/DET-01-empleo.dc.html",
+     "enlaces": [
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "No me interesa",
+       "visible": true
+      },
+      {
+       "destino": "DET-02",
+       "etiqueta": "Me interesa",
+       "visible": true
+      }
+     ]
+    },
+    "DET-02": {
+     "titulo": "DET-02 · Postular (hoja) · Guardia de seguridad 4x4 · F1",
+     "pagina": "apoyo",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/DET-02.png",
+     "fuente": "prototipo-f1/project/DET-02.dc.html",
+     "enlaces": [
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "No me interesa",
+       "visible": true
+      },
+      {
+       "destino": "DET-02",
+       "etiqueta": "Me interesa",
+       "visible": true
+      },
+      {
+       "destino": "DET-01-empleo",
+       "etiqueta": "Cerrar",
+       "visible": true
+      },
+      {
+       "destino": "DET-02-exito",
+       "etiqueta": "Postular",
+       "visible": true
+      }
+     ]
+    },
+    "DET-02-exito": {
+     "titulo": "DET-02 · Postulación enviada: Snackbar en el detalle · F1",
+     "pagina": "apoyo",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/DET-02-exito.png",
+     "fuente": "prototipo-f1/project/DET-02-exito.dc.html",
+     "enlaces": [
+      {
+       "destino": "DET-03",
+       "etiqueta": "Prototipo: avanzar el tiempo",
+       "visible": true,
+       "tipo": "zona del prototipo (no es UI)"
+      },
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "PRC-01",
+       "etiqueta": "Ver mi postulación",
+       "visible": true
+      }
+     ]
+    },
+    "DET-03": {
+     "titulo": "DET-03 · ¡Hicieron match! · Jorge y Seguridad Andes Ltda. · F1",
+     "pagina": "apoyo",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/DET-03.png",
+     "fuente": "prototipo-f1/project/DET-03.dc.html",
+     "enlaces": [
+      {
+       "destino": "EXP-02",
+       "etiqueta": "Turnos",
+       "visible": true
+      },
+      {
+       "destino": "EXP-01",
+       "etiqueta": "Ver de a una",
+       "visible": true
+      },
+      {
+       "destino": "DET-01-empleo",
+       "etiqueta": "Guardia de seguridad 4x4",
+       "visible": true
+      },
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "ACT-02-jorge",
+       "etiqueta": "Actividad",
+       "visible": true
+      },
+      {
+       "destino": "MSG-01-jorge",
+       "etiqueta": "Mensajes, 1 sin leer",
+       "visible": true
+      },
+      {
+       "destino": "PRF-01",
+       "etiqueta": "Perfil",
+       "visible": true
+      },
+      {
+       "destino": "EXP-01-lista",
+       "etiqueta": "Seguir explorando",
+       "visible": true
+      },
+      {
+       "destino": "MSG-02",
+       "etiqueta": "Enviar mensaje",
+       "visible": true
+      }
+     ]
+    },
     "EXP-01-lista": {
      "titulo": "EXP-01 · Explorar · Empleos · Vista lista · Jorge · F1",
      "pagina": "apoyo",
@@ -2514,6 +2744,41 @@
       }
      ]
     },
+    "GES-04": {
+     "titulo": "GES-04 · Cupos del turno · Confirmados · Banquetería Rosa SpA · F1",
+     "pagina": "apoyo",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/GES-04.png",
+     "fuente": "prototipo-f1/project/GES-04.dc.html",
+     "enlaces": [
+      {
+       "destino": "GES-04-postulados",
+       "etiqueta": "Postulados",
+       "visible": true
+      }
+     ]
+    },
+    "GES-04-postulados": {
+     "titulo": "GES-04 · Cupos del turno · Postulados · F1",
+     "pagina": "apoyo",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/GES-04-postulados.png",
+     "fuente": "prototipo-f1/project/GES-04-postulados.dc.html",
+     "enlaces": [
+      {
+       "destino": "GES-04",
+       "etiqueta": "Confirmados",
+       "visible": true
+      },
+      {
+       "destino": "GES-04",
+       "etiqueta": "Confirmar a mis favoritos (2)",
+       "visible": true
+      }
+     ]
+    },
     "MSG-01-jorge": {
      "titulo": "MSG-01 · Mensajes de Jorge · Nuevos matches · F1",
      "pagina": "apoyo",
@@ -2549,6 +2814,26 @@
       }
      ]
     },
+    "MSG-02": {
+     "titulo": "MSG-02 · Conversación · Jorge y Seguridad Andes Ltda. · F1",
+     "pagina": "apoyo",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/MSG-02.png",
+     "fuente": "prototipo-f1/project/MSG-02.dc.html",
+     "enlaces": [
+      {
+       "destino": "MSG-01-jorge",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "PRC-01",
+       "etiqueta": "Empleo · Guardia 4x4",
+       "visible": true
+      }
+     ]
+    },
     "MSG-02b-familia": {
      "titulo": "MSG-02b · Certificado compartido · lo ve Familia en Ñuñoa · F1",
      "pagina": "apoyo",
@@ -2557,6 +2842,31 @@
      "captura": "capturas/f1/MSG-02b-familia.png",
      "fuente": "prototipo-f1/project/MSG-02b-familia.dc.html",
      "enlaces": []
+    },
+    "PRC-01": {
+     "titulo": "PRC-01 · Proceso de empleo · Jorge · Guardia de seguridad 4x4 · F1",
+     "pagina": "apoyo",
+     "tipo": "copia de pantalla aprobada",
+     "lienzo_origen": "Talently · Pantallas",
+     "captura": "capturas/f1/PRC-01.png",
+     "fuente": "prototipo-f1/project/PRC-01.dc.html",
+     "enlaces": [
+      {
+       "destino": "ACT-02-jorge",
+       "etiqueta": "Volver",
+       "visible": true
+      },
+      {
+       "destino": "MSG-02",
+       "etiqueta": "Ver conversaciónSeguridad Andes Ltda.",
+       "visible": true
+      },
+      {
+       "destino": "DET-01-empleo",
+       "etiqueta": "Ver publicaciónGuardia de seguridad 4x4",
+       "visible": true
+      }
+     ]
     },
     "TabBar": {
      "titulo": "BottomTabBar · compartida por las 5 pestañas",
@@ -2574,6 +2884,11 @@
       {
        "destino": "EXP-02",
        "etiqueta": "Explorar",
+       "visible": true
+      },
+      {
+       "destino": "ACT-02-matias",
+       "etiqueta": "Actividad",
        "visible": true
       },
       {
