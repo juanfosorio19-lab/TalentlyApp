@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { paths, tabOf } from './paths';
+import { isTabRoot, paths, tabOf } from './paths';
 
 describe('paths', () => {
     it('arma rutas en español con parámetros opcionales', () => {
@@ -17,5 +17,11 @@ describe('paths', () => {
         expect(tabOf('/mensajes/123')).toBe('mensajes');
         expect(tabOf('/p/123')).toBeNull();
         expect(tabOf('/')).toBeNull();
+    });
+
+    it('distingue raíces de pestaña de pantallas apiladas', () => {
+        expect(isTabRoot('/explorar')).toBe(true);
+        expect(isTabRoot('/mensajes/123')).toBe(false);
+        expect(isTabRoot('/notificaciones')).toBe(false);
     });
 });

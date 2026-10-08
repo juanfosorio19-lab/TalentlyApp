@@ -51,3 +51,9 @@ export function tabOf(pathname: string): TabKey | null {
     const first = pathname.split('/')[1] ?? '';
     return (TAB_KEYS as readonly string[]).includes(first) ? (first as TabKey) : null;
 }
+
+/** ¿Es la raíz de una pestaña (lleva TabBar)? `/explorar` sí; `/mensajes/123` no. */
+export function isTabRoot(pathname: string): boolean {
+    const parts = pathname.split('/').filter(Boolean);
+    return parts.length === 1 && tabOf(pathname) !== null;
+}

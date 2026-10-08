@@ -1,22 +1,16 @@
 // Memoria por pestaña (spec §5.3 regla 1): cambiar de pestaña hace replace y
-// conserva la última subruta y el scroll de cada una. Vive en memoria: al
-// reabrir la app todo parte en Inicio.
+// vuelve a la última subruta de cada una (/explorar?tipo=turno). El scroll lo
+// restaura ScrollRestoration (RootLayout), con clave por ruta en las raíces
+// de pestaña. Vive en memoria: al reabrir la app todo parte en Inicio.
 import { paths, type TabKey } from '../paths';
 
-type Entry = { url: string; scrollY: number };
+const memory = new Map<TabKey, string>();
 
-const memory = new Map<TabKey, Entry>();
-
-export function rememberTab(tab: TabKey, url: string, scrollY: number): void {
-    memory.set(tab, { url, scrollY });
+export function rememberTab(tab: TabKey, url: string): void {
+    memory.set(tab, url);
 }
 
 /** Última subruta visitada de la pestaña, o su raíz. */
 export function lastUrlOf(tab: TabKey): string {
-    return memory.get(tab)?.url ?? paths[tab]();
-}
-
-export function lastScrollOf(tab: TabKey, url: string): number {
-    const e = memory.get(tab);
-    return e && e.url === url ? e.scrollY : 0;
+    return memory.get(tab) ?? paths[tab]();
 }

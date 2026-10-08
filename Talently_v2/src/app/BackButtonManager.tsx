@@ -56,7 +56,11 @@ export function BackButtonManager({ prompts, children }: { prompts: BackPrompts;
     }, [navigate]);
 
     const onHardwareBack = useCallback(async () => {
-        if (busy.current) return;
+        // Con «¿Descartar cambios?» abierto, atrás lo cierra (= «Seguir editando»).
+        if (busy.current) {
+            closeTopOverlay();
+            return;
+        }
         busy.current = true;
         try {
             if (await stepBack()) return;
