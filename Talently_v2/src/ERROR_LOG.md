@@ -250,3 +250,58 @@
 - **CAUSA RAÍZ:** `company_values` era `[]` (vacío pero truthy) → el || nunca caía al fallback `culture_values`
 - **SOLUCIÓN APLICADA:** helper `firstNonEmpty(...listas)` que elige la primera lista con elementos
 - **PATRÓN A EVITAR:** Para fallbacks entre columnas-lista usar `.length`, jamás `||`. Auditar con grep `\|\| userProfile` / `\|\| profile\.` sobre campos array.
+
+---
+
+## Error #23 — Rediseño v3: hojas y diálogos fuera de la pantalla después de hacer scroll
+
+- **ERROR:** BottomSheet, Dialog, MatchModal y Snackbar aparecían fuera de la vista
+- **SÍNTOMA:** con la página desplazada 3000 px, la hoja se dibujaba en top = -2270 px; además un Dialog sobre una hoja no la oscurecía
+- **CONTEXTO:** `src/ui` del rediseño (v3.html); las capas van con portal a `document.body`
+- **CAUSA RAÍZ:** bundle.css de Claude Design posiciona `.tl-scrim/.tl-sheet/.tl-dialog/.tl-match/.tl-snackbar` con `position: absolute` pensando en el marco del mockup; en `body` quedan ancladas al documento y no a la pantalla
+- **SOLUCIÓN APLICADA:** `src/ui/styles/app.css` B7: `position: fixed` para las capas en `body`, sin scroll bajo el velo y el velo de la segunda capa al nivel `z-modal`; la capa de abajo queda `inert` (useModalFocus)
+- **PATRÓN A EVITAR:** Todo estilo que viene de un mockup se prueba en la app real (con scroll, portal y capas apiladas) antes de darlo por bueno. Lo que falta en el sistema se resuelve en app.css y se anota en docs/rediseno/diseno/BRECHAS.md.
+
+---
+
+## Error #24 — Rediseño v3: logos que desaparecen si una copia está oculta
+
+- **ERROR:** Todas las copias del logo quedaban en blanco
+- **SÍNTOMA:** con la primera copia del logo dentro de un `display: none`, las demás copias visibles no mostraban nada
+- **CONTEXTO:** `src/ui/BrandLogo` (SVG oficial inline con `id="tl-bg"`, `tl-t`, `tm`)
+- **CAUSA RAÍZ:** `url(#tl-bg)` apunta a la primera definición del documento; si está oculta, Chromium/WebView no resuelve el gradiente
+- **SOLUCIÓN APLICADA:** BrandLogo vuelve únicos los id por copia con `useId()`
+- **PATRÓN A EVITAR:** SVG inline con `id` internos (gradientes, máscaras, clipPath) siempre con id únicos por instancia.
+
+---
+
+## Error #25 — Rediseño v3: botón cargando sin nombre accesible y con doble envío
+
+- **ERROR:** Un Button con `loading` quedaba sin nombre para lectores de pantalla y Enter lo volvía a disparar
+- **SÍNTOMA:** el árbol de accesibilidad mostraba un botón sin nombre; Enter repetía la acción mientras cargaba
+- **CONTEXTO:** `src/ui/Button` y `src/ui/IconButton`
+- **CAUSA RAÍZ:** bundle.css oculta con `visibility: hidden` todo hijo que no sea el spinner (también el `.tl-vh` con el texto), y `is-loading` solo bloquea el puntero
+- **SOLUCIÓN APLICADA:** `aria-label={loadingLabel}` mientras carga y `onClick` desactivado con `loading`
+- **PATRÓN A EVITAR:** `pointer-events: none` no bloquea el teclado; un estado de espera siempre corta el handler, no solo el puntero.
+
+---
+
+## Error #26 — Rediseño v3: elegir «A convenir» no quedaba guardado
+
+- **ERROR:** En DynamicFields, elegir la unidad «A convenir» volvía a «por turno» y borraba el monto
+- **SÍNTOMA:** después de tocar «A convenir» la unidad seguía en «por turno» y la fila «Tarifa» desaparecía
+- **CONTEXTO:** `src/ui/MoneyField` dentro de `src/ui/DynamicFields`
+- **CAUSA RAÍZ:** MoneyField llamaba `onUnitChange` y luego `onChange`; el padre construía los dos cambios desde el mismo valor viejo y el segundo pisaba al primero
+- **SOLUCIÓN APLICADA:** orden de llamadas corregido (la última lleva el estado final) y el padre limpia el monto al pasar a «A convenir»
+- **PATRÓN A EVITAR:** Dos callbacks seguidos sobre el mismo objeto del padre pisan uno al otro; emitir un solo cambio con el estado completo o usar el setter funcional.
+
+---
+
+## Error #27 — Rediseño v3: recorrer una lista con flechas confirmaba cada opción
+
+- **ERROR:** En SheetPicker (elección única) las flechas cambiaban el valor elegido
+- **SÍNTOMA:** recorrer las comunas con flechas dejaba elegida la última recorrida, y Escape no lo revertía; en MoneyField pasar por «A convenir» borraba el monto
+- **CONTEXTO:** `src/ui/SheetPicker` (Radio nativo dentro de la hoja)
+- **CAUSA RAÍZ:** un radio nativo se marca y dispara `change` al moverse con flechas
+- **SOLUCIÓN APLICADA:** los cambios que vienen de flechas solo mueven el foco; Espacio, Enter y el toque confirman
+- **PATRÓN A EVITAR:** En listas de elección que cierran o confirman, separar «recorrer» de «elegir».

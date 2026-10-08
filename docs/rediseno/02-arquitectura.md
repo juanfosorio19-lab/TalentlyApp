@@ -1378,6 +1378,28 @@ Cada ADR tiene un formato corto: contexto, decisión, qué se descartó, consecu
   - En el MVP, los mensajes del chat no pasan por IA: se cubren con reglas de teléfono y enlaces, más los reportes.
 - **Consecuencias.** El costo de IA queda acotado a una fracción de las publicaciones, y el criterio es auditable.
 
+### ADR-16 · Estilos: el bundle de Claude Design tal cual, en vez de CSS Modules
+
+Tomada el 2026-10-08, al empezar la construcción. Reemplaza lo que dicen §4.2 (`Button.module.css`) y §4.5 (CSS Modules) sobre estilos.
+
+- **Contexto.** Claude Design entregó el sistema de diseño completo como `tokens.css` + `bundle.css` (128 KB, clases `tl-*`, solo tokens, con estados forzables `is-*`) y un `preview.html` por componente con el marcado exacto. Reescribirlo en CSS Modules duplicaría el trabajo y haría que diseño y código se separen en cada entrega.
+- **Decisión.**
+  - `src/ui/styles/tokens.css` y `bundle.css` son copia exacta de la entrega (`npm run ds:sync`); nunca se editan a mano.
+  - Los componentes de `src/ui` (React + TypeScript) renderizan el marcado `tl-*` del preview y no tienen CSS propio.
+  - Lo que el sistema no cubre (capas en la app real, safe areas, brechas) va en `src/ui/styles/app.css`, solo con tokens, y se anota en `docs/rediseno/diseno/BRECHAS.md` para pedirlo a Claude Design. Al llegar en una entrega nueva, se borra de `app.css`.
+  - Íconos y logos se generan como componentes desde `icons.json` y los SVG oficiales.
+- **Consecuencias.** Una entrega nueva de Claude Design se incorpora con un comando. El catálogo `/dev/ui` se compara uno a uno con los preview. La regla de stylelint de §4.5 aplica a `app.css` y a los pocos CSS de pantalla.
+
+### ADR-17 · El rediseño se construye aislado en `v3.html`
+
+Tomada el 2026-10-08.
+
+- **Decisión.**
+  - El rediseño tiene su propia entrada de Vite (`v3.html` → `src/app/main.tsx`), en TypeScript estricto. La app actual (`index.html` → `src/main.jsx`) y su OTA no cambian hasta el corte.
+  - Mientras se previsualiza, el router es `createHashRouter` (`v3.html#/inicio`): no necesita reescrituras del servidor ni choca con las rutas de la app actual. En el corte pasa a `createBrowserRouter`, como dice §4.7.
+  - Mientras Supabase está pausado, las pantallas usan datos de demostración tomados de los prototipos (`src/features/demo`, con `?demo=<actor>`). Se reemplazan por las consultas de cada feature cuando vuelva la base de datos.
+- **Consecuencias.** Se puede construir y probar todo el rediseño sin riesgo para los usuarios actuales. El corte es un cambio de entrada en `index.html` y de router.
+
 ---
 
 ## 6. Estado actual vs objetivo y plan de migración

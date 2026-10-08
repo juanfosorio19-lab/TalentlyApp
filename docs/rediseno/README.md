@@ -9,11 +9,30 @@ Fecha: 1 de octubre de 2026. Rama: `claude/pending-items-review-akh8cv`.
 | # | Documento | Para qué sirve |
 |---|---|---|
 | 01 | [Super prompt para Claude Design](01-super-prompt-claude-design.md) | Prompt maestro + 12 prompts por módulo + checklist de consistencia. Se pega tal cual en Claude Design. |
-| 02 | [Arquitectura](02-arquitectura.md) | Diagramas de contexto, contenedores y secuencias; estructura de carpetas; 15 decisiones técnicas (ADR); plan de migración por fases. |
+| 02 | [Arquitectura](02-arquitectura.md) | Diagramas de contexto, contenedores y secuencias; estructura de carpetas; 17 decisiones técnicas (ADR); plan de migración por fases. |
 | 03 | [Base de datos](03-base-de-datos.md) | Diagramas ER por dominio, máquinas de estado, enums, diccionario de datos, RLS, funciones y triggers, Storage, migración desde el esquema actual y semillas. |
 | 04 | [Perfiles y onboarding](04-perfiles-y-onboarding.md) | Fichas de los 6 perfiles, taxonomía de oficios con atributos y credenciales, flujos de onboarding pantalla por pantalla, reglas de progreso y criterios de QA. |
-| — | [Diseño de Claude Design](diseno/REVISION.md) | Prototipos F1 y F2 aprobados (97 pantallas), sistema de diseño en tokens, capturas y revisión. |
+| — | [Diseño de Claude Design](diseno/REVISION.md) | Prototipos F1 y F2 aprobados (97 pantallas), sistema de diseño en tokens, capturas y revisión. [Brechas](diseno/BRECHAS.md) encontradas al construirlo, para pedir a Claude Design. |
 | 05 | [Spec maestro](05-spec-maestro.md) | Fuente única de verdad que usan los otros cuatro documentos (nombres canónicos de perfiles, tablas, pantallas e íconos). |
+
+## Construcción (desde el 8 de octubre de 2026)
+
+El rediseño se construye en `Talently_v2`, aislado de la app actual (ADR-16 y ADR-17):
+
+- Entrada `v3.html` → `src/app/main.tsx` (TypeScript estricto). La app actual (`index.html`) y su OTA no cambian.
+- `src/ui`: la librería de componentes del sistema de diseño, con su catálogo vivo. Ver [src/ui/README.md](../../Talently_v2/src/ui/README.md).
+- `src/app`: rutas en español, navegación de 5 pestañas, botón atrás de Android y tema.
+- `src/features`: pantallas por módulo; mientras Supabase está pausado usan los datos de demostración de `src/features/demo` (tomados de los prototipos).
+
+Para verlo: `cd Talently_v2 && npm run dev` y abrir:
+
+| Qué | Dirección |
+|---|---|
+| La app como Matías (turnos) | `http://localhost:5173/v3.html?demo=matias#/inicio` |
+| Otros actores | `?demo=jorge`, `pedro`, `carolina`, `rosa` o `banqueteria` |
+| Catálogo de componentes (claro y oscuro) | `http://localhost:5173/v3.html#/dev/ui` |
+
+Comandos: `npm run typecheck`, `npm test`, `npm run lint`, `npm run ds:sync` (incorpora una entrega nueva de Claude Design).
 
 ### Anexos: estado actual
 
