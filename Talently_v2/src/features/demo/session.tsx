@@ -43,11 +43,12 @@ export const DEMO_ACTORS: Record<DemoActorId, DemoActor> = {
     },
     rosa: {
         id: 'rosa', shortName: 'Rosa', fullName: 'Rosa Muñoz', kind: 'persona', comuna: 'Providencia',
-        capabilities: ['turnos'], orgs: ['banqueteria'], flow: '7 · Cambio de actor',
+        // INI-01-rosa: «Aún no tienes perfiles» como persona; trabaja como Banquetería Rosa SpA.
+        capabilities: [], orgs: ['banqueteria'], flow: '7 · Cambio de actor',
     },
     banqueteria: {
         id: 'banqueteria', shortName: 'Banquetería Rosa', fullName: 'Banquetería Rosa SpA', kind: 'organizacion',
-        comuna: 'Providencia', capabilities: ['organizacion'], owner: 'rosa', flow: '4 · Rosa publica un turno',
+        comuna: 'San Miguel', capabilities: ['organizacion'], owner: 'rosa', flow: '4 · Rosa publica un turno',
     },
 };
 
