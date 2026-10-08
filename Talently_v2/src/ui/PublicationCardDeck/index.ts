@@ -1,7 +1,7 @@
-export { PublicationDeck, PublicationDeckShortcut } from './PublicationCardDeck';
+export { PublicationCardDeck, PublicationCardDeckShortcut } from './PublicationCardDeck';
 export type {
-    PublicationDeckProps,
+    PublicationCardDeckProps,
     PublicationDeckCard,
-    PublicationDeckShortcutProps,
+    PublicationCardDeckShortcutProps,
     DeckDecision,
 } from './PublicationCardDeck';

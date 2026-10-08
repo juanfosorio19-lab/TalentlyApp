@@ -20,8 +20,8 @@ export function cuposTone({ left }: Cupos): CuposTone {
     return left <= 2 ? 'warning' : 'text';
 }
 
-/** «Quedan 3 de 8 cupos», «Queda 1 de 8 cupos», «Cupos completos». */
+/** «Quedan 3 de 8 cupos», «Queda 1 de 8 cupos», «Queda 1 de 1 cupo», «Cupos completos». */
 export function cuposLabel({ left, total }: Cupos): string {
     if (left <= 0) return 'Cupos completos';
-    return `${left === 1 ? 'Queda' : 'Quedan'} ${left} de ${total} cupos`;
+    return `${left === 1 ? 'Queda' : 'Quedan'} ${left} de ${total} ${total === 1 ? 'cupo' : 'cupos'}`;
 }

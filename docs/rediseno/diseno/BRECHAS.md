@@ -25,9 +25,16 @@ oscuro, y actualiza bundle.css, el README del componente y decisiones.md».
 | B8 | BottomSheet | Con navegación de 3 botones (o en el navegador) el safe area inferior es 0 y las acciones del pie quedan pegadas al borde. | `padding-bottom: max(barra de gestos, space-3)` |
 | B9 | Snackbar | El Snackbar fijo (`--static`) dentro de una hoja con pie va de borde a borde. | `.tl-sheet > .tl-snackbar--static { margin: 0 space-4 space-3 }` |
 | B10 | Capas | Sin transiciones de apertura y cierre ni estado de arrastre. | Velo y diálogo con fundido, hoja que sube y baja con `duration-slow`, `.is-closing`, `.is-dragging` sin transición y `touch-action: none` en el asa |
+| B11 | MediaUploader | Una foto real (`img`) en la galería o la cámara queda a su tamaño natural; solo existe la regla para `.tl-avatar > img`. Bloquea PUBL-06, SRV-01 y VER-02 con fotos reales. | `.tl-gallery__item > img, .tl-capture__shot > img { position: absolute; inset: 0; object-fit: cover }` |
+| B12 | MediaUploader | La galería deshabilitada (mientras guarda) se ve igual que la activa. | `[disabled]` con `color-surface-2` y `color-text-disabled` |
+| B13 | Agenda (`.tl-event`) | El evento es un botón sin estado presionado. | Capa al 8 % como las filas de lista |
 
 ## Pendientes en el sistema (sin regla provisoria)
 
+- **Cambiar de semana en la Agenda**: CalendarWeek no trae cabecera para ir a la semana anterior o siguiente, y el set no tiene IconChevronLeft (IconArrowLeft es solo Volver). Pedir `.tl-week__nav` e IconChevronLeft/Right; mientras tanto la Agenda muestra solo la semana actual.
+- **Vista Día con eventos que se cruzan**: falta una forma de poner dos bloques en el mismo horario (por ejemplo `.tl-dayview__event--half`); hoy los que se cruzan se listan bajo la grilla.
+- **Chip de acción**: un chip que navega (sin `aria-pressed` ni check), como los horarios de «Ver más» en SlotPicker.
+- **ARIA de los preview de SlotPicker**: `role="radiogroup"` con botones `aria-pressed` y `role="list"` con enlaces sin `listitem` no son válidos; en código se usó `role="group"`.
 - **Hoja expandida**: falta una clase para la hoja abierta a todo el alto (hoy se fija el alto en línea al arrastrar hacia arriba).
 - **Radio con avatar**: la fila `tl-choice--row` de «Usar Talently como» necesita un Avatar antes del texto.
 - **Logo con id de gradiente únicos**: decisiones.md (M1 · L2 punto 2) dice que varias copias del logo pueden compartir sus id de gradiente. En Chromium no es así: si la primera copia queda oculta (`display: none`), todas las demás desaparecen. En código, BrandLogo vuelve únicos los id por copia; conviene corregir la decisión.

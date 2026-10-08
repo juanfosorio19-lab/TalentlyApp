@@ -90,18 +90,22 @@ export function SlotPicker({
     const first = days[0];
     const last = days[days.length - 1];
 
-    // Al abrir, el día elegido queda a la vista dentro de la tira (sin mover la pantalla).
+    // La primera vez que hay un día elegido (al abrir, o cuando llegan los días
+    // y el valor desde Supabase), queda a la vista dentro de la tira, sin mover
+    // la pantalla (scrollIntoView también la desplazaría). Una sola vez:
+    // después, el scroll es de quien desliza.
     const selectedDate = selected?.date;
+    const revealed = useRef(false);
     useEffect(() => {
+        if (revealed.current || !selectedDate) return;
         const strip = stripRef.current;
         const el = strip?.querySelector<HTMLElement>('[aria-pressed="true"]');
         if (!strip || !el) return;
-        if (el.offsetLeft + el.offsetWidth > strip.scrollLeft + strip.clientWidth || el.offsetLeft < strip.scrollLeft) {
-            strip.scrollLeft = el.offsetLeft - strip.offsetLeft;
-        }
-        // Solo al montar: después, el scroll es de quien desliza.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+        revealed.current = true;
+        const s = strip.getBoundingClientRect();
+        const r = el.getBoundingClientRect();
+        if (r.left < s.left || r.right > s.right) strip.scrollLeft += r.left - s.left;
+    }, [selectedDate]);
 
     return (
         <div className={cx('tl-slots', className)} {...rest}>
@@ -124,7 +128,10 @@ export function SlotPicker({
                             aria-pressed={free ? d.date === selectedDate : undefined}
                             aria-label={name}
                             disabled={!free}
-                            onClick={() => onChange({ date: d.date, time: null })}
+                            // Tocar otra vez el día elegido no borra la hora ya elegida.
+                            onClick={() => {
+                                if (d.date !== selectedDate) onChange({ date: d.date, time: null });
+                            }}
                         >
                             <span className="tl-day__wd">{isToday ? 'hoy' : weekdayShort(d.date)}</span>
                             <span className="tl-day__n">{dayOfMonth(d.date)}</span>

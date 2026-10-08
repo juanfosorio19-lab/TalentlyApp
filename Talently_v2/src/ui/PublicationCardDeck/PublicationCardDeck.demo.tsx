@@ -1,9 +1,15 @@
-import { useState, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import type { DemoModule } from '../catalog/types';
 import { DemoFrame, DemoLabel, DemoNotApplicable, DemoRow, DemoSection } from '../catalog/demo';
 import { Button } from '../Button';
+import { Stack } from '../Layout';
 import { Snackbar } from '../Snackbar';
-import { PublicationDeck, PublicationDeckShortcut, type DeckDecision, type PublicationDeckCard } from './PublicationCardDeck';
+import {
+    PublicationCardDeck,
+    PublicationCardDeckShortcut,
+    type DeckDecision,
+    type PublicationDeckCard,
+} from './PublicationCardDeck';
 
 // En el catálogo nada navega: en la app, la tarjeta abre DET-01 (o EXP-01 desde el atajo).
 const noop = () => {};
@@ -39,6 +45,22 @@ const REQUISITOS_SPD = [
     { label: 'Credencial SPD (ex OS-10)', required: true },
     { label: 'Tienes tu credencial SPD vigente', met: true },
 ];
+
+/** INI-01 · la primera oferta de «Empleos para ti» (también la tercera del deck de Jorge). */
+const TALLER: PublicationDeckCard = {
+    id: 'mecanico',
+    author: { name: 'Taller Los Aromos', kind: 'org' },
+    verifications: ORG_VERIFICADA,
+    title: 'Mecánico/a automotriz',
+    href: '#det-01',
+    onOpen: open,
+    tags: [
+        { kind: 'jornada', label: 'Jornada completa' },
+        { kind: 'contrato', label: 'Indefinido' },
+    ],
+    amount: { value: 750000, unit: 'mes', net: true },
+    place: 'a 2 km · Macul',
+};
 
 /** EXP-01 · Jorge ve ofertas de guardia (F1). */
 const OFERTAS: PublicationDeckCard[] = [
@@ -76,20 +98,7 @@ const OFERTAS: PublicationDeckCard[] = [
         requirements: REQUISITOS_SPD,
         why: 'calza con tu oficio y está a 7 km',
     },
-    {
-        id: 'mecanico',
-        author: { name: 'Taller Los Aromos', kind: 'org' },
-        verifications: ORG_VERIFICADA,
-        title: 'Mecánico/a automotriz',
-        href: '#det-01',
-        onOpen: open,
-        tags: [
-            { kind: 'jornada', label: 'Jornada completa' },
-            { kind: 'contrato', label: 'Indefinido' },
-        ],
-        amount: { value: 750000, unit: 'mes', net: true },
-        place: 'a 2 km · Macul',
-    },
+    TALLER,
 ];
 
 /** GES-03 y EXP-05 (M7) · Seguridad Andes Ltda. busca guardia: le sugerimos a Jorge. */
@@ -121,11 +130,18 @@ const decisionText = (d: DeckDecision) => (d === 'si' ? '«Me interesa»' : '«N
 function DeckInteractivo() {
     const [cards, setCards] = useState<PublicationDeckCard[]>(OFERTAS);
     const [ultima, setUltima] = useState<string | null>(null);
+    const vacio = cards.length === 0;
+    // Al decidir la última, el deck y su ActionPair desaparecen: el foco pasa a lo que queda
+    // (en la app, el EmptyState «Viste todas las ofertas cerca»), no cae al body.
+    const reiniciar = useRef<HTMLButtonElement>(null);
+    useEffect(() => {
+        if (vacio) reiniciar.current?.focus();
+    }, [vacio]);
     return (
         <>
             <Pantalla contexto="Explorar · Empleos (EXP-01) · Jorge">
-                {cards.length > 0 ? (
-                    <PublicationDeck
+                {!vacio ? (
+                    <PublicationCardDeck
                         cards={cards}
                         cardMinHeight={ALTO}
                         onDecide={(decision, card) => {
@@ -134,7 +150,7 @@ function DeckInteractivo() {
                         }}
                     />
                 ) : (
-                    <Button variant="tonal" onClick={() => setCards(OFERTAS)}>
+                    <Button ref={reiniciar} variant="tonal" onClick={() => setCards(OFERTAS)}>
                         Volver a empezar
                     </Button>
                 )}
@@ -161,13 +177,13 @@ const demo: DemoModule = {
 
             <DemoSection title="Arrastre a la derecha · sello «Me interesa»">
                 <Pantalla contexto="La siguiente oferta queda debajo, completa y quieta">
-                    <PublicationDeck cards={DOS} cardMinHeight={ALTO} previewDrag="yes" onDecide={noop} />
+                    <PublicationCardDeck cards={DOS} cardMinHeight={ALTO} previewDrag="yes" onDecide={noop} />
                 </Pantalla>
             </DemoSection>
 
             <DemoSection title="Arrastre a la izquierda · sello «No me interesa»">
                 <Pantalla contexto="La siguiente oferta queda debajo, completa y quieta">
-                    <PublicationDeck cards={DOS} cardMinHeight={ALTO} previewDrag="no" onDecide={noop} />
+                    <PublicationCardDeck cards={DOS} cardMinHeight={ALTO} previewDrag="no" onDecide={noop} />
                 </Pantalla>
                 <DemoLabel>
                     Mientras se arrastra, el botón del lado correspondiente se ve presionado. Al soltar sin pasar el
@@ -177,7 +193,7 @@ const demo: DemoModule = {
 
             <DemoSection title="Tarjeta de persona · el mismo deck y el mismo ActionPair">
                 <Pantalla contexto="Personas sugeridas (GES-03 y EXP-05) · Seguridad Andes Ltda. busca guardia">
-                    <PublicationDeck cards={[JORGE]} cardMinHeight={470} onDecide={noop} />
+                    <PublicationCardDeck cards={[JORGE]} cardMinHeight={470} onDecide={noop} />
                 </Pantalla>
                 <DemoLabel>
                     Avatar redondo, oficio como título, años de experiencia y datos del oficio en InfoTag, pretensión,
@@ -188,7 +204,7 @@ const demo: DemoModule = {
 
             <DemoSection title="Perfil impulsado (F3) · sale primero con «Destacado»">
                 <Pantalla contexto="Personas sugeridas · F3">
-                    <PublicationDeck cards={[{ ...JORGE, promoted: true }]} cardMinHeight={470} onDecide={noop} />
+                    <PublicationCardDeck cards={[{ ...JORGE, promoted: true }]} cardMinHeight={470} onDecide={noop} />
                 </Pantalla>
                 <DemoLabel>
                     Solo en Personas sugeridas, lejos de la verificación. En Postulantes (GES-02) el impulso no cambia
@@ -198,7 +214,7 @@ const demo: DemoModule = {
 
             <DemoSection title="Atajo al deck · INI-01 «Empleos para ti»">
                 <Pantalla contexto="Inicio · Empleos para ti">
-                    <PublicationDeckShortcut card={{ ...OFERTAS[2]!, href: '#exp-01' }} />
+                    <PublicationCardDeckShortcut card={{ ...TALLER, href: '#exp-01' }} />
                 </Pantalla>
                 <DemoLabel>
                     La primera tarjeta del deck, compacta, sobre la misma pila (12 px de la siguiente). Tocarla abre
@@ -210,7 +226,7 @@ const demo: DemoModule = {
                 <Estado name="Default" note="Mostrado arriba." />
                 <Estado name="Presionado" note="Igual que la completa: capa al 8 %; un toque abre DET-01.">
                     <Pantalla contexto="Explorar · Empleos (EXP-01)">
-                        <PublicationDeck cards={DOS} cardMinHeight={ALTO} cardClassName="is-pressed" onDecide={noop} />
+                        <PublicationCardDeck cards={DOS} cardMinHeight={ALTO} cardClassName="is-pressed" onDecide={noop} />
                     </Pantalla>
                 </Estado>
                 <Estado
@@ -218,7 +234,7 @@ const demo: DemoModule = {
                     note="Contorno + halo sobre elev-3. Con teclado o lector, el ActionPair hace lo mismo que el arrastre."
                 >
                     <Pantalla contexto="Explorar · Empleos (EXP-01)">
-                        <PublicationDeck cards={DOS} cardMinHeight={ALTO} cardClassName="is-focus" onDecide={noop} />
+                        <PublicationCardDeck cards={DOS} cardMinHeight={ALTO} cardClassName="is-focus" onDecide={noop} />
                     </Pantalla>
                 </Estado>
                 <DemoNotApplicable state="Seleccionado">
@@ -226,7 +242,7 @@ const demo: DemoModule = {
                 </DemoNotApplicable>
                 <Estado name="Deshabilitado" note="Sin conexión, el ActionPair se deshabilita y la tarjeta no se arrastra.">
                     <Pantalla contexto="Explorar · Empleos (EXP-01) · sin conexión">
-                        <PublicationDeck cards={DOS} cardMinHeight={ALTO} disabled onDecide={noop} />
+                        <PublicationCardDeck cards={DOS} cardMinHeight={ALTO} disabled onDecide={noop} />
                     </Pantalla>
                 </Estado>
                 <Estado
@@ -234,18 +250,21 @@ const demo: DemoModule = {
                     note="Si falla, la tarjeta vuelve al deck y aparece el Snackbar de error con «Reintentar»."
                 >
                     <Pantalla contexto="Explorar · Empleos (EXP-01)">
-                        <PublicationDeck cards={DOS} cardMinHeight={ALTO} onDecide={noop} />
-                        <Snackbar
-                            tone="error"
-                            placement="static"
-                            message="No pudimos guardar tu respuesta. Revisa tu conexión e intenta de nuevo."
-                            action={{ label: 'Reintentar', onAction: noop }}
-                        />
+                        {/* El Snackbar va a 12 del deck, como en el preview de PublicationCard (no al gap de la pantalla). */}
+                        <Stack gap={3}>
+                            <PublicationCardDeck cards={DOS} cardMinHeight={ALTO} onDecide={noop} />
+                            <Snackbar
+                                tone="error"
+                                placement="static"
+                                message="No pudimos guardar tu respuesta. Revisa tu conexión e intenta de nuevo."
+                                action={{ label: 'Reintentar', onAction: noop }}
+                            />
+                        </Stack>
                     </Pantalla>
                 </Estado>
-                <Estado name="Cargando" note="Skeleton de tarjeta en el lugar del deck.">
+                <Estado name="Cargando" note="Skeleton de tarjeta en el lugar del deck (sin la barra del CTA: decide el ActionPair).">
                     <Pantalla contexto="Explorar · Empleos (EXP-01)">
-                        <PublicationDeck cards={[]} loading cardMinHeight={ALTO} onDecide={noop} />
+                        <PublicationCardDeck cards={[]} loading cardMinHeight={ALTO} onDecide={noop} />
                     </Pantalla>
                 </Estado>
             </DemoSection>

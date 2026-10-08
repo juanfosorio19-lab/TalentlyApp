@@ -1,6 +1,6 @@
 import type { ComponentPropsWithRef, MouseEventHandler } from 'react';
 import { cx } from '../cx';
-import { IconCheck, IconCloseCircle, IconDocument, IconInfo, IconLike, IconLocation, IconPeople } from '../icons';
+import { IconCheck, IconClose, IconDocument, IconInfo, IconLike, IconLocation, IconPeople } from '../icons';
 import { Amount, type AmountFormatOptions } from '../Amount';
 import { Avatar, type AvatarKind } from '../Avatar';
 import { Badge } from '../Badge';
@@ -16,7 +16,7 @@ import { cuposLabel, cuposTone, type Cupos } from './cupos';
  * `compact` (`tl-pub--compact`: INI-01, EXP-01 en lista, EXP-07, PRF-02,
  * PRF-11; título 16, hasta 2 InfoTag, sin «Por qué ves esto» ni CTA) ·
  * `deck` (`tl-deck__card`: la tarjeta grande del deck, con avatar 56, sellos
- * del arrastre y «Requisitos»; la usa PublicationDeck).
+ * del arrastre y «Requisitos»; la usa PublicationCardDeck).
  */
 export type PublicationCardVariant = 'full' | 'compact' | 'deck';
 
@@ -182,7 +182,7 @@ export function PublicationCard({
                         Me interesa
                     </span>
                     <span className="tl-deck__stamp tl-deck__stamp--no" aria-hidden="true">
-                        <IconCloseCircle />
+                        <IconClose />
                         No me interesa
                     </span>
                 </>

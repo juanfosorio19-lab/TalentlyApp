@@ -1,6 +1,7 @@
 import type { MouseEvent, ReactNode } from 'react';
 import type { DemoModule } from '../catalog/types';
 import { DemoFrame, DemoLabel, DemoNotApplicable, DemoRow, DemoSection } from '../catalog/demo';
+import { Stack } from '../Layout';
 import { SkeletonCard } from '../Skeleton';
 import { Snackbar } from '../Snackbar';
 import { PublicationCard, type PublicationCardData } from './PublicationCard';
@@ -241,13 +242,16 @@ const demo: DemoModule = {
                 </Estado>
                 <Estado name="Error" note="Si falla la acción del CTA, la tarjeta no cambia y aparece el Snackbar de error.">
                     <Pantalla>
-                        <PublicationCard {...TURNO} />
-                        <Snackbar
-                            tone="error"
-                            placement="static"
-                            message="No pudimos tomar el turno. Revisa tu conexión e intenta de nuevo."
-                            action={{ label: 'Reintentar', onAction: noop }}
-                        />
+                        {/* El Snackbar va a 12 de la tarjeta, como en el preview (no al gap de la pantalla). */}
+                        <Stack gap={3}>
+                            <PublicationCard {...TURNO} />
+                            <Snackbar
+                                tone="error"
+                                placement="static"
+                                message="No pudimos tomar el turno. Revisa tu conexión e intenta de nuevo."
+                                action={{ label: 'Reintentar', onAction: noop }}
+                            />
+                        </Stack>
                     </Pantalla>
                 </Estado>
                 <Estado name="Cargando" note="La lista carga con Skeleton de la misma forma. Al tocar el CTA, el botón muestra su spinner.">

@@ -2,14 +2,18 @@ import { useEffect, useRef, useState, type ComponentPropsWithRef, type CSSProper
 import { cx } from '../cx';
 import { ActionPair, type ActionPairChoice } from '../ActionPair';
 import { PublicationCard, type PublicationCardData } from '../PublicationCard';
-import { SkeletonCard } from '../Skeleton';
+import { Skeleton, SkeletonGroup } from '../Skeleton';
 
 /** La decisión sobre la tarjeta de arriba: `si` = «Me interesa» (derecha) · `no` = «No me interesa» (izquierda). */
 export type DeckDecision = 'si' | 'no';
 
-/** Una tarjeta del deck: el contenido de PublicationCard más su identificador. */
+/**
+ * Una tarjeta del deck: el contenido de PublicationCard más su identificador.
+ * `id` y `subject` son del deck: no llegan al `<article>` (el id de la base no
+ * es un id del DOM, y se repetiría si la publicación aparece dos veces).
+ */
 export interface PublicationDeckCard extends PublicationCardData {
-    /** Identificador estable de la publicación o de la persona. */
+    /** Identificador estable de la publicación o de la persona (`key` y `onDecide`). */
     id: string;
     /**
      * Sobre qué se decide, para el lector de pantalla («Me interesa, Jorge
@@ -18,7 +22,7 @@ export interface PublicationDeckCard extends PublicationCardData {
     subject?: string;
 }
 
-export interface PublicationDeckProps extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
+export interface PublicationCardDeckProps extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
     /**
      * Las tarjetas en orden: la primera va arriba y la segunda queda debajo,
      * completa y quieta. Sin tarjetas no se dibuja nada (la pantalla muestra
@@ -30,6 +34,11 @@ export interface PublicationDeckProps extends Omit<ComponentPropsWithRef<'div'>,
      * Llega cuando la tarjeta ya salió: quítala de `cards` (la de abajo sube).
      * Si la acción falla, vuelve a ponerla primera y muestra el Snackbar con
      * «Reintentar»; si no la quitas, vuelve sola al centro.
+     *
+     * Foco: al decidir la última tarjeta el deck desaparece con su ActionPair,
+     * que pudo tener el foco (teclado o lector de pantalla). La pantalla debe
+     * llevar el foco a su EmptyState (el título o su acción) en cuanto lo
+     * dibuja; si no, cae al `body` y no se anuncia nada.
      */
     onDecide: (decision: DeckDecision, card: PublicationDeckCard) => void;
     /** Sin conexión: el ActionPair se deshabilita y la tarjeta no se arrastra. */
@@ -39,7 +48,9 @@ export interface PublicationDeckProps extends Omit<ComponentPropsWithRef<'div'>,
     /**
      * Alto mínimo de la tarjeta, calculado por la pantalla para llenar el
      * espacio entre el SegmentedControl y el ActionPair (en EXP-01 a 390 ×
-     * 844, unos 452). bundle.css no trae una regla que lo resuelva.
+     * 844, unos 452). Provisorio: bundle.css no trae una regla para que
+     * `.tl-deck` estire su tarjeta al alto disponible (brecha); cuando la
+     * traiga, esta prop sobra.
      */
     cardMinHeight?: number;
     /** Solo catálogo: muestra el arrastre a un lado (sello, giro y botón presionado) sin tocar. */
@@ -63,6 +74,51 @@ type Gesture = { pointerId: number; x: number; y: number; width: number; draggin
 const toDecision = (choice: ActionPairChoice): DeckDecision => (choice === 'yes' ? 'si' : 'no');
 
 /**
+ * El contenido para PublicationCard, sin `id` ni `subject`: son del deck y,
+ * esparcidos en la tarjeta, terminarían como atributos del `<article>`.
+ */
+function toCardData(card: PublicationCardData & Partial<Pick<PublicationDeckCard, 'id' | 'subject'>>): PublicationCardData {
+    const data = { ...card };
+    delete data.id;
+    delete data.subject;
+    return data;
+}
+
+/**
+ * Deck que carga: la forma de la tarjeta del deck (avatar de 56, título,
+ * InfoTag, monto y lugar) sin la barra del CTA, porque en el deck decide el
+ * ActionPair. Con `aria-busy` y «Cargando…» oculto, como SkeletonCard.
+ */
+function DeckSkeleton({ style }: { style?: CSSProperties }) {
+    return (
+        <SkeletonGroup className="tl-pub tl-deck__card" style={style}>
+            <div className="tl-pub__head" aria-hidden="true">
+                <span className="tl-avatar tl-avatar--org tl-avatar--56">
+                    <Skeleton shape="square" size={56} />
+                </span>
+                <span className="tl-pub__by">
+                    <Skeleton shape="line" width="55%" />
+                </span>
+                <span className="tl-pub__trust">
+                    <Skeleton shape="line" width="35%" />
+                </span>
+            </div>
+            <span className="tl-pub__title" aria-hidden="true">
+                <Skeleton shape="title" width="80%" />
+            </span>
+            <span className="tl-tags tl-pub__tags" aria-hidden="true">
+                <Skeleton shape="tag" width={136} />
+                <Skeleton shape="tag" width={96} />
+            </span>
+            <span className="tl-pub__amount tl-stack tl-stack--3" aria-hidden="true">
+                <Skeleton shape="title" width="50%" />
+                <Skeleton shape="line" width="40%" />
+            </span>
+        </SkeletonGroup>
+    );
+}
+
+/**
  * Deck de empleos (EXP-01) y de Personas sugeridas (GES-03, EXP-05): la
  * tarjeta grande arriba, la siguiente debajo y el ActionPair. La tarjeta se
  * arrastra con el dedo: a la derecha muestra el sello «Me interesa», a la
@@ -71,7 +127,7 @@ const toDecision = (choice: ActionPairChoice): DeckDecision => (choice === 'yes'
  * arrastre (también con teclado y lector de pantalla). Tocar la tarjeta
  * abre el detalle. Con «reducir movimiento» no hay animaciones (bundle.css).
  */
-export function PublicationDeck({
+export function PublicationCardDeck({
     cards,
     onDecide,
     disabled,
@@ -81,13 +137,15 @@ export function PublicationDeck({
     cardClassName,
     className,
     ...rest
-}: PublicationDeckProps) {
+}: PublicationCardDeckProps) {
     const [drag, setDrag] = useState<Drag | null>(null);
     const topRef = useRef<HTMLElement | null>(null);
     const gesture = useRef<Gesture | null>(null);
-    // Un arrastre termina con un click sobre el enlace estirado: no debe abrir el detalle.
+    // Un arrastre con mouse termina con un click sobre el enlace estirado: no debe abrir el detalle.
     const swallowClick = useRef(false);
     const exitTimer = useRef<number | undefined>(undefined);
+    // Hasta cuándo (performance.now) se ignoran otras decisiones; ver «reducir movimiento» en decide.
+    const lockedUntil = useRef(0);
 
     useEffect(() => () => window.clearTimeout(exitTimer.current), []);
 
@@ -103,18 +161,22 @@ export function PublicationDeck({
 
     const decide = (choice: ActionPairChoice) => {
         if (!top || disabled || loading || leaving) return;
+        if (performance.now() < lockedUntil.current) return;
         const card = top;
         const el = topRef.current;
-        // La salida dura lo que la transición de `.tl-deck__card` (duration-slow); con
-        // «reducir movimiento» no hay salida animada: se decide al tiro. No se lee
+        // La salida dura lo que la transición de `.tl-deck__card` (duration-slow). No se lee
         // transitionDuration porque durante el arrastre la tarjeta lleva `transition: none`.
+        const ms = el ? parseFloat(getComputedStyle(el).getPropertyValue('--duration-slow')) || 0 : 0;
         const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-        const ms = reduce || !el ? 0 : parseFloat(getComputedStyle(el).getPropertyValue('--duration-slow')) || 0;
         const finish = () => {
             setDrag(null);
             onDecide(toDecision(choice), card);
         };
-        if (ms === 0) {
+        if (reduce || ms === 0) {
+            // Sin salida animada se decide al tiro y la tarjeta de abajo sube de inmediato. Sin la
+            // fase 'leave' que protege la salida animada, un doble toque decidiría también esa
+            // tarjeta, que la persona no alcanzó a ver: se ignoran decisiones lo que habría durado.
+            lockedUntil.current = performance.now() + ms;
             finish();
             return;
         }
@@ -157,7 +219,13 @@ export function PublicationDeck({
         const g = gesture.current;
         gesture.current = null;
         if (!g || g.pointerId !== e.pointerId || !g.dragging) return;
+        // El click de este mismo gesto (mouse) llega antes que el timer y se descarta. Un arrastre
+        // táctil no genera click: el timer borra la marca para no perder la próxima activación
+        // (Enter, lector de pantalla) en la tarjeta o en la que sube.
         swallowClick.current = true;
+        window.setTimeout(() => {
+            swallowClick.current = false;
+        }, 0);
         const dx = e.clientX - g.x;
         if (Math.abs(dx) >= g.width * THRESHOLD) decide(dx > 0 ? 'yes' : 'no');
         else setDrag(null); // vuelve al centro con ease-spring
@@ -175,24 +243,27 @@ export function PublicationDeck({
         dragStyle = {
             transform: `translateX(${active.dx}px) rotate(${tilt}deg)`,
             // Mientras el dedo arrastra, sin transición (si no, la tarjeta se queda atrás).
+            // Provisorio: no es un valor calculado; bundle.css no trae `.tl-deck__card.is-dragging
+            // { transition: none }` (brecha). Cuando lo traiga, va la clase y se borra esta línea.
             transition: active.phase === 'drag' ? 'none' : undefined,
         };
     }
+    // Provisorio hasta que bundle.css estire la tarjeta al alto disponible (ver `cardMinHeight`).
     const minHeight: CSSProperties | undefined = cardMinHeight ? { minHeight: cardMinHeight } : undefined;
 
     return (
         <div className={className} {...rest}>
             <div className="tl-deck">
                 {loading || !top ? (
-                    <SkeletonCard className="tl-deck__card" style={minHeight} />
+                    <DeckSkeleton style={minHeight} />
                 ) : (
                     [next, top].map((card) => {
                         if (!card) return null;
-                        const isTop = card === top;
-                        return isTop ? (
+                        const data = toCardData(card);
+                        return card === top ? (
                             <PublicationCard
                                 key={card.id}
-                                {...card}
+                                {...data}
                                 variant="deck"
                                 ref={topRef}
                                 className={cx(side && `is-drag-${side}`, cardClassName)}
@@ -202,7 +273,8 @@ export function PublicationDeck({
                                 onPointerUp={onPointerUp}
                                 onPointerCancel={onPointerCancel}
                                 onClickCapture={(e) => {
-                                    if (!swallowClick.current) return;
+                                    // detail 0: click de teclado o de lector de pantalla, nunca el de un arrastre.
+                                    if (!swallowClick.current || e.detail === 0) return;
                                     swallowClick.current = false;
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -213,7 +285,7 @@ export function PublicationDeck({
                         ) : (
                             <PublicationCard
                                 key={card.id}
-                                {...card}
+                                {...data}
                                 variant="deck"
                                 className="tl-deck__card--next"
                                 style={minHeight}
@@ -235,13 +307,14 @@ export function PublicationDeck({
     );
 }
 
-export interface PublicationDeckShortcutProps extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
+export interface PublicationCardDeckShortcutProps extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
     /**
-     * La primera oferta del deck. Su `href` abre EXP-01 con esa tarjeta
-     * arriba (no DET-01): es la única excepción a «toda la tarjeta abre el
-     * detalle» (decisiones M4 punto 2).
+     * La primera oferta del deck (sirve la PublicationDeckCard tal cual: su
+     * `id` y `subject` no llegan al DOM). Su `href` abre EXP-01 con esa
+     * tarjeta arriba (no DET-01): es la única excepción a «toda la tarjeta
+     * abre el detalle» (decisiones M4 punto 2).
      */
-    card: PublicationCardData;
+    card: PublicationCardData | PublicationDeckCard;
 }
 
 /**
@@ -249,10 +322,10 @@ export interface PublicationDeckShortcutProps extends Omit<ComponentPropsWithRef
  * compacta de la primera oferta sobre la pila de `.tl-deck` (asoma 12 px de
  * la siguiente). Sin ActionPair: se decide en el deck o en el detalle.
  */
-export function PublicationDeckShortcut({ card, className, ...rest }: PublicationDeckShortcutProps) {
+export function PublicationCardDeckShortcut({ card, className, ...rest }: PublicationCardDeckShortcutProps) {
     return (
         <div className={cx('tl-deck', className)} {...rest}>
-            <PublicationCard {...card} variant="compact" />
+            <PublicationCard {...toCardData(card)} variant="compact" />
         </div>
     );
 }
