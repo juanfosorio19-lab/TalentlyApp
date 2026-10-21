@@ -54,12 +54,30 @@ export const DEMO_ACTORS: Record<DemoActorId, DemoActor> = {
 
 interface DemoSession {
     actor: DemoActor;
+    /** Fin del onboarding (flujo 1): pasa a Jorge recién registrado (INI-01-jorge-nuevo). */
+    startAsNewUser: () => void;
+    /**
+     * INI-01-jorge-nuevo: la app se abrió con `nuevo=1` (`?demo=jorge&nuevo=1`
+     * o `#/inicio?nuevo=1`) y el actor es Jorge, el único con esa variante.
+     * Inicio, Actividad, las campanas y Mensajes se ven vacíos.
+     */
+    recienRegistrado: boolean;
     setActor: (id: DemoActorId) => void;
     /** Actores entre los que puede cambiar (SHT-ACTOR): la persona y sus organizaciones. */
     switchable: DemoActor[];
 }
 
 const Ctx = createContext<DemoSession | null>(null);
+
+function urlParam(name: string): string | null {
+    return (
+        new URLSearchParams(window.location.search).get(name) ??
+        new URLSearchParams(window.location.hash.split('?')[1] ?? '').get(name)
+    );
+}
+
+// Se lee una vez al arrancar: vale toda la sesión aunque la ruta de ahora no traiga `nuevo=1`.
+const NUEVO_EN_URL = urlParam('nuevo') === '1';
 
 function initialActor(): DemoActorId {
     // ?demo=jorge en la URL (antes o después del #) elige el actor de demostración.
@@ -71,13 +89,18 @@ function initialActor(): DemoActorId {
 
 export function DemoSessionProvider({ children }: { children: ReactNode }) {
     const [actorId, setActorId] = useState<DemoActorId>(initialActor);
+    const [nuevo, setNuevo] = useState(NUEVO_EN_URL);
     const setActor = useCallback((id: DemoActorId) => setActorId(id), []);
+    const startAsNewUser = useCallback(() => {
+        setActorId('jorge');
+        setNuevo(true);
+    }, []);
     const value = useMemo<DemoSession>(() => {
         const actor = DEMO_ACTORS[actorId];
         const person = actor.owner ? DEMO_ACTORS[actor.owner] : actor;
         const switchable = [person, ...(person.orgs ?? []).map((o) => DEMO_ACTORS[o])];
-        return { actor, setActor, switchable };
-    }, [actorId, setActor]);
+        return { actor, setActor, switchable, startAsNewUser, recienRegistrado: nuevo && actor.id === 'jorge' };
+    }, [actorId, setActor, startAsNewUser, nuevo]);
     return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

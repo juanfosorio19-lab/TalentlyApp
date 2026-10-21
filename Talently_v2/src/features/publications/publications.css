@@ -1,0 +1,55 @@
+/* Detalle de publicación (DET-01, DET-02, AUTH-08): solo maquetación y tonos
+   de texto, siempre con tokens. Sin colores, tamaños ni sombras propias: eso
+   lo ponen los componentes de src/ui. Lo que src/ui aún no trae (cabecera del
+   detalle, lista de datos fuera de la tarjeta, fila «rótulo + valor» con
+   ícono, pie de hoja sin borde) está pedido en «requests»; cuando llegue,
+   la regla de aquí se borra. */
+
+/* Cabecera de quien publica: pasa por debajo del AppBar transparente (app.css B14). */
+.pub-hero {
+  background: var(--color-surface-2);
+  padding: calc(var(--layout-status-bar) + var(--layout-appbar) + var(--space-2)) var(--space-4) var(--space-6);
+}
+.pub-hero__inner { max-width: calc(var(--layout-content-max) - 2 * var(--space-4)); margin: 0 auto; }
+
+/* Bloques del detalle separados 16 (en el prototipo; .tl-app-screen__content usa 24). */
+.tl-app-screen__content.pub-content { gap: var(--space-4); }
+
+/* Texto sin el margen del navegador y en tono secundario (sobre .body, .caption…). */
+.pub-flush { margin: 0; }
+.pub-muted { color: var(--color-text-2); }
+.pub-grow { flex: 1; min-width: 0; }
+
+/* «Sin subordinación ni dependencia»: caption con IconInfo de 16. */
+.pub-note { display: flex; align-items: center; gap: var(--space-1); margin: 0; color: var(--color-text-2); }
+
+/* Lista de datos (.tl-pub__facts) fuera de la tarjeta: lugar y requisitos. */
+.pub-facts--flush { margin: 0; }
+.pub-facts--list { gap: var(--space-2); margin: 0; }
+/* Un requisito que la persona aún no cumple («Aún no verificas tu identidad»). */
+.pub-fact--alert { color: var(--color-danger-text); }
+
+/* Fila «rótulo + valor» de una sección: ícono de 20 en color-text-2. */
+.pub-row-icon { flex: none; display: inline-flex; color: var(--color-text-2); }
+.pub-row-text { display: flex; flex-direction: column; min-width: 0; }
+
+/* «Sobre la organización»: la fila llega al borde de la tarjeta. */
+.pub-bleed { margin: 0 calc(-1 * var(--space-4)); }
+
+/* CTA fijo: el aviso queda a 12 del botón. */
+.pub-cta-note { margin-bottom: var(--space-1); }
+
+/* Hojas de una sola acción (DET-02, AUTH-08): el pie va sin borde. */
+.pub-sheet .tl-sheet__foot { border-top: 0; }
+
+/* DET-02: oferta arriba y la pregunta, separadas 24 de lo que sigue; la nota del CV, a 8 de él. */
+.pub-apply-block { margin: 0 0 var(--space-6); }
+.pub-cv-note { margin: var(--space-2) 0 0; }
+
+/* AUTH-08: texto de arriba, grupo «¿Cómo te enviamos el código?» y las dos acciones bajo el código. */
+.pub-phone-intro { margin: 0 0 var(--space-4); }
+.pub-phone-channel { margin: var(--space-4) 0 0; }
+.pub-code-actions {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
+  margin-top: var(--space-2);
+}

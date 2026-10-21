@@ -1,8 +1,10 @@
-// Rutas del feature (las compone src/app/router.tsx).
-// STUB: lo reemplaza la construcción de las pantallas; conserva tabRoutes y stackRoutes.
+// Rutas del feature Explorar (las compone src/app/router.tsx).
+// Pestaña: /explorar?tipo=empleo|turno|personas (EXP-01, EXP-02, EXP-05; la
+// hoja de filtros EXP-06 vive dentro). Apilada: /buscar?q= (EXP-07).
 import type { RouteObject } from 'react-router-dom';
-import { PlaceholderScreen } from '../../app/system/PlaceholderScreen';
+import { ExploreScreen } from './screens/ExploreScreen';
+import { SearchScreen } from './screens/SearchScreen';
 
-export const tabRoutes: RouteObject[] = [{ path: 'explorar', element: <PlaceholderScreen tab title="Explorar" screenId="EXP-01" /> }];
+export const tabRoutes: RouteObject[] = [{ path: 'explorar', element: <ExploreScreen /> }];
 
-export const stackRoutes: RouteObject[] = [];
+export const stackRoutes: RouteObject[] = [{ path: 'buscar', element: <SearchScreen /> }];

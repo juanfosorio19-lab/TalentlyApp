@@ -1,14 +1,23 @@
-// Hoja «Verificación de …» que abre una VerificationBadge: qué verificó
-// Talently, sin RUT de personas, fecha de nacimiento ni fotos de la cédula.
-// src/ui trae la hoja (BottomSheet) pero no este contenido como componente
-// compartido (pedido en requests).
+// Hoja «Verificación de …» que abre una VerificationBadge (TUR-01): qué
+// verificó Talently, con el ícono de cada estado (el escudo solo en lo
+// verificado) y sin RUT de personas, fecha de nacimiento ni fotos de la
+// cédula. src/ui trae la hoja (BottomSheet) pero no este contenido como
+// componente compartido (pedido en requests).
 import { BottomSheet } from '../../../ui/BottomSheet';
-import { IconPhone, IconShield } from '../../../ui/icons';
+import { IconAlert, IconClock, IconInfo, IconShield, type IconComponent } from '../../../ui/icons';
 import { List, ListItem } from '../../../ui/ListItem';
+import type { VerificationStatus } from '../../../ui/VerificationBadge';
 import type { DemoVerification } from '../../demo/types';
 import { copy } from '../copy';
 import { VERIFICATION_DETAIL } from '../mock';
 import '../activity.css';
+
+const STATUS_ICON: Record<VerificationStatus, IconComponent> = {
+    verified: IconShield,
+    review: IconClock,
+    unverified: IconInfo,
+    expired: IconAlert,
+};
 
 export interface VerificationSheetProps {
     open: boolean;
@@ -24,14 +33,7 @@ export function VerificationSheet({ open, onClose, name, verifications }: Verifi
             <List flat>
                 {verifications.map((v) => {
                     const sub = [VERIFICATION_DETAIL[v.label], v.vence].filter(Boolean).join(' · ');
-                    return (
-                        <ListItem
-                            key={v.label}
-                            icon={v.label.startsWith('Teléfono') ? IconPhone : IconShield}
-                            title={v.label}
-                            sub={sub || undefined}
-                        />
-                    );
+                    return <ListItem key={v.label} icon={STATUS_ICON[v.status]} title={v.label} sub={sub || undefined} />;
                 })}
             </List>
             <p className="caption act-muted">{copy.verification.note}</p>

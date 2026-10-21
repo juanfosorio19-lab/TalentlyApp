@@ -24,7 +24,7 @@ export function ProfileTipCard({ tip, onAction }: ProfileTipCardProps) {
                     <Stack gap={1} align="start">
                         <span className="button-lg">{tip.titulo}</span>
                         {tip.badge && <Badge status={tip.badge} />}
-                        <span className="tl-listitem__sub">{tip.texto}</span>
+                        <span className="body home-muted">{tip.texto}</span>
                     </Stack>
                     <Button variant="tonal" size="sm" onClick={onAction}>
                         {tip.accion}

@@ -23,9 +23,9 @@ import { OptionLink, OptionLinkGroup } from '../../../ui/OptionCard';
 import { Avatar } from '../../../ui/Avatar';
 import { DEMO_TODAY, getPublication } from '../../demo/data';
 import type { DemoAuthor, DemoEmptyState, DemoHomeBlock } from '../../demo/types';
-import { copy } from '../copy';
-import { useAppLinks, useTargetLinks } from '../links';
+import { isPlainClick, useAppLinks, useTargetLinks } from '../links';
 import { isoOf } from '../mock';
+import { homeSheetPath } from '../sheet';
 import { JobsShortcut, ShiftCards } from './HomePublications';
 import { ProfileTipCard } from './ProfileTipCard';
 import type { PublishKind } from './PublishSheet';
@@ -56,7 +56,7 @@ export interface PersonBlockProps {
 }
 
 export function PersonBlock({ block, onVerify, onPublish }: PersonBlockProps) {
-    const { go, hrefOf, linkProps } = useAppLinks();
+    const { go, hrefOf } = useAppLinks();
     const { targetLink, openTarget } = useTargetLinks();
 
     switch (block.tipo) {
@@ -131,6 +131,8 @@ export function PersonBlock({ block, onVerify, onPublish }: PersonBlockProps) {
                                 title={n.titulo}
                                 sub={n.detalle}
                                 status={<Badge status={n.estado} />}
+                                // Con o sin pantalla de destino todavía (PRC-01), la fila lleva a un lugar: chevron como en el prototipo.
+                                chevron
                                 {...targetLink(n.destino)}
                             />
                         ))}
@@ -153,9 +155,10 @@ export function PersonBlock({ block, onVerify, onPublish }: PersonBlockProps) {
                                     icon={need.icon}
                                     title={o.texto}
                                     // PUBL-01 vive en la URL como hoja (spec §5.4): el enlace también sirve en otra pestaña.
-                                    href={hrefOf(`${paths.inicio()}?sheet=publicar&tipo=${need.publish}`)}
+                                    href={hrefOf(homeSheetPath('publicar', { tipo: need.publish }))}
                                     aria-haspopup="dialog"
                                     onClick={(e) => {
+                                        if (!isPlainClick(e)) return;
                                         e.preventDefault();
                                         onPublish(need.publish);
                                     }}
@@ -176,7 +179,9 @@ export function PersonBlock({ block, onVerify, onPublish }: PersonBlockProps) {
                             title={pub?.titulo ?? ''}
                             sub={block.detalle}
                             status={<Badge status={block.estado} />}
-                            {...linkProps(paths.gestionarPublicacion(block.publicationId))}
+                            chevron
+                            // GES-01: «Disponible pronto» mientras no tenga ruta en el router.
+                            {...targetLink({ pantalla: 'gestion', publicationId: block.publicationId })}
                         />
                     </List>
                 </ScreenSection>
@@ -208,4 +213,3 @@ export function PersonBlock({ block, onVerify, onPublish }: PersonBlockProps) {
     }
 }
 
-export { copy as personBlocksCopy };

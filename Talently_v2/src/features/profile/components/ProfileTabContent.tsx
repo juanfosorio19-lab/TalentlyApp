@@ -1,6 +1,6 @@
 // Contenido de un perfil (Trabajo, Hogar u Organización): la tarjeta «Te falta
 // 1 cosa», sus secciones editables y las hojas que abren (PRF-03 y Subir CV).
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSnackbar } from '../../../ui/Snackbar';
 import { paths } from '../../../app/paths';
 import type { DemoProfileSection, DemoProfileTab, DemoProfileTip } from '../../demo/types';
@@ -19,10 +19,12 @@ function isEditable(s: DemoProfileSection): s is EditableSection {
 
 export interface ProfileTabContentProps {
     tab: DemoProfileTab;
+    /** Comuna del actor («Desde Puente Alto.» al editar la distancia). */
+    comuna: string;
     onChange: (next: DemoProfileTab) => void;
 }
 
-export function ProfileTabContent({ tab, onChange }: ProfileTabContentProps) {
+export function ProfileTabContent({ tab, comuna, onChange }: ProfileTabContentProps) {
     const { show } = useSnackbar();
     const openRoute = useOpenRoute();
     const soon = useSoon();
@@ -35,7 +37,19 @@ export function ProfileTabContent({ tab, onChange }: ProfileTabContentProps) {
     const currentCv: CvFile | undefined =
         cvSection?.tipo === 'archivo' ? { nombre: cvSection.nombre, detalle: cvSection.detalle } : undefined;
 
-    const openCv = () => setCv((c) => ({ key: c.key + 1, open: true }));
+    // Quien abrió la hoja del CV («Subir CV» de «Te falta 1 cosa» o de la sección vacía) desaparece al
+    // guardar: el foco pasa a la tarjeta CV en vez de caer en <body>.
+    const cvOpener = useRef<Element | null>(null);
+    const cvCard = useRef<HTMLElement>(null);
+    const [cvSaved, setCvSaved] = useState(0);
+    useEffect(() => {
+        if (cvSaved > 0 && !cvOpener.current?.isConnected) cvCard.current?.focus();
+    }, [cvSaved]);
+
+    const openCv = () => {
+        cvOpener.current = document.activeElement;
+        setCv((c) => ({ key: c.key + 1, open: true }));
+    };
     const openEdit = (index: number) => setEdit((e) => ({ index, key: (e?.key ?? 0) + 1, open: true }));
 
     const onTip = (tip: DemoProfileTip) => {
@@ -65,6 +79,7 @@ export function ProfileTabContent({ tab, onChange }: ProfileTabContentProps) {
         const completitud = tab.completitud && isCvAction(tab.completitud.accion) ? undefined : tab.completitud;
         onChange({ ...tab, secciones, completitud });
         setCv((c) => ({ ...c, open: false }));
+        setCvSaved((n) => n + 1);
         show({ message: COPY.cv.guardado, tone: 'success' });
     };
 
@@ -81,6 +96,7 @@ export function ProfileTabContent({ tab, onChange }: ProfileTabContentProps) {
                     onEdit={() => onEdit(section, i)}
                     onEmptyAction={section.titulo === 'CV' ? openCv : () => soon()}
                     foot={i === last ? tab.pie : undefined}
+                    focusRef={section.titulo === 'CV' ? cvCard : undefined}
                 />
             ))}
             {edit && editing && isEditable(editing) && (
@@ -88,6 +104,7 @@ export function ProfileTabContent({ tab, onChange }: ProfileTabContentProps) {
                     key={edit.key}
                     open={edit.open}
                     section={editing}
+                    comuna={comuna}
                     onClose={() => setEdit({ ...edit, open: false })}
                     onSave={(next) => saveSection(edit.index, next)}
                 />

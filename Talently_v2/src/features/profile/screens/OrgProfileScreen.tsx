@@ -39,7 +39,7 @@ export function OrgProfileScreen() {
                                 {COPY.perfil.verComoMeVen}
                             </Button>
                         </AsiTeVen>
-                        {tab && <ProfileTabContent tab={tab} onChange={changeTab} />}
+                        {tab && <ProfileTabContent tab={tab} comuna={profile.asiTeVen.comuna} onChange={changeTab} />}
                         <ProfileLinks links={[...profile.enlaces, ...ORG_EXTRA_LINKS]} />
                     </Stack>
                 </div>

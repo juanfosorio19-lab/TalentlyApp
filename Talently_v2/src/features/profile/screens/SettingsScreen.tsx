@@ -41,7 +41,8 @@ export function SettingsScreen() {
     const soon = useSoon();
     const { preference } = useTheme();
     const { actor } = useDemoSession();
-    const { configuracion } = getProfile(actor.id);
+    // La cuenta es de la persona (auth.users, spec §2.1): con una organización activa, la de quien la administra.
+    const { configuracion } = getProfile(actor.owner ?? actor.id);
     const [appearance, setAppearance] = useState(false);
     const [logout, setLogout] = useState(false);
 

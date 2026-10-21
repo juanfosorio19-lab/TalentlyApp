@@ -1,6 +1,9 @@
 // PRF-12 · Impulsa tu perfil (flujo 11): «Perfil destacado» por 7 o 30 días.
 // Antes de F3 no se vende: los planes llevan «Pronto» y el CTA deja pedir que
 // avisemos (Snackbar «Te avisaremos cuando puedas impulsar tu perfil»).
+// Solo para quien trabaja (spec §5.4, actor T): a cualquier otro actor, un
+// enlace profundo lo deja en su Perfil.
+import { Navigate } from 'react-router-dom';
 import { AppBar, useScrolled } from '../../../ui/AppBar';
 import { Banner } from '../../../ui/Banner';
 import { Button } from '../../../ui/Button';
@@ -10,7 +13,9 @@ import { OptionGroup } from '../../../ui/OptionCard';
 import { PromotedBadge } from '../../../ui/PromotedBadge';
 import { SnackbarOutlet, useSnackbar } from '../../../ui/Snackbar';
 import { useGoBack } from '../../../app/BackButtonManager';
-import { useDemoSession } from '../../demo/session';
+import { paths } from '../../../app/paths';
+import { useDemoSession, type DemoActorId } from '../../demo/session';
+import { trabaja } from '../actor';
 import { COPY } from '../copy';
 import { useBoostNotify } from '../store';
 import '../profile.css';
@@ -25,11 +30,16 @@ const PLANS = [
 const keep = () => {};
 
 export function BoostScreen() {
+    const { actor } = useDemoSession();
+    if (!trabaja(actor)) return <Navigate to={paths.perfil()} replace />;
+    return <Boost actorId={actor.id} />;
+}
+
+function Boost({ actorId }: { actorId: DemoActorId }) {
     const goBack = useGoBack();
     const scrolled = useScrolled();
-    const { actor } = useDemoSession();
     const { show } = useSnackbar();
-    const [notify, turnOnNotify] = useBoostNotify(actor.id);
+    const [notify, turnOnNotify] = useBoostNotify(actorId);
 
     const avisar = () => {
         turnOnNotify();
@@ -42,7 +52,8 @@ export function BoostScreen() {
             <main className="tl-app-screen__body">
                 <div className="tl-app-screen__content">
                     <p className="body-l prf-muted prf-flush">{COPY.impulsa.intro}</p>
-                    {/* Hechos con ícono: el marcado tl-pub__facts del prototipo (no hay componente suelto; ver requests). */}
+                    {/* Hechos con ícono: el marcado tl-pub__facts del prototipo. src/ui no exporta la lista sola (pedida en
+                        «requests», hoy también armada a mano en activity/components/FactList.tsx). */}
                     <ul className="tl-pub__facts prf-facts">
                         <li className="tl-pub__fact">
                             <IconPeople />
@@ -73,15 +84,18 @@ export function BoostScreen() {
             </main>
             <CtaBar scrolled>
                 <SnackbarOutlet />
-                {notify ? (
-                    <Button variant="tonal" size="lg" block icon={IconCheck} disabled>
-                        {COPY.impulsa.avisado}
-                    </Button>
-                ) : (
-                    <Button variant="tonal" size="lg" block onClick={avisar}>
-                        {COPY.impulsa.avisarme}
-                    </Button>
-                )}
+                {/* Un solo botón que cambia de estado: conserva el foco (PRF-12-avisado: is-disabled + aria-disabled). */}
+                <Button
+                    variant="tonal"
+                    size="lg"
+                    block
+                    icon={notify ? IconCheck : undefined}
+                    aria-disabled={notify || undefined}
+                    className={notify ? 'is-disabled' : undefined}
+                    onClick={notify ? undefined : avisar}
+                >
+                    {notify ? COPY.impulsa.avisado : COPY.impulsa.avisarme}
+                </Button>
             </CtaBar>
         </div>
     );

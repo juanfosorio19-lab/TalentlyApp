@@ -1,11 +1,13 @@
 // Textos de Explorar (EXP-01, EXP-02, EXP-05, EXP-06 y EXP-07), en español de
-// Chile. Los de las capturas F1 van idénticos al prototipo.
+// Chile. Los de las capturas F1 van idénticos al prototipo; los demás siguen
+// «Voz y textos» del sistema de diseño (infinitivo en los CTA, tuteo, nunca la edad).
 
 const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`;
 const nombrePila = (nombre: string) => nombre.split(' ')[0] ?? nombre;
 
 export const copy = {
     titulo: 'Explorar',
+    pronto: 'Disponible pronto',
 
     appBar: {
         buscar: 'Buscar',
@@ -29,11 +31,14 @@ export const copy = {
         deshacer: 'Deshacer',
         deckVacio: {
             titulo: 'Viste todas las ofertas cerca',
-            conFiltros: (n: number) =>
-                `Hay ${plural(n, 'oferta más', 'ofertas más')} si cambias los filtros.`,
+            conFiltros: (n: number) => `Hay ${plural(n, 'oferta más', 'ofertas más')} si cambias los filtros.`,
             sinFiltros: 'Las que marcaste con «Me interesa» siguen en la vista de lista.',
             cambiarFiltros: 'Cambiar filtros',
             verLista: 'Ver lista',
+        },
+        listaVacia: {
+            titulo: 'No te quedan ofertas por ver',
+            texto: 'Marcaste todas con «No me interesa». Te avisaremos cuando haya ofertas nuevas cerca.',
         },
         sinResultados: {
             titulo: 'No hay ofertas con estos filtros',
@@ -122,6 +127,7 @@ export const copy = {
         jornada: 'Jornada',
         contrato: 'Contrato',
         nota: 'Nota mínima',
+        confianza: 'Confianza',
         soloVerificadas: 'Solo organizaciones verificadas',
         soloVerificadasDesc: 'Revisamos su RUT y sus documentos.',
         yaTrabajaron: 'Solo quienes ya trabajaron contigo',
@@ -149,7 +155,7 @@ export const copy = {
             texto: 'Escribe un oficio, una organización o una comuna.',
         },
         sinResultados: {
-            titulo: 'Sin resultados',
+            titulo: (q: string) => `No encontramos «${q}»`,
             texto: 'Prueba con otra palabra, por ejemplo el oficio o la comuna.',
         },
         sinBusqueda: {

@@ -1,6 +1,5 @@
 // AppBar large de Inicio: saludo, selector de actor (solo si la persona
 // pertenece a una organización) y la campana con su contador real → NOT-01.
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { paths } from '../../../app/paths';
 import { ActorSelector, AppBar, useScrolled } from '../../../ui/AppBar';
@@ -9,6 +8,7 @@ import { IconBell } from '../../../ui/icons';
 import { useDemoSession } from '../../demo/session';
 import { copy } from '../copy';
 import { useInbox } from '../inbox';
+import { useHomeSheet } from '../sheet';
 import { ActorSheet } from './ActorSheet';
 
 /** NOT-01 sabe de dónde se abrió: si una notificación lleva ahí mismo, vuelve en vez de apilar. */
@@ -21,7 +21,8 @@ export function HomeAppBar({ title }: { title: string }) {
     const { unread } = useInbox();
     const scrolled = useScrolled();
     const navigate = useNavigate();
-    const [actorSheet, setActorSheet] = useState(false);
+    // SHT-ACTOR es `?sheet=actor` (spec §5.4): atrás la cierra.
+    const actorSheet = useHomeSheet('actor');
     // switchable = la persona y sus organizaciones: con una sola, no hay entre quiénes cambiar.
     const canSwitch = switchable.length > 1;
 
@@ -41,14 +42,14 @@ export function HomeAppBar({ title }: { title: string }) {
                             <ActorSelector
                                 name={actor.fullName}
                                 kind={actor.kind === 'organizacion' ? 'org' : 'person'}
-                                onClick={() => setActorSheet(true)}
+                                onClick={() => actorSheet.show()}
                             />
                         )}
                         <IconButton icon={IconBell} label={copy.bell(unread)} count={unread} onClick={openNotifications} />
                     </>
                 }
             />
-            {canSwitch && <ActorSheet open={actorSheet} onClose={() => setActorSheet(false)} />}
+            {canSwitch && <ActorSheet open={actorSheet.open} onClose={actorSheet.close} />}
         </>
     );
 }

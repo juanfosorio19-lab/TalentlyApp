@@ -1,9 +1,19 @@
-/* Actividad (ACT-01 a ACT-03, TUR-01): lo mínimo que src/ui aún no trae, solo
-   con tokens y sin medidas propias (pedido en requests: rótulo Overline de un
-   grupo de lista y fila «rótulo + valor» con ícono). */
+/* Actividad (ACT-01 a ACT-03, TUR-01): lo mínimo de maquetación que src/ui y
+   app.css aún no traen, solo con tokens y sin medidas, colores ni sombras
+   propias (pedido en requests: rótulo Overline de un grupo de lista, fila
+   «rótulo + valor» con ícono y la lista de datos con check). */
 
 /* Texto sin el margen por defecto del navegador (h1, h2, p). */
 .act-text { margin: 0; }
 
 /* Texto secundario: rótulos Overline («Empleos», «Turnos»), captions y bajadas. */
 .act-muted { margin: 0; color: var(--color-text-2); }
+
+/* Pestaña: como el <main> del prototipo (ACT-02), 8 arriba bajo el AppBar large. */
+.tl-app-screen__content.act-tab { padding-top: var(--space-2); }
+
+/* «Impulsa tu perfil» va separado del resto de la lista (ACT-02: 16 + 16). */
+.act-after { margin-top: var(--space-4); }
+
+/* «Confirmo asistencia» (TUR-01): los pasos van a 8 entre sí, como en el prototipo. */
+.act-facts { gap: var(--space-2); }

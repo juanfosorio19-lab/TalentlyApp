@@ -36,7 +36,7 @@ export function VerificationSheet({ author, onClose }: VerificationSheetProps) {
                             <ListItem key={v.label} icon={ICON[v.status]} title={v.label} sub={verificationDetail(v)} />
                         ))}
                     </List>
-                    <p className="tl-field__help home-sheet-note">{copy.verificacion.nota}</p>
+                    <p className="caption home-muted home-sheet-note">{copy.verificacion.nota}</p>
                 </>
             )}
         </BottomSheet>

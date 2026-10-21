@@ -1,17 +1,21 @@
 // ACT-03 · Actividad · Publicaciones (spec §5.2): la organización ve sus
 // publicaciones activas, pausadas y cerradas; la persona, «Mis publicaciones»
-// (aviso del hogar, clases, servicios). Cada una abre su gestión (GES-01) o,
-// si no tiene, su detalle (DET-01).
-import { useNavigate } from 'react-router-dom';
+// (aviso del hogar, clases, servicios). Cada una abre su gestión (GES-01)
+// cuando esté en el router; mientras tanto, su resumen (DET-01, que en una
+// publicación propia trae «Gestionar publicación»). Al final, «Publicar»
+// (spec §5.3 regla 9: Publicar va en Inicio y en Actividad).
 import { Badge } from '../../../ui/Badge';
+import { Button } from '../../../ui/Button';
 import { EmptyState } from '../../../ui/EmptyState';
-import { IconBook, IconClock, IconOffers, IconTool, type IconComponent } from '../../../ui/icons';
+import { IconAdd, IconBook, IconClock, IconOffers, IconTool, type IconComponent } from '../../../ui/icons';
 import { Stack } from '../../../ui/Layout';
 import { paths } from '../../../app/paths';
 import type { DemoPublication } from '../../demo/types';
 import { LinkListItem } from '../components/LinkListItem';
 import { ListGroup } from '../components/ListGroup';
 import { copy } from '../copy';
+import { useGo } from '../navigation';
+import { activityPaths } from '../paths';
 import { groupOf, metricLine, type MyPublication, type PublicationGroup } from '../selectors';
 
 export const screenId = 'ACT-03';
@@ -34,9 +38,10 @@ function iconOf(p: MyPublication): IconComponent {
 function Row({ p }: { p: MyPublication }) {
     if (p.kind === 'managed') {
         const metric = metricLine(p.managed);
+        // GES-01 (/publicaciones/:id) aún no está en el router: vuelve a paths.gestionarPublicacion cuando se registre.
         return (
             <LinkListItem
-                to={paths.gestionarPublicacion(p.id)}
+                to={paths.publicacion(p.id)}
                 icon={iconOf(p)}
                 title={p.managed.titulo}
                 sub={metric ? [p.managed.resumen, metric] : p.managed.resumen}
@@ -61,7 +66,9 @@ export interface MyPublicationsScreenProps {
 }
 
 export function MyPublicationsScreen({ publications }: MyPublicationsScreenProps) {
-    const navigate = useNavigate();
+    const go = useGo();
+    // PUBL-01 vive en Inicio (?sheet=publicar) hasta que PublishSheet pase a src/ui.
+    const publish = () => go(activityPaths.publicar());
 
     if (publications.length === 0) {
         return (
@@ -69,7 +76,7 @@ export function MyPublicationsScreen({ publications }: MyPublicationsScreenProps
                 icon={IconOffers}
                 title={copy.publications.emptyTitle}
                 text={copy.publications.emptyText}
-                action={{ label: copy.publications.goHome, onClick: () => navigate(paths.inicio()) }}
+                action={{ label: copy.publications.publish, onClick: publish }}
             />
         );
     }
@@ -87,6 +94,9 @@ export function MyPublicationsScreen({ publications }: MyPublicationsScreenProps
                     </ListGroup>
                 );
             })}
+            <Button block icon={IconAdd} onClick={publish}>
+                {copy.publications.publish}
+            </Button>
         </Stack>
     );
 }

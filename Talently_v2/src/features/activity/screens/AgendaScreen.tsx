@@ -1,11 +1,12 @@
 // ACT-01 · Actividad · Agenda (spec §5.2 y §5.4): vista Semana o Día con
-// CalendarWeek y todo lo que tiene fecha (turnos confirmados, entrevistas;
-// la organización ve sus turnos con los cupos cubiertos). La vista y el día
+// CalendarWeek y todo lo que tiene fecha (turnos confirmados, entrevistas y
+// los turnos pendientes con su estado; la organización ve sus turnos con los
+// cupos cubiertos). La vista y el día
 // van en la URL (?seg=agenda&vista=dia&dia=2026-12-12): atrás y la memoria de
 // la pestaña vuelven a lo mismo. CalendarWeek aún no cambia de semana (brecha
 // de src/ui), así que lo que viene después de esta semana va en «Más adelante».
 import { useCallback, useMemo, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { Badge } from '../../../ui/Badge';
 import { CalendarWeek, type AgendaEventData, type CalendarView } from '../../../ui/CalendarWeek';
 import { EmptyState } from '../../../ui/EmptyState';
@@ -16,7 +17,9 @@ import { useDemoSession } from '../../demo/session';
 import { LinkListItem } from '../components/LinkListItem';
 import { ListGroup } from '../components/ListGroup';
 import { copy } from '../copy';
+import { useGo } from '../navigation';
 import { TODAY, WEEK_END, WEEK_START, agendaFor, seeksWork, targetPath, type AgendaItem } from '../selectors';
+import { useRecienRegistrado } from '../session';
 import { useCancelledShifts } from '../shiftStore';
 
 export const screenId = 'ACT-01';
@@ -54,12 +57,16 @@ function whenText({ source }: AgendaItem): string {
 }
 
 export function AgendaScreen() {
-    const navigate = useNavigate();
+    const go = useGo();
     const { actor } = useDemoSession();
     const cancelled = useCancelledShifts();
+    const recienRegistrado = useRecienRegistrado(actor.id);
     const [params, writeParam] = useParamWriter();
 
-    const items = useMemo(() => agendaFor(actor, cancelled), [actor, cancelled]);
+    const items = useMemo(
+        () => agendaFor(actor, cancelled, { recienRegistrado }),
+        [actor, cancelled, recienRegistrado],
+    );
     const thisWeek = items.filter((i) => i.event.date >= WEEK_START && i.event.date <= WEEK_END);
     const later = items.filter((i) => i.event.date > WEEK_END);
 
@@ -69,7 +76,7 @@ export function AgendaScreen() {
 
     const openEvent = (event: AgendaEventData) => {
         const item = items.find((i) => i.event.id === event.id);
-        if (item) navigate(targetPath(item.source.destino));
+        if (item) go(targetPath(item.source.destino));
     };
 
     if (items.length === 0) {
@@ -85,11 +92,11 @@ export function AgendaScreen() {
                     ? copy.agenda.emptyWorker
                     : copy.agenda.emptyOther;
         const action = noProfiles
-            ? { label: copy.agenda.addProfile, onClick: () => navigate(paths.perfil()) }
+            ? { label: copy.agenda.addProfile, onClick: () => go(paths.perfil()) }
             : worker
               ? {
                     label: turnos ? copy.agenda.seeShifts : copy.agenda.seeJobs,
-                    onClick: () => navigate(paths.explorar(turnos ? 'turno' : 'empleo')),
+                    onClick: () => go(paths.explorar(turnos ? 'turno' : 'empleo')),
                 }
               : undefined;
         return <EmptyState icon={IconCalendar} title={copy.agenda.emptyTitle} text={text} action={action} />;

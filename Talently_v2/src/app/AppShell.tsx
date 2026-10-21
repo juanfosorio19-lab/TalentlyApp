@@ -6,14 +6,15 @@ import { Outlet, useHref, useLocation, useNavigate } from 'react-router-dom';
 import { BottomTabBar, type BottomTabBarItem } from '../ui/BottomTabBar';
 import { IconCalendar, IconChat, IconHome, IconPerson, IconSearch } from '../ui/icons';
 import { useDemoSession } from '../features/demo/session';
-import { getHomeFeed } from '../features/demo/data';
+import { useUnreadMessages } from '../features/messaging/unread';
 import { lastUrlOf } from './navigation/tabMemory';
 import { tabOf, type TabKey } from './paths';
 
 function useTabItems(): BottomTabBarItem<TabKey>[] {
-    const { actor } = useDemoSession();
-    // Solo no leídos reales (datos de demostración mientras Supabase está pausado).
-    const unread = getHomeFeed(actor.id).mensajesSinLeer;
+    const { actor, recienRegistrado } = useDemoSession();
+    // Solo no leídos reales: baja al abrir la conversación (estado de la sesión de demostración).
+    const unreadMessages = useUnreadMessages(actor.id);
+    const unread = recienRegistrado ? 0 : unreadMessages;
     const hrefs = {
         inicio: useHref(lastUrlOf('inicio')),
         explorar: useHref(lastUrlOf('explorar')),

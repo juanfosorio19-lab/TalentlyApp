@@ -8,6 +8,7 @@ import { Stack } from '../../../ui/Layout';
 import { paths } from '../../../app/paths';
 import { useDemoSession } from '../../demo/session';
 import type { DemoProfileTab } from '../../demo/types';
+import { trabaja } from '../actor';
 import { AsiTeVen } from '../components/AsiTeVen';
 import { ProfileAppBar } from '../components/ProfileAppBar';
 import { ProfileLinks } from '../components/ProfileLinks';
@@ -30,6 +31,17 @@ export function ProfileScreen() {
     const changeTab = (next: DemoProfileTab) =>
         save({ ...profile, perfiles: profile.perfiles.map((t) => (t.id === next.id ? next : t)) });
 
+    // Accesos que aplican: Impulsa solo a quien trabaja (PRF-12, spec §5.4); sin perfiles no hay «Mis
+    // perfiles» que pausar, y «Agregar un perfil» queda solo como la acción del EmptyState.
+    const sinPerfiles = profile.perfiles.length === 0;
+    const agregarEnVacio = sinPerfiles && Boolean(profile.vacio?.accion);
+    const enlaces = profile.enlaces.filter(
+        (l) =>
+            (l.id !== 'impulsa' || trabaja(actor)) &&
+            (l.id !== 'mis-perfiles' || !sinPerfiles) &&
+            (l.id !== 'agregar' || !agregarEnVacio),
+    );
+
     return (
         <>
             <ProfileAppBar />
@@ -47,7 +59,7 @@ export function ProfileScreen() {
                                         openRoute(paths.perfilPublico(actor.id, tab.id === 'trabajo' ? 'trabajo' : undefined))
                                     }
                                 />
-                                <ProfileTabContent key={tab.id} tab={tab} onChange={changeTab} />
+                                <ProfileTabContent key={tab.id} tab={tab} comuna={profile.asiTeVen.comuna} onChange={changeTab} />
                             </>
                         ) : (
                             profile.vacio && (
@@ -59,7 +71,7 @@ export function ProfileScreen() {
                                 />
                             )
                         )}
-                        <ProfileLinks links={profile.enlaces} />
+                        <ProfileLinks links={enlaces} />
                     </Stack>
                 </div>
             </main>

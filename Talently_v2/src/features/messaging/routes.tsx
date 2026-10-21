@@ -1,10 +1,10 @@
-// Rutas del feature (las compone src/app/router.tsx).
-// STUB: lo reemplaza la construcción de las pantallas; conserva tabRoutes y stackRoutes.
+// Rutas del feature Mensajes (las compone src/app/router.tsx).
+// Pestaña: /mensajes (MSG-01 · bandeja, con ?tipo=empleo|turno).
+// Apilada: /mensajes/:conversationId (MSG-02 · conversación, con MSG-02b en hoja).
 import type { RouteObject } from 'react-router-dom';
-import { PlaceholderScreen } from '../../app/system/PlaceholderScreen';
+import { ConversationScreen } from './screens/ConversationScreen';
+import { InboxScreen } from './screens/InboxScreen';
 
-export const tabRoutes: RouteObject[] = [{ path: 'mensajes', element: <PlaceholderScreen tab title="Mensajes" screenId="MSG-01" /> }];
+export const tabRoutes: RouteObject[] = [{ path: 'mensajes', element: <InboxScreen /> }];
 
-export const stackRoutes: RouteObject[] = [
-    { path: 'mensajes/:conversationId', element: <PlaceholderScreen title="Conversación" screenId="MSG-02" /> },
-];
+export const stackRoutes: RouteObject[] = [{ path: 'mensajes/:conversationId', element: <ConversationScreen /> }];

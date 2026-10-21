@@ -2,10 +2,11 @@
 // ve quien fue confirmado. Quién publica (con su insignia), el bloque del
 // turno, «Agregar al calendario», «Dónde y con quién», la confirmación de
 // asistencia 24 h y 2 h antes, la conversación, compartir el turno y
-// cancelarlo (con la regla de 12 h). El :assignmentId es el id de la
-// postulación (DemoApplication) mientras Supabase está pausado.
+// cancelarlo (con la regla de 12 h). Cancelado, queda el bloque con su Badge
+// «Cancelaste» y la conversación. El :assignmentId es el id de la postulación
+// (DemoApplication) mientras Supabase está pausado.
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { AppBar, useScrolled } from '../../../ui/AppBar';
 import { formatAmount } from '../../../ui/Amount';
@@ -31,7 +32,6 @@ import { List, ListItem } from '../../../ui/ListItem';
 import { SectionCard } from '../../../ui/SectionCard';
 import { ShiftBlock, ShiftBlocks } from '../../../ui/ShiftBlock';
 import { useSnackbar } from '../../../ui/Snackbar';
-import { Timeline, type TimelineStep } from '../../../ui/Timeline';
 import { VerificationBadge } from '../../../ui/VerificationBadge';
 import { useGoBack } from '../../../app/BackButtonManager';
 import { paths } from '../../../app/paths';
@@ -39,10 +39,12 @@ import { useDemoSession } from '../../demo/session';
 import { getApplication } from '../../demo/data';
 import type { DemoApplication, DemoMyShift, DemoRow } from '../../demo/types';
 import { DetailRow } from '../components/DetailRow';
+import { FactList } from '../components/FactList';
 import { LinkListItem } from '../components/LinkListItem';
 import { VerificationSheet } from '../components/VerificationSheet';
 import { copy } from '../copy';
-import { isoFromBlock, minutesUntil, splitTimeRange } from '../selectors';
+import { useGo } from '../navigation';
+import { isoFromBlock, minutesUntil, seeksWork, splitTimeRange } from '../selectors';
 import { cancelShift, useCancelledShifts } from '../shiftStore';
 import '../activity.css';
 
@@ -65,27 +67,24 @@ function rowText(row: DemoRow): string {
 
 const rowValue = (shift: DemoMyShift, label: string) => shift.filas.find((f) => f.label.startsWith(label))?.value;
 
-/** «24 h antes · confirmaste ayer a las 19:04» → paso «24 h antes» con fecha «confirmaste ayer a las 19:04». */
-function confirmationSteps(shift: DemoMyShift): TimelineStep[] {
-    const firstPending = shift.confirmacion.pasos.findIndex((p) => !p.hecho);
-    return shift.confirmacion.pasos.map((p, i) => {
-        const [label = p.texto, ...rest] = p.texto.split(' · ');
-        return {
-            id: p.texto,
-            label,
-            date: rest.join(' · ') || undefined,
-            status: p.hecho ? 'done' : i === firstPending ? 'current' : 'pending',
-        };
-    });
-}
+const TIME_ZONE = 'America/Santiago';
 
-/** Calendario (.ics) del turno, en hora local de Chile. */
-function icsOf(shift: DemoMyShift, date: string): string {
+/** Inicio y término del turno en hora local de Chile («20261210T190000»), y dónde. */
+function calendarEventOf(shift: DemoMyShift, date: string) {
     const { start, end } = splitTimeRange(shift.bloque.time);
     const stamp = (d: string, t: string) => `${d.replaceAll('-', '')}T${t.replace(':', '')}00`;
     // Termina al día siguiente si la hora de término es menor que la de inicio (18:00–02:00).
     const endDate = end <= start ? nextDay(date) : date;
-    const where = rowValue(shift, 'Dirección') ?? shift.comuna;
+    return {
+        start: stamp(date, start),
+        end: stamp(endDate, end),
+        where: rowValue(shift, 'Dirección') ?? shift.comuna,
+    };
+}
+
+/** Calendario (.ics) del turno, en hora local de Chile (RFC 5545: DTSTAMP en cada VEVENT). */
+function icsOf(shift: DemoMyShift, date: string): string {
+    const event = calendarEventOf(shift, date);
     const escape = (s: string) => s.replace(/[\\,;]/g, (c) => `\\${c}`);
     return [
         'BEGIN:VCALENDAR',
@@ -93,13 +92,22 @@ function icsOf(shift: DemoMyShift, date: string): string {
         'PRODID:-//Talently//Mi turno//ES',
         'BEGIN:VEVENT',
         `UID:${shift.bloque.id}@talently`,
-        `DTSTART;TZID=America/Santiago:${stamp(date, start)}`,
-        `DTEND;TZID=America/Santiago:${stamp(endDate, end)}`,
+        `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`,
+        `DTSTART;TZID=${TIME_ZONE}:${event.start}`,
+        `DTEND;TZID=${TIME_ZONE}:${event.end}`,
         `SUMMARY:${escape(shift.titulo)}`,
-        `LOCATION:${escape(where)}`,
+        `LOCATION:${escape(event.where)}`,
         'END:VEVENT',
         'END:VCALENDAR',
     ].join('\r\n');
+}
+
+/** Plantilla «Crear evento» de Google Calendar: en el teléfono no necesita plugin. */
+function googleCalendarUrlOf(shift: DemoMyShift, date: string): string {
+    const event = calendarEventOf(shift, date);
+    const query = new URLSearchParams({ action: 'TEMPLATE', text: shift.titulo, ctz: TIME_ZONE, location: event.where });
+    // `dates` va con su barra tal cual: «20261210T190000/20261211T000000».
+    return `https://calendar.google.com/calendar/render?${query.toString()}&dates=${event.start}/${event.end}`;
 }
 
 function nextDay(iso: string): string {
@@ -108,8 +116,13 @@ function nextDay(iso: string): string {
 }
 
 function NotFound() {
-    const navigate = useNavigate();
+    const go = useGo();
     const goBack = useGoBack();
+    const { actor } = useDemoSession();
+    // Solo quien busca trabajo tiene Postulaciones; los demás vuelven a su Actividad.
+    const action = seeksWork(actor)
+        ? { label: copy.shift.seeApplications, onClick: () => go(paths.actividad('postulaciones')) }
+        : { label: copy.shift.goActivity, onClick: () => go(paths.actividad()) };
     return (
         <div className="tl-app-screen">
             <AppBar variant="standard" title={copy.shift.title} onBack={goBack} />
@@ -118,10 +131,7 @@ function NotFound() {
                     icon={IconCalendar}
                     title={copy.shift.notFoundTitle}
                     text={copy.shift.notFoundText}
-                    action={{
-                        label: copy.shift.seeApplications,
-                        onClick: () => navigate(paths.actividad('postulaciones'), { replace: true }),
-                    }}
+                    action={action}
                 />
             </main>
         </div>
@@ -153,13 +163,18 @@ function MyShift({ application, shift }: { application: DemoApplication; shift: 
     const verification = org.verificaciones[0];
     const fecha = `${shift.bloque.weekday} ${shift.bloque.day} ${shift.bloque.month}`;
 
-    const addToCalendar = () => {
-        // En el teléfono hace falta el plugin de calendario: aún no está.
-        if (Capacitor.isNativePlatform() || !date) {
-            snackbar.show({ message: copy.shift.soon });
+    const addToCalendar = async (day: string) => {
+        // En el teléfono, la plantilla de Google Calendar en el navegador del sistema (sin plugin de calendario).
+        if (Capacitor.isNativePlatform()) {
+            try {
+                const { Browser } = await import('@capacitor/browser');
+                await Browser.open({ url: googleCalendarUrlOf(shift, day) });
+            } catch {
+                snackbar.show({ message: copy.shift.calendarError, tone: 'error' });
+            }
             return;
         }
-        const url = URL.createObjectURL(new Blob([icsOf(shift, date)], { type: 'text/calendar' }));
+        const url = URL.createObjectURL(new Blob([icsOf(shift, day)], { type: 'text/calendar' }));
         const a = document.createElement('a');
         a.href = url;
         a.download = 'mi-turno.ics';
@@ -241,50 +256,65 @@ function MyShift({ application, shift }: { application: DemoApplication; shift: 
                                     duration={shift.bloque.duration}
                                 />
                             </ShiftBlocks>
-                            {!cancelled && (
+                            {/* Sin un día que se entienda no hay qué agregar: el botón no se muestra. */}
+                            {!cancelled && date && (
                                 <div>
-                                    <Button variant="tonal" size="sm" icon={IconCalendar} onClick={addToCalendar}>
+                                    <Button
+                                        variant="tonal"
+                                        size="sm"
+                                        icon={IconCalendar}
+                                        onClick={() => void addToCalendar(date)}
+                                    >
                                         {copy.shift.addToCalendar}
                                     </Button>
                                 </div>
                             )}
                         </Stack>
 
-                        <SectionCard title={copy.shift.whereWho}>
-                            {shift.filas.map((row) => (
-                                <DetailRow key={row.label} icon={rowIcon(row.label)} label={row.label}>
-                                    {rowText(row)}
-                                </DetailRow>
-                            ))}
-                        </SectionCard>
+                        {/* Al cancelar deja de estar confirmado: ya no ve la dirección exacta ni la encargada. */}
+                        {!cancelled && (
+                            <SectionCard title={copy.shift.whereWho}>
+                                {shift.filas.map((row) => (
+                                    <DetailRow key={row.label} icon={rowIcon(row.label)} label={row.label}>
+                                        {rowText(row)}
+                                    </DetailRow>
+                                ))}
+                            </SectionCard>
+                        )}
 
                         {!cancelled && (
                             <Card>
                                 <Stack gap={2}>
-                                    <p className="button-lg act-text">{shift.confirmacion.titulo}</p>
+                                    <h2 className="button-lg act-text">{shift.confirmacion.titulo}</h2>
                                     <p className="body act-muted">{shift.confirmacion.texto}</p>
-                                    <Timeline steps={confirmationSteps(shift)} />
+                                    <FactList
+                                        facts={shift.confirmacion.pasos.map((p) => ({ text: p.texto, done: p.hecho }))}
+                                    />
                                 </Stack>
                             </Card>
                         )}
 
-                        <List>
-                            {shift.conversationId && (
-                                <LinkListItem
-                                    to={paths.conversacion(shift.conversationId)}
-                                    icon={IconChat}
-                                    title={copy.shift.chat}
-                                    sub={org.nombre}
-                                />
-                            )}
-                            <ListItem
-                                icon={IconShare}
-                                title={copy.shift.share}
-                                sub={copy.shift.shareSub}
-                                chevron
-                                onClick={() => void share()}
-                            />
-                        </List>
+                        {(shift.conversationId || !cancelled) && (
+                            <List>
+                                {shift.conversationId && (
+                                    <LinkListItem
+                                        to={paths.conversacion(shift.conversationId)}
+                                        icon={IconChat}
+                                        title={copy.shift.chat}
+                                        sub={org.nombre}
+                                    />
+                                )}
+                                {!cancelled && (
+                                    <ListItem
+                                        icon={IconShare}
+                                        title={copy.shift.share}
+                                        sub={copy.shift.shareSub}
+                                        chevron
+                                        onClick={() => void share()}
+                                    />
+                                )}
+                            </List>
+                        )}
 
                         {!cancelled && (
                             <List>

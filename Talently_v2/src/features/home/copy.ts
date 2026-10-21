@@ -8,7 +8,6 @@ export const copy = {
     bell: (unread: number) => (unread > 0 ? `Notificaciones, ${unread} sin leer` : 'Notificaciones'),
 
     home: {
-        verAgenda: 'Ver agenda',
         publicar: 'Publicar',
     },
 
@@ -42,7 +41,6 @@ export const copy = {
         titulo: 'Notificaciones',
         marcarTodas: 'Marcar todas como leídas',
         marcadas: 'Marcaste todas como leídas',
-        sinLeer: 'Sin leer',
         vacia: {
             titulo: 'No tienes notificaciones',
             texto: 'Aquí te avisaremos cuando te confirmen un turno, alguien postule a lo que publicaste o te escriban.',

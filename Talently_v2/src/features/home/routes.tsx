@@ -1,10 +1,10 @@
-// Rutas del feature (las compone src/app/router.tsx).
-// STUB: lo reemplaza la construcción de las pantallas; conserva tabRoutes y stackRoutes.
+// Rutas del feature «Inicio y notificaciones» (las compone src/app/router.tsx).
+// Pestaña: /inicio (INI-01 persona · INI-02 organización, con las hojas
+// SHT-ACTOR y PUBL-01). Apilada: /notificaciones (NOT-01).
 import type { RouteObject } from 'react-router-dom';
-import { PlaceholderScreen } from '../../app/system/PlaceholderScreen';
+import { HomeScreen } from './screens/HomeScreen';
+import { NotificationsScreen } from './screens/NotificationsScreen';
 
-export const tabRoutes: RouteObject[] = [{ path: 'inicio', element: <PlaceholderScreen tab title="Inicio" screenId="INI-01" /> }];
+export const tabRoutes: RouteObject[] = [{ path: 'inicio', element: <HomeScreen /> }];
 
-export const stackRoutes: RouteObject[] = [
-    { path: 'notificaciones', element: <PlaceholderScreen title="Notificaciones" screenId="NOT-01" /> },
-];
+export const stackRoutes: RouteObject[] = [{ path: 'notificaciones', element: <NotificationsScreen /> }];

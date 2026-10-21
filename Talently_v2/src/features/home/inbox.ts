@@ -2,8 +2,7 @@
 // pausado, lo leído vive en memoria (dura la sesión de la app): la campana de
 // Inicio, NOT-01 y el punto de «Usar Talently como» leen de aquí, así tocar
 // una notificación baja el contador en todas partes (INI-02-cambio: 2 → 1).
-import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { useDemoSession } from '../demo/session';
 import type { DemoNotification } from '../demo/types';
 import { getInbox, nuevoEnUrl } from './mock';
@@ -25,12 +24,18 @@ function markRead(ids: readonly string[]): void {
     listeners.forEach((l) => l());
 }
 
-/** INI-01-jorge-nuevo: la URL trae `nuevo=1` (`?demo=jorge&nuevo=1`). */
+/**
+ * INI-01-jorge-nuevo: la URL con que se abrió la app trae `nuevo=1`
+ * (`?demo=jorge&nuevo=1` o `#/inicio?nuevo=1`). Se resuelve una sola vez al
+ * arrancar, como el actor de demostración (demo/session.tsx): así vale en toda
+ * la sesión, también en NOT-01 y al volver a Inicio, y no depende de que la
+ * ruta de ahora conserve el `?nuevo=1`. Pedido moverlo a DemoSession para que
+ * lo lean las demás pestañas.
+ */
+const RECIEN_REGISTRADO = nuevoEnUrl(new URLSearchParams(window.location.hash.split('?')[1] ?? ''));
+
 export function useRecienRegistrado(): boolean {
-    const [hashSearch] = useSearchParams();
-    // Lo de antes del # no cambia mientras la app está abierta: se lee una vez.
-    const [fromLocation] = useState(() => nuevoEnUrl(new URLSearchParams()));
-    return fromLocation || hashSearch.get('nuevo') === '1';
+    return RECIEN_REGISTRADO;
 }
 
 export interface Inbox {

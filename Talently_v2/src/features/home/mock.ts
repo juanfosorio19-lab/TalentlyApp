@@ -9,7 +9,8 @@ import { paths } from '../../app/paths';
 
 /**
  * ¿Viene del final del onboarding? `?demo=jorge&nuevo=1` (antes del #) o
- * `#/inicio?nuevo=1`. Solo Jorge tiene esa variante (INI-01-jorge-nuevo).
+ * `#/inicio?nuevo=1`, en la URL con que se abrió la app (inbox.ts lo lee una
+ * vez al arrancar). Solo Jorge tiene esa variante (INI-01-jorge-nuevo).
  */
 export function nuevoEnUrl(hashSearch: URLSearchParams): boolean {
     return new URLSearchParams(window.location.search).get('nuevo') === '1' || hashSearch.get('nuevo') === '1';

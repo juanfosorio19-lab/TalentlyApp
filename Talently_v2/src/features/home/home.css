@@ -1,5 +1,14 @@
-/* Inicio y notificaciones: solo maquetación, con tokens. Sin colores, tipografía
-   ni sombras: eso lo ponen los componentes de src/ui. */
+/* Inicio y notificaciones: solo maquetación y el tono de texto secundario, con
+   tokens. Sin colores nuevos, tipografía ni sombras: eso lo ponen los
+   componentes de src/ui. src/ui aún no trae una utilidad de tono de texto
+   (pedida en «requests»); cuando exista, .home-muted se borra. */
+
+/* INI-01 e INI-02: el contenido parte a 8 del AppBar (main del prototipo). */
+.home-content { padding-top: var(--space-2); }
+
+/* Texto secundario (`color-text-2`) sobre las clases de tokens.css (.body, .caption). */
+.home-muted { color: var(--color-text-2); }
+.home-flush { margin: 0; }
 
 /* INI-02: KPIs en una grilla de 2 (como la del prototipo, separación 12). */
 .home-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
@@ -11,5 +20,8 @@
 .home-sheet-list { margin: var(--space-1) calc(-1 * var(--space-4)) 0; }
 .home-sheet-note { margin: var(--space-2) 0 0; }
 
-/* NOT-01: el primer grupo va pegado a «Marcar todas como leídas». */
-.home-notifs > section:first-child > .tl-agenda__day { margin-top: var(--space-2); }
+/* NOT-01: lista pegada al AppBar; «Marcar todas como leídas» a la derecha y el
+   primer grupo a 8 de ella (los demás, a 24: .tl-agenda__day). */
+.home-notifs { gap: 0; padding-top: 0; }
+.home-notifs__actions { display: flex; justify-content: flex-end; }
+.home-notifs > section:first-of-type > .tl-agenda__day { margin-top: var(--space-2); }

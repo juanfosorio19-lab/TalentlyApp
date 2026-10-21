@@ -36,6 +36,13 @@ export type Segment = Extract<ExploreType, 'empleo' | 'turno' | 'personas'>;
 
 const SEGMENT_ORDER: readonly Segment[] = ['empleo', 'turno', 'personas'];
 
+/** Pantalla de cada segmento (spec §5.4). */
+export const SEGMENT_SCREEN_ID: Readonly<Record<Segment, string>> = {
+    empleo: 'EXP-01',
+    turno: 'EXP-02',
+    personas: 'EXP-05',
+};
+
 /** Publicaciones activas propias del actor (organización u hogar), en el orden de su panel. */
 export function ownPublications(actor: DemoActor): DemoPublication[] {
     let ids: string[] = [];

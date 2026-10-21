@@ -54,7 +54,6 @@ export const COPY = {
     // Hoja de Apariencia (spec §5.2: Sistema · Claro · Oscuro). no está en el prototipo.
     tema: {
         titulo: 'Apariencia',
-        legend: 'Tema',
         sistema: 'Sistema',
         claro: 'Claro',
         oscuro: 'Oscuro',
@@ -68,6 +67,7 @@ export const COPY = {
         crearOrganizacion: 'Crear organización',
         notaHogar: 'Tu hogar no aparece aquí: su actividad se ve dentro de tu perfil.',
         cambiaste: (nombre: string) => `Cambiaste a ${nombre}`,
+        sinLeer: 'Tiene novedades sin leer',
     },
     // Hoja «Verificación de …» (catálogo de VerificationBadge).
     verificacion: {
@@ -80,6 +80,21 @@ export const COPY = {
         cancelar: 'Cancelar',
         guardar: 'Guardar',
         guardado: 'Guardamos los cambios',
+        experiencia: 'Elige tu experiencia',
+        nivel: 'Elige el nivel',
+        comuna: 'Elige tu comuna',
+        buscarComuna: 'Buscar comuna',
+        tamano: 'Elige el tamaño',
+        // ONB-T2 bajo las distancias.
+        desde: (comuna: string) => `Desde ${comuna}.`,
+        asiLoVen: (texto: string) => `En tus avisos se ve como «${texto}».`,
+    },
+    // Cerrar una hoja con cambios: el mismo diálogo del atrás de Android (RootLayout).
+    descartar: {
+        titulo: '¿Descartar cambios?',
+        texto: 'Si sales ahora, se pierde lo que cambiaste.',
+        seguir: 'Seguir editando',
+        confirmar: 'Descartar',
     },
     // Hoja Subir CV. no está en el prototipo (la acción «Subir CV en PDF» sí).
     cv: {
@@ -88,6 +103,8 @@ export const COPY = {
         formatos: 'PDF, hasta 10 MB',
         nota: 'Lo verán solo las organizaciones a las que postules.',
         guardado: 'Guardamos tu CV',
+        soloPdf: 'Elige un archivo PDF.',
+        muyGrande: (peso: string) => `Pesa ${peso}. Elige uno de hasta 10 MB.`,
         editar: 'Cambiar CV',
     },
     /** Funciones que aún no tienen pantalla en esta demostración. */

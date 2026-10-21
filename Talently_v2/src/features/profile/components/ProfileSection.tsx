@@ -2,10 +2,12 @@
 // prototipo: SectionCard con lápiz, filas «rótulo + valor» con su ícono,
 // oficios con tile y Badge «Principal», credenciales con su estado, idiomas en
 // una línea y la nota con candado al pie.
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 import { Amount } from '../../../ui/Amount';
 import { Badge } from '../../../ui/Badge';
+import { Button } from '../../../ui/Button';
 import {
+    IconAdd,
     IconCalendar,
     IconClassLanguages,
     IconClock,
@@ -22,6 +24,7 @@ import {
     IconOffers,
     IconPeople,
     IconPerson,
+    IconUpload,
     type IconComponent,
 } from '../../../ui/icons';
 import { InfoTag, InfoTags } from '../../../ui/InfoTag';
@@ -149,15 +152,27 @@ export interface ProfileSectionProps {
     onEmptyAction?: () => void;
     /** Texto al pie, dentro de la tarjeta («Tus avisos se publican desde Inicio.»). */
     foot?: ReactNode;
+    /** La tarjeta recibe el foco por programa (tabIndex -1) cuando lo que lo tenía desaparece (CV guardado). */
+    focusRef?: Ref<HTMLElement>;
 }
 
-export function ProfileSection({ section, onEdit, onEmptyAction, foot }: ProfileSectionProps) {
+export function ProfileSection({ section, onEdit, onEmptyAction, foot, focusRef }: ProfileSectionProps) {
+    const focusable = focusRef ? { ref: focusRef, tabIndex: -1, className: 'tl-focus' } : undefined;
     if (section.tipo === 'vacio') {
+        // Como en el prototipo (PRF-01 · CV): Button tonal sm con su ícono («Subir CV en PDF» lleva la flecha
+        // de subida). SectionCard `empty` trae un Button md con +; pedido en «requests».
         return (
-            <SectionCard
-                title={section.titulo}
-                empty={{ text: section.texto, actionLabel: section.accion, onAction: () => onEmptyAction?.() }}
-            />
+            <SectionCard title={section.titulo} {...focusable}>
+                <p className="tl-section__empty">{section.texto}</p>
+                <Button
+                    variant="tonal"
+                    size="sm"
+                    icon={section.accion.startsWith('Subir') ? IconUpload : IconAdd}
+                    onClick={() => onEmptyAction?.()}
+                >
+                    {section.accion}
+                </Button>
+            </SectionCard>
         );
     }
 
@@ -204,7 +219,7 @@ export function ProfileSection({ section, onEdit, onEmptyAction, foot }: Profile
     }
 
     return (
-        <SectionCard title={section.titulo} onEdit={edit}>
+        <SectionCard title={section.titulo} onEdit={edit} {...focusable}>
             {body}
             {foot && <p className="body prf-foot">{foot}</p>}
         </SectionCard>

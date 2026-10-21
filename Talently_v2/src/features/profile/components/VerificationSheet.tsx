@@ -25,12 +25,12 @@ export function VerificationSheet({ open, onClose, actorId, nombre, verificacion
     const detail = VERIFICATION_DETAIL[actorId] ?? {};
     return (
         <BottomSheet open={open} onClose={onClose} title={COPY.verificacion.titulo(nombre)}>
-            <List flat>
+            <List flat className="prf-sheet-list">
                 {verificaciones.map((v) => (
                     <ListItem key={v.label} icon={iconOf(v.label)} title={v.label} sub={detail[v.label] ?? v.vence} />
                 ))}
             </List>
-            <p className="caption prf-muted prf-flush">{COPY.verificacion.nota}</p>
+            <p className="caption prf-muted prf-sheet-note">{COPY.verificacion.nota}</p>
         </BottomSheet>
     );
 }

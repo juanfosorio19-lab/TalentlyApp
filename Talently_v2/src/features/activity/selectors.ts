@@ -9,13 +9,16 @@ import type { DemoActor } from '../demo/session';
 import {
     DEMO_TODAY,
     getAgenda,
+    getApplications,
     getHomeFeed,
     getManagedPublication,
     getOrgDashboard,
+    getProcess,
     getPublication,
 } from '../demo/data';
 import type {
     DemoAgendaEvent,
+    DemoApplication,
     DemoManagedPublication,
     DemoPublication,
     DemoShiftBlock,
@@ -96,7 +99,14 @@ export function splitTimeRange(range: string): { start: string; end: string } {
 
 // ─── Destinos ───────────────────────────────────────────────────────────────
 
-/** A dónde lleva tocar algo de la demo, siempre con `paths`. */
+/**
+ * A dónde lleva tocar algo de la demo, siempre con `paths`. GES-01, GES-02,
+ * GES-04 y PRC-01 aún no están en el router (pedido en requests): mientras
+ * tanto, la gestión, los postulantes, los cupos y el proceso abren el resumen
+ * de su publicación (DET-01, que en una propia trae «Gestionar publicación»).
+ * Cuando se registren, cada caso vuelve a paths.gestionarPublicacion,
+ * paths.postulantes, paths.cuposTurno y paths.proceso.
+ */
 export function targetPath(t: DemoTarget): string {
     switch (t.pantalla) {
         case 'inicio':
@@ -104,18 +114,17 @@ export function targetPath(t: DemoTarget): string {
         case 'explorar':
             return paths.explorar(t.tipo);
         case 'publicacion':
-            return paths.publicacion(t.publicationId);
         case 'gestion':
         case 'evaluar':
-            return paths.gestionarPublicacion(t.publicationId);
         case 'postulantes':
-            return paths.postulantes(t.publicationId);
         case 'cupos':
-            return paths.cuposTurno(t.publicationId, t.bloqueId);
+            return paths.publicacion(t.publicationId);
         case 'conversacion':
             return paths.conversacion(t.conversationId);
-        case 'proceso':
-            return paths.proceso(t.processId);
+        case 'proceso': {
+            const process = getProcess(t.processId);
+            return process ? paths.publicacion(process.publicationId) : paths.proceso(t.processId);
+        }
         case 'mi-turno':
             return paths.miTurno(t.applicationId);
         case 'perfil':
@@ -133,23 +142,49 @@ export function seeksWork(actor: DemoActor): boolean {
 }
 
 /**
- * Solo los segmentos con contenido posible. Persona: Agenda · Postulaciones
- * (si busca empleo o turnos) · Mis publicaciones (si publicó algo: aviso del
- * hogar, clases, servicios). Organización: Publicaciones · Agenda.
+ * Solo los segmentos con contenido posible, en el orden de spec §5.2.
+ * Persona: Agenda · Postulaciones (si busca empleo o turnos) · Mis
+ * publicaciones (si publicó algo: aviso del hogar, clases, servicios).
+ * Organización: Publicaciones · Agenda.
  */
 export function segmentsFor(actor: DemoActor, hasPublications: boolean): SegmentedOption<ActivitySegment>[] {
-    const panel = (value: ActivitySegment, label: string): SegmentedOption<ActivitySegment> => ({
-        value,
-        label,
-        controls: `act-panel-${value}`,
-    });
+    const option = (value: ActivitySegment, label: string): SegmentedOption<ActivitySegment> => ({ value, label });
     if (actor.kind === 'organizacion') {
-        return [panel('publicaciones', copy.segments.publicaciones), panel('agenda', copy.segments.agenda)];
+        return [option('publicaciones', copy.segments.publicaciones), option('agenda', copy.segments.agenda)];
     }
-    const list = [panel('agenda', copy.segments.agenda)];
-    if (seeksWork(actor)) list.push(panel('postulaciones', copy.segments.postulaciones));
-    if (hasPublications) list.push(panel('publicaciones', copy.segments.misPublicaciones));
+    const list = [option('agenda', copy.segments.agenda)];
+    if (seeksWork(actor)) list.push(option('postulaciones', copy.segments.postulaciones));
+    if (hasPublications) list.push(option('publicaciones', copy.segments.misPublicaciones));
     return list;
+}
+
+/**
+ * Segmento con que abre la pestaña (sin `?seg` o con uno que no aplica). El
+ * orden de los segmentos no es el de apertura: el TabBar del prototipo lleva
+ * a Matías y Jorge a ACT-02 (Postulaciones), a Carolina a ACT-03 (Mis
+ * publicaciones) y a la organización a ACT-01 (Agenda, ACT-01-rosa).
+ */
+export function defaultSegmentFor(actor: DemoActor, hasPublications: boolean): ActivitySegment {
+    if (actor.kind === 'organizacion') return 'agenda';
+    if (seeksWork(actor)) return 'postulaciones';
+    if (hasPublications) return 'publicaciones';
+    return 'agenda';
+}
+
+// ─── Postulaciones (ACT-02) ─────────────────────────────────────────────────
+
+export interface ActivityOptions {
+    /** Cuenta recién creada (INI-01-jorge-nuevo): aún no tiene actividad. */
+    recienRegistrado: boolean;
+}
+
+/**
+ * Las postulaciones del actor, en el orden del prototipo (empleos y luego
+ * turnos). Recién registrado, ninguna. Las que se envían en la sesión
+ * (publications/store.ts) aún no llegan aquí: pedido en requests.
+ */
+export function applicationsFor(actor: DemoActor, { recienRegistrado }: ActivityOptions): DemoApplication[] {
+    return recienRegistrado ? [] : getApplications(actor.id);
 }
 
 // ─── Agenda (ACT-01) ────────────────────────────────────────────────────────
@@ -168,13 +203,53 @@ function coverageOf(t: DemoTarget): string | undefined {
     return block ? copy.agenda.coverage(block.confirmados.length, block.total) : undefined;
 }
 
+/** Estados de un turno pendiente que la Agenda muestra con su Badge (README de CalendarWeek). */
+const PENDING_SHIFT: ReadonlySet<string> = new Set(['Postulado', 'En lista de espera']);
+
+/** Comuna de «a 18 km · Las Condes» (o «Las Condes» si quien mira es quien publica). */
+const comunaOf = (lugar: string) => lugar.split(' · ').pop() ?? lugar;
+
 /**
- * La agenda del actor para CalendarWeek, en orden de fecha y hora. Quita los
- * turnos que la persona canceló en esta sesión (`cancelled`, ids de postulación).
+ * Turnos postulados o en lista de espera, con fecha: uno por bloque (quien
+ * postula, postula a todos los días). Abren su detalle (DET-01).
  */
-export function agendaFor(actor: DemoActor, cancelled: ReadonlySet<string>): AgendaItem[] {
+function pendingShifts(actor: DemoActor, applications: readonly DemoApplication[]): DemoAgendaEvent[] {
+    const events: DemoAgendaEvent[] = [];
+    for (const a of applications) {
+        if (a.tipo !== 'turno' || a.miTurno || !PENDING_SHIFT.has(a.estado)) continue;
+        const publication = getPublication(a.publicationId);
+        if (publication?.tipo !== 'turno') continue;
+        for (const b of publication.bloques) {
+            const { start, end } = splitTimeRange(b.time);
+            if (!start) continue;
+            events.push({
+                id: `${a.id}:${b.id}`,
+                viewerId: actor.id,
+                fecha: `${b.weekday} ${b.day} ${b.month}`,
+                esHoy: isoFromBlock(b) === TODAY,
+                inicio: start,
+                fin: end || undefined,
+                titulo: `Turno · ${publication.titulo}`,
+                detalle: `${a.autor.nombre} · ${comunaOf(publication.lugar)}`,
+                estado: a.estado,
+                tipo: 'turno',
+                destino: { pantalla: 'publicacion', publicationId: a.publicationId },
+            });
+        }
+    }
+    return events;
+}
+
+/**
+ * La agenda del actor para CalendarWeek, en orden de fecha y hora: lo
+ * confirmado, las entrevistas y los turnos pendientes con su estado. Quita los
+ * turnos que la persona canceló en esta sesión (`cancelled`, ids de
+ * postulación). Recién registrado, vacía.
+ */
+export function agendaFor(actor: DemoActor, cancelled: ReadonlySet<string>, options: ActivityOptions): AgendaItem[] {
+    if (options.recienRegistrado) return [];
     const items: AgendaItem[] = [];
-    for (const e of getAgenda(actor.id)) {
+    for (const e of [...getAgenda(actor.id), ...pendingShifts(actor, applicationsFor(actor, options))]) {
         if (e.destino.pantalla === 'mi-turno' && cancelled.has(e.destino.applicationId)) continue;
         const date = isoFromDayText(e.fecha);
         if (!date) continue;
@@ -207,14 +282,16 @@ export type MyPublication =
 
 /**
  * Lo que publicó el actor. Organización: las de su panel (INI-02). Persona:
- * su aviso de Inicio («Tu aviso»). features/demo aún no trae una función por
- * dueño (pedida en requests). Con GES-01 abre la gestión; si no, su resumen.
+ * su aviso de Inicio («Tu aviso»; recién registrado, ninguno). features/demo
+ * aún no trae una función por dueño (pedida en requests).
  */
-export function publicationsFor(actor: DemoActor): MyPublication[] {
+export function publicationsFor(actor: DemoActor, { recienRegistrado }: ActivityOptions): MyPublication[] {
     const ids =
         actor.kind === 'organizacion'
             ? (getOrgDashboard(actor.id)?.publicaciones ?? [])
-            : getHomeFeed(actor.id).bloques.flatMap((b) => (b.tipo === 'tu-aviso' ? [b.publicationId] : []));
+            : getHomeFeed(actor.id, { recienRegistrado }).bloques.flatMap((b) =>
+                  b.tipo === 'tu-aviso' ? [b.publicationId] : [],
+              );
     const list: MyPublication[] = [];
     for (const id of ids) {
         const managed = getManagedPublication(id);

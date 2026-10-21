@@ -20,13 +20,15 @@ export const copy = {
     agenda: {
         later: 'Más adelante',
         emptyTitle: 'Aún no tienes nada agendado',
-        emptyWorker: 'Cuando te confirmen un turno o te citen a una entrevista, lo verás aquí con su fecha y hora.',
+        /** Sistema de diseño (EmptyState, «Actividad · Agenda, sin nada agendado»). */
+        emptyWorker: 'Cuando te confirmen un turno o una entrevista, aparecerá aquí.',
         emptyOrg: 'Cuando publiques un turno, lo verás aquí por fecha, con sus cupos cubiertos.',
-        emptyOther: 'Cuando agendes una entrevista, la verás aquí con su fecha y hora.',
+        emptyOther: 'Cuando agendes una entrevista, aparecerá aquí.',
         /** Persona sin perfiles (INI-01-rosa): «Agregar un perfil», como en Inicio. */
         emptyNoProfiles: 'Agrega un perfil para buscar trabajo o contratar para tu hogar. Aquí verás tus turnos y entrevistas.',
         addProfile: 'Agregar un perfil',
-        seeShifts: 'Ver turnos cerca',
+        /** Sistema de diseño (EmptyState de la Agenda). */
+        seeShifts: 'Ver turnos de esta semana',
         seeJobs: 'Ver empleos cerca',
         weekEmptyTitle: 'Nada agendado esta semana',
         weekEmptyNext: (fecha: string) => `Lo próximo es el ${fecha}: lo ves más abajo.`,
@@ -49,14 +51,15 @@ export const copy = {
         groups: { activas: 'Activas', pausadas: 'Pausadas', cerradas: 'Cerradas' },
         emptyTitle: 'Aún no tienes publicaciones',
         emptyText: 'Lo que publiques aparece aquí, con sus postulantes y su estado.',
-        goHome: 'Ir a Inicio',
+        /** Como en INI-01-carolina: Button primary block con IconAdd. */
+        publish: 'Publicar',
     },
 
     shift: {
         title: 'Mi turno',
         addToCalendar: 'Agregar al calendario',
         calendarDownloaded: 'Descargamos el turno: ábrelo para agregarlo a tu calendario',
-        soon: 'Disponible pronto',
+        calendarError: 'No pudimos abrir el calendario. Intenta de nuevo.',
         whereWho: 'Dónde y con quién',
         chat: 'Conversación con la organización',
         share: 'Compartir mi turno con alguien de confianza',
@@ -83,10 +86,13 @@ export const copy = {
         notFoundTitle: 'No encontramos este turno',
         notFoundText: 'Puede que el enlace esté incompleto o que el turno ya no esté en tu cuenta.',
         seeApplications: 'Ver mis postulaciones',
+        /** Quien no tiene Postulaciones (organización, hogar, sin perfiles). */
+        goActivity: 'Ir a Actividad',
     },
 
     verification: {
         title: (name: string) => `Verificación de ${name}`,
-        note: 'Talently revisa estos datos antes de marcar una insignia como verificada.',
+        /** Igual que la hoja de Inicio: la hoja nunca muestra datos sensibles. */
+        note: 'Talently nunca muestra el RUT, la fecha de nacimiento ni las fotos de la cédula.',
     },
 } as const;

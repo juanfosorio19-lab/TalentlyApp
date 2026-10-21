@@ -16,8 +16,16 @@
 .prf-wrap { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); }
 .prf-wrap--loose { gap: var(--space-2) var(--space-4); margin-top: var(--space-1); }
 
-/* «Mis perfiles»: rótulo y «Ver cómo me ven» en la misma línea. */
+/* «Mis perfiles»: rótulo y «Ver cómo me ven» en la misma línea; el botón ghost llega al borde (prototipo). */
 .prf-tabs > .tl-chipgroup__head { align-items: center; margin-bottom: var(--space-2); }
+.prf-tabs__preview { margin-right: calc(-1 * var(--space-3)); }
+
+/* Nota bajo una elección con chips («Desde Puente Alto.», ONB-T2). */
+.prf-chipnote { margin: var(--space-2) 0 0; }
+
+/* Lista plana dentro de una hoja: sus filas llegan al borde, como en SHT-ACTOR. */
+.prf-sheet-list { margin: var(--space-1) calc(-1 * var(--space-4)) 0; }
+.prf-sheet-note { margin: var(--space-2) 0 0; }
 
 /* Ícono de 20 al inicio de una fila «rótulo + valor» de una sección. */
 .prf-icon { flex: none; display: inline-flex; color: var(--color-text-2); }

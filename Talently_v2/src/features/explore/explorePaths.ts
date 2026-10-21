@@ -22,3 +22,18 @@ export function explorarUrl({ tipo, vista, p }: ExploreParams): string {
     if (!rest) return base;
     return `${base}${base.includes('?') ? '&' : '?'}${rest}`;
 }
+
+/**
+ * Destinos que paths.ts ya define pero que el router todavía no tiene: hoy
+ * terminarían en SYS-404. Mientras estén aquí, tocarlos muestra el Snackbar
+ * honesto «Disponible pronto» (useLinks().openRoute); cuando su pantalla
+ * exista, se quitan de esta lista y el mismo botón navega.
+ */
+const PENDING_ROUTES: readonly string[] = [
+    '/u/', // PRF-10 · perfil público de persona
+    '/publicaciones/', // GES-01, GES-02 y GES-04
+];
+
+export function isPendingRoute(path: string): boolean {
+    return PENDING_ROUTES.some((p) => (p.endsWith('/') ? path.startsWith(p) : path === p || path.startsWith(`${p}?`)));
+}

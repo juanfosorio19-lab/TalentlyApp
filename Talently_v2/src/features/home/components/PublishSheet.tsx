@@ -48,13 +48,19 @@ export interface PublishSheetProps {
     initial?: PublishKind;
 }
 
-/** El cuerpo se monta en cada apertura: la elección parte de `initial` cada vez. */
+/**
+ * El cuerpo se monta en cada apertura: la elección parte de `initial` cada vez.
+ * Un `initial` que no es de este actor (`?sheet=publicar&tipo=hogar` en una
+ * organización) no deja la hoja sin opción marcada: vale la del prototipo.
+ */
 function PublishOptions({ as, publisher, initial }: Omit<PublishSheetProps, 'open' | 'onClose'>) {
     const options = as === 'organizacion' ? ORG_OPTIONS : HOGAR_OPTIONS;
-    const [value, setValue] = useState<PublishKind>(initial ?? (as === 'organizacion' ? 'turno' : 'hogar'));
+    const fallback: PublishKind = as === 'organizacion' ? 'turno' : 'hogar';
+    const start = initial && options.some((o) => o.value === initial) ? initial : fallback;
+    const [value, setValue] = useState<PublishKind>(start);
     return (
         <Stack gap={4}>
-            <span className="tl-listitem__sub">{copy.publicar.publicasComo(publisher)}</span>
+            <p className="body home-muted home-flush">{copy.publicar.publicasComo(publisher)}</p>
             <OptionGroup<PublishKind>
                 mode="single"
                 legend={copy.publicar.leyenda}

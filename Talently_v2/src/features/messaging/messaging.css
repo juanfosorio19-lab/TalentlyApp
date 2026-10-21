@@ -1,0 +1,21 @@
+/* Mensajes (MSG-01, MSG-02, MSG-02b): solo maquetación y tonos de texto, con
+   tokens. Sin colores, medidas ni sombras propias: eso lo ponen los componentes
+   de src/ui. src/ui no trae utilidades de tono de texto ni un marco de chat a
+   alto completo (pedidos en «requests»); cuando existan, este archivo se borra. */
+
+/* MSG-01: el contenido parte a 8 del AppBar (main del prototipo). */
+.msg-content { padding-top: var(--space-2); }
+
+/* MSG-02: la conversación ocupa el alto visible. AppBar, ContextChip y Composer
+   quedan fijos y solo los mensajes se desplazan (como el marco del prototipo). */
+.tl-app-screen.msg-chat { height: 100%; }
+.msg-chat__log { min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; }
+/* Pocos mensajes: abajo, junto al Composer. margin-top: auto (y no justify-content)
+   para que con muchos se pueda subir hasta el primero. */
+.msg-chat__log > .tl-chat { box-sizing: border-box; width: 100%; max-width: var(--layout-content-max); margin: auto auto 0; }
+.msg-chat__log > .tl-empty { margin: auto; }
+
+/* MSG-02b: «Lo verá Familia en Ñuñoa». */
+.msg-flush { margin: 0; }
+.msg-muted { color: var(--color-text-2); }
+.msg-strong { color: var(--color-text); font-weight: 600; }

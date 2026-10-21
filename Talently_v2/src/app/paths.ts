@@ -30,6 +30,19 @@ export const paths = {
     cuposTurno: (id: string, shiftId: string) => `/publicaciones/${id}/turnos/${shiftId}`,
     proceso: (engagementId: string) => `/procesos/${engagementId}`,
     miTurno: (assignmentId: string) => `/turnos/${assignmentId}`,
+    /** REV-01 · Dejar reseña después de un turno, clase o servicio. */
+    resena: (engagementId: string) => `/resena/${engagementId}`,
+    /** PRF-12 · Impulsa tu perfil (solo perfil de trabajo). */
+    impulsar: () => '/perfil/impulsar',
+    /** VER-02 · Verificar identidad. */
+    verificarIdentidad: () => '/verificacion/identidad',
+    /** PUBL-02 a PUBL-06 · asistentes de publicación, paso a paso en la URL. */
+    publicar: (tipo: 'empleo' | 'turno' | 'hogar' | 'clase' | 'servicio', paso = 1) => `/publicar/${tipo}/${paso}`,
+    /** AUTH-01 · Bienvenida (fuera de la sesión). */
+    bienvenida: () => '/bienvenida',
+    registro: () => '/registro',
+    ingresar: () => '/ingresar',
+    onboarding: (bloque: string, paso?: number) => `/onboarding/${bloque}${paso ? `/${paso}` : ''}`,
     perfilPublico: (id: string, ver?: 'trabajo' | 'servicios' | 'clases') => `/u/${id}${q({ ver })}`,
     organizacion: (id: string) => `/o/${id}`,
     verificacion: () => '/verificacion',

@@ -95,7 +95,7 @@ export function ActorSheet({ open, onClose }: ActorSheetProps) {
             <List flat className="home-sheet-list">
                 <ListItem icon={IconAdd} title={copy.actor.crear} onClick={createOrg} />
             </List>
-            <p className="tl-field__help home-sheet-note">{copy.actor.nota}</p>
+            <p className="caption home-muted home-sheet-note">{copy.actor.nota}</p>
         </BottomSheet>
     );
 }

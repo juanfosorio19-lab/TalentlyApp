@@ -2,6 +2,10 @@
    cubren). Sin colores, medidas ni sombras propias: solo la estructura de
    EXP-01, EXP-02 y EXP-05 del prototipo F1. */
 
+/* El panel del segmento llena el alto que queda (EmptyState centrado). */
+.explore-main { display: flex; flex-direction: column; }
+.explore-panel { flex: 1; }
+
 /* Cabecera bajo el AppBar: SegmentedControl y fila de chips. Queda fija
    mientras la lista pasa por debajo (EXP-02-turnos-desplazado). Va un nivel
    bajo el AppBar para que su sombra (is-scrolled) se vea encima. */
@@ -42,10 +46,13 @@
   justify-content: space-between;
   gap: var(--space-3);
 }
-.explore-bar__text { margin: 0; color: var(--color-text-2); }
+.explore-bar__text { margin: 0; min-width: 0; color: var(--color-text-2); }
 
 /* Encabezado de día de EXP-02 («HOY», «MAÑANA»…). */
 .explore-day__title { margin: 0; color: var(--color-text-2); }
 
 /* EmptyState centrado en el alto que queda (como el prototipo). */
 .explore-empty { flex: 1; display: flex; align-items: center; justify-content: center; padding: var(--space-6) 0; }
+
+/* Pila del segmento que llena el panel (para centrar su EmptyState). */
+.explore-fill { flex: 1; }
