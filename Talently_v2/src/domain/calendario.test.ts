@@ -23,7 +23,7 @@ describe('buildIcs', () => {
 
     it('escapa comas y punto y coma, y usa CRLF', () => {
         expect(ics).toContain('SUMMARY:Turno · Garzón\\, Banquetería Rosa SpA');
-        expect(ics).toContain('LOCATION:Metro Los Dominicos\; Las Condes');
+        expect(ics).toContain('LOCATION:Metro Los Dominicos\\; Las Condes');
         expect(ics.split('\r\n').length).toBeGreaterThan(10);
         expect(ics.includes('\n') && !ics.replace(/\r\n/g, '').includes('\n')).toBe(true);
     });

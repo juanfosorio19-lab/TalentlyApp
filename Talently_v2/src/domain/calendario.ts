@@ -32,7 +32,7 @@ function utcStamp(now: Date): string {
 }
 
 function escapeText(text: string): string {
-    return text.replace(/\\/g, '\\\\').replace(/;/g, '\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+    return text.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
 }
 
 /** Corta las líneas de más de 75 octetos (RFC 5545 §3.1). */
