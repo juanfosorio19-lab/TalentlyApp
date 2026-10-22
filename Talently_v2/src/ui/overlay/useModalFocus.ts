@@ -76,6 +76,21 @@ function returnTarget(opener: HTMLElement | null): HTMLElement | null {
 }
 
 /**
+ * Si la capa se abrió sin un elemento que la abriera (enlace directo,
+ * notificación, ?sheet= en la URL), el foco vuelve al título de la pantalla
+ * en vez de caer al body: el h1 enfocable (tabIndex -1) o, si no hay, el
+ * primer encabezado de la pantalla con tabIndex -1 temporal.
+ */
+function screenFallback(): HTMLElement | null {
+    const heading =
+        document.querySelector<HTMLElement>('.tl-app-screen h1[tabindex="-1"]') ??
+        document.querySelector<HTMLElement>('h1[tabindex="-1"]') ??
+        document.querySelector<HTMLElement>('.tl-app-screen h1, main h1, h1');
+    if (heading && !heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
+    return heading;
+}
+
+/**
  * Mientras `active` sea true: al empezar lleva el foco a `initialRef` (o al
  * primer control de la capa), lo mantiene dentro (Tab y Mayús+Tab dan la
  * vuelta; si se escapa, vuelve), deja `inert` las capas de abajo y al
@@ -135,7 +150,8 @@ export function useModalFocus(
             // Primero se libera la capa de abajo: el que abrió suele estar en ella.
             syncInert();
             const target = returnTarget(opener);
-            if (target?.isConnected) target.focus({ preventScroll: true });
+            if (target?.isConnected && target !== document.body) target.focus({ preventScroll: true });
+            else screenFallback()?.focus({ preventScroll: true });
         };
     }, [active, containerRef, initialRef]);
 }

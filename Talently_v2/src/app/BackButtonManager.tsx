@@ -4,7 +4,7 @@
 //   2. formulario con cambios → «¿Descartar cambios?»
 //   3. paso N > 1 de un asistente → paso anterior
 //   4. historial interno → navigate(-1)
-//   5. pestaña distinta de Inicio → Inicio (replace)
+//   5. pestaña distinta de Inicio → Inicio (replace); Bienvenida cuenta como Inicio
 //   6. Inicio → toast «Presiona atrás otra vez para salir»; 2.º toque en < 2 s → salir
 // El BackButton del AppBar usa los pasos 1 a 4 con useGoBack(); si no hay
 // historial (se llegó por un enlace), vuelve a la raíz de su pestaña o a Inicio.
@@ -64,8 +64,11 @@ export function BackButtonManager({ prompts, children }: { prompts: BackPrompts;
         busy.current = true;
         try {
             if (await stepBack()) return;
-            const tab = tabOf(locationRef.current.pathname);
-            if (tab !== 'inicio') {
+            const { pathname } = locationRef.current;
+            // Bienvenida (fuera de la sesión) se trata como Inicio: atrás no entra a la
+            // sesión que se acaba de cerrar; avisa y el segundo toque sale de la app.
+            const outsideSession = pathname === paths.bienvenida();
+            if (tabOf(pathname) !== 'inicio' && !outsideSession) {
                 navigate(paths.inicio(), { replace: true });
                 return;
             }

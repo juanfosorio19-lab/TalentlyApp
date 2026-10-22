@@ -172,14 +172,15 @@ function detalleOf(publicationId: string): string {
 /**
  * Las postulaciones del actor tal como las ve en esta sesión: las de los
  * datos (sin las que el prototipo muestra antes de postular, salvo que ya
- * postuló) más las enviadas ahora, con el turno cancelado al día. ACT-02, la
+ * postuló; ninguna si está recién registrado) más las enviadas ahora, con
+ * el turno cancelado al día. ACT-02, la
  * Agenda, Inicio y el deck usan SOLO esto.
  */
 export function useApplications(actorId: DemoActorId, recienRegistrado = false): DemoApplication[] {
     const { applications, cancelledShifts } = useSessionState();
     return useMemo(() => {
-        if (recienRegistrado) return [];
-        const fromData = getApplications(actorId).filter(
+        // Recién registrado: sin postulaciones de los datos, pero sí las que haga en esta sesión.
+        const fromData = (recienRegistrado ? [] : getApplications(actorId)).filter(
             (a) => !startsWithoutApplication(actorId, a.publicationId) || applications.has(keyOf(actorId, a.publicationId)),
         );
         const known = new Set(fromData.map((a) => a.publicationId));
