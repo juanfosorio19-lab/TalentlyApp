@@ -1,0 +1,19 @@
+/* Procesos y reseñas (PRC-01, REV-01): solo maquetación y tono de texto, con
+   tokens. Sin colores, tamaños ni sombras propias: eso lo ponen los
+   componentes de src/ui. Lo que src/ui aún no trae (cabecera con Avatar de 56,
+   nota con ícono de 16 en Caption) está pedido en «requests». */
+
+/* Texto sin el margen del navegador (h2, p). */
+.prc-flush { margin: 0; }
+
+/* Texto secundario: bajada de la cabecera y del checklist. */
+.prc-muted { color: var(--color-text-2); }
+
+/* Columna de texto junto al Avatar. */
+.prc-grow { flex: 1; min-width: 0; }
+
+/* «Tu evaluación se publicará…»: Caption con IconLock de 16 (REV-01). */
+.prc-note { display: flex; align-items: flex-start; gap: var(--space-2); margin: 0; color: var(--color-text-2); }
+
+/* «Ir al sitio de la Dirección del Trabajo»: en su propia línea, bajo el detalle del paso. */
+.prc-dt-link { display: block; width: fit-content; margin-top: var(--space-1); }

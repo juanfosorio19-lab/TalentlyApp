@@ -1,15 +1,17 @@
-// Subir CV en PDF (PRF-01 · «Te falta 1 cosa» y sección CV): elige el archivo
-// real del teléfono con MediaUploader y, al guardar, el perfil de esta sesión
-// muestra el CV. Solo acepta un PDF de hasta 10 MB: MediaUploader documento
-// trae también «Tomar foto» (sin prop para quitarla, pedida en «requests») y
-// esa foto se rechaza aquí. Mientras Supabase está pausado no se sube a
-// ningún servidor.
-import { useState } from 'react';
+// Subir CV en PDF (PRF-01 · «Te falta 1 cosa» y sección CV, `?sheet=cv`):
+// elige el archivo real del teléfono y, al guardar, el perfil de esta sesión
+// muestra el CV. Solo un PDF de hasta 10 MB: sin «Tomar foto» (una foto no es
+// un CV) y el selector solo ofrece PDF; si igual llega otro archivo, se
+// rechaza con el motivo. Mientras Supabase está pausado no se sube a ningún
+// servidor.
+import { useEffect, useRef, useState } from 'react';
 import { BottomSheet } from '../../../ui/BottomSheet';
 import { Button } from '../../../ui/Button';
+import { IconUpload } from '../../../ui/icons';
 import { Stack } from '../../../ui/Layout';
 import { MediaUploader } from '../../../ui/MediaUploader';
 import { COPY } from '../copy';
+import { checkCvFile, sizeText } from '../cvFile';
 import { DiscardDialog } from './DiscardDialog';
 
 export interface CvFile {
@@ -18,15 +20,42 @@ export interface CvFile {
     detalle: string;
 }
 
-const MAX_BYTES = 10 * 1024 * 1024;
+const PDF = 'application/pdf,.pdf';
 
-function isPdf(file: File): boolean {
-    return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-}
-
-function sizeText(bytes: number): string {
-    if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} MB`;
-    return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+/**
+ * Vacío: la tarjeta de documento del sistema (`tl-doc--empty`) con un solo
+ * botón real, «Elegir archivo». MediaUploader `document` trae también «Tomar
+ * foto» y no tiene cómo quitarla (pedido en «requests»: `camera={false}`);
+ * cuando la tenga, esto vuelve a ser MediaUploader.
+ */
+function EmptyPdfPicker({ onSelect }: { onSelect: (files: File[]) => void }) {
+    const input = useRef<HTMLInputElement>(null);
+    return (
+        <div className="tl-doc tl-doc--empty">
+            <div className="tl-doc__body">
+                <span className="tl-doc__name">{COPY.cv.documento}</span>
+                <span className="tl-doc__meta">{COPY.cv.formatos}</span>
+            </div>
+            <div className="tl-upload-actions">
+                <Button variant="outline" icon={IconUpload} onClick={() => input.current?.click()}>
+                    {COPY.cv.elegir}
+                </Button>
+                <input
+                    ref={input}
+                    type="file"
+                    hidden
+                    tabIndex={-1}
+                    accept={PDF}
+                    onChange={(e) => {
+                        const files = Array.from(e.currentTarget.files ?? []);
+                        // Vacía el input para que elegir otra vez el mismo archivo vuelva a avisar.
+                        e.currentTarget.value = '';
+                        if (files.length > 0) onSelect(files);
+                    }}
+                />
+            </div>
+        </div>
+    );
 }
 
 export interface CvSheetProps {
@@ -41,6 +70,24 @@ export function CvSheet({ open, current, onClose, onSave }: CvSheetProps) {
     const [file, setFile] = useState<CvFile | null>(current ?? null);
     const [error, setError] = useState<string | null>(null);
     const [confirm, setConfirm] = useState(false);
+    // Al abrir, parte del CV guardado (también si la última vez se cerró con el atrás del navegador).
+    const [wasOpen, setWasOpen] = useState(open);
+    if (open !== wasOpen) {
+        setWasOpen(open);
+        if (open) {
+            setFile(current ?? null);
+            setError(null);
+            setConfirm(false);
+        }
+    }
+
+    // Elegir o quitar un archivo cambia la tarjeta y se lleva el botón tocado: el foco
+    // pasa a la tarjeta del documento (no cae en <body>).
+    const docRef = useRef<HTMLDivElement>(null);
+    const [docChanges, setDocChanges] = useState(0);
+    useEffect(() => {
+        if (docChanges > 0) docRef.current?.focus({ preventScroll: true });
+    }, [docChanges]);
 
     // Un archivo que no sirve no reemplaza al anterior a medias: queda sin archivo
     // elegido (Guardar deshabilitado) y la tarjeta dice por qué.
@@ -52,12 +99,14 @@ export function CvSheet({ open, current, onClose, onSave }: CvSheetProps) {
     const pick = (files: File[]) => {
         const f = files[0];
         if (!f) return;
-        // Solo PDF: «Tomar foto» de MediaUploader entrega una imagen y el selector puede saltarse `accept`.
-        if (!isPdf(f)) {
+        setDocChanges((n) => n + 1);
+        // El selector del teléfono puede saltarse `accept`: lo que no es un PDF de hasta 10 MB se rechaza.
+        const check = checkCvFile(f);
+        if (check === 'no-pdf') {
             reject(COPY.cv.soloPdf);
             return;
         }
-        if (f.size > MAX_BYTES) {
+        if (check === 'muy-grande') {
             reject(COPY.cv.muyGrande(sizeText(f.size)));
             return;
         }
@@ -88,18 +137,27 @@ export function CvSheet({ open, current, onClose, onSave }: CvSheetProps) {
             >
                 <Stack gap={3}>
                     <p className="body prf-muted prf-flush">{COPY.cv.nota}</p>
-                    <MediaUploader
-                        variant="document"
-                        title={COPY.cv.documento}
-                        formats={COPY.cv.formatos}
-                        accept="application/pdf"
-                        state={error ? 'error' : file ? 'uploaded' : 'empty'}
-                        fileName={file?.nombre}
-                        size={file?.detalle}
-                        error={error ?? undefined}
-                        onSelect={pick}
-                        onRemove={() => setFile(null)}
-                    />
+                    <div ref={docRef} tabIndex={-1} className="tl-focus">
+                        {!error && !file ? (
+                            <EmptyPdfPicker onSelect={pick} />
+                        ) : (
+                            <MediaUploader
+                                variant="document"
+                                title={COPY.cv.documento}
+                                formats={COPY.cv.formatos}
+                                accept={PDF}
+                                state={error ? 'error' : 'uploaded'}
+                                fileName={file?.nombre}
+                                size={file?.detalle}
+                                error={error ?? undefined}
+                                onSelect={pick}
+                                onRemove={() => {
+                                    setFile(null);
+                                    setDocChanges((n) => n + 1);
+                                }}
+                            />
+                        )}
+                    </div>
                 </Stack>
             </BottomSheet>
             <DiscardDialog

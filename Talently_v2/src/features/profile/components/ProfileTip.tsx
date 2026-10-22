@@ -6,11 +6,12 @@ import { Card } from '../../../ui/Card';
 import { IconDocument, IconShield, IconUpload } from '../../../ui/icons';
 import { Stack } from '../../../ui/Layout';
 import type { DemoProfileTip } from '../../demo/types';
+import { tipAction } from '../model';
 
 export function ProfileTip({ tip, onAction }: { tip: DemoProfileTip; onAction: () => void }) {
-    // Verificar identidad lleva el escudo; un documento por subir, el documento y «subir».
-    const verify = tip.destino?.pantalla === 'verificacion';
-    const Tile = verify ? IconShield : IconDocument;
+    const action = tipAction(tip);
+    // Verificar identidad lleva el escudo; un documento por subir (CV, credencial, curso), el documento.
+    const Tile = /identidad/iu.test(tip.accion) ? IconShield : IconDocument;
     return (
         <Card>
             <Stack row gap={3} align="start">
@@ -23,7 +24,8 @@ export function ProfileTip({ tip, onAction }: { tip: DemoProfileTip; onAction: (
                         {tip.badge && <Badge status={tip.badge} />}
                         <span className="body prf-muted">{tip.texto}</span>
                     </Stack>
-                    <Button variant="tonal" size="sm" icon={verify ? undefined : IconUpload} onClick={onAction}>
+                    {/* «Subir CV en PDF» sube aquí mismo (flecha de subida, PRF-01); el resto abre su pantalla. */}
+                    <Button variant="tonal" size="sm" icon={action.kind === 'cv' ? IconUpload : undefined} onClick={onAction}>
                         {tip.accion}
                     </Button>
                 </Stack>

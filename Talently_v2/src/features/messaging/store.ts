@@ -97,10 +97,10 @@ export function sendMessage(id: string, texto: string, hora: string): void {
     if (status === 'sending') deliver(id, entryId);
 }
 
-/** Flujo 10: comparte el certificado (la tarjeta de sistema entra a la conversación). */
-export function shareCertificate(id: string): void {
+/** Flujo 10: comparte el certificado (la tarjeta de sistema entra a la conversación a esta hora). */
+export function shareCertificate(id: string, hora: string): void {
     const entryId = `cert-${nextId++}`;
-    update(id, (s) => ({ ...s, touched: clock++, entries: [...s.entries, { kind: 'certificado', id: entryId, off: false }] }));
+    update(id, (s) => ({ ...s, touched: clock++, entries: [...s.entries, { kind: 'certificado', id: entryId, off: false, hora }] }));
 }
 
 /** «Dejar de compartir»: la tarjeta pasa a «Ya no está disponible». */
@@ -111,8 +111,27 @@ export function stopSharing(id: string, entryId: string): void {
     }));
 }
 
+/**
+ * Bloquear cierra la conversación y revoca de inmediato el certificado que
+ * quien mira haya compartido (spec §10.1.1: «al cerrar la conversación por
+ * bloqueo, el acceso compartido se revoca»). Desbloquear no lo vuelve a
+ * compartir: hay que hacerlo otra vez desde Adjuntar.
+ */
 export function setBlocked(id: string, blocked: boolean): void {
-    update(id, (s) => (s.blocked === blocked ? s : { ...s, blocked }));
+    update(id, (s) => {
+        if (s.blocked === blocked) return s;
+        if (!blocked) return { ...s, blocked };
+        return {
+            ...s,
+            blocked,
+            entries: s.entries.map((e) => (e.kind === 'certificado' && !e.off ? { ...e, off: true } : e)),
+        };
+    });
+}
+
+/** Lectura sin React (pruebas). */
+export function getConversationState(id: string): ConversationState {
+    return snapshot.get(id) ?? EMPTY_STATE;
 }
 
 // Al volver la conexión, lo que quedó en cola sale solo.

@@ -4,15 +4,17 @@
 import type { Ref } from 'react';
 import { EmptyState, type EmptyStateAction } from '../../../ui/EmptyState';
 import type { IconComponent } from '../../../ui/icons';
+import type { DemoActorId } from '../../demo/session';
+import { targetPath } from '../../demo/targets';
 import type { DemoEmptyState } from '../../demo/types';
-import { emptyIconOf, targetPath } from '../model';
+import { emptyIconOf } from '../model';
 
 export interface ExploreEmptyProps {
     icon: IconComponent;
     title: string;
     text: string;
     action?: EmptyStateAction;
-    /** Para llevarle el foco (al decidir la última tarjeta del deck). */
+    /** Para llevarle el foco cuando desaparece lo que se tocó (la última tarjeta del deck o de la lista). */
     emptyRef?: Ref<HTMLDivElement>;
 }
 
@@ -24,13 +26,18 @@ export function ExploreEmpty({ icon, title, text, action, emptyRef }: ExploreEmp
     );
 }
 
-/** Props de ExploreEmpty para un estado vacío de la demo: la acción navega a su destino. */
-export function fromDemo(e: DemoEmptyState, fallback: IconComponent, go: (path: string) => void): ExploreEmptyProps {
+/** Props de ExploreEmpty para un estado vacío de la demo: la acción navega a su destino (demo/targets). */
+export function fromDemo(
+    e: DemoEmptyState,
+    fallback: IconComponent,
+    actorId: DemoActorId,
+    go: (path: string) => void,
+): ExploreEmptyProps {
     const destino = e.destino;
     return {
         icon: emptyIconOf(e, fallback),
         title: e.titulo,
         text: e.texto,
-        action: e.accion && destino ? { label: e.accion, onClick: () => go(targetPath(destino)) } : undefined,
+        action: e.accion && destino ? { label: e.accion, onClick: () => go(targetPath(destino, actorId)) } : undefined,
     };
 }

@@ -3,20 +3,26 @@
 // EmptyState). Lo que viene de los datos (nombres, contexto, mensajes) no
 // está aquí: sale de features/demo.
 
+/** Filtros de la bandeja de una persona (MSG-01): uno a la vez. */
 export type InboxFilter = 'todos' | 'empleo' | 'turno';
 
 export const copy = {
-    soon: 'Disponible pronto',
     bell: (unread: number) => (unread > 0 ? `Notificaciones, ${unread} sin leer` : 'Notificaciones'),
 
     inbox: {
         title: 'Mensajes',
         filtersLabel: 'Tipo de conversación',
         filters: { todos: 'Todos', empleo: 'Empleo', turno: 'Turno' } satisfies Record<InboxFilter, string>,
+        /** Organización (spec §5.2): «Igual, con filtro por publicación». */
+        publicationFiltersLabel: 'Publicación',
         unread: (n: number) => (n === 1 ? '1 mensaje sin leer' : `${n} mensajes sin leer`),
         emptyTitle: 'Aún no tienes conversaciones',
         emptyText: 'Cuando postules o tomes un turno, aquí podrás hablar con quien publica.',
         emptyAction: 'Explorar turnos',
+        emptyActionJobs: 'Explorar empleos',
+        /** Quien publica (organización u hogar): le habla a quien recibe postulaciones. */
+        publisherEmptyText: 'Cuando alguien postule a tus publicaciones, aquí podrás hablar con esa persona.',
+        publisherEmptyAction: 'Ver mis publicaciones',
         filteredTitle: {
             empleo: 'No tienes conversaciones de empleos',
             turno: 'No tienes conversaciones de turnos',
@@ -37,8 +43,8 @@ export const copy = {
         // «Seguridad Andes Ltda.» ya termina en punto: no se repite.
         blocked: (name: string) => `Bloqueaste a ${name}${name.endsWith('.') ? '' : '.'} Ya no pueden enviarse mensajes.`,
         offline: 'Sin conexión. Mostramos lo último que cargaste.',
-        publicationGone: 'Esta publicación ya no está disponible',
         calendarDownloaded: 'Descargamos la entrevista: ábrela para agregarla a tu calendario',
+        calendarError: 'No pudimos abrir el calendario. Intenta de nuevo.',
         stoppedSharing: 'Dejaste de compartir tu certificado',
         alreadySharing: 'Ya lo estás compartiendo. Puedes dejar de hacerlo desde la tarjeta.',
         interviewWith: (name: string) => `Entrevista con ${name}`,

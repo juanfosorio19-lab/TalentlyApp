@@ -1,7 +1,7 @@
 // INI-02 · Inicio de una organización (spec §5.2): KPIs reales, «Publicar»
 // (abre PUBL-01: Empleo o Turno) y «Requiere tu atención» (turnos sin
 // cubrir, postulantes sin revisar y evaluaciones pendientes), cada fila con
-// su destino real (GES-04, GES-02) en cuanto esa pantalla esté en el router.
+// su destino (GES-04, GES-02) de demo/targets, abierto con useOpenPath.
 import { Button } from '../../../ui/Button';
 import { Card } from '../../../ui/Card';
 import { IconAdd, IconDocument, IconPeople, IconStar, type IconComponent } from '../../../ui/icons';
@@ -9,7 +9,7 @@ import { ScreenSection, Stack } from '../../../ui/Layout';
 import { List, ListItem } from '../../../ui/ListItem';
 import type { DemoAttentionItem, DemoHomeFeed } from '../../demo/types';
 import { copy } from '../copy';
-import { useTargetLinks } from '../links';
+import { useHomeNavigation } from '../navigation';
 import '../home.css';
 
 export const screenId = 'INI-02';
@@ -26,7 +26,7 @@ export interface OrgHomeScreenProps {
 }
 
 export function OrgHomeScreen({ feed, onPublish }: OrgHomeScreenProps) {
-    const { targetLink } = useTargetLinks();
+    const { targetLink } = useHomeNavigation();
     const panelBlock = feed.bloques.find((b) => b.tipo === 'panel');
     const panel = panelBlock?.tipo === 'panel' ? panelBlock.panel : undefined;
 
@@ -59,7 +59,7 @@ export function OrgHomeScreen({ feed, onPublish }: OrgHomeScreenProps) {
                                     icon={ATTENTION_ICON[item.icono]}
                                     title={item.texto}
                                     sub={item.detalle}
-                                    // GES-04 y GES-02: «Disponible pronto» mientras no tengan ruta; el chevron, como en el prototipo.
+                                    // El chevron, como en el prototipo (también si la pantalla aún dice «Disponible pronto»).
                                     chevron
                                     {...targetLink(item.destino)}
                                 />

@@ -2,69 +2,66 @@
 // BottomSheet «Filtros» con secciones de Chips y, al pie, «Limpiar» (ghost) y
 // la primaria con el resultado concreto («Ver 7 turnos»). Lo que se toca es
 // un borrador: se aplica solo con el botón del pie (README de BottomSheet);
-// cerrar con Cerrar, el velo, el asa o atrás no cambia nada.
-import { useCallback, useState, type ReactNode } from 'react';
+// cerrar con Cerrar, el velo, el asa o atrás no cambia nada. El borrador se
+// toma de los filtros aplicados cada vez que la hoja se ABRE (también si se
+// cerró con el atrás del navegador), así nunca muestra lo de la vez anterior.
+import { useState, type ReactNode } from 'react';
+import type { UrlSheet } from '../../../app/sheets';
 import { BottomSheet, SheetSection } from '../../../ui/BottomSheet';
 import { Button } from '../../../ui/Button';
 import { Chip } from '../../../ui/Chip';
 import { copy } from '../copy';
+import { useCommitOnClose } from './useCommitOnClose';
 
 export const screenId = 'EXP-06';
 
-export interface FiltersDraft<F> {
-    open: boolean;
-    draft: F;
-    setDraft: (next: F) => void;
-    /** Abre la hoja con los filtros aplicados como borrador. */
-    openSheet: () => void;
-    close: () => void;
-    /** Aplica el borrador y cierra. */
-    apply: () => void;
-}
-
-/** Estado de la hoja: abierta, y el borrador que se aplica con el pie. */
-export function useFiltersDraft<F>(applied: F, setApplied: (next: F) => void): FiltersDraft<F> {
-    const [open, setOpen] = useState(false);
-    const [draft, setDraft] = useState<F>(applied);
-    const openSheet = useCallback(() => {
-        setDraft(applied);
-        setOpen(true);
-    }, [applied]);
-    const close = useCallback(() => setOpen(false), []);
-    const apply = useCallback(() => {
-        setApplied(draft);
-        setOpen(false);
-    }, [draft, setApplied]);
-    return { open, draft, setDraft, openSheet, close, apply };
-}
-
-export interface FiltersSheetProps {
-    open: boolean;
-    onClose: () => void;
-    /** Deja el borrador sin filtros (no aplica hasta el botón del pie). */
-    onClear: () => void;
-    onApply: () => void;
+export interface FiltersSheetProps<F> {
+    /** useSheet('filtros') de la pantalla: `open` y `hide`. */
+    sheet: UrlSheet;
+    /** Los filtros aplicados (de la URL). */
+    applied: F;
+    /** «Limpiar»: sin ningún filtro. */
+    empty: F;
+    /** Aplica el borrador (se llama ya con la hoja cerrada). */
+    onApply: (next: F) => void;
     /** «Ver 7 turnos», «Ver 3 empleos»: el resultado del borrador. */
-    applyLabel: string;
-    children: ReactNode;
+    applyLabel: (draft: F) => string;
+    /** Las secciones de la hoja para el borrador. */
+    children: (draft: F, setDraft: (next: F) => void) => ReactNode;
 }
 
-export function FiltersSheet({ open, onClose, onClear, onApply, applyLabel, children }: FiltersSheetProps) {
+export function FiltersSheet<F>({ sheet, applied, empty, onApply, applyLabel, children }: FiltersSheetProps<F>) {
+    const [draft, setDraft] = useState<F>(applied);
+    // Al abrir, el borrador parte de lo aplicado (estado derivado durante el render).
+    const [wasOpen, setWasOpen] = useState(sheet.open);
+    if (sheet.open !== wasOpen) {
+        setWasOpen(sheet.open);
+        if (sheet.open) setDraft(applied);
+    }
+    const applyAfterClose = useCommitOnClose(sheet.open, onApply);
+
     return (
         <BottomSheet
-            open={open}
-            onClose={onClose}
+            open={sheet.open}
+            onClose={sheet.hide}
             title={copy.filtros.titulo}
             footer={
                 <>
-                    <Button variant="ghost" onClick={onClear}>
+                    <Button variant="ghost" onClick={() => setDraft(empty)}>
                         {copy.filtros.limpiar}
                     </Button>
-                    <Button onClick={onApply}>{applyLabel}</Button>
+                    <Button
+                        onClick={() => {
+                            applyAfterClose(draft);
+                            sheet.hide();
+                        }}
+                    >
+                        {applyLabel(draft)}
+                    </Button>
                 </>
             }
         >
-            {children}
+            {children(draft, setDraft)}
         </BottomSheet>
     );
 }

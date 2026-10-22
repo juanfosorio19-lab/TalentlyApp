@@ -5,17 +5,23 @@
 /* El panel del segmento llena el alto que queda (EmptyState centrado). */
 .explore-main { display: flex; flex-direction: column; }
 .explore-panel { flex: 1; }
+/* El panel recibe el foco por código cuando desaparece lo que se tocó («Quitar filtros»): sin contorno (como B16). */
+.explore-panel:focus { outline: 0; }
 
 /* Cabecera bajo el AppBar: SegmentedControl y fila de chips. Queda fija
-   mientras la lista pasa por debajo (EXP-02-turnos-desplazado). Va un nivel
-   bajo el AppBar para que su sombra (is-scrolled) se vea encima. */
+   mientras la lista pasa por debajo (EXP-02-turnos-desplazado), en el nivel
+   de lo fijo (z-sticky), sobre las tarjetas. */
 .explore-head {
   position: sticky;
   top: calc(var(--layout-status-bar) + var(--layout-appbar));
-  z-index: calc(var(--z-sticky) - 1);
+  z-index: var(--z-sticky);
   background: var(--color-bg);
   padding: var(--space-2) 0 var(--space-3);
 }
+/* El AppBar de Explorar va un nivel de token más arriba que la cabecera fija,
+   para que su sombra (is-scrolled) se vea encima de ella como en el prototipo.
+   No cruza a la TabBar: están en extremos opuestos de la pantalla. */
+.tl-appbar.explore-appbar { z-index: var(--z-tabbar); }
 .explore-head__inner {
   max-width: var(--layout-content-max);
   margin: 0 auto;

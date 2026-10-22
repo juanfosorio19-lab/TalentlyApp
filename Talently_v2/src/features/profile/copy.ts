@@ -47,7 +47,6 @@ export const COPY = {
         dialogTexto:
             'Para volver a entrar necesitarás tu correo y tu contraseña. Tus perfiles y conversaciones quedan guardados.',
         cancelar: 'Cancelar',
-        snackSesionDemo: 'Sesión de demostración: no hay cuenta que cerrar',
         // no está en el prototipo: CFG-06 no existe en la demostración.
         snackEliminarDemo: 'Sesión de demostración: no hay cuenta que eliminar',
     },
@@ -101,14 +100,14 @@ export const COPY = {
         titulo: 'Subir CV',
         documento: 'Tu CV',
         formatos: 'PDF, hasta 10 MB',
+        // La etiqueta de MediaUploader para documentos.
+        elegir: 'Elegir archivo',
         nota: 'Lo verán solo las organizaciones a las que postules.',
         guardado: 'Guardamos tu CV',
         soloPdf: 'Elige un archivo PDF.',
         muyGrande: (peso: string) => `Pesa ${peso}. Elige uno de hasta 10 MB.`,
         editar: 'Cambiar CV',
     },
-    /** Funciones que aún no tienen pantalla en esta demostración. */
-    pronto: 'Disponible pronto',
 } as const;
 
 /**

@@ -1,40 +1,102 @@
 // Pestaña Explorar (/explorar?tipo=empleo|turno|personas). Elige el segmento
 // que aplica al actor (spec §5.2: Empleos · Turnos para quien trabaja o aún no
 // tiene perfiles; Personas para una organización o un hogar con aviso activo)
-// y muestra su pantalla: EXP-01, EXP-02 o EXP-05. El segmento va en la URL con
-// replace: la memoria de la pestaña y atrás vuelven al mismo, con su scroll.
-import { useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+// y muestra su panel: EXP-01, EXP-02 o EXP-05. El AppBar, la cabecera con el
+// SegmentedControl y las hojas de la URL se dibujan una sola vez: cambiar de
+// segmento solo cambia los chips y el panel (el foco sigue en la pestaña).
+// Todo lo elegido (segmento, filtros, chips, vista y publicación) va en la URL
+// con replace: la memoria de la pestaña y atrás vuelven a lo mismo, con su scroll.
+import { useCallback, useMemo, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { useSheet } from '../../../app/sheets';
+import { getExplore } from '../../demo/data';
 import { useDemoSession } from '../../demo/session';
-import { explorarUrl } from '../explorePaths';
-import { defaultSegment, segmentsOf, type Segment } from '../model';
+import { ExploreLayout } from '../components/ExploreLayout';
+import { useSheetKeepsScroll } from '../components/hooks';
+import { VerificationSheet } from '../components/VerificationSheet';
+import {
+    countEmpleoFiltros,
+    countPersonaFiltros,
+    countTurnoFiltros,
+    PARAM_PUBLICACION,
+    PARAM_TIPO,
+    readEmpleoFiltros,
+    readPersonaFiltros,
+    readTurnoFiltros,
+    withParams,
+    type Segment,
+} from '../filters';
+import { empleosOf, hasTurnos, ownPublications, personasFor, pickPublication, segmentFor, segmentsOf } from '../model';
 import '../explore.css';
 import { EmpleosScreen } from './EmpleosScreen';
-import { PersonasScreen } from './PersonasScreen';
-import { TurnosScreen } from './TurnosScreen';
+import { PersonasChips, PersonasScreen } from './PersonasScreen';
+import { TurnosChips, TurnosScreen } from './TurnosScreen';
 
-/** La pestaña abre en EXP-01, EXP-02 o EXP-05 según el actor; cada segmento lleva su id (data-screen-id). */
+/** La pestaña abre en EXP-01, EXP-02 o EXP-05 según el actor; cada panel lleva su id (data-screen-id). */
 export const screenId = 'EXP-01';
 
 export function ExploreScreen() {
     const { actor } = useDemoSession();
-    const navigate = useNavigate();
-    const [params] = useSearchParams();
+    // Otro actor parte de cero (otro foco, otras hojas); sus filtros siguen en la URL.
+    return <ExploreTab key={actor.id} />;
+}
 
-    const segments = useMemo(() => segmentsOf(actor), [actor]);
-    const requested = params.get('tipo');
-    // Un segmento que no aplica al actor (enlace viejo, cambio de actor) cae en el suyo.
-    const segment = segments.find((s) => s === requested) ?? defaultSegment(actor, segments);
-    const onSegment = (next: Segment) => navigate(explorarUrl({ tipo: next }), { replace: true });
+function ExploreTab() {
+    const { actor, recienRegistrado } = useDemoSession();
+    const [params, setParams] = useSearchParams();
+    const filtersSheet = useSheet('filtros');
+    const panelRef = useRef<HTMLDivElement>(null);
+    const focusPanel = useCallback(() => panelRef.current?.focus(), []);
+    useSheetKeepsScroll();
 
-    const common = { segments, segment, onSegment };
-    // key: al cambiar de actor, el segmento parte de cero (sus filtros se recuerdan por actor).
+    const explore = getExplore(actor.id);
+    const segments = useMemo(() => segmentsOf(actor, recienRegistrado), [actor, recienRegistrado]);
+    const segment = segmentFor(actor, segments, params.get(PARAM_TIPO));
+    // Cambiar de segmento no apila historial; los filtros de cada segmento quedan en la URL (con su prefijo).
+    const onSegment = (next: Segment) =>
+        setParams((prev) => withParams(prev, (p) => p.set(PARAM_TIPO, next)), { replace: true });
+
+    // Botón Filtros del AppBar: solo si el segmento tiene algo que filtrar.
+    let filterCount = 0;
+    let canFilter = false;
+    let chips = null;
+    let panel;
+    const panelProps = { filtersSheet, focusPanel };
     switch (segment) {
         case 'empleo':
-            return <EmpleosScreen key={actor.id} {...common} />;
+            canFilter = empleosOf(explore).length > 0;
+            filterCount = countEmpleoFiltros(readEmpleoFiltros(params, explore.filtrosActivos));
+            panel = <EmpleosScreen {...panelProps} />;
+            break;
         case 'turno':
-            return <TurnosScreen key={actor.id} {...common} />;
-        case 'personas':
-            return <PersonasScreen key={actor.id} {...common} />;
+            canFilter = hasTurnos(explore);
+            filterCount = countTurnoFiltros(readTurnoFiltros(params, explore.filtrosActivos));
+            chips = canFilter ? <TurnosChips /> : null;
+            panel = <TurnosScreen {...panelProps} />;
+            break;
+        case 'personas': {
+            const pubs = ownPublications(actor, recienRegistrado);
+            const pub = pickPublication(pubs, params.get(PARAM_PUBLICACION));
+            canFilter = pub !== undefined && personasFor(actor, pub).tipo === 'sugeridas';
+            filterCount = countPersonaFiltros(readPersonaFiltros(params));
+            chips = pub ? <PersonasChips pubs={pubs} pub={pub} /> : null;
+            panel = <PersonasScreen {...panelProps} />;
+            break;
+        }
     }
+
+    return (
+        <ExploreLayout
+            segments={segments}
+            segment={segment}
+            onSegment={onSegment}
+            filterCount={canFilter ? filterCount : 0}
+            onFilters={canFilter ? () => filtersSheet.show() : undefined}
+            chips={chips}
+            panelRef={panelRef}
+        >
+            {panel}
+            <VerificationSheet />
+        </ExploreLayout>
+    );
 }

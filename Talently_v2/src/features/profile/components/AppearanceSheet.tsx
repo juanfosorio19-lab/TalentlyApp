@@ -1,7 +1,7 @@
-// CFG-01 · Apariencia: Sistema · Claro · Oscuro (spec §5.2). Es la hoja del
-// sistema para elegir una opción (SheetPicker, sin buscador): un toque,
-// Espacio o Enter aplican el tema al tiro (ThemeProvider) y cierran; las
-// flechas solo recorren la lista.
+// CFG-01 · Apariencia (`?sheet=apariencia`): Sistema · Claro · Oscuro (spec
+// §5.2). Es la hoja del sistema para elegir una opción (SheetPicker, sin
+// buscador): un toque, Espacio o Enter aplican el tema al tiro (ThemeProvider)
+// y cierran; las flechas solo recorren la lista sin aplicar nada.
 import { SheetPicker } from '../../../ui/SheetPicker';
 import { useTheme, type ThemePreference } from '../../../app/providers/ThemeProvider';
 import { COPY } from '../copy';

@@ -1,80 +1,73 @@
 // PRF-01 · Mi perfil (persona): «Así te ven», Mis perfiles con su contenido
 // editable y, al final, los accesos (Agregar un perfil, Verificación, Mis
-// perfiles, Impulsa tu perfil). El engranaje lleva a Configuración.
-import { useState } from 'react';
+// perfiles, Impulsa tu perfil). El AppBar large de la pestaña (con el
+// engranaje a Configuración) lo pone routes.tsx, el mismo para PRF-01 y PRF-02.
+// El perfil elegido en «Mis perfiles» vive en la URL (`?perfil=hogar`): sigue
+// elegido al volver de una pantalla apilada o de otra pestaña.
+import { useSearchParams } from 'react-router-dom';
 import { EmptyState } from '../../../ui/EmptyState';
 import { IconAdd } from '../../../ui/icons';
 import { Stack } from '../../../ui/Layout';
 import { paths } from '../../../app/paths';
+import { useOpenPath } from '../../../app/navigation/useOpenPath';
 import { useDemoSession } from '../../demo/session';
 import type { DemoProfileTab } from '../../demo/types';
-import { trabaja } from '../actor';
 import { AsiTeVen } from '../components/AsiTeVen';
-import { ProfileAppBar } from '../components/ProfileAppBar';
 import { ProfileLinks } from '../components/ProfileLinks';
 import { ProfileTabContent } from '../components/ProfileTabContent';
 import { ProfileTabs } from '../components/ProfileTabs';
-import { useEditableProfile } from '../store';
-import { useOpenRoute, useSoon } from '../useOpenRoute';
+import { resolveTab, visibleLinks } from '../model';
+import { useProfile } from '../useProfile';
 import '../profile.css';
 
 export const screenId = 'PRF-01';
 
 export function ProfileScreen() {
     const { actor } = useDemoSession();
-    const [profile, save] = useEditableProfile(actor.id);
-    const openRoute = useOpenRoute();
-    const soon = useSoon();
-    const [tabId, setTabId] = useState<DemoProfileTab['id'] | undefined>(profile.perfiles[0]?.id);
-    const tab = profile.perfiles.find((t) => t.id === tabId) ?? profile.perfiles[0];
+    const { profile, saveTab } = useProfile();
+    const { open, soon } = useOpenPath();
+    const [params, setParams] = useSearchParams();
+    const tab = resolveTab(profile.perfiles, params.get('perfil'));
 
-    const changeTab = (next: DemoProfileTab) =>
-        save({ ...profile, perfiles: profile.perfiles.map((t) => (t.id === next.id ? next : t)) });
-
-    // Accesos que aplican: Impulsa solo a quien trabaja (PRF-12, spec §5.4); sin perfiles no hay «Mis
-    // perfiles» que pausar, y «Agregar un perfil» queda solo como la acción del EmptyState.
-    const sinPerfiles = profile.perfiles.length === 0;
-    const agregarEnVacio = sinPerfiles && Boolean(profile.vacio?.accion);
-    const enlaces = profile.enlaces.filter(
-        (l) =>
-            (l.id !== 'impulsa' || trabaja(actor)) &&
-            (l.id !== 'mis-perfiles' || !sinPerfiles) &&
-            (l.id !== 'agregar' || !agregarEnVacio),
-    );
+    const chooseTab = (id: DemoProfileTab['id']) =>
+        setParams(
+            (prev) => {
+                const next = new URLSearchParams(prev);
+                next.set('perfil', id);
+                return next;
+            },
+            { replace: true, preventScrollReset: true },
+        );
 
     return (
-        <>
-            <ProfileAppBar />
-            <main className="tl-app-screen__body">
-                <div className="tl-app-screen__content prf-content">
-                    <Stack gap={4}>
-                        <AsiTeVen actorId={actor.id} asiTeVen={profile.asiTeVen} kind="person" />
-                        {tab ? (
-                            <>
-                                <ProfileTabs
-                                    tabs={profile.perfiles}
-                                    value={tab.id}
-                                    onChange={setTabId}
-                                    onPreview={() =>
-                                        openRoute(paths.perfilPublico(actor.id, tab.id === 'trabajo' ? 'trabajo' : undefined))
-                                    }
-                                />
-                                <ProfileTabContent key={tab.id} tab={tab} comuna={profile.asiTeVen.comuna} onChange={changeTab} />
-                            </>
-                        ) : (
-                            profile.vacio && (
-                                <EmptyState
-                                    icon={IconAdd}
-                                    title={profile.vacio.titulo}
-                                    text={profile.vacio.texto}
-                                    action={profile.vacio.accion ? { label: profile.vacio.accion, onClick: () => soon() } : undefined}
-                                />
-                            )
-                        )}
-                        <ProfileLinks links={enlaces} />
-                    </Stack>
-                </div>
-            </main>
-        </>
+        <main className="tl-app-screen__body">
+            <div className="tl-app-screen__content prf-content">
+                <Stack gap={4}>
+                    <AsiTeVen actorId={actor.id} asiTeVen={profile.asiTeVen} kind="person" />
+                    {tab ? (
+                        <>
+                            <ProfileTabs
+                                tabs={profile.perfiles}
+                                value={tab.id}
+                                onChange={chooseTab}
+                                onPreview={() => open(paths.perfilPublico(actor.id, tab.id === 'trabajo' ? 'trabajo' : undefined))}
+                            />
+                            <ProfileTabContent key={tab.id} tab={tab} comuna={profile.asiTeVen.comuna} onChange={saveTab} />
+                        </>
+                    ) : (
+                        profile.vacio && (
+                            <EmptyState
+                                icon={IconAdd}
+                                title={profile.vacio.titulo}
+                                text={profile.vacio.texto}
+                                // PRF-04 (/perfil/agregar) aún no tiene ruta: «Disponible pronto».
+                                action={profile.vacio.accion ? { label: profile.vacio.accion, onClick: soon } : undefined}
+                            />
+                        )
+                    )}
+                    <ProfileLinks links={visibleLinks(profile, actor)} />
+                </Stack>
+            </div>
+        </main>
     );
 }

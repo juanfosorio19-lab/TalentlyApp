@@ -1,6 +1,8 @@
 // Rutas del feature «Detalle de publicación» (las compone src/app/router.tsx).
-// Apilada: /p/:id (DET-01). DET-02 (Postular), AUTH-08 (Verificar teléfono) y
-// DET-03 (¡Hicieron match!) son hojas y un modal sobre el detalle, sin ruta.
+// Apilada: /p/:id (DET-01). DET-02 (Postular) y AUTH-08 (Verificar teléfono)
+// son hojas en la URL del detalle (?sheet=postular, ?sheet=telefono). DET-03
+// (¡Hicieron match!) no tiene ruta: lo muestra MatchHost, montado en
+// RootLayout, sobre cualquier pantalla.
 import type { RouteObject } from 'react-router-dom';
 import { PublicationDetailScreen } from './screens/PublicationDetailScreen';
 

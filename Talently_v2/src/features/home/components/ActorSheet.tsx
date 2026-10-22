@@ -1,5 +1,7 @@
-// SHT-ACTOR «Usar Talently como»: la persona y sus organizaciones (el hogar
-// nunca aparece). Elegir cambia el actor de toda la app y cierra la hoja.
+// SHT-ACTOR «Usar Talently como» (`?sheet=actor`): la persona y sus
+// organizaciones (el hogar nunca aparece). Elegir cambia el actor de toda la
+// app y cierra la hoja; el punto dice qué actor tiene novedades sin leer, con
+// la misma bandeja de todas las campanas (useInbox de demo/sessionStore).
 import { useRef, type KeyboardEvent, type MouseEvent } from 'react';
 import { Avatar } from '../../../ui/Avatar';
 import { BottomSheet } from '../../../ui/BottomSheet';
@@ -7,11 +9,11 @@ import { IconAdd } from '../../../ui/icons';
 import { Stack } from '../../../ui/Layout';
 import { List, ListItem } from '../../../ui/ListItem';
 import { RadioGroup } from '../../../ui/Radio';
-import { useSnackbar } from '../../../ui/Snackbar';
 import { useDemoSession, type DemoActor, type DemoActorId } from '../../demo/session';
+import { useInbox } from '../../demo/sessionStore';
 import { copy } from '../copy';
-import { useInbox } from '../inbox';
 import { actorVerified } from '../mock';
+import { useHomeNavigation } from '../navigation';
 
 export const sheetId = 'SHT-ACTOR';
 
@@ -20,15 +22,15 @@ export interface ActorSheetProps {
     onClose: () => void;
 }
 
-/** Avatar, nombre, qué es y el punto de novedades: todo dentro de la fila del Radio. */
+/** Avatar, nombre, qué es y el punto de novedades: todo dentro de la fila del Radio (como el prototipo). */
 function ActorLabel({ actor, unread }: { actor: DemoActor; unread: boolean }) {
     const org = actor.kind === 'organizacion';
     return (
         <Stack row gap={3}>
             <Avatar name={actor.fullName} kind={org ? 'org' : 'person'} verified={actorVerified(actor)} />
-            <span className="home-actor__text">
+            <span className="home-grow">
                 {actor.fullName}
-                <span className="tl-choice__desc">{org ? copy.actor.organizacion(actor.comuna) : copy.actor.persona}</span>
+                <span className="body home-muted home-block">{org ? copy.actor.organizacion(actor.comuna) : copy.actor.persona}</span>
             </span>
             {unread && (
                 <>
@@ -41,9 +43,9 @@ function ActorLabel({ actor, unread }: { actor: DemoActor; unread: boolean }) {
 }
 
 export function ActorSheet({ open, onClose }: ActorSheetProps) {
-    const { actor, switchable, setActor } = useDemoSession();
-    const { items } = useInbox();
-    const snackbar = useSnackbar();
+    const { actor, switchable, setActor, recienRegistrado } = useDemoSession();
+    const { items } = useInbox(actor.id, recienRegistrado);
+    const { soon } = useHomeNavigation();
     // Con flechas el radio nativo se marca al moverse: eso solo recorre la lista (como SheetPicker).
     const arrow = useRef(false);
 
@@ -73,9 +75,10 @@ export function ActorSheet({ open, onClose }: ActorSheetProps) {
         if (target instanceof HTMLInputElement && target.type === 'radio' && target.value === actor.id && !arrow.current) onClose();
     };
 
+    // Crear una organización es de una fase futura: la hoja se cierra y el Snackbar lo dice sobre Inicio.
     const createOrg = () => {
         onClose();
-        snackbar.show({ message: copy.soon });
+        soon();
     };
 
     return (

@@ -1,12 +1,14 @@
 // «Así te ven» (PRF-01 y PRF-02): avatar, nombre, comuna, insignias reales y
-// nota por rol. Las insignias se tocan y abren «Verificación de …».
-import { useState, type ReactNode } from 'react';
+// nota por rol. Las insignias se tocan y abren «Verificación de …»
+// (`?sheet=verificacion`).
+import type { ReactNode } from 'react';
 import { Avatar } from '../../../ui/Avatar';
 import { Stack } from '../../../ui/Layout';
 import { RatingStars } from '../../../ui/RatingStars';
 import { VerificationBadge } from '../../../ui/VerificationBadge';
 import type { DemoActorId, DemoProfile } from '../../demo/types';
 import { COPY } from '../copy';
+import { useStillSheet } from '../useStillSheet';
 import { VerificationSheet } from './VerificationSheet';
 
 export interface AsiTeVenProps {
@@ -18,7 +20,7 @@ export interface AsiTeVenProps {
 }
 
 export function AsiTeVen({ actorId, asiTeVen, kind, children }: AsiTeVenProps) {
-    const [sheet, setSheet] = useState(false);
+    const sheet = useStillSheet('verificacion');
     const { nombre, iniciales, comuna, verificaciones, notas } = asiTeVen;
     const verified = verificaciones.some((v) => v.status === 'verified');
 
@@ -31,7 +33,7 @@ export function AsiTeVen({ actorId, asiTeVen, kind, children }: AsiTeVenProps) {
             {verificaciones.length > 0 && (
                 <div className="prf-wrap">
                     {verificaciones.map((v) => (
-                        <VerificationBadge key={v.label} status={v.status} onClick={() => setSheet(true)}>
+                        <VerificationBadge key={v.label} status={v.status} onClick={() => sheet.show()}>
                             {v.label}
                         </VerificationBadge>
                     ))}
@@ -49,8 +51,9 @@ export function AsiTeVen({ actorId, asiTeVen, kind, children }: AsiTeVenProps) {
             )}
             {children}
             <VerificationSheet
-                open={sheet}
-                onClose={() => setSheet(false)}
+                // Sin insignias (un enlace viejo con la hoja abierta) no hay nada que contar.
+                open={sheet.open && verificaciones.length > 0}
+                onClose={sheet.hide}
                 actorId={actorId}
                 nombre={nombre}
                 verificaciones={verificaciones}

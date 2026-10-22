@@ -1,12 +1,15 @@
-// Rutas del feature (las compone src/app/router.tsx).
-// STUB: lo reemplaza la construcción de las pantallas; conserva tabRoutes y stackRoutes.
+// Rutas del feature Gestionar publicaciones (las compone src/app/router.tsx).
+// Apiladas (sin TabBar): GES-01 /publicaciones/:id, GES-02 /publicaciones/:id/postulantes
+// y GES-04 /publicaciones/:id/turnos/:shiftId (spec §5.4).
 import type { RouteObject } from 'react-router-dom';
-import { PlaceholderScreen } from '../../app/system/PlaceholderScreen';
+import { ApplicantsScreen } from './screens/ApplicantsScreen';
+import { ManagePublicationScreen } from './screens/ManagePublicationScreen';
+import { ShiftRosterScreen } from './screens/ShiftRosterScreen';
 
 export const tabRoutes: RouteObject[] = [];
 
 export const stackRoutes: RouteObject[] = [
-    { path: 'publicaciones/:id', element: <PlaceholderScreen title="Gestionar publicación" screenId="GES-01" /> },
-    { path: 'publicaciones/:id/postulantes', element: <PlaceholderScreen title="Postulantes" screenId="GES-02" /> },
-    { path: 'publicaciones/:id/turnos/:shiftId', element: <PlaceholderScreen title="Cupos del turno" screenId="GES-04" /> },
+    { path: 'publicaciones/:id', element: <ManagePublicationScreen /> },
+    { path: 'publicaciones/:id/postulantes', element: <ApplicantsScreen /> },
+    { path: 'publicaciones/:id/turnos/:shiftId', element: <ShiftRosterScreen /> },
 ];

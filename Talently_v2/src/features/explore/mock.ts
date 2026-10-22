@@ -72,6 +72,24 @@ export const COMUNAS_RM: readonly string[] = [
 ];
 
 /**
+ * EXP-07 · Sinónimos de búsqueda (spec §4.5 «synonyms»): palabras que la
+ * gente escribe y que nunca se muestran en la interfaz. Sin tildes y en
+ * minúsculas (como `fold`). Cuando exista el diccionario único en src/domain,
+ * se usa ese.
+ */
+export const SINONIMOS: Readonly<Record<string, readonly string[]>> = {
+    nana: ['asesor', 'asesora'],
+    empleada: ['asesor', 'asesora'],
+    ninera: ['cuidador', 'cuidadora'],
+    mesero: ['garzon', 'garzona', 'garzones'],
+    mesera: ['garzon', 'garzona', 'garzones'],
+    barman: ['bartender'],
+    os10: ['guardia', 'seguridad'],
+    vigilante: ['guardia', 'seguridad'],
+    bodeguero: ['bodega'],
+};
+
+/**
  * Hoja «Verificación de …»: qué revisó Talently según la insignia. La demo
  * no trae la fecha de cada verificación; cuando la traiga, va en la línea.
  */

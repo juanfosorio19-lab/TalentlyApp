@@ -7,14 +7,9 @@
 export const DEMO_NOW_TIME = '13:00';
 
 /**
- * no está en el prototipo: las entrevistas de la agenda no traen hora de
- * término y CalendarWeek la necesita para dibujar el bloque. Se muestran de 1 h.
- */
-export const INTERVIEW_MINUTES = 60;
-
-/**
  * no está en el prototipo: qué revisó Talently en cada insignia (hoja
  * «Verificación de …»). Sin RUT de personas, fecha de nacimiento ni fotos.
+ * Los datos no traen cuándo se verificó: la hoja no inventa la fecha.
  */
 export const VERIFICATION_DETAIL: Record<string, string> = {
     'Organización verificada': 'RUT y documentos de la organización revisados',

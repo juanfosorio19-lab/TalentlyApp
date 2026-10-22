@@ -13,7 +13,8 @@ interface MessageListProps {
     items: readonly ChatItem[];
     /** Nombre de la otra parte, para lectores de pantalla («Seguridad Andes Ltda.: …»). */
     peerName: string;
-    onAddToCalendar: (card: DemoSystemCard) => void;
+    /** «Agregar al calendario» de la entrevista; `id` es el del mensaje (UID del evento). */
+    onAddToCalendar: (card: DemoSystemCard, id: string) => void;
     /** Quien recibió el certificado: «Ver». */
     onViewCertificate: () => void;
     /** Quien lo compartió: «Dejar de compartir» (la tarjeta pasa a «Ya no está disponible»). */
@@ -33,9 +34,10 @@ export function MessageList({ items, peerName, onAddToCalendar, onViewCertificat
                 ) : (
                     <SystemMessage
                         card={item.tarjeta}
-                        onAddToCalendar={() => onAddToCalendar(item.tarjeta)}
+                        shareId={item.shareId}
+                        onAddToCalendar={() => onAddToCalendar(item.tarjeta, item.id)}
                         onView={onViewCertificate}
-                        onStop={item.shareId ? () => onStopSharing(item.shareId as string) : undefined}
+                        onStop={onStopSharing}
                     />
                 )}
             </Fragment>
@@ -51,15 +53,19 @@ function lineIcon(text: string): IconComponent {
     return IconInfo; // «Subido por ti, sin verificar», «Documento subido por la persona, sin verificar»
 }
 
+/** Atributo de la tarjeta compartida en esta sesión: la pantalla le pasa el foco al dejar de compartirla. */
+export const SHARE_ATTR = 'data-share-id';
+
 interface SystemMessageProps {
     card: DemoSystemCard;
+    /** Solo en el certificado que compartió quien mira en esta sesión. */
+    shareId?: string;
     onAddToCalendar: () => void;
     onView: () => void;
-    /** Solo en el certificado que compartió quien mira. */
-    onStop?: () => void;
+    onStop: (shareId: string) => void;
 }
 
-function SystemMessage({ card, onAddToCalendar, onView, onStop }: SystemMessageProps) {
+function SystemMessage({ card, shareId, onAddToCalendar, onView, onStop }: SystemMessageProps) {
     if (card.tipo === 'entrevista') {
         if (!card.disponible) return <SystemCard icon={IconCalendar} title={card.titulo} off />;
         const [when = '', place = ''] = card.lineas;
@@ -68,8 +74,8 @@ function SystemMessage({ card, onAddToCalendar, onView, onStop }: SystemMessageP
     const lines: SystemCardLine[] = card.lineas.map((text) => ({ icon: lineIcon(text), text }));
     // Quien lo compartió: «Dejar de compartir» (ghost); la otra parte: «Ver» (tonal), como CertificateCard.
     const action = card.accion ? (
-        onStop ? (
-            <Button variant="ghost" size="sm" onClick={onStop}>
+        shareId ? (
+            <Button variant="ghost" size="sm" onClick={() => onStop(shareId)}>
                 {card.accion}
             </Button>
         ) : (
@@ -78,5 +84,7 @@ function SystemMessage({ card, onAddToCalendar, onView, onStop }: SystemMessageP
             </Button>
         )
     ) : undefined;
-    return <SystemCard icon={IconDocument} title={card.titulo} lines={lines} actions={action} off={!card.disponible} />;
+    // La compartida en esta sesión recibe el foco (tabIndex -1) cuando «Dejar de compartir» desaparece.
+    const focusable = shareId ? { [SHARE_ATTR]: shareId, tabIndex: -1, className: 'tl-focus' } : {};
+    return <SystemCard icon={IconDocument} title={card.titulo} lines={lines} actions={action} off={!card.disponible} {...focusable} />;
 }

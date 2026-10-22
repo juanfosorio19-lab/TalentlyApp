@@ -4,31 +4,33 @@
 // de la familia es MSG-02b-familia). AppBar de conversación, ContextChip fijo
 // bajo el AppBar, mensajes con estados reales (Enviando…, Enviado, Leído, en
 // cola sin conexión), tarjetas de sistema y el Composer con su aviso de
-// seguridad. Enviar agrega el mensaje localmente (store.ts) mientras Supabase
-// está pausado.
+// seguridad. Hojas en la URL: ?sheet=adjuntar y ?sheet=reportar (SHT-REPORTE).
+// Enviar agrega el mensaje localmente (store.ts) mientras Supabase está pausado.
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { useParams } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { AppBar } from '../../../ui/AppBar';
 import { Banner } from '../../../ui/Banner';
 import { Composer } from '../../../ui/Composer';
-import { ContextChip, ContextChipBar, PUBLICATION_TYPES } from '../../../ui/ContextChip';
+import { ContextChip, ContextChipBar, ContextChipInRow, PUBLICATION_TYPES } from '../../../ui/ContextChip';
 import { Dialog } from '../../../ui/Dialog';
 import { EmptyState } from '../../../ui/EmptyState';
 import { IconChat } from '../../../ui/icons';
 import { Chat } from '../../../ui/MessageBubble';
 import { useSnackbar, type SnackbarTone } from '../../../ui/Snackbar';
 import { useGoBack } from '../../../app/BackButtonManager';
+import { SOON_MESSAGE, useOpenPath } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
+import { useSheet } from '../../../app/sheets';
+import { buildIcs } from '../../../domain/calendario';
 import { getConversation, getPublication } from '../../demo/data';
 import type { DemoConversation, DemoSystemCard, DemoViewerId } from '../../demo/types';
 import { AttachSheet } from '../components/AttachSheet';
 import { CertificateSheet } from '../components/CertificateSheet';
 import { ConversationMenuSheet } from '../components/ConversationMenuSheet';
-import { MessageList } from '../components/MessageList';
+import { MessageList, SHARE_ATTR } from '../components/MessageList';
 import { ReportSheet } from '../components/ReportSheet';
 import { copy } from '../copy';
-import { useLinks, useViewerId } from '../links';
 import { DEMO_NOW_TIME, INTERVIEW_MINUTES } from '../mock';
 import {
     certificateActive,
@@ -37,7 +39,8 @@ import {
     chatItems,
     contextOf,
     contextPath,
-    interviewIcs,
+    googleCalendarUrl,
+    interviewEvent,
     peerKind,
     peerProfilePath,
     peerVerified,
@@ -53,32 +56,37 @@ import {
     useConversationState,
     useOnline,
 } from '../store';
+import { useViewer } from '../viewer';
 import '../messaging.css';
 
 export const screenId = 'MSG-02';
 
 export function ConversationScreen() {
     const { conversationId } = useParams();
-    const viewerId = useViewerId();
-    const conv = conversationId ? getConversation(conversationId) : undefined;
+    const { viewerId, recienRegistrado } = useViewer();
+    // Jorge recién registrado todavía no tiene conversaciones.
+    const conv = conversationId && !recienRegistrado ? getConversation(conversationId) : undefined;
     // Solo quien participa la ve (RLS de conversations en el spec §7.6).
     if (!conv || conv.viewerId !== viewerId) return <ConversationNotFound />;
     return <Conversation key={conv.id} conv={conv} viewerId={viewerId} />;
 }
 
-type Sheet = 'menu' | 'reportar' | 'adjuntar' | 'certificado';
-
 function Conversation({ conv, viewerId }: { conv: DemoConversation; viewerId: DemoViewerId }) {
     const goBack = useGoBack();
     const snackbar = useSnackbar();
-    const { go } = useLinks();
+    const { open, canOpen, linkProps } = useOpenPath();
     const online = useOnline();
     const state = useConversationState(conv.id);
-    const [sheet, setSheetState] = useState<Sheet | null>(null);
+    const attach = useSheet('adjuntar');
+    const report = useSheet('reportar');
+    const [menuOpen, setMenuOpen] = useState(false);
     const [blockOpen, setBlockOpen] = useState(false);
+    // MSG-02b se pide desde Adjuntar y se abre recién cuando Adjuntar ya cerró: así
+    // la hoja del certificado guarda como origen el botón Adjuntar y el foco vuelve ahí.
+    const [certRequested, setCertRequested] = useState(false);
     const logRef = useRef<HTMLElement>(null);
 
-    // Abrirla la deja leída: sus no leídos salen de la bandeja.
+    // Abrirla la deja leída: sus no leídos salen de la bandeja y del badge de la pestaña.
     useEffect(() => markRead(conv.id), [conv.id]);
 
     const items = useMemo(() => chatItems(conv, state), [conv, state]);
@@ -87,32 +95,37 @@ function Conversation({ conv, viewerId }: { conv: DemoConversation; viewerId: De
     const name = conv.con.nombre;
     const kind = peerKind(conv.con);
     const context = contextOf(conv.contexto.tipo, conv.contexto.chip);
-    const contextTarget = contextPath(conv, viewerId);
+    const contextTarget = contextPath(conv, viewerId, canOpen);
     const publicationId = conv.contexto.publicationId;
     const publication = publicationId ? getPublication(publicationId) : undefined;
-    const canShare = viewerWorks(conv) && Boolean(conv.certificado);
+    // Quien trabaja (conversa con una organización o un hogar) puede compartirlo en toda conversación (M5).
+    const canShare = viewerWorks(conv);
+    const certOpen = canShare && certRequested && !attach.open;
 
-    // Al abrir una hoja se va el aviso anterior: no queda flotando sobre ella.
-    const setSheet = (next: Sheet | null) => {
-        if (next) snackbar.hide();
-        setSheetState(next);
-    };
     // En el chat el aviso va sobre el Composer, a la altura de la TabBar (M5 punto 13).
     const toast = (message: string, tone?: SnackbarTone) => snackbar.show({ message, tone, placement: 'tabbar' });
-    const soon = () => toast(copy.soon);
-    const closeAnd = (then: () => void) => () => {
-        setSheet(null);
-        then();
-    };
+    const go = (path: string) => (canOpen(path) ? open(path) : toast(SOON_MESSAGE));
+    // Perfil público (PRF-10 / PRF-11): enlace real si ya existe; si no, el aviso sobre el Composer.
+    const peerPath = peerProfilePath(conv.con);
+    const peerLink = canOpen(peerPath) ? linkProps(peerPath) : { href: undefined, onClick: () => toast(SOON_MESSAGE) };
 
-    const addToCalendar = (card: DemoSystemCard) => {
-        // En el teléfono hace falta el plugin de calendario: aún no está.
-        const ics = Capacitor.isNativePlatform() ? null : interviewIcs(card, copy.chat.interviewWith(name), INTERVIEW_MINUTES);
-        if (!ics) {
-            soon();
+    const addToCalendar = async (card: DemoSystemCard, messageId: string) => {
+        const event = interviewEvent(card, copy.chat.interviewWith(name), INTERVIEW_MINUTES, `${conv.id}-${messageId}`);
+        if (!event) {
+            toast(copy.chat.calendarError, 'error');
             return;
         }
-        const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
+        // En el teléfono, la plantilla de Google Calendar en el navegador del sistema (sin plugin de calendario).
+        if (Capacitor.isNativePlatform()) {
+            try {
+                const { Browser } = await import('@capacitor/browser');
+                await Browser.open({ url: googleCalendarUrl(event) });
+            } catch {
+                toast(copy.chat.calendarError, 'error');
+            }
+            return;
+        }
+        const url = URL.createObjectURL(new Blob([buildIcs(event)], { type: 'text/calendar' }));
         const a = document.createElement('a');
         a.href = url;
         a.download = 'entrevista.ics';
@@ -121,35 +134,41 @@ function Conversation({ conv, viewerId }: { conv: DemoConversation; viewerId: De
         toast(copy.chat.calendarDownloaded, 'success');
     };
 
-    const openCertificate = () => {
-        if (certificateActive(state)) {
-            setSheet(null);
-            toast(copy.chat.alreadySharing);
-            return;
-        }
-        setSheet('certificado');
+    const requestCertificate = () => {
+        attach.hide();
+        if (certificateActive(state)) toast(copy.chat.alreadySharing);
+        else setCertRequested(true);
+    };
+
+    const stop = (shareId: string) => {
+        // «Dejar de compartir» desaparece de la tarjeta: el foco pasa a la tarjeta, que sigue en pantalla.
+        logRef.current?.querySelector<HTMLElement>(`[${SHARE_ATTR}="${shareId}"]`)?.focus({ preventScroll: true });
+        stopSharing(conv.id, shareId);
+        toast(copy.chat.stoppedSharing, 'success');
+    };
+
+    const openSheet = (show: () => void) => {
+        // El aviso anterior no queda flotando sobre la hoja.
+        snackbar.hide();
+        show();
     };
 
     return (
         <div className="tl-app-screen msg-chat" data-screen-id={screenId}>
             <AppBar
                 variant="chat"
-                peer={{
-                    name,
-                    meta: conv.con.linea,
-                    kind,
-                    verified: peerVerified(conv.con),
-                    onClick: () => go(peerProfilePath(conv.con), { placement: 'tabbar' }),
-                }}
+                peer={{ name, meta: conv.con.linea, kind, verified: peerVerified(conv.con), href: peerLink.href, onClick: peerLink.onClick }}
                 onBack={goBack}
-                onMore={() => setSheet('menu')}
+                onMore={() => openSheet(() => setMenuOpen(true))}
             />
             {!online && <Banner fixed>{copy.chat.offline}</Banner>}
             <ContextChipBar>
-                <ContextChip
-                    {...context}
-                    onClick={() => (contextTarget ? go(contextTarget) : toast(copy.chat.publicationGone))}
-                />
+                {contextTarget ? (
+                    <ContextChip {...context} onClick={() => go(contextTarget)} />
+                ) : (
+                    // Turno pasado: la publicación ya no existe y el chip solo dice de qué se habló.
+                    <ContextChipInRow {...context} />
+                )}
             </ContextChipBar>
             <main ref={logRef} className="tl-app-screen__body msg-chat__log">
                 {items.length === 0 ? (
@@ -159,12 +178,9 @@ function Conversation({ conv, viewerId }: { conv: DemoConversation; viewerId: De
                         <MessageList
                             items={items}
                             peerName={name}
-                            onAddToCalendar={addToCalendar}
-                            onViewCertificate={soon}
-                            onStopSharing={(shareId) => {
-                                stopSharing(conv.id, shareId);
-                                toast(copy.chat.stoppedSharing, 'success');
-                            }}
+                            onAddToCalendar={(card, id) => void addToCalendar(card, id)}
+                            onViewCertificate={() => toast(SOON_MESSAGE)}
+                            onStopSharing={stop}
                         />
                     </Chat>
                 )}
@@ -173,35 +189,46 @@ function Conversation({ conv, viewerId }: { conv: DemoConversation; viewerId: De
                 value={state.draft}
                 onChange={(text) => setDraft(conv.id, text)}
                 onSend={(text) => sendMessage(conv.id, text, DEMO_NOW_TIME)}
-                onAttach={() => setSheet('adjuntar')}
+                onAttach={() => openSheet(() => attach.show())}
+                attachProps={{ 'aria-haspopup': 'dialog' }}
                 closedReason={state.blocked ? copy.chat.blocked(name) : undefined}
                 notice={conv.certificado && certificatePending(conv, state) ? <Banner>{conv.certificado.aviso}</Banner> : undefined}
             />
 
             <ConversationMenuSheet
-                open={sheet === 'menu'}
-                onClose={() => setSheet(null)}
+                open={menuOpen}
+                onClose={() => setMenuOpen(false)}
                 title={name}
                 publication={
                     publication && {
                         title: publication.titulo,
                         icon: PUBLICATION_TYPES[publication.tipo].icon,
-                        onOpen: closeAnd(() => go(paths.publicacion(publication.id))),
+                        onOpen: () => {
+                            setMenuOpen(false);
+                            go(paths.publicacion(publication.id));
+                        },
                     }
                 }
                 blocked={state.blocked}
-                onReport={() => setSheet('reportar')}
-                onBlock={closeAnd(() => setBlockOpen(true))}
-                onUnblock={closeAnd(() => {
+                onReport={() => {
+                    setMenuOpen(false);
+                    report.show();
+                }}
+                onBlock={() => {
+                    setMenuOpen(false);
+                    setBlockOpen(true);
+                }}
+                onUnblock={() => {
+                    setMenuOpen(false);
                     setBlocked(conv.id, false);
                     toast(copy.block.unblocked(name), 'success');
-                })}
+                }}
             />
             <ReportSheet
-                open={sheet === 'reportar'}
-                onClose={() => setSheet(null)}
+                open={report.open}
+                onClose={report.hide}
                 onSend={() => {
-                    setSheet(null);
+                    report.hide();
                     toast(copy.report.sent, 'success');
                 }}
             />
@@ -212,6 +239,7 @@ function Conversation({ conv, viewerId }: { conv: DemoConversation; viewerId: De
                 confirmLabel={copy.block.confirm}
                 destructive
                 onConfirm={() => {
+                    // Cierra la conversación y revoca el certificado compartido (spec §10.1.1).
                     setBlocked(conv.id, true);
                     setBlockOpen(false);
                 }}
@@ -219,20 +247,26 @@ function Conversation({ conv, viewerId }: { conv: DemoConversation; viewerId: De
                 {copy.block.text}
             </Dialog>
             <AttachSheet
-                open={sheet === 'adjuntar'}
-                onClose={() => setSheet(null)}
+                open={attach.open && !state.blocked}
+                onClose={attach.hide}
                 certificate={canShare}
-                onCertificate={openCertificate}
-                onSoon={closeAnd(soon)}
+                onCertificate={requestCertificate}
+                onSoon={() => {
+                    attach.hide();
+                    toast(SOON_MESSAGE);
+                }}
             />
             {canShare && (
                 <CertificateSheet
-                    open={sheet === 'certificado'}
-                    onClose={() => setSheet(null)}
+                    open={certOpen}
+                    onClose={() => setCertRequested(false)}
                     peer={{ name, kind, initials: conv.con.iniciales }}
                     issued={certificateIssued(conv)}
-                    onShare={closeAnd(() => shareCertificate(conv.id))}
-                    onUpload={() => snackbar.show({ message: copy.soon })}
+                    onShare={() => {
+                        setCertRequested(false);
+                        shareCertificate(conv.id, DEMO_NOW_TIME);
+                    }}
+                    onUpload={() => toast(SOON_MESSAGE)}
                 />
             )}
         </div>
@@ -272,7 +306,7 @@ function useStickToBottom(ref: RefObject<HTMLElement | null>, count: number) {
 
 function ConversationNotFound() {
     const goBack = useGoBack();
-    const { go } = useLinks();
+    const { open } = useOpenPath();
     return (
         <div className="tl-app-screen">
             <AppBar variant="standard" title={copy.notFound.appBar} onBack={goBack} />
@@ -281,7 +315,7 @@ function ConversationNotFound() {
                     icon={IconChat}
                     title={copy.notFound.title}
                     text={copy.notFound.text}
-                    action={{ label: copy.notFound.action, onClick: () => go(paths.mensajes()) }}
+                    action={{ label: copy.notFound.action, onClick: () => open(paths.mensajes(), { replace: true }) }}
                 />
             </main>
         </div>

@@ -1,0 +1,67 @@
+/* Bienvenida y onboarding: solo maquetación y tonos de texto, siempre con
+   tokens. Los colores, radios y tipografía los ponen los componentes de
+   src/ui y bundle.css (el fondo del hero es .tl-hero de app.css, B6). Lo que
+   compensa una brecha de src/ui está pedido en «requests». */
+
+/* AUTH-01 · Hero: logo T a 32 del borde, la ilustración pegada abajo y las
+   esquinas inferiores en radius-xl (prototipo). */
+.onb-hero {
+  flex: none; display: flex; flex-direction: column; align-items: center; overflow: hidden;
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+}
+.onb-hero > .tl-statusbar { align-self: stretch; }
+.onb-hero__logo { margin-top: var(--space-8); }
+.onb-hero__art { display: block; width: 100%; max-width: var(--layout-frame-width); margin-top: var(--space-16); line-height: 0; }
+.onb-hero__art > svg { display: block; width: 100%; height: auto; }
+
+/* AUTH-01 · Título y bajada centrados bajo el hero. */
+.onb-welcome {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  box-sizing: border-box; width: 100%; max-width: var(--layout-content-max); margin: 0 auto;
+  padding: var(--space-6) var(--space-4) 0;
+}
+.onb-welcome__title { margin: 0 0 var(--space-2); }
+
+/* Tonos y márgenes de texto sobre las clases de tokens.css (.body, .body-l…). */
+.onb-muted { color: var(--color-text-2); }
+.onb-flush { margin: 0; }
+.onb-strong { color: var(--color-text); font-weight: 600; }
+.onb-grow { flex: 1; min-width: 0; }
+.onb-note { margin: var(--space-4) 0 0; }
+.onb-after { margin: var(--space-2) 0 0; }
+.onb-chipnote { margin: var(--space-2) 0 0; }
+.onb-label { display: block; }
+.onb-subhead { margin: 0 0 var(--space-4); }
+
+/* AUTH-02 · El separador «o» va a 4 del botón de Google y del primer campo. */
+.onb-divider > .tl-divider { margin: var(--space-1) 0; }
+
+/* AUTH-03 · «Reenviar código» a 8 de la ayuda. */
+.onb-resend { margin-top: var(--space-2); }
+
+/* Campos lado a lado (Nombre · Apellido, Desde · Hasta). */
+.onb-grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+
+/* ONB-03 · Foto: el avatar y, a su lado, «Tomar foto» y «Elegir de la galería» uno sobre otro. */
+.onb-photo { display: flex; align-items: center; gap: var(--space-4); }
+.onb-photo__actions { flex-direction: column; align-items: stretch; }
+
+/* ONB-T1 · «Marcar como principal» alineado con el texto (el ghost trae su padding)
+   y el basurero en color-text-2, pegado a la esquina de la tarjeta. */
+.onb-pull { margin-left: calc(-1 * var(--space-3)); }
+.onb-trash { --ib-fg: var(--color-text-2); margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-2)) 0 0; }
+
+/* ONB-T4 · La credencial recibe el foco cuando el botón tocado desaparece. */
+.onb-slot:focus { outline: 0; }
+
+/* Hojas: listas planas cuyas filas llegan al borde de la hoja. */
+.onb-sheet-list { margin: var(--space-1) calc(-1 * var(--space-4)) 0; }
+
+/* ONB-99 · Contador del encabezado y filas de la sección «Perfil de trabajo». */
+.onb-count { margin-right: var(--space-2); }
+.onb-row { align-items: center; }
+.onb-row--col { flex-direction: column; gap: var(--space-2); }
+.onb-done { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.onb-done__item { display: flex; align-items: flex-start; gap: var(--space-2); color: var(--color-text); }
+/* El check de 16 centrado en la primera línea de 20. */
+.onb-done__check { flex: none; display: inline-flex; margin-top: calc((var(--space-5) - var(--space-4)) / 2); color: var(--color-success-text); }

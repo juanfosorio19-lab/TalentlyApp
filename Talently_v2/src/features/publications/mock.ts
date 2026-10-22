@@ -5,30 +5,11 @@ import { getApplications, getExplore, getHomeFeed, getPerson, getProfile } from 
 import type { DemoActorId } from '../demo/session';
 
 /**
- * Publicaciones que el prototipo muestra ANTES de postular: los datos de
- * demostración traen el «después» (ACT-02 ya dice «Postulado», PRC-01 ya
- * está en entrevista). Para que los flujos 2 y 3 se puedan recorrer, en
- * estas el actor parte sin postulación hasta que postula en la sesión.
+ * ¿Los datos traen el celular del actor verificado? Es lo de antes de la
+ * sesión: si además lo verificó en AUTH-08 (o si el prototipo lo hace
+ * verificar en su flujo) lo decide isPhoneVerified de demo/sessionStore.
  */
-const FLOW_START: Partial<Record<DemoActorId, readonly string[]>> = {
-    matias: ['turno-garzones-matrimonio'], // flujo 2 · DET-01-turno
-    pedro: ['empleo-mecanico-automotriz'], // flujo 3 · DET-01-empleo-pedro
-    jorge: ['empleo-guardia-4x4'], // apoyo · DET-01-empleo, DET-02, DET-03
-};
-
-export function startsWithoutApplication(actorId: DemoActorId, publicationId: string): boolean {
-    return FLOW_START[actorId]?.includes(publicationId) ?? false;
-}
-
-/**
- * Matías verifica su teléfono en AUTH-08 (flujo 2): sus datos ya lo traen
- * verificado porque muestran el después. Al empezar la sesión, todavía no.
- */
-const PHONE_PENDING_AT_START: readonly DemoActorId[] = ['matias'];
-
-/** ¿El actor ya tiene su celular verificado según los datos (antes de esta sesión)? */
 export function phoneVerifiedInData(actorId: DemoActorId): boolean {
-    if (PHONE_PENDING_AT_START.includes(actorId)) return false;
     return getPerson(actorId)?.verificaciones.some((v) => v.label === 'Teléfono verificado' && v.status === 'verified') ?? false;
 }
 
@@ -79,14 +60,6 @@ export const VERIFICATION_DETAIL: Record<string, string> = {
 };
 
 /**
- * Nombre corto de una organización para el texto del match: «Seguridad
- * Andes» de «Seguridad Andes Ltda.» (DET-03). Quita solo la razón social.
- */
-export function shortOrgName(nombre: string): string {
-    return nombre.replace(/\s+(Ltda\.|Limitada|SpA|S\.A\.|EIRL|E\.I\.R\.L\.)$/u, '');
-}
-
-/**
  * «Requisitos · para ti» (Tienes tu credencial SPD vigente, Tu nota es 4,8)
  * está escrito para quien mira la publicación en el prototipo. Solo se
  * muestra a ese actor: la publicación está en su Explorar, en su Inicio o en
@@ -105,9 +78,6 @@ export function isWrittenFor(actorId: DemoActorId, publicationId: string): boole
         (b) => (b.tipo === 'turnos' || b.tipo === 'empleos') && b.publicaciones.includes(publicationId),
     );
 }
-
-/** El match llega un rato después de postular (en el prototipo, el «salto de tiempo» de la barra de estado). */
-export const MATCH_DELAY_MS = 3000;
 
 /** Esperas simuladas mientras Supabase está pausado: enviar el código, verificarlo, postular. */
 export const DEMO_LATENCY_MS = 600;

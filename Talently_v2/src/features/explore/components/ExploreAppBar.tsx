@@ -1,13 +1,14 @@
 // AppBar large de la pestaña Explorar (spec §5.1): Buscar, Filtros con su
-// contador (solo aquí) y la campana con las notificaciones sin leer reales.
+// contador (solo aquí) y la campana con las notificaciones sin leer reales
+// (useInbox: la misma cifra que Inicio y NOT-01).
 import { paths } from '../../../app/paths';
 import { AppBar, useScrolled } from '../../../ui/AppBar';
 import { IconButton } from '../../../ui/IconButton';
 import { IconBell, IconFilter, IconSearch } from '../../../ui/icons';
-import { getHomeFeed } from '../../demo/data';
 import { useDemoSession } from '../../demo/session';
+import { useInbox } from '../../demo/sessionStore';
 import { copy } from '../copy';
-import { useLinks } from './useLinks';
+import { useGo } from './hooks';
 
 export interface ExploreAppBarProps {
     /** Filtros activos del segmento (contador del botón). */
@@ -17,14 +18,16 @@ export interface ExploreAppBarProps {
 }
 
 export function ExploreAppBar({ filterCount, onFilters }: ExploreAppBarProps) {
-    const { actor } = useDemoSession();
-    const { go } = useLinks();
+    const { actor, recienRegistrado } = useDemoSession();
+    const { unread } = useInbox(actor.id, recienRegistrado);
+    const { go } = useGo();
     const scrolled = useScrolled();
-    const unread = getHomeFeed(actor.id).notificacionesSinLeer;
     return (
         <AppBar
             title={copy.titulo}
             scrolled={scrolled}
+            // Sobre la cabecera fija (SegmentedControl y chips), para que su sombra se vea encima.
+            className="explore-appbar"
             actions={
                 <>
                     <IconButton icon={IconSearch} label={copy.appBar.buscar} onClick={() => go(paths.buscar())} />

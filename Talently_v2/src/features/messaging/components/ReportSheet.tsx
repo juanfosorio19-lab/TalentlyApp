@@ -1,5 +1,6 @@
-// SHT-REPORTE · Reportar (M5): los 7 motivos tipificados en su orden, un
-// TextArea opcional y «Enviar reporte», que se habilita al elegir un motivo.
+// SHT-REPORTE · Reportar (M5, ?sheet=reportar): los 7 motivos tipificados en
+// su orden, un TextArea opcional y «Enviar reporte», que se habilita al elegir
+// un motivo.
 import { useState } from 'react';
 import { BottomSheet } from '../../../ui/BottomSheet';
 import { Button } from '../../../ui/Button';
@@ -8,7 +9,7 @@ import { RadioGroup } from '../../../ui/Radio';
 import { TextArea } from '../../../ui/TextArea';
 import { copy } from '../copy';
 
-export const sheetId = 'SHT-REPORTE';
+export const screenId = 'SHT-REPORTE';
 
 const REASONS = copy.report.reasons.map((r) => ({ value: r, label: r }));
 
@@ -22,12 +23,18 @@ interface ReportSheetProps {
 export function ReportSheet({ open, onClose, onSend }: ReportSheetProps) {
     const [reason, setReason] = useState<string | null>(null);
     const [details, setDetails] = useState('');
+    // Cada vez que se abre parte vacía: también si antes se cerró con el atrás del navegador o de Android.
+    const [wasOpen, setWasOpen] = useState(open);
+    if (open !== wasOpen) {
+        setWasOpen(open);
+        if (open) {
+            setReason(null);
+            setDetails('');
+        }
+    }
 
     const send = () => {
-        if (!reason) return;
-        onSend(reason, details.trim());
-        setReason(null);
-        setDetails('');
+        if (reason) onSend(reason, details.trim());
     };
 
     return (
@@ -41,7 +48,7 @@ export function ReportSheet({ open, onClose, onSend }: ReportSheetProps) {
                 </Button>
             }
         >
-            <Stack gap={6} data-screen-id={sheetId}>
+            <Stack gap={6} data-screen-id={screenId}>
                 <RadioGroup legend={copy.report.legend} options={REASONS} value={reason} onChange={setReason} />
                 <TextArea
                     label={copy.report.details}

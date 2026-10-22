@@ -6,29 +6,31 @@
 // Radio de src/ui no tiene lugar para el Avatar antes del texto: la fila se
 // arma con sus piezas tl-choice, igual que el catálogo de BottomSheet (pedido
 // en «requests», junto con mover esta hoja a un lugar común con Inicio).
-// Con el teclado se comporta como la de Inicio y SheetPicker: las flechas solo
-// recorren la lista; Espacio, Enter o un toque eligen y cierran.
+// Con el teclado se comporta como SheetPicker: las flechas solo recorren la
+// lista; Espacio, Enter o un toque eligen y cierran. Vive en la URL
+// (`?sheet=actor`): `onClose` es el `hide` de useSheet.
 import { useId, useRef, type KeyboardEvent, type MouseEvent } from 'react';
 import { Avatar } from '../../../ui/Avatar';
 import { BottomSheet } from '../../../ui/BottomSheet';
 import { IconAdd } from '../../../ui/icons';
 import { List, ListItem } from '../../../ui/ListItem';
 import { useSnackbar } from '../../../ui/Snackbar';
+import { paths } from '../../../app/paths';
+import { useOpenPath } from '../../../app/navigation/useOpenPath';
 import { getProfile } from '../../demo/data';
 import { useDemoSession, type DemoActorId } from '../../demo/session';
-import { focusActorSelectorAfterSwitch } from '../actor';
+import { useInbox } from '../../demo/sessionStore';
 import { COPY } from '../copy';
-import { useInbox } from '../inbox';
-import { useSoon } from '../useOpenRoute';
 
 const isRadio = (target: EventTarget): target is HTMLInputElement =>
     target instanceof HTMLInputElement && target.type === 'radio';
 
 export function ActorSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-    const { actor, switchable, setActor } = useDemoSession();
-    const { items } = useInbox();
+    const { actor, switchable, setActor, recienRegistrado } = useDemoSession();
+    // La bandeja de la persona (una organización ve la de quien la administra), con lo leído al día.
+    const { items } = useInbox(actor.id, recienRegistrado);
     const { show } = useSnackbar();
-    const soon = useSoon();
+    const { open: openPath } = useOpenPath();
     const name = useId();
     // Si el cambio que viene llega por una flecha: el radio nativo se marca al
     // moverse, pero eso solo recorre la lista (ni cambia de actor ni cierra).
@@ -39,7 +41,7 @@ export function ActorSheet({ open, onClose }: { open: boolean; onClose: () => vo
         onClose();
         if (id === actor.id) return;
         const next = switchable.find((a) => a.id === id);
-        focusActorSelectorAfterSwitch();
+        // El AppBar de la pestaña no se vuelve a montar: al cerrarse la hoja, el foco vuelve al selector.
         setActor(id);
         if (next) show({ message: COPY.actor.cambiaste(next.fullName), tone: 'success' });
     };
@@ -113,7 +115,13 @@ export function ActorSheet({ open, onClose }: { open: boolean; onClose: () => vo
                 })}
             </div>
             <List flat className="prf-sheet-list">
-                <ListItem icon={IconAdd} title={COPY.actor.crearOrganizacion} chevron={false} onClick={() => soon()} />
+                <ListItem
+                    icon={IconAdd}
+                    title={COPY.actor.crearOrganizacion}
+                    chevron={false}
+                    // ONB-O1 a ONB-O4 (spec §6.4): mientras no exista, «Disponible pronto».
+                    onClick={() => openPath(paths.onboarding('organizacion', 1))}
+                />
             </List>
             <p className="caption prf-muted prf-sheet-note">{COPY.actor.notaHogar}</p>
         </BottomSheet>

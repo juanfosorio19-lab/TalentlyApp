@@ -1,11 +1,16 @@
 // TUR-01 · Mi turno (/turnos/:assignmentId, prototipo TUR-01): lo que solo
 // ve quien fue confirmado. Quién publica (con su insignia), el bloque del
-// turno, «Agregar al calendario», «Dónde y con quién», la confirmación de
-// asistencia 24 h y 2 h antes, la conversación, compartir el turno y
-// cancelarlo (con la regla de 12 h). Cancelado, queda el bloque con su Badge
-// «Cancelaste» y la conversación. El :assignmentId es el id de la postulación
-// (DemoApplication) mientras Supabase está pausado.
-import { useState } from 'react';
+// turno, «Agregar al calendario» (.ics con buildIcs), «Dónde y con quién», la
+// confirmación de asistencia 24 h y 2 h antes, la conversación, compartir el
+// turno y cancelarlo (con la regla de 12 h). Si el turno ya pasó, o hay uno
+// anterior por evaluar (la evaluación se pide antes de postular al siguiente,
+// spec §5.2), «Dejar reseña» lleva a REV-01 (flujo 2). Cancelado, queda el
+// bloque con su Badge «Cancelaste» y la conversación. La postulación sale de
+// la sesión (useApplications) y la cancelación se guarda allí (cancelShift):
+// ACT-02, la Agenda e Inicio la ven igual. El :assignmentId es el id de la
+// postulación (DemoApplication) mientras Supabase está pausado. La hoja de
+// verificación y el diálogo de cancelar van en la URL (?sheet=).
+import { useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { AppBar, useScrolled } from '../../../ui/AppBar';
@@ -25,6 +30,7 @@ import {
     IconMoney,
     IconPerson,
     IconShare,
+    IconStar,
     type IconComponent,
 } from '../../../ui/icons';
 import { Stack } from '../../../ui/Layout';
@@ -34,18 +40,29 @@ import { ShiftBlock, ShiftBlocks } from '../../../ui/ShiftBlock';
 import { useSnackbar } from '../../../ui/Snackbar';
 import { VerificationBadge } from '../../../ui/VerificationBadge';
 import { useGoBack } from '../../../app/BackButtonManager';
+import { useOpenPath } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
+import { useSheet } from '../../../app/sheets';
+import { buildIcs } from '../../../domain/calendario';
 import { useDemoSession } from '../../demo/session';
-import { getApplication } from '../../demo/data';
+import { cancelShift, useApplications, useInbox } from '../../demo/sessionStore';
+import { targetPath } from '../../demo/targets';
 import type { DemoApplication, DemoMyShift, DemoRow } from '../../demo/types';
 import { DetailRow } from '../components/DetailRow';
 import { FactList } from '../components/FactList';
-import { LinkListItem } from '../components/LinkListItem';
 import { VerificationSheet } from '../components/VerificationSheet';
 import { copy } from '../copy';
-import { useGo } from '../navigation';
-import { isoFromBlock, minutesUntil, seeksWork, splitTimeRange } from '../selectors';
-import { cancelShift, useCancelledShifts } from '../shiftStore';
+import {
+    googleCalendarUrl,
+    hasEnded,
+    icsFileName,
+    minutesUntil,
+    pendingReviewsFor,
+    seeksWork,
+    shiftCalendarEvent,
+    shiftWindow,
+    type ShiftWindow,
+} from '../selectors';
 import '../activity.css';
 
 export const screenId = 'TUR-01';
@@ -67,62 +84,14 @@ function rowText(row: DemoRow): string {
 
 const rowValue = (shift: DemoMyShift, label: string) => shift.filas.find((f) => f.label.startsWith(label))?.value;
 
-const TIME_ZONE = 'America/Santiago';
-
-/** Inicio y término del turno en hora local de Chile («20261210T190000»), y dónde. */
-function calendarEventOf(shift: DemoMyShift, date: string) {
-    const { start, end } = splitTimeRange(shift.bloque.time);
-    const stamp = (d: string, t: string) => `${d.replaceAll('-', '')}T${t.replace(':', '')}00`;
-    // Termina al día siguiente si la hora de término es menor que la de inicio (18:00–02:00).
-    const endDate = end <= start ? nextDay(date) : date;
-    return {
-        start: stamp(date, start),
-        end: stamp(endDate, end),
-        where: rowValue(shift, 'Dirección') ?? shift.comuna,
-    };
-}
-
-/** Calendario (.ics) del turno, en hora local de Chile (RFC 5545: DTSTAMP en cada VEVENT). */
-function icsOf(shift: DemoMyShift, date: string): string {
-    const event = calendarEventOf(shift, date);
-    const escape = (s: string) => s.replace(/[\\,;]/g, (c) => `\\${c}`);
-    return [
-        'BEGIN:VCALENDAR',
-        'VERSION:2.0',
-        'PRODID:-//Talently//Mi turno//ES',
-        'BEGIN:VEVENT',
-        `UID:${shift.bloque.id}@talently`,
-        `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`,
-        `DTSTART;TZID=${TIME_ZONE}:${event.start}`,
-        `DTEND;TZID=${TIME_ZONE}:${event.end}`,
-        `SUMMARY:${escape(shift.titulo)}`,
-        `LOCATION:${escape(event.where)}`,
-        'END:VEVENT',
-        'END:VCALENDAR',
-    ].join('\r\n');
-}
-
-/** Plantilla «Crear evento» de Google Calendar: en el teléfono no necesita plugin. */
-function googleCalendarUrlOf(shift: DemoMyShift, date: string): string {
-    const event = calendarEventOf(shift, date);
-    const query = new URLSearchParams({ action: 'TEMPLATE', text: shift.titulo, ctz: TIME_ZONE, location: event.where });
-    // `dates` va con su barra tal cual: «20261210T190000/20261211T000000».
-    return `https://calendar.google.com/calendar/render?${query.toString()}&dates=${event.start}/${event.end}`;
-}
-
-function nextDay(iso: string): string {
-    const [y = 1970, m = 1, d = 1] = iso.split('-').map(Number);
-    return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
-}
-
 function NotFound() {
-    const go = useGo();
+    const { open } = useOpenPath();
     const goBack = useGoBack();
     const { actor } = useDemoSession();
-    // Solo quien busca trabajo tiene Postulaciones; los demás vuelven a su Actividad.
+    // Solo quien busca trabajo tiene Postulaciones; los demás vuelven a su Actividad (replace: es otra pestaña).
     const action = seeksWork(actor)
-        ? { label: copy.shift.seeApplications, onClick: () => go(paths.actividad('postulaciones')) }
-        : { label: copy.shift.goActivity, onClick: () => go(paths.actividad()) };
+        ? { label: copy.shift.seeApplications, onClick: () => open(paths.actividad('postulaciones'), { replace: true }) }
+        : { label: copy.shift.goActivity, onClick: () => open(paths.actividad(), { replace: true }) };
     return (
         <div className="tl-app-screen">
             <AppBar variant="standard" title={copy.shift.title} onBack={goBack} />
@@ -140,57 +109,108 @@ function NotFound() {
 
 export function MyShiftScreen() {
     const { assignmentId } = useParams();
-    const { actor } = useDemoSession();
-    const application = assignmentId ? getApplication(assignmentId) : undefined;
-    // Solo quien fue confirmado ve la dirección exacta y la encargada.
-    if (!application?.miTurno || application.actorId !== actor.id) return <NotFound />;
+    const { actor, recienRegistrado } = useDemoSession();
+    // Solo las postulaciones del actor en esta sesión: quien fue confirmado ve la dirección exacta y la encargada.
+    const application = useApplications(actor.id, recienRegistrado).find((a) => a.id === assignmentId);
+    if (!application?.miTurno) return <NotFound />;
     return <MyShift application={application} shift={application.miTurno} />;
+}
+
+interface ReviewCardProps {
+    title: string;
+    text: string;
+    path: string;
+    /** El turno ya pasó: evaluarlo es la acción principal de la pantalla. */
+    primary?: boolean;
+}
+
+/** «Dejar reseña» → REV-01. */
+function ReviewCard({ title, text, path, primary }: ReviewCardProps) {
+    const { open } = useOpenPath();
+    return (
+        <Card>
+            <Stack gap={3} align="start">
+                <Stack gap={1}>
+                    <h2 className="button-lg act-text">{title}</h2>
+                    <p className="body act-muted">{text}</p>
+                </Stack>
+                <Button variant={primary ? 'primary' : 'tonal'} icon={IconStar} onClick={() => open(path)}>
+                    {copy.shift.review}
+                </Button>
+            </Stack>
+        </Card>
+    );
 }
 
 function MyShift({ application, shift }: { application: DemoApplication; shift: DemoMyShift }) {
     const goBack = useGoBack();
     const scrolled = useScrolled();
     const snackbar = useSnackbar();
-    const cancelledShifts = useCancelledShifts();
-    const [verificationOpen, setVerificationOpen] = useState(false);
-    const [cancelOpen, setCancelOpen] = useState(false);
+    const { linkProps } = useOpenPath();
+    const { actor, recienRegistrado } = useDemoSession();
+    const { items: notifications } = useInbox(actor.id, recienRegistrado);
+    const verificationSheet = useSheet('verificacion');
+    const cancelDialog = useSheet('cancelar');
+    const titleRef = useRef<HTMLHeadingElement>(null);
+    const focusTitleAfterCancel = useRef(false);
 
     const org = application.autor;
-    const cancelled = cancelledShifts.has(application.id);
-    const date = isoFromBlock(shift.bloque);
-    const { start } = splitTimeRange(shift.bloque.time);
-    const late = date ? minutesUntil(date, start) < LATE_CANCEL_MIN : true;
+    const cancelled = application.estado === 'Cancelaste';
+    const slot = shiftWindow(shift.bloque);
+    const late = slot ? minutesUntil(slot.date, slot.start) < LATE_CANCEL_MIN : true;
+    const ended = slot ? hasEnded(slot) : false;
+    const active = !cancelled && !ended;
     const verification = org.verificaciones[0];
     const fecha = `${shift.bloque.weekday} ${shift.bloque.day} ${shift.bloque.month}`;
+    const address = rowValue(shift, 'Dirección');
+    const reviewPath = targetPath({ pantalla: 'evaluar', publicationId: application.publicationId }, actor.id);
+    const pendingReviews = pendingReviewsFor(notifications, actor.id, application.publicationId);
 
-    const addToCalendar = async (day: string) => {
-        // En el teléfono, la plantilla de Google Calendar en el navegador del sistema (sin plugin de calendario).
+    // Al cancelar se van «Cancelar turno» y su diálogo: el foco pasa al título (no queda en el body).
+    // El diálogo se cierra en el mismo cambio (y su foco vuelve a un botón que ya no está): esto corre después.
+    useEffect(() => {
+        if (!cancelled || !focusTitleAfterCancel.current) return;
+        focusTitleAfterCancel.current = false;
+        titleRef.current?.focus();
+    }, [cancelled]);
+
+    const addToCalendar = async (w: ShiftWindow) => {
+        const event = shiftCalendarEvent(
+            `${application.id}-${shift.bloque.id}`,
+            shift.titulo,
+            w,
+            address ?? shift.comuna,
+            org.nombre,
+        );
+        const file = new File([buildIcs(event)], icsFileName(shift.titulo), { type: 'text/calendar' });
         if (Capacitor.isNativePlatform()) {
+            // En el teléfono: compartir el .ics (el sistema ofrece el calendario) o, si el WebView no
+            // comparte archivos, la plantilla de Google Calendar en el navegador del sistema.
             try {
+                if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
+                    await navigator.share({ files: [file], title: shift.titulo });
+                    return;
+                }
                 const { Browser } = await import('@capacitor/browser');
-                await Browser.open({ url: googleCalendarUrlOf(shift, day) });
-            } catch {
+                await Browser.open({ url: googleCalendarUrl(event) });
+            } catch (error) {
+                // La persona cerró la hoja de compartir: no es un error.
+                if (error instanceof DOMException && error.name === 'AbortError') return;
                 snackbar.show({ message: copy.shift.calendarError, tone: 'error' });
             }
             return;
         }
-        const url = URL.createObjectURL(new Blob([icsOf(shift, day)], { type: 'text/calendar' }));
+        const url = URL.createObjectURL(file);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'mi-turno.ics';
+        a.download = file.name;
         a.click();
         window.setTimeout(() => URL.revokeObjectURL(url), 1000);
         snackbar.show({ message: copy.shift.calendarDownloaded, tone: 'success' });
     };
 
     const share = async () => {
-        const text = copy.shift.shareText(
-            shift.titulo,
-            fecha,
-            shift.bloque.time,
-            rowValue(shift, 'Dirección'),
-            rowValue(shift, 'Hora de llegada'),
-        );
+        const text = copy.shift.shareText(shift.titulo, fecha, shift.bloque.time, address, rowValue(shift, 'Hora de llegada'));
         if (typeof navigator.share === 'function') {
             try {
                 await navigator.share({ title: copy.shift.title, text });
@@ -209,8 +229,9 @@ function MyShift({ application, shift }: { application: DemoApplication; shift: 
     };
 
     const confirmCancel = () => {
+        focusTitleAfterCancel.current = true;
         cancelShift(application.id);
-        setCancelOpen(false);
+        cancelDialog.hide();
         snackbar.show({ message: copy.shift.cancelled });
     };
 
@@ -232,7 +253,8 @@ function MyShift({ application, shift }: { application: DemoApplication; shift: 
                                     {verification && (
                                         <VerificationBadge
                                             status={verification.status}
-                                            onClick={() => setVerificationOpen(true)}
+                                            aria-haspopup="dialog"
+                                            onClick={() => verificationSheet.show()}
                                         >
                                             {verification.label}
                                         </VerificationBadge>
@@ -240,9 +262,11 @@ function MyShift({ application, shift }: { application: DemoApplication; shift: 
                                 </div>
                             </Stack>
                             <Stack gap={1} align="start">
-                                <h1 className="h2 act-text">{shift.titulo}</h1>
+                                <h1 ref={titleRef} tabIndex={-1} className="h2 act-text tl-focus">
+                                    {shift.titulo}
+                                </h1>
                                 <span className="body act-muted">{shift.comuna}</span>
-                                <Badge status={cancelled ? 'Cancelaste' : shift.estado} />
+                                <Badge status={application.estado} />
                             </Stack>
                         </Stack>
 
@@ -256,20 +280,24 @@ function MyShift({ application, shift }: { application: DemoApplication; shift: 
                                     duration={shift.bloque.duration}
                                 />
                             </ShiftBlocks>
-                            {/* Sin un día que se entienda no hay qué agregar: el botón no se muestra. */}
-                            {!cancelled && date && (
+                            {/* Sin un horario que se entienda no hay qué agregar: el botón no se muestra. */}
+                            {active && slot && (
                                 <div>
                                     <Button
                                         variant="tonal"
                                         size="sm"
                                         icon={IconCalendar}
-                                        onClick={() => void addToCalendar(date)}
+                                        onClick={() => void addToCalendar(slot)}
                                     >
                                         {copy.shift.addToCalendar}
                                     </Button>
                                 </div>
                             )}
                         </Stack>
+
+                        {!cancelled && ended && (
+                            <ReviewCard title={copy.shift.reviewTitle} text={copy.shift.reviewNote} path={reviewPath} primary />
+                        )}
 
                         {/* Al cancelar deja de estar confirmado: ya no ve la dirección exacta ni la encargada. */}
                         {!cancelled && (
@@ -282,7 +310,7 @@ function MyShift({ application, shift }: { application: DemoApplication; shift: 
                             </SectionCard>
                         )}
 
-                        {!cancelled && (
+                        {active && (
                             <Card>
                                 <Stack gap={2}>
                                     <h2 className="button-lg act-text">{shift.confirmacion.titulo}</h2>
@@ -294,17 +322,26 @@ function MyShift({ application, shift }: { application: DemoApplication; shift: 
                             </Card>
                         )}
 
-                        {(shift.conversationId || !cancelled) && (
+                        {pendingReviews.map((r) => (
+                            <ReviewCard
+                                key={r.id}
+                                title={r.title}
+                                text={copy.shift.pendingReviewNote(r.from)}
+                                path={targetPath(r.target, actor.id)}
+                            />
+                        ))}
+
+                        {(shift.conversationId || active) && (
                             <List>
                                 {shift.conversationId && (
-                                    <LinkListItem
-                                        to={paths.conversacion(shift.conversationId)}
+                                    <ListItem
+                                        {...linkProps(paths.conversacion(shift.conversationId))}
                                         icon={IconChat}
                                         title={copy.shift.chat}
                                         sub={org.nombre}
                                     />
                                 )}
-                                {!cancelled && (
+                                {active && (
                                     <ListItem
                                         icon={IconShare}
                                         title={copy.shift.share}
@@ -316,7 +353,7 @@ function MyShift({ application, shift }: { application: DemoApplication; shift: 
                             </List>
                         )}
 
-                        {!cancelled && (
+                        {active && (
                             <List>
                                 <ListItem
                                     danger
@@ -324,7 +361,7 @@ function MyShift({ application, shift }: { application: DemoApplication; shift: 
                                     title={copy.shift.cancel}
                                     sub={copy.shift.cancelSub}
                                     aria-haspopup="dialog"
-                                    onClick={() => setCancelOpen(true)}
+                                    onClick={() => cancelDialog.show()}
                                 />
                             </List>
                         )}
@@ -333,14 +370,14 @@ function MyShift({ application, shift }: { application: DemoApplication; shift: 
             </main>
 
             <VerificationSheet
-                open={verificationOpen}
-                onClose={() => setVerificationOpen(false)}
+                open={verificationSheet.open}
+                onClose={verificationSheet.hide}
                 name={org.nombre}
                 verifications={org.verificaciones}
             />
             <Dialog
-                open={cancelOpen}
-                onClose={() => setCancelOpen(false)}
+                open={cancelDialog.open && active}
+                onClose={cancelDialog.hide}
                 title={copy.shift.cancelDialogTitle}
                 cancelLabel={copy.shift.keep}
                 confirmLabel={copy.shift.cancel}
@@ -352,3 +389,4 @@ function MyShift({ application, shift }: { application: DemoApplication; shift: 
         </div>
     );
 }
+

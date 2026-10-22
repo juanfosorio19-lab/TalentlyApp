@@ -3,11 +3,14 @@
 // DET-01-turno-postulado, DET-01-turno--f9). AppBar transparente sobre la
 // cabecera de quien publica, los bloques del detalle y el CTA fijo con el
 // aviso de Talently: «Tomar turno» en un turno, «No me interesa» / «Me
-// interesa» en un empleo. Desde aquí se abren AUTH-08 (Verificar teléfono,
-// antes del primer acto transaccional), DET-02 (Postular) y DET-03 (¡Hicieron
-// match!, que lleva a la conversación).
-import { useEffect, useState, type MouseEvent } from 'react';
-import { useHref, useNavigate, useParams } from 'react-router-dom';
+// interesa» en un empleo. Las hojas viven en la URL: `?sheet=telefono`
+// (AUTH-08, antes del primer acto transaccional), `?sheet=postular` (DET-02),
+// `?sheet=verificacion` y `?sheet=opciones`. Lo que pasa aquí (postular,
+// verificar el celular, «No me interesa») va a demo/sessionStore para que
+// ACT-02, la Agenda, Inicio y el deck lo vean; el match (DET-03) lo muestra
+// MatchHost sobre cualquier pantalla.
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useHref, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ActionPair } from '../../../ui/ActionPair';
 import { AppBar, useScrolled } from '../../../ui/AppBar';
 import { Amount, type AmountFormatOptions } from '../../../ui/Amount';
@@ -20,15 +23,17 @@ import { IconButton } from '../../../ui/IconButton';
 import { IconInfo, IconLocation, IconMore, IconShare } from '../../../ui/icons';
 import { InfoTag, InfoTags } from '../../../ui/InfoTag';
 import { Stack } from '../../../ui/Layout';
-import { MatchModal } from '../../../ui/MatchModal';
 import { SectionCard } from '../../../ui/SectionCard';
 import { ShiftBlock, ShiftBlocks } from '../../../ui/ShiftBlock';
 import { SnackbarOutlet, useSnackbar } from '../../../ui/Snackbar';
 import { useGoBack } from '../../../app/BackButtonManager';
+import { useOpenPath, type LinkTargetProps } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
+import { useSheet } from '../../../app/sheets';
 import { NotFoundScreen } from '../../../app/system/NotFoundScreen';
-import { useDemoSession } from '../../demo/session';
 import { getPublication } from '../../demo/data';
+import { DEMO_ACTORS, useDemoSession, type DemoActorId } from '../../demo/session';
+import { applyTo, decide, scheduleMatch, useApplications, useSessionApplication, verifyPhone } from '../../demo/sessionStore';
 import type { DemoInfoTag, DemoPublication } from '../../demo/types';
 import { ApplySheet } from '../components/ApplySheet';
 import {
@@ -41,13 +46,13 @@ import {
     RequirementsSection,
 } from '../components/DetailParts';
 import { MoreSheet, VerificationSheet } from '../components/DetailSheets';
-import { useMoreBelow, useOpenPath } from '../components/hooks';
+import { useMoreBelow, useOpenCount, usePhoneVerified } from '../components/hooks';
 import { PhoneSheet } from '../components/PhoneSheet';
 import { useLater } from '../components/useLater';
 import { copy } from '../copy';
-import { DEMO_LATENCY_MS, MATCH_DELAY_MS, isWrittenFor, profileCv, shortOrgName } from '../mock';
-import { detailCta, hasVerifiedPhone, isAccepting, matchConversation, rowIcon, rowText, type DetailCta } from '../model';
-import { applyTo, markMatchSeen, usePublicationSession, verifyPhone } from '../store';
+import { matchConversation } from '../match';
+import { DEMO_LATENCY_MS, isWrittenFor, profileCv } from '../mock';
+import { detailCta, isAccepting, rowIcon, rowText, shareUrl, type DetailCta } from '../model';
 import '../publications.css';
 
 export const screenId = 'DET-01';
@@ -57,7 +62,7 @@ export function PublicationDetailScreen() {
     const { actor } = useDemoSession();
     const publication = id ? getPublication(id) : undefined;
     if (!publication) return <NotFoundScreen />;
-    // Otro actor u otra publicación parten de cero (hojas cerradas, sin match pendiente).
+    // Otro actor u otra publicación parten de cero.
     return <PublicationDetail key={`${actor.id}:${publication.id}`} pub={publication} />;
 }
 
@@ -76,97 +81,143 @@ function stateBadge(pub: DemoPublication, cta: DetailCta): BadgeStatus | null {
     return pub.tipo === 'empleo' ? 'Oferta cerrada' : 'Cerrada';
 }
 
-type PhoneRequest = { open: boolean; key: number; next: 'take' | 'apply' };
+/** Lo que useSheet deja en `location.state` cuando la app abrió la hoja (atrás la cierra). */
+type SheetState = { sheet?: string } | null;
+
+/**
+ * Cambia la hoja abierta por otra (AUTH-08 → DET-02) o la quita, sin dejar
+ * historial: el atrás sigue cerrándola como a la de antes. Si la abrió la
+ * app, quitarla es volver; si se llegó por un enlace, se quita con replace.
+ */
+function useSwapSheet(): (to: string | null) => void {
+    const navigate = useNavigate();
+    const location = useLocation();
+    // Una sola vez por entrada del historial (los efectos de StrictMode corren dos veces).
+    const swappedFrom = useRef<string | null>(null);
+    return useCallback(
+        (to: string | null) => {
+            if (swappedFrom.current === location.key) return;
+            swappedFrom.current = location.key;
+            const openedByApp = Boolean((location.state as SheetState)?.sheet);
+            if (!to && openedByApp) {
+                navigate(-1);
+                return;
+            }
+            const next = new URLSearchParams(location.search);
+            if (to) next.set('sheet', to);
+            else next.delete('sheet');
+            navigate(
+                { pathname: location.pathname, search: next.size ? `?${next}` : '' },
+                { replace: true, preventScrollReset: true, state: to && openedByApp ? ({ sheet: to } satisfies SheetState) : null },
+            );
+        },
+        [location.key, location.pathname, location.search, location.state, navigate],
+    );
+}
 
 function PublicationDetail({ pub }: { pub: DemoPublication }) {
-    const { actor } = useDemoSession();
+    const { actor, recienRegistrado, setActor } = useDemoSession();
     const goBack = useGoBack();
-    const navigate = useNavigate();
     const snackbar = useSnackbar();
     const later = useLater();
     const scrolled = useScrolled();
     const moreBelow = useMoreBelow();
-    const { open: openPath } = useOpenPath();
-    const session = usePublicationSession(actor.id, pub.id);
+    const { open: openPath, canOpen, linkProps, soon } = useOpenPath();
+    const swapSheet = useSwapSheet();
 
-    const cta = detailCta(actor, pub, session);
-    const conversation = matchConversation(actor, pub);
-    const forViewer = isWrittenFor(actor.id, pub.id);
+    const applications = useApplications(actor.id, recienRegistrado);
+    const sessionApplication = useSessionApplication(actor.id, pub.id);
+    const phoneOk = usePhoneVerified(actor.id, recienRegistrado);
+    const cta = detailCta(actor, pub, applications, sessionApplication?.estado);
+    const forViewer = !recienRegistrado && isWrittenFor(actor.id, pub.id);
+    const cv = recienRegistrado ? undefined : profileCv(actor.id);
     const orgPath = pub.autor.tipo === 'persona' ? paths.perfilPublico(pub.autor.id) : paths.organizacion(pub.autor.id);
-    const orgHref = useHref(orgPath);
+    const shareHref = useHref(paths.publicacion(pub.id));
 
-    const [verificationOpen, setVerificationOpen] = useState(false);
-    const [moreOpen, setMoreOpen] = useState(false);
-    const [applyOpen, setApplyOpen] = useState(false);
-    const [phone, setPhone] = useState<PhoneRequest>({ open: false, key: 0, next: 'take' });
+    const verificationSheet = useSheet('verificacion');
+    const moreSheet = useSheet('opciones');
+    const phoneSheet = useSheet('telefono');
+    const applySheet = useSheet('postular');
+    // Cada vez que se abren, parten de cero (aunque se hayan cerrado con el atrás del navegador).
+    const phoneKey = useOpenCount(phoneSheet.open);
+    const applyKey = useOpenCount(applySheet.open);
+
     const [taking, setTaking] = useState(false);
-    const [matchOpen, setMatchOpen] = useState(false);
-    const [leaving, setLeaving] = useState(false);
+    const ctaRef = useRef<HTMLButtonElement>(null);
+    // Postular quita «Me interesa» de la pantalla: al cerrar la hoja, el foco va al CTA nuevo.
+    const focusCta = useRef(false);
+    // La app misma está pasando de AUTH-08 a DET-02 o cerrando la hoja: la guarda de abajo no se mete.
+    const handingOff = useRef(false);
 
-    // DET-03: la organización responde un rato después de postular (el «salto de tiempo» del prototipo).
-    const appliedAt = session.application?.at;
+    const canAct = cta.kind === 'open';
+    const waitlist = cta.kind === 'open' && cta.waitlist;
+
+    // Una hoja que llega por enlace (`?sheet=postular`) solo se abre si se puede postular, y AUTH-08 va antes.
     useEffect(() => {
-        if (appliedAt === undefined || session.matchSeen || !conversation) return;
-        const wait = Math.max(0, appliedAt + MATCH_DELAY_MS - Date.now());
-        const timer = window.setTimeout(() => {
-            setMatchOpen(true);
-            markMatchSeen(actor.id, pub.id);
-        }, wait);
-        return () => window.clearTimeout(timer);
-    }, [appliedAt, session.matchSeen, conversation, actor.id, pub.id]);
+        if (!applySheet.open && !phoneSheet.open) {
+            handingOff.current = false;
+            return;
+        }
+        if (handingOff.current) return;
+        if (!canAct || (applySheet.open && pub.tipo !== 'empleo')) swapSheet(null);
+        else if (applySheet.open && !phoneOk) swapSheet(phoneSheet.open ? null : 'telefono');
+        else if (phoneSheet.open && phoneOk) swapSheet(pub.tipo === 'empleo' && !applySheet.open ? 'postular' : null);
+    }, [applySheet.open, phoneSheet.open, canAct, phoneOk, pub.tipo, swapSheet]);
 
-    // «Seguir explorando» (o atrás con el match abierto): cuando el modal ya salió de la pila de capas, vuelve.
     useEffect(() => {
-        if (leaving) goBack();
-    }, [leaving, goBack]);
+        if (!focusCta.current || applySheet.open || phoneSheet.open) return;
+        focusCta.current = false;
+        ctaRef.current?.focus({ preventScroll: true });
+    });
 
-    const askPhone = (next: PhoneRequest['next']) => setPhone((p) => ({ open: true, key: p.key + 1, next }));
-
-    /** Antes del primer acto transaccional: una organización no postula y hace falta el celular verificado. */
-    const canAct = (next: PhoneRequest['next']): boolean => {
-        if (actor.kind === 'organizacion') {
-            snackbar.show({ message: copy.orgCannotApply });
-            return false;
-        }
-        if (!hasVerifiedPhone(actor, session)) {
-            askPhone(next);
-            return false;
-        }
-        return true;
-    };
-
-    const takeShift = (waitlist: boolean) => {
+    const takeShift = () => {
         setTaking(true);
         later(() => {
             setTaking(false);
             applyTo(actor.id, pub.id, waitlist ? 'En lista de espera' : 'Postulado');
+            focusCta.current = true;
             snackbar.show({ message: waitlist ? copy.done.waitlist : copy.done.turno, tone: 'success' });
         }, DEMO_LATENCY_MS);
     };
 
-    const waitlist = cta.kind === 'open' && cta.waitlist;
     const onTake = () => {
-        if (canAct('take')) takeShift(waitlist);
+        if (!phoneOk) phoneSheet.show();
+        else takeShift();
     };
     const onInterested = () => {
-        if (canAct('apply')) setApplyOpen(true);
+        if (!phoneOk) phoneSheet.show();
+        else applySheet.show();
+    };
+    const onNotInterested = () => {
+        // Igual que en el deck: no vuelve a aparecer y la otra parte nunca lo sabe.
+        decide(actor.id, pub.id, 'no');
+        goBack();
     };
 
     const onPhoneVerified = () => {
         verifyPhone(actor.id);
-        setPhone((p) => ({ ...p, open: false }));
-        if (phone.next === 'take') takeShift(waitlist);
-        else setApplyOpen(true);
+        handingOff.current = true;
+        if (pub.tipo === 'empleo') {
+            swapSheet('postular');
+            return;
+        }
+        phoneSheet.hide();
+        takeShift();
     };
 
     const onApplied = () => {
-        setApplyOpen(false);
         applyTo(actor.id, pub.id, 'Postulado');
+        // La organización responde un rato después: MatchHost lo muestra donde esté la persona.
+        if (matchConversation(actor.id, pub)) scheduleMatch(actor.id, pub.id);
+        handingOff.current = true;
+        focusCta.current = true;
+        applySheet.hide();
         snackbar.show({ message: copy.done.empleo(pub.titulo), tone: 'success' });
     };
 
     const share = async () => {
-        const url = window.location.href;
+        // La publicación sola: sin `?demo=` ni la hoja abierta.
+        const url = shareUrl(window.location, shareHref);
         if (typeof navigator.share === 'function') {
             try {
                 await navigator.share({ title: pub.titulo, text: `${pub.titulo} · ${pub.autor.nombre}`, url });
@@ -184,48 +235,63 @@ function PublicationDetail({ pub }: { pub: DemoPublication }) {
         }
     };
 
+    const manage = (ownerId: DemoActorId) => {
+        const path = paths.gestionarPublicacion(pub.id);
+        if (!canOpen(path)) {
+            soon();
+            return;
+        }
+        // Rosa mira un turno de su banquetería: gestiona como la organización.
+        if (ownerId !== actor.id) {
+            setActor(ownerId);
+            snackbar.show({ message: copy.switched(DEMO_ACTORS[ownerId].fullName) });
+        }
+        openPath(path);
+    };
+
     const badge = stateBadge(pub, cta);
     const accepting = isAccepting(pub);
-    const similar = () => navigate(paths.explorar(pub.tipo === 'turno' ? 'turno' : 'empleo'));
 
-    let action;
+    let action = null;
     if (cta.kind === 'own') {
         action = (
-            <Button variant="tonal" size="lg" block onClick={() => openPath(paths.gestionarPublicacion(pub.id))}>
+            <Button ref={ctaRef} variant="tonal" size="lg" block onClick={() => manage(cta.ownerId)}>
                 {copy.cta.manage}
             </Button>
         );
     } else if (cta.kind === 'applied') {
         action = (
-            <Button variant="tonal" size="lg" block onClick={() => openPath(cta.to)}>
+            <Button ref={ctaRef} variant="tonal" size="lg" block onClick={() => openPath(cta.to)}>
                 {cta.label}
             </Button>
         );
     } else if (cta.kind === 'closed') {
         action = (
-            <Button variant="tonal" size="lg" block onClick={similar}>
+            <Button ref={ctaRef} variant="tonal" size="lg" block onClick={() => openPath(paths.explorar(pub.tipo === 'turno' ? 'turno' : 'empleo'))}>
                 {pub.tipo === 'turno' ? copy.cta.similarShifts : copy.cta.similarJobs}
             </Button>
         );
-    } else if (pub.tipo === 'turno') {
+    } else if (cta.kind === 'open' && pub.tipo === 'turno') {
         action = (
-            <Button size="lg" block loading={taking} loadingLabel={copy.cta.taking} onClick={onTake}>
+            <Button ref={ctaRef} size="lg" block loading={taking} loadingLabel={copy.cta.taking} onClick={onTake}>
                 {cta.waitlist ? copy.cta.waitlist : copy.cta.take}
             </Button>
         );
-    } else if (pub.tipo === 'empleo') {
-        action = <ActionPair onNo={goBack} onYes={onInterested} />;
-    } else {
+    } else if (cta.kind === 'open' && pub.tipo === 'empleo') {
+        action = <ActionPair onNo={onNotInterested} onYes={onInterested} />;
+    } else if (cta.kind === 'open') {
         // Servicios (F3) y clases (F2): sus hojas aún no existen.
         action = (
-            <Button size="lg" block onClick={() => snackbar.show({ message: copy.soon })}>
+            <Button ref={ctaRef} size="lg" block onClick={soon}>
                 {pub.tipo === 'servicio' ? copy.cta.quote : copy.cta.schedule}
             </Button>
         );
     }
 
-    const notice =
-        cta.kind === 'own' ? null : cta.kind === 'closed' || !accepting ? copy.closed[pub.tipo === 'turno' ? 'turno' : 'empleo'] : pub.detalle.aviso;
+    let notice: string | null = pub.detalle.aviso;
+    if (cta.kind === 'own') notice = null;
+    else if (cta.kind === 'org') notice = copy.orgCannotApply;
+    else if (cta.kind === 'closed' || !accepting) notice = copy.closed[pub.tipo === 'turno' ? 'turno' : 'empleo'];
 
     return (
         <div className="tl-app-screen">
@@ -237,26 +303,17 @@ function PublicationDetail({ pub }: { pub: DemoPublication }) {
                 actions={
                     <>
                         <IconButton icon={IconShare} label={copy.appBar.share} onClick={() => void share()} />
-                        <IconButton icon={IconMore} label={copy.appBar.more} aria-haspopup="dialog" onClick={() => setMoreOpen(true)} />
+                        <IconButton icon={IconMore} label={copy.appBar.more} aria-haspopup="dialog" onClick={() => moreSheet.show()} />
                     </>
                 }
             />
             <main className="tl-app-screen__body">
-                <DetailHero author={pub.autor} onVerification={() => setVerificationOpen(true)} />
+                <DetailHero author={pub.autor} onVerification={() => verificationSheet.show()} />
                 <div className="tl-app-screen__content pub-content">
                     {pub.tipo === 'turno' ? (
                         <ShiftBody pub={pub} badge={badge} forViewer={forViewer} />
                     ) : (
-                        <JobBody
-                            pub={pub}
-                            badge={badge}
-                            forViewer={forViewer}
-                            orgHref={orgHref}
-                            onOpenOrg={(e) => {
-                                e.preventDefault();
-                                openPath(orgPath);
-                            }}
-                        />
+                        <JobBody pub={pub} badge={badge} forViewer={forViewer} orgLink={linkProps(orgPath)} />
                     )}
                 </div>
             </main>
@@ -267,48 +324,34 @@ function PublicationDetail({ pub }: { pub: DemoPublication }) {
             </CtaBar>
 
             <VerificationSheet
-                open={verificationOpen}
-                onClose={() => setVerificationOpen(false)}
+                open={verificationSheet.open}
+                onClose={verificationSheet.hide}
                 name={pub.autor.nombre}
                 verifications={pub.autor.verificaciones}
             />
             <MoreSheet
-                open={moreOpen}
-                onClose={() => setMoreOpen(false)}
+                open={moreSheet.open}
+                onClose={moreSheet.hide}
                 onReport={() => {
-                    setMoreOpen(false);
-                    snackbar.show({ message: copy.soon });
+                    moreSheet.hide();
+                    soon();
                 }}
             />
-            {phone.key > 0 && (
-                <PhoneSheet
-                    key={phone.key}
-                    open={phone.open}
-                    onClose={() => setPhone((p) => ({ ...p, open: false }))}
-                    purpose={pub.tipo === 'turno' ? 'turno' : 'empleo'}
-                    onVerified={onPhoneVerified}
-                />
-            )}
+            <PhoneSheet
+                key={`telefono-${phoneKey}`}
+                open={phoneSheet.open && canAct && !phoneOk}
+                onClose={phoneSheet.hide}
+                purpose={pub.tipo === 'turno' ? 'turno' : 'empleo'}
+                onVerified={onPhoneVerified}
+            />
             {pub.tipo === 'empleo' && (
                 <ApplySheet
-                    open={applyOpen}
-                    onClose={() => setApplyOpen(false)}
+                    key={`postular-${applyKey}`}
+                    open={applySheet.open && canAct && phoneOk}
+                    onClose={applySheet.hide}
                     publication={pub}
-                    profileCv={profileCv(actor.id)}
+                    profileCv={cv}
                     onApplied={onApplied}
-                />
-            )}
-            {conversation && (
-                <MatchModal
-                    open={matchOpen}
-                    onClose={() => {
-                        setMatchOpen(false);
-                        setLeaving(true);
-                    }}
-                    onMessage={() => navigate(paths.conversacion(conversation.id))}
-                    person={{ name: actor.fullName }}
-                    org={{ name: pub.autor.nombre, shortName: shortOrgName(pub.autor.nombre) }}
-                    publication={pub.titulo}
                 />
             )}
         </div>
@@ -386,14 +429,13 @@ function JobBody({
     pub,
     badge,
     forViewer,
-    orgHref,
-    onOpenOrg,
+    orgLink,
 }: {
     pub: DemoPublication;
     badge: BadgeStatus | null;
     forViewer: boolean;
-    orgHref: string;
-    onOpenOrg: (e: MouseEvent<HTMLElement>) => void;
+    /** «Sobre la organización» → su perfil público (linkProps de useOpenPath). */
+    orgLink: LinkTargetProps;
 }) {
     const { descripcion, filasTitulo, requisitos, beneficios, sobreOrganizacion, contratacion } = pub.detalle;
     // La forma de contratación va con los demás datos si la tarjeta no la trae ya (aviso del hogar).
@@ -434,7 +476,7 @@ function JobBody({
             )}
             {requisitos.length > 0 && <RequirementsSection items={requisitos} forViewer={forViewer} />}
             {beneficios && beneficios.length > 0 && <BenefitsSection items={beneficios} />}
-            {sobreOrganizacion && <AboutOrgSection author={pub.autor} text={sobreOrganizacion} href={orgHref} onOpen={onOpenOrg} />}
+            {sobreOrganizacion && <AboutOrgSection author={pub.autor} text={sobreOrganizacion} link={orgLink} />}
         </>
     );
 }

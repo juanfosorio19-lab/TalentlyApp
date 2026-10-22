@@ -1,16 +1,25 @@
-// Rutas del feature (las compone src/app/router.tsx).
-// STUB: lo reemplaza la construcción de las pantallas; conserva tabRoutes y stackRoutes.
+// Rutas del feature Bienvenida y onboarding (las compone src/app/router.tsx).
+// Todas apiladas, fuera del AppShell (sin TabBar): AUTH-01 Bienvenida,
+// AUTH-02 Crear cuenta, AUTH-03 Revisa tu correo, ONB-01 ¿Qué quieres hacer?,
+// ONB-03 Tus datos, ONB-T1 a ONB-T5 (bloque Trabajo, el paso en la URL) y
+// ONB-99 Listo (spec §5.4 y §6).
 import type { RouteObject } from 'react-router-dom';
-import { PlaceholderScreen } from '../../app/system/PlaceholderScreen';
+import { DataScreen } from './screens/DataScreen';
+import { DoneScreen } from './screens/DoneScreen';
+import { IntentScreen } from './screens/IntentScreen';
+import { SignUpScreen } from './screens/SignUpScreen';
+import { VerifyEmailScreen } from './screens/VerifyEmailScreen';
+import { WelcomeScreen } from './screens/WelcomeScreen';
+import { WorkStepRoute } from './screens/work/WorkStepRoute';
 
 export const tabRoutes: RouteObject[] = [];
 
 export const stackRoutes: RouteObject[] = [
-    { path: 'bienvenida', element: <PlaceholderScreen title="Bienvenida" screenId="AUTH-01" /> },
-    { path: 'registro', element: <PlaceholderScreen title="Crear cuenta" screenId="AUTH-02" /> },
-    { path: 'registro/verificar', element: <PlaceholderScreen title="Revisa tu correo" screenId="AUTH-03" /> },
-    { path: 'onboarding/intencion', element: <PlaceholderScreen title="¿Qué quieres hacer en Talently?" screenId="ONB-01" /> },
-    { path: 'onboarding/datos', element: <PlaceholderScreen title="Tus datos" screenId="ONB-03" /> },
-    { path: 'onboarding/trabajo/:paso', element: <PlaceholderScreen title="Trabajo" screenId="ONB-T1" /> },
-    { path: 'onboarding/listo', element: <PlaceholderScreen title="Listo" screenId="ONB-99" /> },
+    { path: 'bienvenida', element: <WelcomeScreen /> },
+    { path: 'registro', element: <SignUpScreen /> },
+    { path: 'registro/verificar', element: <VerifyEmailScreen /> },
+    { path: 'onboarding/intencion', element: <IntentScreen /> },
+    { path: 'onboarding/datos', element: <DataScreen /> },
+    { path: 'onboarding/trabajo/:paso', element: <WorkStepRoute /> },
+    { path: 'onboarding/listo', element: <DoneScreen /> },
 ];

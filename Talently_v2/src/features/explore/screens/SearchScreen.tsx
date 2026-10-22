@@ -1,43 +1,59 @@
 // EXP-07 · Buscar (/buscar?q=): se abre con la lupa del AppBar de Explorar.
-// Busca en lo que el actor ve en Explorar (oficio, organización, comuna y
-// datos clave, sin tildes) y agrupa por tipo: «Empleos (2)», «Turnos (3)», con
-// PublicationCard compacta que abre DET-01. Lo escrito va en la URL (replace):
-// atrás desde el detalle vuelve con la misma búsqueda. Una organización o un
-// hogar no buscan empleos ni turnos: se les lleva a sus Personas sugeridas.
+// Busca en lo que el actor ve en Explorar, sin tildes y con sinónimos
+// («nana» encuentra «Asesor/a del hogar»): empleos y turnos para quien
+// trabaja; personas sugeridas para una organización o un hogar (por nombre,
+// oficio o comuna). Agrupa por tipo: «Empleos (2)», «Turnos (3)», «Personas
+// sugeridas (4)», con PublicationCard compacta que abre DET-01 o el perfil.
+// Lo escrito va en la URL (replace): atrás desde el detalle vuelve con la
+// misma búsqueda. Si el actor no tiene nada que buscar (sin perfiles), el
+// EmptyState de la demo con su acción real. Sin historial (enlace directo o
+// recarga), volver lleva a Explorar, de donde sale la búsqueda.
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useGoBack } from '../../../app/BackButtonManager';
+import { hasInternalHistory } from '../../../app/navigation/backHandlers';
+import { lastUrlOf } from '../../../app/navigation/tabMemory';
 import { paths } from '../../../app/paths';
 import { AppBar, useScrolled } from '../../../ui/AppBar';
-import { EmptyState } from '../../../ui/EmptyState';
-import { IconPeople, IconSearch } from '../../../ui/icons';
+import { IconAdd, IconOffers, IconSearch } from '../../../ui/icons';
 import { ScreenSection, Stack } from '../../../ui/Layout';
 import { PublicationCard } from '../../../ui/PublicationCard';
 import { SearchField } from '../../../ui/SearchField';
+import { getExplore } from '../../demo/data';
 import { useDemoSession } from '../../demo/session';
 import type { DemoPublication } from '../../demo/types';
-import { useLinks } from '../components/useLinks';
-import { useVerificationSheet } from '../components/VerificationSheet';
+import { ExploreEmpty, fromDemo } from '../components/ExploreEmpty';
+import { useGo, useSheetKeepsScroll } from '../components/hooks';
+import { useShowVerification, VerificationSheet } from '../components/VerificationSheet';
 import { copy } from '../copy';
-import { publicationCard, searchExplore, segmentsOf } from '../model';
+import { isEmptyScope, personCard, publicationCard, searchHints, searchIn, searchScope, segmentsOf, type Suggestion } from '../model';
 import '../explore.css';
 
 export const screenId = 'EXP-07';
 
+type Alcance = 'trabajo' | 'personas' | 'todo';
+
 export function SearchScreen() {
     const goBack = useGoBack();
     const scrolled = useScrolled();
-    const { actor } = useDemoSession();
+    const { actor, recienRegistrado } = useDemoSession();
     const [params, setParams] = useSearchParams();
-    const links = useLinks();
-    const [onVerify, verificationSheet] = useVerificationSheet();
+    const { go, cardLink } = useGo();
+    const showVerification = useShowVerification();
+    useSheetKeepsScroll();
 
     // El texto vive en el campo (si esperara a la URL, que cambia en una transición, se perderían letras);
     // la URL lo guarda con replace para volver a la misma búsqueda.
     const [q, setQ] = useState(() => params.get('q') ?? '');
-    const buscaTrabajo = segmentsOf(actor).some((s) => s === 'empleo' || s === 'turno');
-    const results = useMemo(() => searchExplore(actor, q), [actor, q]);
-    const total = results.empleos.length + results.turnos.length;
+    const scope = useMemo(() => searchScope(actor, recienRegistrado), [actor, recienRegistrado]);
+    const results = useMemo(() => searchIn(scope, q), [scope, q]);
+    const hints = useMemo(() => searchHints(scope), [scope]);
+    const total = results.empleos.length + results.turnos.length + results.personas.length;
+    const trabajo = scope.empleos.length + scope.turnos.length > 0;
+    const alcance: Alcance = trabajo && scope.personas.length > 0 ? 'todo' : trabajo ? 'trabajo' : 'personas';
+
+    // Sin historial interno, el atrás del AppBar vuelve a Explorar (no a Inicio).
+    const onBack = () => (hasInternalHistory() ? goBack() : go(lastUrlOf('explorar')));
 
     const card = (p: DemoPublication) => {
         const detalle = paths.publicacion(p.id);
@@ -45,48 +61,54 @@ export function SearchScreen() {
             <PublicationCard
                 key={p.id}
                 variant="compact"
-                {...publicationCard(p, { href: links.href(detalle), onOpen: links.open(detalle), onVerify })}
+                {...publicationCard(p, { ...cardLink(detalle), onVerify: () => showVerification({ publicacion: p.id }) })}
             />
         );
     };
+    const personItem = (s: Suggestion) => (
+        <PublicationCard
+            key={s.person.id}
+            variant="compact"
+            {...personCard(s, {
+                ...cardLink(paths.perfilPublico(s.person.id, 'trabajo')),
+                onVerify: () => showVerification({ persona: s.person.id }),
+            })}
+        />
+    );
 
     let body;
-    if (!buscaTrabajo) {
-        body = (
-            <div className="explore-empty">
-                <EmptyState
-                    icon={IconPeople}
-                    title={copy.buscar.sinBusqueda.titulo}
-                    text={copy.buscar.sinBusqueda.texto}
-                    action={{ label: copy.buscar.sinBusqueda.accion, onClick: () => links.go(paths.explorar('personas')) }}
+    if (isEmptyScope(scope)) {
+        // Nada que buscar todavía: qué hacer para tenerlo. Quien contrata, publicar; Rosa sin perfiles, agregar uno.
+        const vacio = getExplore(actor.id).empleos.vacio;
+        if (segmentsOf(actor, recienRegistrado).includes('personas')) {
+            body = (
+                <ExploreEmpty
+                    icon={IconOffers}
+                    title={copy.personas.sinPublicaciones.titulo}
+                    text={copy.personas.sinPublicaciones.texto}
+                    action={{ label: copy.personas.sinPublicaciones.accion, onClick: () => go(paths.inicio()) }}
                 />
-            </div>
-        );
+            );
+        } else body = vacio ? <ExploreEmpty {...fromDemo(vacio, IconAdd, actor.id, go)} /> : null;
     } else {
+        const inicio = copy.buscar.inicio[alcance];
         body = (
             <>
                 <SearchField
-                    label={copy.buscar.campo}
-                    placeholder={copy.buscar.placeholder}
+                    label={copy.buscar.campo[alcance]}
+                    placeholder={copy.buscar.placeholder[alcance]}
                     value={q}
                     autoFocus={!q}
                     onChange={(e) => {
-                        setQ(e.target.value);
-                        setParams(e.target.value ? { q: e.target.value } : {}, { replace: true });
+                        const next = e.target.value;
+                        setQ(next);
+                        setParams(next ? { q: next } : {}, { replace: true, preventScrollReset: true });
                     }}
                 />
                 {!q.trim() ? (
-                    <div className="explore-empty">
-                        <EmptyState icon={IconSearch} title={copy.buscar.inicio.titulo} text={copy.buscar.inicio.texto} />
-                    </div>
+                    <ExploreEmpty icon={IconSearch} title={inicio.titulo} text={inicio.texto} />
                 ) : total === 0 ? (
-                    <div className="explore-empty">
-                        <EmptyState
-                            icon={IconSearch}
-                            title={copy.buscar.sinResultados.titulo(q.trim())}
-                            text={copy.buscar.sinResultados.texto}
-                        />
-                    </div>
+                    <ExploreEmpty icon={IconSearch} title={copy.buscar.sinResultados.titulo(q.trim())} text={copy.buscar.sinResultados.texto(hints)} />
                 ) : (
                     <>
                         {results.empleos.length > 0 && (
@@ -99,6 +121,11 @@ export function SearchScreen() {
                                 <Stack gap={3}>{results.turnos.map(card)}</Stack>
                             </ScreenSection>
                         )}
+                        {results.personas.length > 0 && (
+                            <ScreenSection title={copy.buscar.personas(results.personas.length)}>
+                                <Stack gap={3}>{results.personas.map(personItem)}</Stack>
+                            </ScreenSection>
+                        )}
                     </>
                 )}
             </>
@@ -107,11 +134,11 @@ export function SearchScreen() {
 
     return (
         <div className="tl-app-screen" data-screen-id={screenId}>
-            <AppBar variant="standard" title={copy.buscar.titulo} onBack={goBack} scrolled={scrolled} />
+            <AppBar variant="standard" title={copy.buscar.titulo} onBack={onBack} scrolled={scrolled} />
             <main className="tl-app-screen__body explore-main">
                 <div className="tl-app-screen__content explore-panel">{body}</div>
             </main>
-            {verificationSheet}
+            <VerificationSheet />
         </div>
     );
 }

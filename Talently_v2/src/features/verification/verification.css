@@ -1,0 +1,29 @@
+/* Verificación: solo maquetación y tonos de texto, siempre con tokens.
+   src/ui aún no trae la fila «Así» de ejemplo de VER-02 ni utilidades de tono
+   de texto (pedidas en «requests»); cuando existan, este archivo se borra. */
+
+.ver-muted { color: var(--color-text-2); }
+.ver-flush { margin: 0; }
+
+/* VER-02 · «Antes de empezar»: los tres hechos con ícono, separados 12 (prototipo). */
+.ver-facts { gap: var(--space-3); margin: 0; }
+
+/* VER-02 · fila «Así»: el ejemplo de 112 (72 la selfie) y el texto al lado (prototipo). */
+.ver-example { display: flex; align-items: center; gap: var(--space-4); }
+.ver-example__sample { flex: none; width: calc(var(--space-16) + var(--space-12)); }
+.ver-example__sample--face { width: calc(var(--space-16) + var(--space-2)); }
+.ver-example__text { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+
+/* VER-02 · la foto tomada se recorta a la guía (óvalo o cédula): app.css B11 la estira al marco
+   pero `.tl-capture__shot` no recorta (brecha pedida en «requests»). */
+.ver-capture .tl-capture__shot { overflow: hidden; }
+
+/* Hojas: pie sin borde (AUTH-08 del prototipo) y filas que llegan al borde (Opciones). */
+.ver-sheet .tl-sheet__foot { border-top: 0; }
+.ver-sheet-list { margin: 0 calc(-1 * var(--space-4)); }
+
+/* AUTH-08 · «Reenviar código» y «Cambiar número» en la misma línea, a 8 del código. */
+.ver-code-actions {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
+  margin-top: var(--space-2);
+}

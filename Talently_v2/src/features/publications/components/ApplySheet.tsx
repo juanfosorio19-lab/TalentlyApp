@@ -1,9 +1,8 @@
-// DET-02 · Postular (`?sheet=postular` en la spec): la oferta arriba, la
-// pregunta filtro (Sí / No), el CV del perfil con «Cambiar» si la oferta lo
-// pide y un mensaje opcional de hasta 300 caracteres. «Postular» envía; el
-// resultado (Snackbar y, si la organización responde, el match) lo muestra
-// el detalle. Mientras Supabase está pausado, el CV elegido no se sube a
-// ningún servidor.
+// DET-02 · Postular (`?sheet=postular`): la oferta arriba, la pregunta filtro
+// (Sí / No), el CV del perfil con «Cambiar» si la oferta lo pide y un mensaje
+// opcional de hasta 300 caracteres. «Postular» envía; el resultado (Snackbar
+// y, si la organización responde, el match) lo muestra el detalle. Mientras
+// Supabase está pausado, el CV elegido no se sube a ningún servidor.
 import { useRef, useState } from 'react';
 import { Avatar } from '../../../ui/Avatar';
 import { BottomSheet, SheetSection } from '../../../ui/BottomSheet';
@@ -13,48 +12,50 @@ import { Stack } from '../../../ui/Layout';
 import { List, ListItem } from '../../../ui/ListItem';
 import { MediaUploader } from '../../../ui/MediaUploader';
 import { RadioGroup } from '../../../ui/Radio';
-import { useSnackbar } from '../../../ui/Snackbar';
 import { TextArea } from '../../../ui/TextArea';
 import type { DemoPublication } from '../../demo/types';
 import { copy } from '../copy';
+import { cvProblem, sizeText, type CvProblem } from '../cv';
 import { DEMO_LATENCY_MS, messageExample, type CvFile } from '../mock';
 import { useLater } from './useLater';
 import '../publications.css';
 
 export const screenId = 'DET-02';
 
-const MAX_CV_BYTES = 10 * 1024 * 1024;
 const MESSAGE_MAX = 300;
+const PDF = 'application/pdf';
 
-function sizeText(bytes: number): string {
-    if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} MB`;
-    return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+function problemText(problem: CvProblem): string {
+    return problem.kind === 'not-pdf' ? copy.apply.cvNotPdf : copy.apply.cvTooBig(problem.size);
 }
 
 export interface ApplySheetProps {
     open: boolean;
+    /** `hide` de useSheet('postular'). */
     onClose: () => void;
     publication: DemoPublication;
     /** El CV del perfil de trabajo, si lo tiene. */
     profileCv?: CvFile;
-    /** Se envió: el detalle cierra la hoja y muestra el resultado. */
+    /** Se envió: el detalle registra la postulación, cierra la hoja y muestra el resultado. */
     onApplied: () => void;
 }
 
 /**
- * Siempre montada mientras el detalle esté abierto: si la persona cierra la
- * hoja y vuelve a abrirla, lo que había escrito sigue ahí.
+ * Parte de cero cada vez que se abre: el detalle le pone una `key` nueva al
+ * abrirla (así nada queda de antes aunque se haya cerrado con el atrás).
  */
 export function ApplySheet({ open, onClose, publication: pub, profileCv, onApplied }: ApplySheetProps) {
     const later = useLater();
-    const snackbar = useSnackbar();
     const fileRef = useRef<HTMLInputElement>(null);
+    const questionRef = useRef<HTMLDivElement>(null);
+    const cvRef = useRef<HTMLDivElement>(null);
     const question = pub.detalle.postular?.pregunta;
     const needsCv = pub.detalle.postular?.pideCv ?? false;
 
     const [answer, setAnswer] = useState<'si' | 'no' | null>(null);
     const [answerMissing, setAnswerMissing] = useState(false);
     const [cv, setCv] = useState<{ file: CvFile; fromProfile: boolean } | null>(profileCv ? { file: profileCv, fromProfile: true } : null);
+    /** Por qué no sirve el archivo elegido, o que falta el CV obligatorio. */
     const [cvError, setCvError] = useState<string | null>(null);
     const [message, setMessage] = useState('');
     const [sending, setSending] = useState(false);
@@ -62,8 +63,9 @@ export function ApplySheet({ open, onClose, publication: pub, profileCv, onAppli
     const pick = (files: File[]) => {
         const f = files[0];
         if (!f) return;
-        if (f.size > MAX_CV_BYTES) {
-            setCvError(copy.apply.cvTooBig(sizeText(f.size)));
+        const problem = cvProblem(f);
+        if (problem) {
+            setCvError(problemText(problem));
             return;
         }
         setCvError(null);
@@ -72,9 +74,14 @@ export function ApplySheet({ open, onClose, publication: pub, profileCv, onAppli
 
     const submit = () => {
         const noAnswer = Boolean(question) && answer === null;
+        const noCv = needsCv && !cv;
         setAnswerMissing(noAnswer);
-        if (needsCv && !cv) snackbar.show({ message: copy.apply.cvRequired, tone: 'error' });
-        if (noAnswer || (needsCv && !cv)) return;
+        if (noCv) setCvError(copy.apply.cvRequired);
+        if (noAnswer || noCv) {
+            // El aviso queda en el mismo campo (no en un Snackbar que tape el mensaje): se lleva a la vista.
+            (noAnswer ? questionRef : cvRef).current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            return;
+        }
         setSending(true);
         later(() => {
             setSending(false);
@@ -103,64 +110,74 @@ export function ApplySheet({ open, onClose, publication: pub, profileCv, onAppli
             </Stack>
 
             {question && (
-                <RadioGroup
-                    className="pub-apply-block"
-                    legend={question}
-                    options={[
-                        { value: 'si', label: copy.apply.yes },
-                        { value: 'no', label: copy.apply.no },
-                    ]}
-                    value={answer}
-                    onChange={(next) => {
-                        setAnswer(next);
-                        setAnswerMissing(false);
-                    }}
-                    error={answerMissing ? copy.apply.answerRequired : undefined}
-                />
+                <div ref={questionRef} className="pub-apply-block">
+                    <RadioGroup
+                        legend={question}
+                        options={[
+                            { value: 'si', label: copy.apply.yes },
+                            { value: 'no', label: copy.apply.no },
+                        ]}
+                        value={answer}
+                        onChange={(next) => {
+                            setAnswer(next);
+                            setAnswerMissing(false);
+                        }}
+                        error={answerMissing ? copy.apply.answerRequired : undefined}
+                    />
+                </div>
             )}
 
             {needsCv && (
-                <SheetSection label={copy.apply.cv}>
-                    {cv ? (
-                        <List>
-                            <ListItem
-                                icon={IconDocument}
-                                title={<span className="button-lg">{cv.file.nombre}</span>}
-                                sub={cv.fromProfile ? copy.apply.cvFromProfile(cv.file.detalle) : cv.file.detalle}
-                                end={
-                                    <Button variant="ghost" size="sm" onClick={() => fileRef.current?.click()}>
-                                        {copy.apply.change}
-                                    </Button>
-                                }
+                <div ref={cvRef}>
+                    <SheetSection label={copy.apply.cv}>
+                        {cv ? (
+                            <>
+                                <List>
+                                    <ListItem
+                                        icon={IconDocument}
+                                        title={<span className="button-lg">{cv.file.nombre}</span>}
+                                        sub={cv.fromProfile ? copy.apply.cvFromProfile(cv.file.detalle) : cv.file.detalle}
+                                        end={
+                                            <Button variant="ghost" size="sm" onClick={() => fileRef.current?.click()}>
+                                                {copy.apply.change}
+                                            </Button>
+                                        }
+                                    />
+                                </List>
+                                {/* «Cambiar» eligió algo que no sirve: el CV de antes se queda y el motivo va debajo. */}
+                                {cvError && (
+                                    <p className="caption pub-fact--alert pub-cv-note" role="alert">
+                                        {cvError}
+                                    </p>
+                                )}
+                                <input
+                                    ref={fileRef}
+                                    type="file"
+                                    hidden
+                                    tabIndex={-1}
+                                    accept={PDF}
+                                    onChange={(e) => {
+                                        const files = Array.from(e.currentTarget.files ?? []);
+                                        e.currentTarget.value = '';
+                                        pick(files);
+                                    }}
+                                />
+                            </>
+                        ) : (
+                            <MediaUploader
+                                variant="document"
+                                title={copy.apply.cvTitle}
+                                state={cvError ? 'error' : 'empty'}
+                                requirement="Obligatoria"
+                                formats={copy.apply.cvFormats}
+                                accept={PDF}
+                                error={cvError ?? undefined}
+                                onSelect={pick}
                             />
-                        </List>
-                    ) : (
-                        <MediaUploader
-                            variant="document"
-                            title={copy.apply.cvTitle}
-                            state={cvError ? 'error' : 'empty'}
-                            requirement="Obligatoria"
-                            formats={copy.apply.cvFormats}
-                            accept="application/pdf"
-                            error={cvError ?? undefined}
-                            onSelect={pick}
-                        />
-                    )}
-                    {cvError && cv && <p className="caption pub-fact--alert pub-cv-note">{cvError}</p>}
-                    <p className="caption pub-muted pub-cv-note">{cv?.fromProfile ? copy.apply.cvNote : copy.apply.cvNoteEmpty}</p>
-                    <input
-                        ref={fileRef}
-                        type="file"
-                        hidden
-                        tabIndex={-1}
-                        accept="application/pdf"
-                        onChange={(e) => {
-                            const files = Array.from(e.currentTarget.files ?? []);
-                            e.currentTarget.value = '';
-                            pick(files);
-                        }}
-                    />
-                </SheetSection>
+                        )}
+                        <p className="caption pub-muted pub-cv-note">{cv?.fromProfile ? copy.apply.cvNote : copy.apply.cvNoteEmpty}</p>
+                    </SheetSection>
+                </div>
             )}
 
             <TextArea

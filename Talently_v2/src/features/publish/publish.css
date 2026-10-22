@@ -1,0 +1,44 @@
+/* Publicar (PUBL-03, PUBL-04, PUBL-07, PUBL-08): solo maquetación, siempre
+   con tokens. Lo que src/ui aún no trae (acción propia en la cabecera de
+   SectionCard, fila «rótulo + valor» con ícono suelto, fila de Badge bajo el
+   texto de ResultScreen, pie de hoja en columna) está pedido en «requests»;
+   cuando llegue, la regla de aquí se borra. */
+
+/* Texto sin el margen del navegador y en tono secundario. */
+.publish-flush { margin: 0; }
+.publish-muted { color: var(--color-text-2); }
+
+/* Nota con ícono de 16 delante («Lo pagado nunca salta requisitos…», «Son 40 horas…»). */
+.publish-note { display: flex; gap: var(--space-2); margin: 0; color: var(--color-text-2); }
+.publish-note--text { align-items: center; color: var(--color-text); }
+.publish-note__icon { flex: none; display: inline-flex; }
+
+/* «Bloque 1» con «Editar» a la derecha. */
+.publish-between { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+
+/* Desde · Hasta (PUBL-04 paso 2) y Desde · Hasta · Cupos (PUBL-03 paso 2, cupos de 72). */
+.publish-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.publish-grid--shift { grid-template-columns: 1fr 1fr calc(var(--space-12) + var(--space-6)); }
+.publish-grid > * { min-width: 0; }
+
+/* Bloque en edición: el basurero en color-text-2, como en el prototipo. */
+.publish-block .tl-iconbtn { --ib-fg: var(--color-text-2); }
+
+/* Resumen de la vista previa: ícono suelto en color-text-2 y rótulo + valor. */
+.publish-row-icon { flex: none; display: inline-flex; color: var(--color-text-2); }
+.publish-row-text { display: flex; flex-direction: column; min-width: 0; }
+
+/* El Banner de contexto («Como hay niños…») queda a 12 más del grupo de arriba. */
+.publish-after-group { margin-top: var(--space-3); }
+
+/* PUBL-07: Badge y plazo bajo el texto del resultado. */
+.publish-result-meta {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: var(--space-2); margin-top: var(--space-4);
+}
+
+/* PUBL-04-identidad: el texto y la lista separados como en el prototipo; las dos acciones en columna. */
+.publish-sheet-text { margin: 0 0 var(--space-4); }
+.publish-sheet-facts { gap: var(--space-2); margin: 0 0 var(--space-3); }
+.publish-sheet .tl-sheet__foot { flex-direction: column; gap: var(--space-2); border-top: 0; }
+.publish-sheet .tl-sheet__foot .tl-btn { flex: none; }

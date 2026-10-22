@@ -2,7 +2,9 @@
 // controles del onboarding (ONB-T2 y PUBL-04): chips de jornada, «Disponible
 // desde», distancia, la grilla de franjas, montos, experiencia y comuna.
 // Guardar cambia el perfil de esta sesión y avisa con un Snackbar; cerrar con
-// cambios pregunta «¿Descartar cambios?».
+// cambios pregunta «¿Descartar cambios?». Vive en la URL
+// (`?sheet=editar&s=<sección>`): cada vez que se abre parte de lo guardado,
+// también si la última vez se cerró con el atrás del navegador.
 import { useState } from 'react';
 import { AvailabilityGrid } from '../../../ui/AvailabilityGrid';
 import { BottomSheet } from '../../../ui/BottomSheet';
@@ -14,9 +16,10 @@ import { RadioGroup } from '../../../ui/Radio';
 import { Select } from '../../../ui/Select';
 import { TextArea } from '../../../ui/TextArea';
 import { TextField } from '../../../ui/TextField';
-import type { DemoProfileSection, DemoRow } from '../../demo/types';
+import type { DemoRow } from '../../demo/types';
 import { formatShiftDays, parseShiftDays } from '../availability';
 import { COPY } from '../copy';
+import type { EditableSection } from '../model';
 import {
     COMUNAS_RM,
     CONTEXTO_HOGAR,
@@ -30,8 +33,6 @@ import {
 } from '../mock';
 import { ChipChoice } from './ChipChoice';
 import { DiscardDialog } from './DiscardDialog';
-
-export type EditableSection = Extract<DemoProfileSection, { tipo: 'texto' | 'filas' | 'tags' }>;
 
 const EXPERIENCIA = ['Menos de 1 año', '1 a 3 años', '3 a 5 años', '5 a 10 años', 'Más de 10 años'] as const;
 const DE_EXPERIENCIA = ' de experiencia';
@@ -247,6 +248,16 @@ export function EditSectionSheet({ open, section, comuna, onClose, onSave }: Edi
     const [draft, setDraft] = useState<EditableSection>(section);
     const [tried, setTried] = useState(false);
     const [confirm, setConfirm] = useState(false);
+    // Al abrir, parte de lo guardado (estado derivado durante el render, como SheetPicker).
+    const [wasOpen, setWasOpen] = useState(open);
+    if (open !== wasOpen) {
+        setWasOpen(open);
+        if (open) {
+            setDraft(section);
+            setTried(false);
+            setConfirm(false);
+        }
+    }
     const dirty = JSON.stringify(draft) !== JSON.stringify(section);
 
     const save = () => {

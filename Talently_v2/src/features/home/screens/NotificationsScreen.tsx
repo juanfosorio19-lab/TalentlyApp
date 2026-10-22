@@ -1,14 +1,15 @@
 // NOT-01 · Notificaciones (/notificaciones, apilada): la bandeja de la persona
 // (sus organizaciones comparten bandeja), agrupada en Hoy, Ayer, Esta semana y
-// Antes, con «Marcar todas como leídas» solo si hay alguna sin leer. Tocar una
-// la marca leída y abre su destino; si es de otro actor (una notificación de
-// Banquetería Rosa SpA mientras Rosa usa Talently como persona), cambia de
-// actor solo y lo dice con el Snackbar «Cambiaste a …» (flujo 7, spec §5.3
-// regla 7: cada notificación trae su destino y su actor). Si la pantalla de
-// destino todavía no está en el router, dice «Disponible pronto» sin cambiar
-// de actor ni llevar a SYS-404.
+// Antes, con «Marcar todas como leídas» solo si hay alguna sin leer. Lo leído
+// vive en demo/sessionStore (useInbox): todas las campanas lo ven igual.
+// Tocar una la marca leída y abre su destino; si es de otro actor (una
+// notificación de Banquetería Rosa SpA mientras Rosa usa Talently como
+// persona), cambia de actor solo y lo dice con el Snackbar «Cambiaste a …»
+// (flujo 7, spec §5.3 regla 7). El destino se resuelve con demo/targets y se
+// valida con canOpen ANTES de cambiar de actor: si la pantalla todavía no
+// existe, dice «Disponible pronto» sin cambiar de actor ni llevar a SYS-404.
 import { useId, useRef, type MouseEvent } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useGoBack } from '../../../app/BackButtonManager';
 import { paths } from '../../../app/paths';
 import { AppBar, useScrolled } from '../../../ui/AppBar';
@@ -28,17 +29,16 @@ import {
 } from '../../../ui/icons';
 import { List, ListItem } from '../../../ui/ListItem';
 import { useSnackbar } from '../../../ui/Snackbar';
-import { useDemoSession, type DemoActor } from '../../demo/session';
-import type { DemoNotification, DemoNotificationGroup, DemoNotificationIcon } from '../../demo/types';
+import { useDemoSession } from '../../demo/session';
+import { useInbox } from '../../demo/sessionStore';
+import type { DemoNotification, DemoNotificationIcon } from '../../demo/types';
 import type { NotificationsEntryState } from '../components/HomeAppBar';
 import { copy } from '../copy';
-import { useInbox } from '../inbox';
-import { isPlainClick, useAppLinks, useTargetPath } from '../links';
+import { useHomeNavigation } from '../navigation';
+import { groupNotifications, resolveNotification } from '../selectors';
 import '../home.css';
 
 export const screenId = 'NOT-01';
-
-const GROUPS: readonly DemoNotificationGroup[] = ['Hoy', 'Ayer', 'Esta semana', 'Antes'];
 
 const ICON: Record<DemoNotificationIcon, IconComponent> = {
     cupos: IconPeople,
@@ -52,44 +52,37 @@ const ICON: Record<DemoNotificationIcon, IconComponent> = {
     postulacion: IconOffers,
 };
 
-type TargetPath = ReturnType<typeof useTargetPath>;
-
-/**
- * A quién y a dónde lleva una notificación: el actor al que se refiere (si es
- * otro de la persona) y la ruta, solo si su pantalla ya existe (si no, `null`).
- */
-function resolve(n: DemoNotification, actor: DemoActor, switchable: readonly DemoActor[], pathOf: TargetPath) {
-    const other = n.actorId !== actor.id ? switchable.find((a) => a.id === n.actorId) : undefined;
-    const path = pathOf(n.destino, other?.id ?? actor.id);
-    return { other, path };
-}
+/** Abrir en otra pestaña (Ctrl, Cmd, Mayús, rueda) sigue siendo del navegador. */
+const plainClick = (e: MouseEvent<HTMLElement>) => e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
 
 export function NotificationsScreen() {
     const goBack = useGoBack();
     const scrolled = useScrolled();
-    const navigate = useNavigate();
     const location = useLocation();
-    const { actor, switchable, setActor } = useDemoSession();
-    const { items, unread, markRead, markAllRead } = useInbox();
+    const { actor, switchable, setActor, recienRegistrado } = useDemoSession();
+    const { items, unread, markRead, markAllRead } = useInbox(actor.id, recienRegistrado);
     const snackbar = useSnackbar();
-    const { hrefOf, go } = useAppLinks();
-    const pathOf = useTargetPath();
+    const { go, link, soon, canOpen } = useHomeNavigation();
     const from = (location.state as NotificationsEntryState | null)?.from;
     const headingId = useId();
     // «Marcar todas como leídas» desaparece al tocarlo: el foco pasa al primer grupo, no al body.
     const firstHeading = useRef<HTMLHeadingElement>(null);
+    const switchableIds = switchable.map((a) => a.id);
+
+    const route = (n: DemoNotification) => resolveNotification(n, actor.id, switchableIds, canOpen);
 
     const open = (n: DemoNotification) => {
-        const { other, path } = resolve(n, actor, switchable, pathOf);
+        const { switchTo, path } = route(n);
         markRead(n.id);
         // La pantalla de destino es de una fase futura: se dice, sin cambiar de actor.
         if (!path) {
-            snackbar.show({ message: copy.soon });
+            soon();
             return;
         }
-        if (other) {
-            setActor(other.id);
-            snackbar.show({ message: copy.actor.cambiaste(other.fullName) });
+        if (switchTo) {
+            setActor(switchTo);
+            const name = switchable.find((a) => a.id === switchTo)?.fullName ?? '';
+            snackbar.show({ message: copy.actor.cambiaste(name) });
         }
         // Si lleva a la pantalla de la que se vino (Inicio), vuelve en vez de apilarla otra vez.
         if (path === from) goBack();
@@ -97,12 +90,12 @@ export function NotificationsScreen() {
     };
 
     const onMarkAll = () => {
-        markAllRead();
         firstHeading.current?.focus();
+        markAllRead();
         snackbar.show({ message: copy.notificaciones.marcadas, tone: 'success' });
     };
 
-    const groups = GROUPS.map((g) => ({ grupo: g, items: items.filter((n) => n.grupo === g) })).filter((g) => g.items.length > 0);
+    const groups = groupNotifications(items);
 
     return (
         <div className="tl-app-screen">
@@ -114,7 +107,7 @@ export function NotificationsScreen() {
                         title={copy.notificaciones.vacia.titulo}
                         text={copy.notificaciones.vacia.texto}
                         // CFG-03 (Notificaciones) se abre desde Configuración.
-                        action={{ label: copy.notificaciones.vacia.accion, onClick: () => navigate(paths.configuracion()) }}
+                        action={{ label: copy.notificaciones.vacia.accion, onClick: () => go(paths.configuracion()) }}
                     />
                 ) : (
                     <div className="tl-app-screen__content home-notifs">
@@ -128,7 +121,7 @@ export function NotificationsScreen() {
                         {groups.map(({ grupo, items: list }, gi) => (
                             <section key={grupo} aria-labelledby={`${headingId}-${gi}`}>
                                 <h2
-                                    className="tl-agenda__day overline"
+                                    className="overline home-muted home-group"
                                     id={`${headingId}-${gi}`}
                                     ref={gi === 0 ? firstHeading : undefined}
                                     tabIndex={gi === 0 ? -1 : undefined}
@@ -137,18 +130,19 @@ export function NotificationsScreen() {
                                 </h2>
                                 <List>
                                     {list.map((n) => {
-                                        const { path } = resolve(n, actor, switchable, pathOf);
+                                        const { path } = route(n);
                                         return (
                                             <ListItem
                                                 key={n.id}
+                                                className="home-notif"
                                                 icon={ICON[n.icono]}
                                                 title={n.titulo}
                                                 sub={`${n.origen} · ${n.cuando}`}
                                                 unread={n.sinLeer}
                                                 chevron={false}
-                                                href={path ? hrefOf(path) : undefined}
+                                                href={path ? link(path).href : undefined}
                                                 onClick={(e: MouseEvent<HTMLElement>) => {
-                                                    if (path && !isPlainClick(e)) return;
+                                                    if (path && !plainClick(e)) return;
                                                     e.preventDefault();
                                                     open(n);
                                                 }}

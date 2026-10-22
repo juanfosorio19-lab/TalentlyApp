@@ -1,10 +1,10 @@
-// AUTH-08 · Verificar teléfono (`?sheet=telefono` en la spec): hoja antes del
+// AUTH-08 · Verificar teléfono (`?sheet=telefono`): hoja antes del
 // primer acto transaccional (tomar un turno, postular). Paso 1: número y canal
 // (SMS o WhatsApp) → «Enviar código». Paso 2: CodeInput de 6 dígitos que se
 // verifica solo al completarse, «Reenviar código (en 0:45)» con cuenta
 // regresiva real y «Cambiar número». Mientras Supabase está pausado no se
 // envía ningún SMS: el código que se escriba se acepta.
-import { useId, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { BottomSheet } from '../../../ui/BottomSheet';
 import { Button } from '../../../ui/Button';
 import { CodeInput, formatCountdown, useCountdown } from '../../../ui/CodeInput';
@@ -13,25 +13,31 @@ import { RadioGroup } from '../../../ui/Radio';
 import { FieldFoot, FieldLabel, describedBy, hasFieldError } from '../../../ui/TextField';
 import { copy } from '../copy';
 import { DEMO_LATENCY_MS } from '../mock';
+import { PHONE_DIGITS, groupPhone, nextPhone } from '../phone';
 import { useLater } from './useLater';
 import '../publications.css';
 
 export const screenId = 'AUTH-08';
 
-const PHONE_DIGITS = 8;
 const RESEND_SECONDS = 45;
 
 type Channel = 'sms' | 'whatsapp';
-
-const onlyDigits = (s: string) => s.replace(/\D/g, '').slice(0, PHONE_DIGITS);
-/** «12345678» → «1234 5678». */
-const groupPhone = (d: string) => (d.length > 4 ? `${d.slice(0, 4)} ${d.slice(4)}` : d);
 
 /**
  * Celular chileno con el «+56 9» fijo delante (TextField aún no trae prefijo:
  * pedido en «requests»). Mismo marcado `.tl-field` que el resto de los campos.
  */
-function PhoneField({ value, onChange, error }: { value: string; onChange: (digits: string) => void; error?: ReactNode }) {
+function PhoneField({
+    value,
+    onChange,
+    error,
+    inputRef,
+}: {
+    value: string;
+    onChange: (digits: string) => void;
+    error?: ReactNode;
+    inputRef: RefObject<HTMLInputElement | null>;
+}) {
     const id = useId();
     const helpId = `${id}-h`;
     const errorId = `${id}-e`;
@@ -44,13 +50,15 @@ function PhoneField({ value, onChange, error }: { value: string; onChange: (digi
                     {copy.phone.prefix}
                 </span>
                 <input
+                    ref={inputRef}
                     className="tl-field__input"
                     id={id}
                     type="tel"
                     inputMode="tel"
                     autoComplete="tel-national"
                     value={groupPhone(value)}
-                    onChange={(e) => onChange(onlyDigits(e.target.value))}
+                    // Pegado como venga («+56 9 1234 5678»): quedan los 8 dígitos (phone.ts).
+                    onChange={(e) => onChange(nextPhone(value, e.target.value))}
                     aria-invalid={isError || undefined}
                     aria-describedby={describedBy(isError ? errorId : helpId)}
                 />
@@ -62,6 +70,7 @@ function PhoneField({ value, onChange, error }: { value: string; onChange: (digi
 
 export interface PhoneSheetProps {
     open: boolean;
+    /** `hide` de useSheet('telefono'). */
     onClose: () => void;
     /** Para qué se pide: cambia la primera frase («Para tomar turnos…» o «Para postular…»). */
     purpose: 'turno' | 'empleo';
@@ -70,8 +79,9 @@ export interface PhoneSheetProps {
 }
 
 /**
- * La hoja parte de cero cada vez que se abre: quien la usa le pone una `key`
- * nueva al abrirla (así el número y la cuenta regresiva no quedan de antes).
+ * La hoja parte de cero cada vez que se abre: el detalle le pone una `key`
+ * nueva al abrirla (así el número y la cuenta regresiva no quedan de antes,
+ * aunque se haya cerrado con el atrás del navegador).
  */
 export function PhoneSheet({ open, onClose, purpose, onVerified }: PhoneSheetProps) {
     const later = useLater();
@@ -80,6 +90,14 @@ export function PhoneSheet({ open, onClose, purpose, onVerified }: PhoneSheetPro
     const [channel, setChannel] = useState<Channel>('sms');
     const [phoneError, setPhoneError] = useState<string | null>(null);
     const [sending, setSending] = useState(false);
+    const phoneRef = useRef<HTMLInputElement>(null);
+    // «Cambiar número» se va con el paso 2: el foco vuelve al número, no al body.
+    const refocusPhone = useRef(false);
+    useEffect(() => {
+        if (step !== 'numero' || !refocusPhone.current) return;
+        refocusPhone.current = false;
+        phoneRef.current?.focus();
+    }, [step]);
 
     const send = () => {
         if (phone.length !== PHONE_DIGITS) {
@@ -97,7 +115,15 @@ export function PhoneSheet({ open, onClose, purpose, onVerified }: PhoneSheetPro
     if (step === 'codigo') {
         return (
             <BottomSheet open={open} onClose={onClose} title={copy.phone.codeTitle} className="pub-sheet">
-                <CodeStep channel={channel} last4={phone.slice(-4)} onChangeNumber={() => setStep('numero')} onVerified={onVerified} />
+                <CodeStep
+                    channel={channel}
+                    last4={phone.slice(-4)}
+                    onChangeNumber={() => {
+                        refocusPhone.current = true;
+                        setStep('numero');
+                    }}
+                    onVerified={onVerified}
+                />
             </BottomSheet>
         );
     }
@@ -116,6 +142,7 @@ export function PhoneSheet({ open, onClose, purpose, onVerified }: PhoneSheetPro
         >
             <p className="body pub-muted pub-phone-intro">{purpose === 'turno' ? copy.phone.introShift : copy.phone.introJob}</p>
             <PhoneField
+                inputRef={phoneRef}
                 value={phone}
                 onChange={(d) => {
                     setPhone(d);

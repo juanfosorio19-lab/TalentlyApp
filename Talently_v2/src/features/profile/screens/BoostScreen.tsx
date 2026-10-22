@@ -15,8 +15,8 @@ import { SnackbarOutlet, useSnackbar } from '../../../ui/Snackbar';
 import { useGoBack } from '../../../app/BackButtonManager';
 import { paths } from '../../../app/paths';
 import { useDemoSession, type DemoActorId } from '../../demo/session';
-import { trabaja } from '../actor';
 import { COPY } from '../copy';
+import { trabaja } from '../model';
 import { useBoostNotify } from '../store';
 import '../profile.css';
 
@@ -52,8 +52,8 @@ function Boost({ actorId }: { actorId: DemoActorId }) {
             <main className="tl-app-screen__body">
                 <div className="tl-app-screen__content">
                     <p className="body-l prf-muted prf-flush">{COPY.impulsa.intro}</p>
-                    {/* Hechos con ícono: el marcado tl-pub__facts del prototipo. src/ui no exporta la lista sola (pedida en
-                        «requests», hoy también armada a mano en activity/components/FactList.tsx). */}
+                    {/* Hechos con ícono de 16: el mismo marcado `ul.tl-pub__facts` del prototipo (PRF-12). src/ui no
+                        exporta esta lista suelta (solo dentro de PublicationCard): pedida en «requests». */}
                     <ul className="tl-pub__facts prf-facts">
                         <li className="tl-pub__fact">
                             <IconPeople />

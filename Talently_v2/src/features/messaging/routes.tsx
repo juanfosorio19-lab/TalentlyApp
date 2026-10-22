@@ -1,6 +1,8 @@
 // Rutas del feature Mensajes (las compone src/app/router.tsx).
-// Pestaña: /mensajes (MSG-01 · bandeja, con ?tipo=empleo|turno).
-// Apilada: /mensajes/:conversationId (MSG-02 · conversación, con MSG-02b en hoja).
+// Pestaña: /mensajes (MSG-01 · bandeja, con ?tipo=empleo|turno para una
+// persona o ?pub=<publicación> para una organización).
+// Apilada: /mensajes/:conversationId (MSG-02 · conversación, con las hojas
+// ?sheet=adjuntar y ?sheet=reportar, y MSG-02b en hoja).
 import type { RouteObject } from 'react-router-dom';
 import { ConversationScreen } from './screens/ConversationScreen';
 import { InboxScreen } from './screens/InboxScreen';

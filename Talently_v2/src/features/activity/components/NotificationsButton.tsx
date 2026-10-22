@@ -1,27 +1,27 @@
-// La campana del AppBar large (spec §5.1): contador de no leídas y abre NOT-01.
-// Recién registrado, sin contador (como en INI-01-jorge-nuevo). Lo leído en
-// NOT-01 vive en home/inbox.ts: hasta que suba a features/demo (pedido en
-// requests), esta campana no baja al marcar leídas.
-import { useNavigate } from 'react-router-dom';
+// La campana del AppBar large (spec §5.1): contador real de no leídas, el
+// mismo de todas las campanas (useInbox de demo/sessionStore: baja al leer en
+// NOT-01) y abre NOT-01. Recién registrado, sin contador (INI-01-jorge-nuevo).
+import { useLocation } from 'react-router-dom';
 import { IconButton } from '../../../ui/IconButton';
 import { IconBell } from '../../../ui/icons';
+import { useOpenPath } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
 import { useDemoSession } from '../../demo/session';
-import { getHomeFeed } from '../../demo/data';
+import { useInbox } from '../../demo/sessionStore';
 import { copy } from '../copy';
-import { useRecienRegistrado } from '../session';
 
 export function NotificationsButton() {
-    const navigate = useNavigate();
-    const { actor } = useDemoSession();
-    const recienRegistrado = useRecienRegistrado(actor.id);
-    const unread = getHomeFeed(actor.id, { recienRegistrado }).notificacionesSinLeer;
+    const { open } = useOpenPath();
+    const { pathname, search } = useLocation();
+    const { actor, recienRegistrado } = useDemoSession();
+    const { unread } = useInbox(actor.id, recienRegistrado);
     return (
         <IconButton
             icon={IconBell}
             label={copy.tab.notifications(unread)}
             count={unread}
-            onClick={() => navigate(paths.notificaciones())}
+            // NOT-01 sabe de dónde se abrió (como desde Inicio): una notificación que lleva aquí mismo vuelve.
+            onClick={() => open(paths.notificaciones(), { state: { from: pathname + search } })}
         />
     );
 }

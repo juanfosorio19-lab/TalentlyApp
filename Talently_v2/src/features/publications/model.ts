@@ -17,17 +17,17 @@ import {
     IconStar,
     type IconComponent,
 } from '../../ui/icons';
-import { getApplications, getConversations, getManagedPublication } from '../demo/data';
+import { getManagedPublication } from '../demo/data';
 import type { DemoActor } from '../demo/session';
-import type { DemoConversation, DemoPublication, DemoRow } from '../demo/types';
+import type { DemoApplication, DemoPublication, DemoRow } from '../demo/types';
 import { copy } from './copy';
-import { phoneVerifiedInData, startsWithoutApplication } from './mock';
-import type { PublicationSession } from './store';
 
 /** Qué ofrece el CTA fijo de DET-01. */
 export type DetailCta =
-    /** Quien publica: «Gestionar publicación» (GES-01). */
-    | { kind: 'own' }
+    /** Quien publica (o la persona que administra la organización): «Gestionar publicación» (GES-01). */
+    | { kind: 'own'; ownerId: DemoActor['id'] }
+    /** Una organización mira la publicación de otra: no postula (solo el aviso). */
+    | { kind: 'org' }
     /** Ya no recibe postulaciones: Banner y «Ver ofertas parecidas». */
     | { kind: 'closed' }
     /** Abierta: «Tomar turno» (o la lista de espera si no quedan cupos) o el par «Me interesa». */
@@ -40,19 +40,19 @@ export function isAccepting(pub: DemoPublication): boolean {
     return pub.estado === 'Activa';
 }
 
-export function isOwnPublication(actor: DemoActor, pub: DemoPublication): boolean {
-    return pub.autor.id === actor.id || getManagedPublication(pub.id)?.ownerId === actor.id;
-}
-
-/** La postulación de los datos de demostración (salvo las que el prototipo muestra antes de postular). */
-function dataApplication(actor: DemoActor, pub: DemoPublication) {
-    if (startsWithoutApplication(actor.id, pub.id)) return undefined;
-    return getApplications(actor.id).find((a) => a.publicationId === pub.id);
+/**
+ * Quién gestiona la publicación entre los actores de la demo: quien la
+ * publicó o la organización dueña. `undefined` si no es del actor ni de una
+ * organización que la persona administra.
+ */
+export function ownerFor(actor: Pick<DemoActor, 'id' | 'orgs'>, pub: DemoPublication): DemoActor['id'] | undefined {
+    const owners = [pub.autor.id, getManagedPublication(pub.id)?.ownerId].filter((id): id is string => Boolean(id));
+    if (owners.includes(actor.id)) return actor.id;
+    return actor.orgs?.find((org) => owners.includes(org));
 }
 
 /** A dónde lleva «Ver mi postulación» / «Ver mis postulaciones» (ACT-02, PRC-01 o TUR-01). */
-function applicationTarget(actor: DemoActor, pub: DemoPublication): { to: string; label: string } {
-    const app = getApplications(actor.id).find((a) => a.publicationId === pub.id);
+function applicationTarget(pub: DemoPublication, app: DemoApplication | undefined): { to: string; label: string } {
     if (pub.tipo === 'turno') {
         if (app?.miTurno && app.estado === 'Confirmado') return { to: paths.miTurno(app.id), label: copy.cta.myShift };
         return { to: paths.actividad('postulaciones'), label: copy.cta.myApplications };
@@ -61,24 +61,37 @@ function applicationTarget(actor: DemoActor, pub: DemoPublication): { to: string
     return { to: paths.actividad('postulaciones'), label: copy.cta.myApplication };
 }
 
-export function detailCta(actor: DemoActor, pub: DemoPublication, session: PublicationSession): DetailCta {
-    if (isOwnPublication(actor, pub)) return { kind: 'own' };
-    const estado = session.application?.estado ?? dataApplication(actor, pub)?.estado;
-    if (estado) return { kind: 'applied', estado, ...applicationTarget(actor, pub) };
+/**
+ * El CTA según quién mira. `applications` son las del actor tal como las ve
+ * en esta sesión (useApplications: respeta Jorge recién registrado y los
+ * flujos que parten sin postulación); `sessionEstado`, lo que eligió al
+ * postular ahora («En lista de espera»).
+ */
+export function detailCta(
+    actor: Pick<DemoActor, 'id' | 'kind' | 'orgs'>,
+    pub: DemoPublication,
+    applications: readonly DemoApplication[],
+    sessionEstado?: BadgeStatus,
+): DetailCta {
+    const ownerId = ownerFor(actor, pub);
+    if (ownerId) return { kind: 'own', ownerId };
+    if (actor.kind === 'organizacion') return { kind: 'org' };
+    const app = applications.find((a) => a.publicationId === pub.id);
+    const estado = sessionEstado ?? app?.estado;
+    if (estado) return { kind: 'applied', estado, ...applicationTarget(pub, app) };
     if (!isAccepting(pub)) return { kind: 'closed' };
     const waitlist = pub.tipo === 'turno' && pub.cupos.left <= 0;
     return { kind: 'open', waitlist };
 }
 
-/** ¿Tiene el celular verificado (en los datos o en esta sesión)? */
-export function hasVerifiedPhone(actor: DemoActor, session: PublicationSession): boolean {
-    return session.phoneVerified || phoneVerifiedInData(actor.id);
-}
-
-/** La conversación que abre el match (DET-03): la del actor sobre este empleo. */
-export function matchConversation(actor: DemoActor, pub: DemoPublication): DemoConversation | undefined {
-    if (pub.tipo !== 'empleo') return undefined;
-    return getConversations(actor.id).find((c) => c.contexto.publicationId === pub.id);
+/**
+ * Enlace para compartir: la publicación sola, sin el actor de la demo
+ * (`?demo=`), la hoja abierta ni nada de la sesión. `href` es el de
+ * useHref(paths.publicacion(id)) («#/p/…» con HashRouter).
+ */
+export function shareUrl(location: { origin: string; pathname: string }, href: string): string {
+    // HashRouter: la página (v3.html) más «#/p/…». BrowserRouter: la ruta sola.
+    return href.startsWith('#') ? `${location.origin}${location.pathname}${href}` : `${location.origin}${href}`;
 }
 
 /** Ícono de una fila del detalle, según su rótulo (prototipo DET-01). */

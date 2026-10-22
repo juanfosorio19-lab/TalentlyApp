@@ -1,0 +1,36 @@
+/* Gestionar publicaciones (GES-01, GES-02, GES-04): lo mínimo de maquetación
+   que src/ui y app.css aún no traen, solo con tokens. Es la estructura de los
+   mockups del prototipo F1 (style="…" de los .dc.html). */
+
+/* El contenido de estas pantallas va a 16 entre bloques (no a 24). */
+.tl-app-screen__content.manage-content { gap: var(--space-4); }
+
+/* Texto sin el margen del navegador. */
+.manage-text { margin: 0; }
+
+/* Texto secundario: subtítulos, rótulos de métricas, captions. */
+.manage-muted { margin: 0; color: var(--color-text-2); }
+
+/* Dos columnas iguales: métricas (12) y acciones Editar · Pausar (8). */
+.manage-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.manage-grid--tight { gap: var(--space-2); }
+.manage-grid__wide { grid-column: 1 / -1; }
+
+/* Fila de chips de estado con scroll horizontal, de borde a borde (GES-02). */
+.manage-chips {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  margin: 0 calc(-1 * var(--space-4));
+  padding: 0 var(--space-4);
+  scrollbar-width: none;
+}
+.manage-chips::-webkit-scrollbar { display: none; }
+.manage-chips > * { flex: none; }
+
+/* Nombre que abre el proceso (GES-02, Marta → PRC-01): se lee como el título
+   de la fila, sin el azul ni el subrayado del navegador. El foco, tl-focus. */
+.manage-title-link { color: inherit; text-decoration: none; }
+
+/* EmptyState dentro del panel de una pestaña (GES-04-sin-postulados: 24 · 16). */
+.manage-empty { padding: var(--space-6) var(--space-4); }

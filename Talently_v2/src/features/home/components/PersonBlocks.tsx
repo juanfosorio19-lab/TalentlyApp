@@ -1,6 +1,9 @@
 // Los bloques del Inicio de una persona (INI-01, spec §5.2), en el orden en
 // que llegan de los datos: cada uno aparece solo si su capacidad está activa.
+// Todo destino sale de paths.ts o de demo/targets y se abre con useOpenPath.
+import type { MouseEvent } from 'react';
 import { paths } from '../../../app/paths';
+import { Avatar } from '../../../ui/Avatar';
 import { Badge } from '../../../ui/Badge';
 import { Button } from '../../../ui/Button';
 import { AgendaEvent } from '../../../ui/CalendarWeek';
@@ -20,15 +23,13 @@ import {
 import { ScreenSection, Stack } from '../../../ui/Layout';
 import { List, ListItem } from '../../../ui/ListItem';
 import { OptionLink, OptionLinkGroup } from '../../../ui/OptionCard';
-import { Avatar } from '../../../ui/Avatar';
 import { DEMO_TODAY, getPublication } from '../../demo/data';
-import type { DemoAuthor, DemoEmptyState, DemoHomeBlock } from '../../demo/types';
-import { isPlainClick, useAppLinks, useTargetLinks } from '../links';
+import type { DemoEmptyState, DemoHomeBlock } from '../../demo/types';
 import { isoOf } from '../mock';
-import { homeSheetPath } from '../sheet';
+import { useHomeNavigation } from '../navigation';
+import type { PublishKind } from '../selectors';
 import { JobsShortcut, ShiftCards } from './HomePublications';
 import { ProfileTipCard } from './ProfileTipCard';
-import type { PublishKind } from './PublishSheet';
 
 const YEAR = Number(DEMO_TODAY.split(' ').pop());
 
@@ -40,7 +41,7 @@ const EMPTY_ICON: Record<NonNullable<DemoEmptyState['icono']>, IconComponent> = 
     notificaciones: IconBell,
 };
 
-/** «¿Qué necesitas?» del hogar: el ícono de la categoría y qué publicación prepara. */
+/** «¿Qué necesitas?» del hogar: el ícono de la categoría y qué opción marca en PUBL-01. */
 const NEED: Record<string, { icon: IconComponent; publish: PublishKind }> = {
     'asesor-hogar': { icon: IconJobHomeCare, publish: 'hogar' },
     'cuidador-infantil': { icon: IconPeople, publish: 'hogar' },
@@ -48,16 +49,21 @@ const NEED: Record<string, { icon: IconComponent; publish: PublishKind }> = {
     'banquetero-evento': { icon: IconJobFoodEvents, publish: 'evento' },
 };
 
+/** Abrir en otra pestaña (Ctrl, Cmd, Mayús, rueda) sigue siendo del navegador. */
+const plainClick = (e: MouseEvent<HTMLElement>) => e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
+
 export interface PersonBlockProps {
     block: DemoHomeBlock;
-    onVerify: (author: DemoAuthor) => void;
+    /** Abre «Verificación de …» de quien publica la tarjeta. */
+    onVerify: (publicationId: string) => void;
     /** Abre PUBL-01, con una opción marcada si viene de «¿Qué necesitas?». */
-    onPublish: (initial?: PublishKind) => void;
+    onPublish: (kind?: PublishKind) => void;
+    /** `href` de PUBL-01 con esa opción (el enlace también sirve abierto en otra pestaña). */
+    publishHref: (kind: PublishKind) => string;
 }
 
-export function PersonBlock({ block, onVerify, onPublish }: PersonBlockProps) {
-    const { go, hrefOf } = useAppLinks();
-    const { targetLink, openTarget } = useTargetLinks();
+export function PersonBlock({ block, onVerify, onPublish, publishHref }: PersonBlockProps) {
+    const { go, targetLink, openTarget } = useHomeNavigation();
 
     switch (block.tipo) {
         case 'agenda':
@@ -71,22 +77,25 @@ export function PersonBlock({ block, onVerify, onPublish }: PersonBlockProps) {
                         </Button>
                     }
                 >
-                    {block.eventos.map((e) => (
-                        <AgendaEvent
-                            key={e.id}
-                            event={{
-                                id: e.id,
-                                date: isoOf(e.fecha, YEAR),
-                                start: e.inicio,
-                                end: e.fin ?? '',
-                                kind: e.tipo,
-                                title: e.titulo,
-                                who: e.detalle,
-                                status: e.estado,
-                            }}
-                            onClick={() => openTarget(e.destino)}
-                        />
-                    ))}
+                    {/* El último compromiso no deja su margen de lista bajo la sección (Main). */}
+                    <div className="home-agenda">
+                        {block.eventos.map((e) => (
+                            <AgendaEvent
+                                key={e.id}
+                                event={{
+                                    id: e.id,
+                                    date: isoOf(e.fecha, YEAR),
+                                    start: e.inicio,
+                                    end: e.fin ?? '',
+                                    kind: e.tipo,
+                                    title: e.titulo,
+                                    who: e.detalle,
+                                    status: e.estado,
+                                }}
+                                onClick={() => openTarget(e.destino)}
+                            />
+                        ))}
+                    </div>
                 </ScreenSection>
             );
 
@@ -131,7 +140,7 @@ export function PersonBlock({ block, onVerify, onPublish }: PersonBlockProps) {
                                 title={n.titulo}
                                 sub={n.detalle}
                                 status={<Badge status={n.estado} />}
-                                // Con o sin pantalla de destino todavía (PRC-01), la fila lleva a un lugar: chevron como en el prototipo.
+                                // Con o sin pantalla de destino todavía, la fila lleva a un lugar: chevron como en el prototipo.
                                 chevron
                                 {...targetLink(n.destino)}
                             />
@@ -154,11 +163,11 @@ export function PersonBlock({ block, onVerify, onPublish }: PersonBlockProps) {
                                     key={o.id}
                                     icon={need.icon}
                                     title={o.texto}
-                                    // PUBL-01 vive en la URL como hoja (spec §5.4): el enlace también sirve en otra pestaña.
-                                    href={hrefOf(homeSheetPath('publicar', { tipo: need.publish }))}
+                                    // PUBL-01 vive en la URL como hoja (spec §5.4).
+                                    href={publishHref(need.publish)}
                                     aria-haspopup="dialog"
                                     onClick={(e) => {
-                                        if (!isPlainClick(e)) return;
+                                        if (!plainClick(e)) return;
                                         e.preventDefault();
                                         onPublish(need.publish);
                                     }}
@@ -180,7 +189,7 @@ export function PersonBlock({ block, onVerify, onPublish }: PersonBlockProps) {
                             sub={block.detalle}
                             status={<Badge status={block.estado} />}
                             chevron
-                            // GES-01: «Disponible pronto» mientras no tenga ruta en el router.
+                            // GES-01 de su aviso.
                             {...targetLink({ pantalla: 'gestion', publicationId: block.publicationId })}
                         />
                     </List>
@@ -212,4 +221,3 @@ export function PersonBlock({ block, onVerify, onPublish }: PersonBlockProps) {
             return null;
     }
 }
-

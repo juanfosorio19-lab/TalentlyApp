@@ -3,17 +3,16 @@
 // aplican al actor (spec §5.2). Cada segmento es su pantalla: ACT-01 Agenda,
 // ACT-02 Postulaciones y ACT-03 Publicaciones. El segmento va en la URL
 // (replace): la memoria de la pestaña y atrás vuelven al mismo.
-import { useEffect, useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AppBar, useScrolled } from '../../../ui/AppBar';
 import { Stack } from '../../../ui/Layout';
 import { SegmentedControl } from '../../../ui/SegmentedControl';
-import { paths, type ActivitySegment } from '../../../app/paths';
+import type { ActivitySegment } from '../../../app/paths';
 import { useDemoSession } from '../../demo/session';
 import { NotificationsButton } from '../components/NotificationsButton';
 import { copy } from '../copy';
-import { defaultSegmentFor, publicationsFor, segmentsFor } from '../selectors';
-import { useRecienRegistrado } from '../session';
+import { publicationsFor, resolveSegment } from '../selectors';
 import { AgendaScreen } from './AgendaScreen';
 import { ApplicationsScreen } from './ApplicationsScreen';
 import { MyPublicationsScreen } from './MyPublicationsScreen';
@@ -33,27 +32,35 @@ export const segmentScreenIds: Record<ActivitySegment, string> = {
 const panelId = (seg: ActivitySegment) => `act-panel-${seg}`;
 
 export function ActivityScreen() {
-    const navigate = useNavigate();
-    const [params] = useSearchParams();
-    const { actor } = useDemoSession();
-    const recienRegistrado = useRecienRegistrado(actor.id);
+    const [params, setParams] = useSearchParams();
+    const { actor, recienRegistrado } = useDemoSession();
     const scrolled = useScrolled();
 
     const publications = useMemo(() => publicationsFor(actor, { recienRegistrado }), [actor, recienRegistrado]);
-    const hasPublications = publications.length > 0;
-    const segments = segmentsFor(actor, hasPublications);
     const requested = params.get('seg');
     // Sin ?seg, o con uno que no aplica al actor (enlace viejo, cambio de actor), abre el de por defecto.
-    const fallback = defaultSegmentFor(actor, hasPublications);
-    const current =
-        segments.find((s) => s.value === requested) ?? segments.find((s) => s.value === fallback) ?? segments[0];
-    const seg: ActivitySegment = current?.value ?? 'agenda';
+    const { seg, segments } = resolveSegment(actor, publications.length > 0, requested);
+    const current = segments.find((s) => s.value === seg);
     const withTabs = segments.length > 1;
+
+    // Cambia el segmento sin perder lo demás de la URL (la vista y el día de la Agenda siguen ahí al volver).
+    const showSegment = useCallback(
+        (next: ActivitySegment) =>
+            setParams(
+                (prev) => {
+                    const p = new URLSearchParams(prev);
+                    p.set('seg', next);
+                    return p;
+                },
+                { replace: true, preventScrollReset: true },
+            ),
+        [setParams],
+    );
 
     // Un ?seg que no aplica se corrige en la URL: la memoria de la pestaña no guarda un segmento falso.
     useEffect(() => {
-        if (requested && requested !== seg) navigate(paths.actividad(seg), { replace: true });
-    }, [requested, seg, navigate]);
+        if (requested && requested !== seg) showSegment(seg);
+    }, [requested, seg, showSegment]);
 
     // Solo el segmento elegido tiene panel: las demás pestañas no apuntan a un id que no existe.
     const options = segments.map((s) => (s.value === seg ? { ...s, controls: panelId(seg) } : s));
@@ -68,7 +75,7 @@ export function ActivityScreen() {
                             <SegmentedControl
                                 options={options}
                                 value={seg}
-                                onChange={(next) => navigate(paths.actividad(next), { replace: true })}
+                                onChange={showSegment}
                                 aria-label={copy.tab.segmentsLabel}
                             />
                         )}

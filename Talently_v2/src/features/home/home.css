@@ -1,27 +1,37 @@
 /* Inicio y notificaciones: solo maquetación y el tono de texto secundario, con
    tokens. Sin colores nuevos, tipografía ni sombras: eso lo ponen los
-   componentes de src/ui. src/ui aún no trae una utilidad de tono de texto
-   (pedida en «requests»); cuando exista, .home-muted se borra. */
+   componentes de src/ui y las clases de tokens.css (.body, .caption,
+   .overline). src/ui aún no trae una utilidad de tono de texto (pedida en
+   «requests»); cuando exista, .home-muted se borra. */
 
 /* INI-01 e INI-02: el contenido parte a 8 del AppBar (main del prototipo). */
 .home-content { padding-top: var(--space-2); }
 
-/* Texto secundario (`color-text-2`) sobre las clases de tokens.css (.body, .caption). */
+/* Texto secundario (`color-text-2`) sobre las clases de tokens.css. */
 .home-muted { color: var(--color-text-2); }
-.home-flush { margin: 0; }
+.home-block { display: block; }
+.home-grow { flex: 1; min-width: 0; }
+
+/* INI-01 «Hoy en tu agenda»: cada compromiso trae su margen de lista (8); el
+   último no lo deja bajo la sección (en Main el evento va con margen 0). */
+.home-agenda { margin-bottom: calc(-1 * var(--space-2)); }
 
 /* INI-02: KPIs en una grilla de 2 (como la del prototipo, separación 12). */
 .home-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
 
-/* SHT-ACTOR: el nombre ocupa el ancho; el punto de no leído queda junto al radio. */
-.home-actor__text { flex: 1; min-width: 0; }
-
-/* SHT-ACTOR: «Crear organización» alineada con los avatares (la fila trae su padding de 16). */
+/* SHT-ACTOR y «Verificación de …»: la lista sin borde alineada con las filas
+   de la hoja (la fila trae su padding de 16) y la nota a 8 de ella. */
 .home-sheet-list { margin: var(--space-1) calc(-1 * var(--space-4)) 0; }
 .home-sheet-note { margin: var(--space-2) 0 0; }
 
-/* NOT-01: lista pegada al AppBar; «Marcar todas como leídas» a la derecha y el
-   primer grupo a 8 de ella (los demás, a 24: .tl-agenda__day). */
+/* PUBL-01: «Publicas como …» a 16 de las opciones. */
+.home-publisher { margin: 0 0 var(--space-4); }
+
+/* NOT-01: lista pegada al AppBar; «Marcar todas como leídas» a la derecha;
+   cada grupo con su título Overline a 24 del anterior y a 8 de su lista (el
+   primero, a 8 del botón), y filas de 12 arriba y abajo (NOT-01.dc.html). */
 .home-notifs { gap: 0; padding-top: 0; }
 .home-notifs__actions { display: flex; justify-content: flex-end; }
-.home-notifs > section:first-of-type > .tl-agenda__day { margin-top: var(--space-2); }
+.home-group { margin: var(--space-6) 0 var(--space-2); }
+.home-notifs > section:first-of-type > .home-group { margin-top: var(--space-2); }
+.home-notifs .home-notif { padding-top: var(--space-3); padding-bottom: var(--space-3); }

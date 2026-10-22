@@ -1,31 +1,27 @@
-// Lo que Actividad lee de los datos de demostración, ya listo para las
-// pantallas. Solo usa las funciones de acceso de features/demo (nunca sus
-// constantes DEMO_*), así que cuando vuelva Supabase no cambia nada aquí.
+// Lo que Actividad lee de los datos de demostración y del estado de la sesión,
+// ya listo para las pantallas. Son funciones puras: las pantallas les pasan lo
+// que leen de demo/sessionStore (useApplications, useInbox), así ACT-02, la
+// Agenda, Inicio y TUR-01 ven lo mismo. Solo usan las funciones de acceso de
+// features/demo (nunca sus constantes de datos).
 import type { SegmentedOption } from '../../ui/SegmentedControl';
-import type { AgendaEventData, IsoDate } from '../../ui/CalendarWeek';
-import { addDays, startOfWeek } from '../../ui/CalendarWeek';
+import { addDays, formatDayShort, startOfWeek, type AgendaEventData, type IsoDate } from '../../ui/CalendarWeek';
 import { paths, type ActivitySegment } from '../../app/paths';
-import type { DemoActor } from '../demo/session';
-import {
-    DEMO_TODAY,
-    getAgenda,
-    getApplications,
-    getHomeFeed,
-    getManagedPublication,
-    getOrgDashboard,
-    getProcess,
-    getPublication,
-} from '../demo/data';
+import type { CalendarEvent } from '../../domain/calendario';
+import type { DemoActor, DemoActorId } from '../demo/session';
+import { startsWithoutApplication } from '../demo/sessionStore';
+import { DEMO_TODAY, getAgenda, getHomeFeed, getManagedPublication, getOrgDashboard, getProcess, getPublication } from '../demo/data';
 import type {
+    BadgeStatus,
     DemoAgendaEvent,
     DemoApplication,
     DemoManagedPublication,
+    DemoNotification,
     DemoPublication,
     DemoShiftBlock,
     DemoTarget,
 } from '../demo/types';
 import { copy } from './copy';
-import { DEMO_NOW_TIME, INTERVIEW_MINUTES } from './mock';
+import { DEMO_NOW_TIME } from './mock';
 
 // ─── Fechas de la demo («sáb 12 dic» → «2026-12-12») ───────────────────────
 
@@ -79,8 +75,6 @@ const minutesOf = (hhmm: string) => {
     return h * 60 + m;
 };
 
-const hhmm = (minutes: number) => `${pad(Math.floor(minutes / 60) % 24)}:${pad(minutes % 60)}`;
-
 const dayIndex = (iso: IsoDate) => {
     const [y = 1970, m = 1, d = 1] = iso.split('-').map(Number);
     return Date.UTC(y, m - 1, d) / 86_400_000;
@@ -95,43 +89,6 @@ export function minutesUntil(date: IsoDate, time: string): number {
 export function splitTimeRange(range: string): { start: string; end: string } {
     const [start = '', end = ''] = range.split(/[–-]/).map((s) => s.trim());
     return { start, end };
-}
-
-// ─── Destinos ───────────────────────────────────────────────────────────────
-
-/**
- * A dónde lleva tocar algo de la demo, siempre con `paths`. GES-01, GES-02,
- * GES-04 y PRC-01 aún no están en el router (pedido en requests): mientras
- * tanto, la gestión, los postulantes, los cupos y el proceso abren el resumen
- * de su publicación (DET-01, que en una propia trae «Gestionar publicación»).
- * Cuando se registren, cada caso vuelve a paths.gestionarPublicacion,
- * paths.postulantes, paths.cuposTurno y paths.proceso.
- */
-export function targetPath(t: DemoTarget): string {
-    switch (t.pantalla) {
-        case 'inicio':
-            return paths.inicio();
-        case 'explorar':
-            return paths.explorar(t.tipo);
-        case 'publicacion':
-        case 'gestion':
-        case 'evaluar':
-        case 'postulantes':
-        case 'cupos':
-            return paths.publicacion(t.publicationId);
-        case 'conversacion':
-            return paths.conversacion(t.conversationId);
-        case 'proceso': {
-            const process = getProcess(t.processId);
-            return process ? paths.publicacion(process.publicationId) : paths.proceso(t.processId);
-        }
-        case 'mi-turno':
-            return paths.miTurno(t.applicationId);
-        case 'perfil':
-            return paths.perfil();
-        case 'verificacion':
-            return paths.verificacion();
-    }
 }
 
 // ─── Segmentos (spec §5.2) ──────────────────────────────────────────────────
@@ -171,6 +128,19 @@ export function defaultSegmentFor(actor: DemoActor, hasPublications: boolean): A
     return 'agenda';
 }
 
+/** El segmento que se muestra para `?seg=<pedido>`: el pedido si aplica al actor; si no, el de apertura. */
+export function resolveSegment(
+    actor: DemoActor,
+    hasPublications: boolean,
+    requested: string | null,
+): { seg: ActivitySegment; segments: SegmentedOption<ActivitySegment>[] } {
+    const segments = segmentsFor(actor, hasPublications);
+    const fallback = defaultSegmentFor(actor, hasPublications);
+    const current =
+        segments.find((s) => s.value === requested) ?? segments.find((s) => s.value === fallback) ?? segments[0];
+    return { seg: current?.value ?? 'agenda', segments };
+}
+
 // ─── Postulaciones (ACT-02) ─────────────────────────────────────────────────
 
 export interface ActivityOptions {
@@ -179,21 +149,36 @@ export interface ActivityOptions {
 }
 
 /**
- * Las postulaciones del actor, en el orden del prototipo (empleos y luego
- * turnos). Recién registrado, ninguna. Las que se envían en la sesión
- * (publications/store.ts) aún no llegan aquí: pedido en requests.
+ * A dónde lleva una fila de ACT-02: un turno confirmado abre Mi turno
+ * (TUR-01, flujo 2); un empleo, su proceso (PRC-01); un turno postulado o en
+ * lista de espera, su detalle (DET-01, como DET-01-turno-postulado).
  */
-export function applicationsFor(actor: DemoActor, { recienRegistrado }: ActivityOptions): DemoApplication[] {
-    return recienRegistrado ? [] : getApplications(actor.id);
+export function applicationPath(a: DemoApplication): string {
+    if (a.miTurno) return paths.miTurno(a.id);
+    if (a.tipo === 'empleo' && a.processId) return paths.proceso(a.processId);
+    return paths.publicacion(a.publicationId);
 }
 
 // ─── Agenda (ACT-01) ────────────────────────────────────────────────────────
 
 export interface AgendaItem {
-    /** Lo que dibuja CalendarWeek. */
-    event: AgendaEventData;
-    /** El original, para su destino y su fecha tal como se dice («lun 14 dic»). */
-    source: DemoAgendaEvent;
+    id: string;
+    date: IsoDate;
+    /** La fecha tal como se dice en los datos: «lun 14 dic». */
+    fecha: string;
+    start: string;
+    /** Sin hora de término (las entrevistas de la demo): se muestra solo el inicio, nunca una inventada. */
+    end?: string;
+    kind: 'turno' | 'entrevista';
+    /** «Turno · Garzón», «Entrevista · Mecánico/a automotriz». */
+    title: string;
+    /** «Banquetería Rosa SpA · Cóctel corporativo · Providencia». */
+    who?: string;
+    /** Organización: «5/8 confirmados» del bloque del turno. */
+    where?: string;
+    status: BadgeStatus;
+    /** A dónde lleva tocarlo (demo/targets → paths). */
+    target: DemoTarget;
 }
 
 /** Organización: «5/8 confirmados» del bloque del turno, si se conoce. */
@@ -204,7 +189,7 @@ function coverageOf(t: DemoTarget): string | undefined {
 }
 
 /** Estados de un turno pendiente que la Agenda muestra con su Badge (README de CalendarWeek). */
-const PENDING_SHIFT: ReadonlySet<string> = new Set(['Postulado', 'En lista de espera']);
+const PENDING_SHIFT: ReadonlySet<BadgeStatus> = new Set<BadgeStatus>(['Postulado', 'En lista de espera']);
 
 /** Comuna de «a 18 km · Las Condes» (o «Las Condes» si quien mira es quien publica). */
 const comunaOf = (lugar: string) => lugar.split(' · ').pop() ?? lugar;
@@ -213,7 +198,7 @@ const comunaOf = (lugar: string) => lugar.split(' · ').pop() ?? lugar;
  * Turnos postulados o en lista de espera, con fecha: uno por bloque (quien
  * postula, postula a todos los días). Abren su detalle (DET-01).
  */
-function pendingShifts(actor: DemoActor, applications: readonly DemoApplication[]): DemoAgendaEvent[] {
+function pendingShifts(actorId: DemoActorId, applications: readonly DemoApplication[]): DemoAgendaEvent[] {
     const events: DemoAgendaEvent[] = [];
     for (const a of applications) {
         if (a.tipo !== 'turno' || a.miTurno || !PENDING_SHIFT.has(a.estado)) continue;
@@ -224,7 +209,7 @@ function pendingShifts(actor: DemoActor, applications: readonly DemoApplication[
             if (!start) continue;
             events.push({
                 id: `${a.id}:${b.id}`,
-                viewerId: actor.id,
+                viewerId: actorId,
                 fecha: `${b.weekday} ${b.day} ${b.month}`,
                 esHoy: isoFromBlock(b) === TODAY,
                 inicio: start,
@@ -241,43 +226,109 @@ function pendingShifts(actor: DemoActor, applications: readonly DemoApplication[
 }
 
 /**
- * La agenda del actor para CalendarWeek, en orden de fecha y hora: lo
- * confirmado, las entrevistas y los turnos pendientes con su estado. Quita los
- * turnos que la persona canceló en esta sesión (`cancelled`, ids de
- * postulación). Recién registrado, vacía.
+ * ¿Sigue en pie este compromiso de los datos en esta sesión? Un turno
+ * confirmado, si la postulación sigue y no se canceló en TUR-01. Una
+ * entrevista, si su proceso ya existe: en los flujos 2 y 3 el actor parte sin
+ * postular (FLOW_START de demo/sessionStore) y su entrevista llega al postular.
  */
-export function agendaFor(actor: DemoActor, cancelled: ReadonlySet<string>, options: ActivityOptions): AgendaItem[] {
-    if (options.recienRegistrado) return [];
+function isLive(e: DemoAgendaEvent, actorId: DemoActorId, applications: readonly DemoApplication[]): boolean {
+    const d = e.destino;
+    if (d.pantalla === 'mi-turno') {
+        const application = applications.find((a) => a.id === d.applicationId);
+        return application !== undefined && application.estado !== 'Cancelaste';
+    }
+    if (d.pantalla === 'proceso') {
+        const publicationId = getProcess(d.processId)?.publicationId;
+        if (publicationId && startsWithoutApplication(actorId, publicationId)) {
+            return applications.some((a) => a.publicationId === publicationId);
+        }
+    }
+    return true;
+}
+
+const byDateAndStart = (a: AgendaItem, b: AgendaItem) =>
+    a.date === b.date ? minutesOf(a.start) - minutesOf(b.start) : a.date < b.date ? -1 : 1;
+
+/**
+ * La agenda del actor en orden de fecha y hora: lo confirmado, las entrevistas
+ * y los turnos pendientes con su estado. `applications` son las de la sesión
+ * (useApplications): sin las canceladas y sin lo que el actor aún no postuló.
+ * Recién registrado, vacía.
+ */
+export function agendaFor(
+    actor: DemoActor,
+    applications: readonly DemoApplication[],
+    { recienRegistrado }: ActivityOptions,
+): AgendaItem[] {
+    if (recienRegistrado) return [];
     const items: AgendaItem[] = [];
-    for (const e of [...getAgenda(actor.id), ...pendingShifts(actor, applicationsFor(actor, options))]) {
-        if (e.destino.pantalla === 'mi-turno' && cancelled.has(e.destino.applicationId)) continue;
+    const events = [...getAgenda(actor.id).filter((e) => isLive(e, actor.id, applications)), ...pendingShifts(actor.id, applications)];
+    for (const e of events) {
         const date = isoFromDayText(e.fecha);
         if (!date) continue;
-        const end = e.fin ?? hhmm(minutesOf(e.inicio) + INTERVIEW_MINUTES);
         items.push({
-            source: e,
-            event: {
-                id: e.id,
-                date,
-                start: e.inicio,
-                end,
-                kind: e.tipo,
-                title: e.titulo,
-                who: e.detalle,
-                where: actor.kind === 'organizacion' ? coverageOf(e.destino) : undefined,
-                status: e.estado,
-            },
+            id: e.id,
+            date,
+            fecha: e.fecha,
+            start: e.inicio,
+            end: e.fin,
+            kind: e.tipo,
+            title: e.titulo,
+            who: e.detalle,
+            where: actor.kind === 'organizacion' ? coverageOf(e.destino) : undefined,
+            status: e.estado,
+            target: e.destino,
         });
     }
-    return items.sort((a, b) =>
-        a.event.date === b.event.date ? minutesOf(a.event.start) - minutesOf(b.event.start) : a.event.date < b.event.date ? -1 : 1,
-    );
+    return items.sort(byDateAndStart);
+}
+
+/** Lo que dibuja AgendaEvent. Sin hora de término, la columna de la hora muestra solo el inicio. */
+export function toEventData(item: AgendaItem): AgendaEventData {
+    return {
+        id: item.id,
+        date: item.date,
+        start: item.start,
+        end: item.end ?? '',
+        kind: item.kind,
+        title: item.title,
+        who: item.who,
+        where: item.where,
+        status: item.status,
+    };
+}
+
+/**
+ * Nombre accesible de un compromiso sin hora de término (AgendaEvent arma
+ * «de 10:00 a 11:00» y aquí no hay término): «…, vie 11 dic a las 10:00, …».
+ * Con término, el de AgendaEvent.
+ */
+export function eventLabel(item: AgendaItem): string | undefined {
+    if (item.end) return undefined;
+    const sub = [item.who, item.where].filter(Boolean).join(' · ');
+    return `${item.title}, ${formatDayShort(item.date)} a las ${item.start}${sub ? `, ${sub}` : ''}, ${item.status}`;
+}
+
+/** «lun 14 dic · 09:00» o «sáb 19 dic · 18:00–00:00»: la fecha y el horario como se dicen. */
+export function whenText(item: AgendaItem): string {
+    return `${item.fecha} · ${item.start}${item.end ? `–${item.end}` : ''}`;
+}
+
+/** Los compromisos agrupados por día, en orden (vista Semana). */
+export function groupByDay(items: readonly AgendaItem[]): { date: IsoDate; items: AgendaItem[] }[] {
+    const groups: { date: IsoDate; items: AgendaItem[] }[] = [];
+    for (const item of items) {
+        const last = groups[groups.length - 1];
+        if (last && last.date === item.date) last.items.push(item);
+        else groups.push({ date: item.date, items: [item] });
+    }
+    return groups;
 }
 
 // ─── Publicaciones (ACT-03) ─────────────────────────────────────────────────
 
 export type MyPublication =
-    | { kind: 'managed'; id: string; managed: DemoManagedPublication; tipo: DemoPublication['tipo'] | undefined }
+    | { kind: 'managed'; id: string; managed: DemoManagedPublication; publication: DemoPublication | undefined }
     | { kind: 'summary'; id: string; publication: DemoPublication };
 
 /**
@@ -286,17 +337,16 @@ export type MyPublication =
  * aún no trae una función por dueño (pedida en requests).
  */
 export function publicationsFor(actor: DemoActor, { recienRegistrado }: ActivityOptions): MyPublication[] {
+    if (recienRegistrado) return [];
     const ids =
         actor.kind === 'organizacion'
             ? (getOrgDashboard(actor.id)?.publicaciones ?? [])
-            : getHomeFeed(actor.id, { recienRegistrado }).bloques.flatMap((b) =>
-                  b.tipo === 'tu-aviso' ? [b.publicationId] : [],
-              );
+            : getHomeFeed(actor.id).bloques.flatMap((b) => (b.tipo === 'tu-aviso' ? [b.publicationId] : []));
     const list: MyPublication[] = [];
     for (const id of ids) {
         const managed = getManagedPublication(id);
         const publication = getPublication(id);
-        if (managed) list.push({ kind: 'managed', id, managed, tipo: publication?.tipo });
+        if (managed) list.push({ kind: 'managed', id, managed, publication });
         else if (publication) list.push({ kind: 'summary', id, publication });
     }
     return list;
@@ -318,4 +368,106 @@ export function metricLine(m: DemoManagedPublication): string | undefined {
     if (!metric) return undefined;
     const main = `${metric.valor} ${metric.label.toLocaleLowerCase('es-CL')}`;
     return metric.detalle ? `${main} · ${metric.detalle}` : main;
+}
+
+/**
+ * «Publicas como …» de PUBL-01: la organización, o el hogar de la persona
+ * («Familia en Ñuñoa», autor de su aviso). Sin aviso, su nombre.
+ */
+export function publisherFor(actor: DemoActor, publications: readonly MyPublication[]): string {
+    if (actor.kind === 'organizacion') return actor.fullName;
+    const own = publications.find((p) => p.publication)?.publication;
+    return own?.autor.nombre ?? actor.fullName;
+}
+
+// ─── Mi turno (TUR-01) ──────────────────────────────────────────────────────
+
+export interface ShiftWindow {
+    date: IsoDate;
+    start: string;
+    /** Día en que termina: el siguiente si cruza la medianoche (18:00–02:00). */
+    endDate: IsoDate;
+    end: string;
+}
+
+/** Cuándo empieza y termina el bloque del turno. `null` si su día o su horario no se entienden. */
+export function shiftWindow(block: DemoShiftBlock): ShiftWindow | null {
+    const date = isoFromBlock(block);
+    const { start, end } = splitTimeRange(block.time);
+    if (!date || !start || !end) return null;
+    return { date, start, end, endDate: minutesOf(end) <= minutesOf(start) ? addDays(date, 1) : date };
+}
+
+/** ¿El turno ya terminó (ahora en la demo)? Entonces se evalúa (REV-01) y ya no se confirma ni cancela. */
+export function hasEnded(w: ShiftWindow): boolean {
+    return minutesUntil(w.endDate, w.end) <= 0;
+}
+
+/** Evento del calendario (.ics con buildIcs) del turno, en hora local de Chile. */
+export function shiftCalendarEvent(
+    uid: string,
+    title: string,
+    w: ShiftWindow,
+    location?: string,
+    description?: string,
+): CalendarEvent {
+    return { uid, title, start: `${w.date}T${w.start}`, end: `${w.endDate}T${w.end}`, location, description };
+}
+
+/** «2026-12-10T19:00» → «20261210T190000». */
+const googleStamp = (value: string) => `${value.replace(/[-:]/g, '')}00`;
+
+/** Plantilla «Crear evento» de Google Calendar: en el teléfono abre sin plugin de calendario. */
+export function googleCalendarUrl(e: CalendarEvent): string {
+    const query = new URLSearchParams({ action: 'TEMPLATE', text: e.title, ctz: 'America/Santiago' });
+    if (e.location) query.set('location', e.location);
+    if (e.description) query.set('details', e.description);
+    // `dates` va con su barra tal cual: «20261210T190000/20261211T000000».
+    return `https://calendar.google.com/calendar/render?${query.toString()}&dates=${googleStamp(e.start)}/${googleStamp(e.end)}`;
+}
+
+/**
+ * Nombre del archivo, legible: «Mi turno - Garzones para coctel corporativo.ics».
+ * Solo ASCII (Chrome descarta un nombre con tildes o «·» y lo llama «download») y
+ * sin / ni : que el sistema no acepta.
+ */
+export function icsFileName(title: string): string {
+    const name = `${copy.shift.title} - ${title}`
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^\x20-\x7E]+/g, '')
+        .replace(/[\\/:*?"<>|]+/g, '-');
+    return `${name}.ics`;
+}
+
+export interface PendingReview {
+    id: string;
+    /** «Evalúa tu turno del sáb 5 dic». */
+    title: string;
+    /** «Banquetería Rosa SpA». */
+    from: string;
+    target: DemoTarget;
+}
+
+/**
+ * Evaluaciones que el actor tiene pendientes (spec §5.2: la evaluación mutua
+ * se pide antes de postular al siguiente turno), salvo la del turno que se
+ * está mirando. Salen de su bandeja (useInbox): la notificación «Evalúa tu
+ * turno del …» lleva a REV-01.
+ */
+export function pendingReviewsFor(
+    notifications: readonly DemoNotification[],
+    actorId: DemoActorId,
+    exceptPublicationId?: string,
+): PendingReview[] {
+    const seen = new Set<string>();
+    const reviews: PendingReview[] = [];
+    for (const n of notifications) {
+        const t = n.destino;
+        if (n.actorId !== actorId || t?.pantalla !== 'evaluar' || t.publicationId === exceptPublicationId) continue;
+        if (seen.has(t.publicationId)) continue;
+        seen.add(t.publicationId);
+        reviews.push({ id: n.id, title: n.titulo, from: n.origen, target: t });
+    }
+    return reviews;
 }

@@ -5,9 +5,15 @@
 const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`;
 const nombrePila = (nombre: string) => nombre.split(' ')[0] ?? nombre;
 
+/** ««Garzón», «Bodega» o «Maipú»». */
+function enumerar(palabras: readonly string[]): string {
+    const q = palabras.map((p) => `«${p}»`);
+    if (q.length <= 1) return q.join('');
+    return `${q.slice(0, -1).join(', ')} o ${q[q.length - 1]}`;
+}
+
 export const copy = {
     titulo: 'Explorar',
-    pronto: 'Disponible pronto',
 
     appBar: {
         buscar: 'Buscar',
@@ -26,7 +32,6 @@ export const copy = {
     empleos: {
         verLista: 'Ver lista',
         verDeAUna: 'Ver de a una',
-        meInteresa: (titulo: string) => `Marcaste que te interesa ${titulo}`,
         noMeInteresa: (titulo: string) => `No te mostraremos más ${titulo}`,
         deshacer: 'Deshacer',
         deckVacio: {
@@ -39,6 +44,7 @@ export const copy = {
         listaVacia: {
             titulo: 'No te quedan ofertas por ver',
             texto: 'Marcaste todas con «No me interesa». Te avisaremos cuando haya ofertas nuevas cerca.',
+            verDescartadas: 'Volver a ver las descartadas',
         },
         sinResultados: {
             titulo: 'No hay ofertas con estos filtros',
@@ -53,6 +59,8 @@ export const copy = {
         comuna: 'Comuna',
         todos: 'Todos',
         tomarTurno: 'Tomar turno',
+        listaEspera: 'Unirme a la lista de espera',
+        verPostulaciones: 'Ver mis postulaciones',
         comunaPronto: (comuna: string) =>
             `Por ahora ves turnos cerca de ${comuna}. Cambiar de comuna estará disponible pronto.`,
         buscarComuna: 'Buscar comuna',
@@ -76,8 +84,11 @@ export const copy = {
         invitaste: (nombre: string) => `Invitaste a ${nombrePila(nombre)} a postular`,
         descartaste: (nombre: string) => `No te sugeriremos más a ${nombrePila(nombre)}`,
         deshacer: 'Deshacer',
+        verPostulantes: 'Ver postulantes',
+        verCupos: 'Ver cupos',
+        cambiarPublicacion: 'Cambiar de publicación',
         porque: {
-            oficio: (titulo: string) => `calza con el oficio de ${titulo}`,
+            oficio: 'calza con el oficio que buscas',
             trabajo: (fecha: string) => `ya trabajó contigo el ${fecha}`,
             comuna: (comuna: string) => `vive en ${comuna}`,
         },
@@ -85,7 +96,6 @@ export const copy = {
             titulo: 'Este turno ya tiene sus cupos completos',
             texto: (titulo: string, total: number) =>
                 `${titulo} tiene sus ${total} cupos confirmados. Elige otra publicación para ver personas sugeridas.`,
-            accion: 'Cambiar de publicación',
         },
         todosPostularon: {
             titulo: 'Las personas sugeridas ya postularon',
@@ -93,8 +103,6 @@ export const copy = {
                 n === 1
                     ? `Revisa a la persona que postuló a ${titulo}.`
                     : `Revisa a las ${n} personas que postularon a ${titulo}.`,
-            verPostulantes: 'Ver postulantes',
-            verCupos: 'Ver cupos',
         },
         revisasteTodas: {
             titulo: 'Revisaste a todas las personas sugeridas',
@@ -127,7 +135,6 @@ export const copy = {
         jornada: 'Jornada',
         contrato: 'Contrato',
         nota: 'Nota mínima',
-        confianza: 'Confianza',
         soloVerificadas: 'Solo organizaciones verificadas',
         soloVerificadasDesc: 'Revisamos su RUT y sus documentos.',
         yaTrabajaron: 'Solo quienes ya trabajaron contigo',
@@ -146,22 +153,22 @@ export const copy = {
     // EXP-07 · Buscar
     buscar: {
         titulo: 'Buscar',
-        campo: 'Buscar empleos y turnos',
-        placeholder: 'Oficio, organización o comuna',
+        campo: { trabajo: 'Buscar empleos y turnos', personas: 'Buscar personas', todo: 'Buscar empleos, turnos y personas' },
+        placeholder: { trabajo: 'Oficio, organización o comuna', personas: 'Nombre, oficio o comuna', todo: 'Oficio, nombre o comuna' },
         empleos: (n: number) => `Empleos (${n})`,
         turnos: (n: number) => `Turnos (${n})`,
+        personas: (n: number) => `Personas (${n})`,
         inicio: {
-            titulo: 'Busca empleos y turnos',
-            texto: 'Escribe un oficio, una organización o una comuna.',
+            trabajo: { titulo: 'Busca empleos y turnos', texto: 'Escribe un oficio, una organización o una comuna.' },
+            personas: { titulo: 'Busca personas para tus publicaciones', texto: 'Escribe un nombre, un oficio o una comuna.' },
+            todo: { titulo: 'Busca empleos, turnos y personas', texto: 'Escribe un oficio, un nombre o una comuna.' },
         },
         sinResultados: {
             titulo: (q: string) => `No encontramos «${q}»`,
-            texto: 'Prueba con otra palabra, por ejemplo el oficio o la comuna.',
-        },
-        sinBusqueda: {
-            titulo: 'Busca personas desde tus publicaciones',
-            texto: 'Las personas sugeridas para cada publicación están en Explorar.',
-            accion: 'Ver personas sugeridas',
+            texto: (pistas: readonly string[]) =>
+                pistas.length > 0
+                    ? `Prueba con ${enumerar(pistas)}.`
+                    : 'Prueba con otra palabra, por ejemplo el oficio o la comuna.',
         },
     },
 } as const;

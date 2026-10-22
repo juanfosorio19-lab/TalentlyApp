@@ -1,41 +1,9 @@
-// Ayudas de navegación y de scroll del detalle.
-import { useCallback, useContext, useSyncExternalStore } from 'react';
-import { UNSAFE_DataRouterContext, matchRoutes, useNavigate } from 'react-router-dom';
-import { useSnackbar } from '../../../ui/Snackbar';
-import { copy } from '../copy';
-
-/**
- * Abre una ruta de paths.ts solo si su pantalla ya está en el router; si
- * todavía no (PRF-11, GES-01, PRC-01 mientras se construyen), muestra el
- * Snackbar honesto «Disponible pronto» en vez de llevar a SYS-404. Cuando la
- * pantalla exista, el mismo botón navega sin tocar este feature.
- */
-export function useOpenPath() {
-    const navigate = useNavigate();
-    const snackbar = useSnackbar();
-    const dataRouter = useContext(UNSAFE_DataRouterContext);
-
-    const canOpen = useCallback(
-        (to: string) => {
-            const routes = dataRouter?.router.routes;
-            if (!routes) return true;
-            const matches = matchRoutes(routes, to.split('?')[0] ?? to);
-            const last = matches?.[matches.length - 1];
-            return Boolean(last && last.route.path !== '*');
-        },
-        [dataRouter],
-    );
-
-    const open = useCallback(
-        (to: string) => {
-            if (canOpen(to)) navigate(to);
-            else snackbar.show({ message: copy.soon });
-        },
-        [canOpen, navigate, snackbar],
-    );
-
-    return { open, canOpen };
-}
+// Ayudas del detalle: el CTA fijo con sombra mientras queda contenido abajo,
+// las hojas que parten de cero cada vez que se abren y el celular verificado.
+import { useCallback, useState, useSyncExternalStore } from 'react';
+import type { DemoActorId } from '../../demo/session';
+import { isPhoneVerified, useSessionState } from '../../demo/sessionStore';
+import { phoneVerifiedInData } from '../mock';
 
 function subscribeToLayout(onChange: () => void): () => void {
     window.addEventListener('scroll', onChange, { passive: true });
@@ -60,4 +28,29 @@ export function useMoreBelow(threshold = 4): boolean {
         return doc.scrollHeight - window.innerHeight - window.scrollY > threshold;
     }, [threshold]);
     return useSyncExternalStore(subscribeToLayout, getSnapshot, () => false);
+}
+
+/**
+ * Cuántas veces se abrió una hoja. Como `key`, la hoja parte de cero cada vez
+ * que se ABRE (no al cerrar: se cierra también con el atrás del navegador, y
+ * mientras sale conserva lo que mostraba).
+ */
+export function useOpenCount(open: boolean): number {
+    const [state, setState] = useState({ open, count: open ? 1 : 0 });
+    if (state.open !== open) {
+        const next = { open, count: open ? state.count + 1 : state.count };
+        setState(next);
+        return next.count;
+    }
+    return state.count;
+}
+
+/**
+ * ¿Tiene el celular verificado? Lo de los datos (salvo Jorge recién
+ * registrado y quien lo verifica en su flujo) o lo verificado en esta sesión.
+ */
+export function usePhoneVerified(actorId: DemoActorId, recienRegistrado: boolean): boolean {
+    // Se vuelve a pintar cuando cambia la sesión (verifyPhone).
+    useSessionState();
+    return isPhoneVerified(actorId, !recienRegistrado && phoneVerifiedInData(actorId));
 }

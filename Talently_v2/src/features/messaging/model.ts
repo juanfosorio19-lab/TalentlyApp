@@ -5,10 +5,10 @@ import type { AvatarKind } from '../../ui/Avatar';
 import { PUBLICATION_TYPES, type ContextChipContent } from '../../ui/ContextChip';
 import type { MessageStatus } from '../../ui/MessageBubble';
 import { paths } from '../../app/paths';
+import type { CalendarEvent } from '../../domain/calendario';
 import { DEMO_TODAY, getApplications, getManagedPublication, getProcess } from '../demo/data';
 import type { DemoConversation, DemoMessage, DemoSystemCard, DemoViewerId } from '../demo/types';
 import { copy, type InboxFilter } from './copy';
-import { isPendingRoute } from './pending';
 import type { ConversationState } from './store';
 
 // ─── Contexto («Turno · Garzón · hoy») ──────────────────────────────────────
@@ -59,18 +59,22 @@ export function peerProfilePath(con: DemoConversation['con']): string {
 
 /**
  * El chip fijo bajo el AppBar abre lo más útil de esa publicación para quien
- * mira: quien postuló, su proceso (PRC-01, flujo 3) o su turno confirmado
- * (TUR-01); quien publicó, el proceso de esa persona o la gestión de la
- * publicación (GES-01); si no, el detalle (DET-01). Lo que el router aún no
- * tiene (pending.ts) se salta, como el prototipo cuando falta PRC-01: el chip
- * nunca termina en SYS-404. `null` si la publicación ya no existe en la demo
- * (turnos pasados).
+ * mira: quien postuló, su proceso (PRC-01, final del flujo 3) o su turno
+ * confirmado (TUR-01); quien publicó, el proceso de esa persona o la gestión
+ * de la publicación (GES-01); si no, el detalle (DET-01). `canOpen` (de
+ * useOpenPath) salta lo que el router todavía no tiene: el chip nunca termina
+ * en SYS-404. `null` si la publicación ya no existe en la demo (turnos
+ * pasados): el chip se muestra sin poder tocarse.
  */
-export function contextPath(conv: DemoConversation, viewerId: DemoViewerId): string | null {
+export function contextPath(
+    conv: DemoConversation,
+    viewerId: DemoViewerId,
+    canOpen: (path: string) => boolean = () => true,
+): string | null {
     const publicationId = conv.contexto.publicationId;
     if (!publicationId) return null;
     const detail = paths.publicacion(publicationId);
-    return contextTargets(conv, viewerId, publicationId).find((to) => !isPendingRoute(to)) ?? detail;
+    return [...contextTargets(conv, viewerId, publicationId), detail].find(canOpen) ?? detail;
 }
 
 /** Los destinos del chip antes que el detalle, del más útil al menos. */
@@ -116,11 +120,11 @@ export type ChatItem = ChatText | ChatCard;
 
 const STATUS: Record<'Enviado' | 'Leído', MessageStatus> = { Enviado: 'sent', Leído: 'read' };
 
-function fromDemo(m: DemoMessage, idPrefix = ''): ChatItem {
-    if (m.tipo === 'sistema') return { kind: 'sistema', id: idPrefix + m.id, dia: m.dia, tarjeta: m.tarjeta };
+function fromDemo(m: DemoMessage): ChatItem {
+    if (m.tipo === 'sistema') return { kind: 'sistema', id: m.id, dia: m.dia, tarjeta: m.tarjeta };
     return {
         kind: 'texto',
-        id: idPrefix + m.id,
+        id: m.id,
         dia: m.dia,
         own: m.de === 'yo',
         texto: m.texto,
@@ -231,14 +235,62 @@ export function sortRows(rows: InboxRow[]): InboxRow[] {
         .map(({ row }) => row);
 }
 
-export function matchesFilter(row: InboxRow, filter: InboxFilter): boolean {
-    return filter === 'todos' || row.conv.contexto.tipo === filter;
+// ─── Filtros de la bandeja ──────────────────────────────────────────────────
+
+export const ALL = 'todos';
+
+const TYPE_FILTERS: readonly InboxFilter[] = ['todos', 'empleo', 'turno'];
+
+export interface InboxFilters {
+    /** Parámetro de la URL (con replace): `?tipo=empleo` (persona) o `?pub=<id>` (organización). */
+    param: 'tipo' | 'pub';
+    /** Nombre del grupo para lectores de pantalla. */
+    label: string;
+    /** «Todos» primero. */
+    options: { value: string; label: string }[];
 }
 
-export const FILTERS: readonly InboxFilter[] = ['todos', 'empleo', 'turno'];
+/**
+ * Persona: Todos · Empleo · Turno (prototipo MSG-01). Organización: «Igual,
+ * con filtro por publicación» (spec §5.2): Todos y cada publicación con
+ * conversaciones, en el orden de la bandeja. Con una sola publicación no hay
+ * nada que filtrar y no se muestran.
+ */
+export function inboxFilters(rows: readonly InboxRow[], audience: 'persona' | 'organizacion'): InboxFilters | null {
+    if (audience === 'persona') {
+        return {
+            param: 'tipo',
+            label: copy.inbox.filtersLabel,
+            options: TYPE_FILTERS.map((f) => ({ value: f, label: copy.inbox.filters[f] })),
+        };
+    }
+    const publications = new Map<string, string>();
+    for (const { conv } of rows) {
+        const id = conv.contexto.publicationId;
+        if (id && !publications.has(id)) publications.set(id, contextOf(conv.contexto.tipo, conv.contexto.chip).title);
+    }
+    if (publications.size < 2) return null;
+    return {
+        param: 'pub',
+        label: copy.inbox.publicationFiltersLabel,
+        options: [{ value: ALL, label: copy.inbox.filters.todos }, ...[...publications].map(([value, label]) => ({ value, label }))],
+    };
+}
 
-export function parseFilter(value: string | null): InboxFilter {
-    return FILTERS.includes(value as InboxFilter) ? (value as InboxFilter) : 'todos';
+/** El valor de la URL si es una opción; si no, «Todos». */
+export function selectedFilter(filters: InboxFilters | null, raw: string | null): string {
+    return filters && raw && filters.options.some((o) => o.value === raw) ? raw : ALL;
+}
+
+export function matchesFilter(row: InboxRow, filters: InboxFilters | null, value: string): boolean {
+    if (!filters || value === ALL) return true;
+    return filters.param === 'tipo' ? row.conv.contexto.tipo === value : row.conv.contexto.publicationId === value;
+}
+
+/** Filtro de tipo sin conversaciones: su EmptyState («No tienes conversaciones de turnos»). */
+export function filteredEmpty(filters: InboxFilters | null, value: string): { title: string; text: string } | null {
+    if (filters?.param !== 'tipo' || (value !== 'empleo' && value !== 'turno')) return null;
+    return { title: copy.inbox.filteredTitle[value], text: copy.inbox.filteredText[value] };
 }
 
 // ─── Fechas de la demo ──────────────────────────────────────────────────────
@@ -290,95 +342,47 @@ export function lastMessageAt(conv: DemoConversation): number {
     return last;
 }
 
-// ─── Entrevista al calendario (.ics) ────────────────────────────────────────
+// ─── Entrevista al calendario ───────────────────────────────────────────────
 
-const TIME_ZONE = 'America/Santiago';
-
-/** Cuánto se separa la hora de Chile de UTC en ese instante (cambia con el horario de verano). */
-function zoneOffset(utc: number): number {
-    const parts = new Intl.DateTimeFormat('en-US', {
-        timeZone: TIME_ZONE,
-        hourCycle: 'h23',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-    }).formatToParts(new Date(utc));
-    const get = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((p) => p.type === type)?.value);
-    return Date.UTC(get('year'), get('month') - 1, get('day'), get('hour'), get('minute')) - utc;
-}
-
-/** Hora de pared en Santiago → instante UTC. */
-function santiagoToUtc(y: number, m: number, d: number, h: number, min: number): Date {
-    const wall = Date.UTC(y, m - 1, d, h, min);
-    let utc = wall;
-    for (let i = 0; i < 2; i++) utc = wall - zoneOffset(utc);
-    return new Date(utc);
-}
-
-/** «mar 15 dic · 10:00» → la entrevista en hora de Chile, con el año de la demo. */
-function parseWhen(when: string): Date | null {
+/** «mar 15 dic · 10:00» → «2026-12-15T10:00», con el año de la demo. */
+function parseWhen(when: string): { date: string; minutes: number } | null {
     const day = parseDayMonth(when);
     const time = /·\s*(\d{1,2}):(\d{2})/.exec(when);
     const year = day?.y ?? demoToday()?.y;
     if (!day || !time || !year) return null;
-    return santiagoToUtc(year, day.m, day.d, Number(time[1]), Number(time[2]));
+    return { date: `${year}-${pad(day.m)}-${pad(day.d)}`, minutes: Number(time[1]) * 60 + Number(time[2]) };
 }
 
-/** 20261215T130000Z: fecha y hora UTC de RFC 5545 (§3.3.5, forma 2). */
-const utcStamp = (d: Date) =>
-    `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
-
-/** Texto de RFC 5545 (§3.3.11). */
-const escapeText = (s: string) => s.replace(/[\\,;]/g, (c) => `\\${c}`).replace(/\r?\n/g, '\\n');
-
-/** Líneas de a lo más 75 octetos; las siguientes empiezan con un espacio (§3.1). */
-function fold(line: string): string {
-    const encoder = new TextEncoder();
-    const chunks: string[] = [];
-    let chunk = '';
-    let size = 0;
-    for (const ch of line) {
-        const n = encoder.encode(ch).length;
-        if (size + n > (chunks.length === 0 ? 75 : 74)) {
-            chunks.push(chunk);
-            chunk = '';
-            size = 0;
-        }
-        chunk += ch;
-        size += n;
-    }
-    chunks.push(chunk);
-    return chunks.join('\r\n ');
+/** Fecha y minutos del día → «2026-12-15T11:00» (si pasa de medianoche, al día siguiente). */
+function localDateTime(date: string, minutes: number): string {
+    const [y = 1970, m = 1, d = 1] = date.split('-').map(Number);
+    const at = new Date(Date.UTC(y, m - 1, d) + minutes * 60_000);
+    return `${at.getUTCFullYear()}-${pad(at.getUTCMonth() + 1)}-${pad(at.getUTCDate())}T${pad(at.getUTCHours())}:${pad(at.getUTCMinutes())}`;
 }
 
 /**
- * Calendario de la entrevista (RFC 5545): DTSTAMP obligatorio y horas en UTC,
- * así no hace falta un VTIMEZONE y cualquier calendario la muestra a la hora de
- * Chile. `null` si la fecha no se entiende.
+ * La entrevista de la tarjeta («mar 15 dic · 10:00», «Av. Concha y Toro 1234,
+ * Puente Alto») como evento de calendario, en hora local de Chile, para
+ * buildIcs (src/domain/calendario). `null` si la fecha no se entiende.
  */
-export function interviewIcs(card: DemoSystemCard, title: string, minutes: number, now: Date = new Date()): string | null {
+export function interviewEvent(card: DemoSystemCard, title: string, minutes: number, uid: string): CalendarEvent | null {
     const [when = '', place = ''] = card.lineas;
     const start = parseWhen(when);
     if (!start) return null;
-    const end = new Date(start.getTime() + minutes * 60_000);
-    return [
-        'BEGIN:VCALENDAR',
-        'VERSION:2.0',
-        'PRODID:-//Talently//Mensajes//ES',
-        'CALSCALE:GREGORIAN',
-        'BEGIN:VEVENT',
-        `UID:${utcStamp(start)}-${title.replace(/[^\p{L}\p{N}]+/gu, '-')}@talently`,
-        `DTSTAMP:${utcStamp(now)}`,
-        `DTSTART:${utcStamp(start)}`,
-        `DTEND:${utcStamp(end)}`,
-        `SUMMARY:${escapeText(title)}`,
-        `LOCATION:${escapeText(place)}`,
-        'END:VEVENT',
-        'END:VCALENDAR',
-    ]
-        .map(fold)
-        .join('\r\n')
-        .concat('\r\n');
+    return {
+        uid,
+        title,
+        start: localDateTime(start.date, start.minutes),
+        end: localDateTime(start.date, start.minutes + minutes),
+        location: place || undefined,
+    };
+}
+
+/** En el teléfono, sin plugin de calendario: la plantilla «Crear evento» de Google Calendar, en hora de Chile. */
+export function googleCalendarUrl(event: CalendarEvent): string {
+    const stamp = (local: string) => `${local.replace(/[-:]/g, '')}00`;
+    const query = new URLSearchParams({ action: 'TEMPLATE', text: event.title, ctz: 'America/Santiago' });
+    if (event.location) query.set('location', event.location);
+    // `dates` va con su barra tal cual: «20261215T100000/20261215T110000».
+    return `https://calendar.google.com/calendar/render?${query.toString()}&dates=${stamp(event.start)}/${stamp(event.end)}`;
 }

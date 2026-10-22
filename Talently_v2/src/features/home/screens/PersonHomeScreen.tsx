@@ -4,27 +4,23 @@
 // «¿Qué necesitas?», su aviso y «Publicar» (INI-01-carolina). Jorge recién
 // registrado: sin actividad y la credencial SPD (INI-01-jorge-nuevo). Rosa:
 // «Aún no tienes perfiles» (INI-01-rosa).
-import type { DemoAuthor, DemoHomeFeed } from '../../demo/types';
-import { PersonBlock } from '../components/PersonBlocks';
-import type { PublishKind } from '../components/PublishSheet';
+import type { DemoHomeBlock } from '../../demo/types';
+import { PersonBlock, type PersonBlockProps } from '../components/PersonBlocks';
 import '../home.css';
 
 export const screenId = 'INI-01';
 
-export interface PersonHomeScreenProps {
-    feed: DemoHomeFeed;
-    /** Abre «Verificación de …» al tocar la insignia de quien publica. */
-    onVerify: (author: DemoAuthor) => void;
-    /** Abre PUBL-01, con una opción marcada si viene de «¿Qué necesitas?». */
-    onPublish: (initial?: PublishKind) => void;
+export interface PersonHomeScreenProps extends Omit<PersonBlockProps, 'block'> {
+    /** Los bloques ya al día con la sesión (selectors.homeBlocks). */
+    blocks: readonly DemoHomeBlock[];
 }
 
-export function PersonHomeScreen({ feed, onVerify, onPublish }: PersonHomeScreenProps) {
+export function PersonHomeScreen({ blocks, ...handlers }: PersonHomeScreenProps) {
     return (
         <main className="tl-app-screen__body">
             <div className="tl-app-screen__content home-content">
-                {feed.bloques.map((block, i) => (
-                    <PersonBlock key={`${block.tipo}-${i}`} block={block} onVerify={onVerify} onPublish={onPublish} />
+                {blocks.map((block, i) => (
+                    <PersonBlock key={`${block.tipo}-${i}`} block={block} {...handlers} />
                 ))}
             </div>
         </main>

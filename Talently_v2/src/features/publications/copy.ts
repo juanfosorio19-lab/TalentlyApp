@@ -4,8 +4,6 @@
 // con «// no está en el prototipo».
 
 export const copy = {
-    soon: 'Disponible pronto',
-
     appBar: {
         turno: 'Turno',
         empleo: 'Oferta de empleo',
@@ -47,7 +45,10 @@ export const copy = {
         empleo: (titulo: string) => `Postulaste a ${titulo}`,
     },
 
-    // no está en el prototipo: una organización mira la publicación de otra.
+    /** «Gestionar publicación» de Rosa como persona: pasa a su organización (como SHT-ACTOR, flujo 7). */
+    switched: (nombre: string) => `Cambiaste a ${nombre}`,
+
+    // no está en el prototipo: una organización mira la publicación de otra (CTA sin botón, solo el aviso).
     orgCannotApply: 'Las organizaciones no postulan. Para postular, usa Talently como persona.',
 
     share: {
@@ -80,6 +81,7 @@ export const copy = {
         cvFormats: 'PDF, hasta 10 MB',
         cvRequired: 'Sube tu CV para postular', // no está en el prototipo
         cvTooBig: (size: string) => `Pesa ${size}. Elige uno de hasta 10 MB.`,
+        cvNotPdf: 'No es un PDF. Elige tu CV en PDF.', // no está en el prototipo
         message: 'Mensaje',
         messageHelp: (org: string) => `Lo verá ${org} junto a tu perfil.`,
         submit: 'Postular',

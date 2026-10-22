@@ -1,4 +1,5 @@
-// «Verificación de …»: lo que abre una VerificationBadge (qué verificó
+// «Verificación de …» (`?sheet=verificacion&pub=<id>`): lo que abre la
+// VerificationBadge de quien publica una tarjeta de Inicio (qué verificó
 // Talently). Nunca muestra RUT, fecha de nacimiento ni fotos de la cédula.
 import { useState } from 'react';
 import { BottomSheet } from '../../../ui/BottomSheet';
@@ -17,13 +18,14 @@ const ICON: Record<VerificationStatus, IconComponent> = {
 };
 
 export interface VerificationSheetProps {
-    /** Quién: la organización, el hogar o la persona de la tarjeta. `null` = cerrada. */
+    /** Quién: la organización, el hogar o la persona de la tarjeta (sale de la URL). `null` = cerrada. */
     author: DemoAuthor | null;
     onClose: () => void;
 }
 
 export function VerificationSheet({ author, onClose }: VerificationSheetProps) {
-    // Mientras la hoja sale, sigue mostrando a quien mostraba.
+    // Mientras la hoja sale (la URL ya no la trae), sigue mostrando a quien mostraba.
+    // Al abrirla otra vez, `author` llega de la URL: nunca queda un nombre viejo.
     const [last, setLast] = useState(author);
     if (author && author !== last) setLast(author);
     const shown = author ?? last;

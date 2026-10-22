@@ -3,8 +3,6 @@
 // (saludo, bloques, notificaciones) vienen de src/features/demo.
 
 export const copy = {
-    soon: 'Disponible pronto',
-
     bell: (unread: number) => (unread > 0 ? `Notificaciones, ${unread} sin leer` : 'Notificaciones'),
 
     home: {

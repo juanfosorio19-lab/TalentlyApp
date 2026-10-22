@@ -1,5 +1,6 @@
-// Hojas chicas de DET-01: «Verificación de …» (la abre la insignia de quien
-// publica) y «Más opciones» (el ⋯ del AppBar). La hoja de verificación es la
+// Hojas chicas de DET-01: «Verificación de …» (`?sheet=verificacion`, la abre
+// la insignia de quien publica) y «Más opciones» (`?sheet=opciones`, el ⋯ del
+// AppBar). La hoja de verificación es la
 // misma de Actividad e Inicio: src/ui no la trae como componente compartido
 // (pedido en «requests»).
 import { BottomSheet } from '../../../ui/BottomSheet';

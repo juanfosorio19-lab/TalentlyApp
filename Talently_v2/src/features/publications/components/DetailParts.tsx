@@ -2,7 +2,7 @@
 // publica, lista de datos («a 18 km · Las Condes»), fila «rótulo + valor»,
 // Requisitos, Beneficios y «Sobre la organización». src/ui aún no las trae
 // como componentes (pedido en «requests»).
-import type { MouseEventHandler, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Avatar } from '../../../ui/Avatar';
 import { Badge } from '../../../ui/Badge';
 import { cx } from '../../../ui/cx';
@@ -12,6 +12,7 @@ import { Stack } from '../../../ui/Layout';
 import { List, ListItem } from '../../../ui/ListItem';
 import { SectionCard, SectionRow } from '../../../ui/SectionCard';
 import { VerificationBadge } from '../../../ui/VerificationBadge';
+import type { LinkTargetProps } from '../../../app/navigation/useOpenPath';
 import type { DemoAuthor, DemoRequirement } from '../../demo/types';
 import { copy } from '../copy';
 import { requirementIcon } from '../model';
@@ -129,18 +130,8 @@ export function BenefitsSection({ items }: { items: readonly string[] }) {
     );
 }
 
-/** «Sobre la organización»: la fila abre su perfil público (PRF-11). */
-export function AboutOrgSection({
-    author,
-    text,
-    href,
-    onOpen,
-}: {
-    author: DemoAuthor;
-    text: string;
-    href: string;
-    onOpen: MouseEventHandler<HTMLElement>;
-}) {
+/** «Sobre la organización»: la fila abre su perfil público (PRF-11) con `linkProps` de useOpenPath. */
+export function AboutOrgSection({ author, text, link }: { author: DemoAuthor; text: string; link: LinkTargetProps }) {
     return (
         <SectionCard title={copy.sections.aboutOrg}>
             <List flat className="pub-bleed">
@@ -148,8 +139,8 @@ export function AboutOrgSection({
                     avatar={<Avatar name={author.nombre} initials={author.iniciales} kind={avatarKind(author)} />}
                     title={author.nombre}
                     sub={text}
-                    href={href}
-                    onClick={onOpen}
+                    href={link.href}
+                    onClick={link.onClick}
                 />
             </List>
         </SectionCard>

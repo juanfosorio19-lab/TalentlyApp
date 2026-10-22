@@ -1,21 +1,19 @@
 // Contenido de un perfil (Trabajo, Hogar u Organización): la tarjeta «Te falta
-// 1 cosa», sus secciones editables y las hojas que abren (PRF-03 y Subir CV).
+// 1 cosa», sus secciones editables y las hojas que abren, en la URL (spec
+// §5.4): PRF-03 es `?sheet=editar&s=<sección>` y Subir CV, `?sheet=cv`.
 import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useSnackbar } from '../../../ui/Snackbar';
 import { paths } from '../../../app/paths';
-import type { DemoProfileSection, DemoProfileTab, DemoProfileTip } from '../../demo/types';
+import { useOpenPath } from '../../../app/navigation/useOpenPath';
+import type { DemoProfileSection, DemoProfileTab } from '../../demo/types';
 import { COPY, SAVED_BY_SECTION } from '../copy';
-import { useOpenRoute, useSoon } from '../useOpenRoute';
+import { editAction, findEditable, isCvAction, sectionSlug, tipAction, type EditableSection } from '../model';
+import { useStillSheet } from '../useStillSheet';
 import { CvSheet, type CvFile } from './CvSheet';
-import { EditSectionSheet, type EditableSection } from './EditSectionSheet';
+import { EditSectionSheet } from './EditSectionSheet';
 import { ProfileSection } from './ProfileSection';
 import { ProfileTip } from './ProfileTip';
-
-const isCvAction = (accion: string) => accion.includes('CV');
-
-function isEditable(s: DemoProfileSection): s is EditableSection {
-    return s.tipo === 'texto' || s.tipo === 'filas' || s.tipo === 'tags';
-}
 
 export interface ProfileTabContentProps {
     tab: DemoProfileTab;
@@ -26,49 +24,82 @@ export interface ProfileTabContentProps {
 
 export function ProfileTabContent({ tab, comuna, onChange }: ProfileTabContentProps) {
     const { show } = useSnackbar();
-    const openRoute = useOpenRoute();
-    const soon = useSoon();
-    // La hoja se vuelve a montar (key) en cada apertura: parte con los datos guardados.
-    const [edit, setEdit] = useState<{ index: number; key: number; open: boolean } | null>(null);
-    const [cv, setCv] = useState<{ key: number; open: boolean }>({ key: 0, open: false });
+    const { open: openPath, soon } = useOpenPath();
+    const editar = useStillSheet('editar');
+    const cv = useStillSheet('cv');
 
+    // ─── PRF-03 · Editar sección ────────────────────────────────────────────
+    const slug = editar.param('s');
+    const target = findEditable(tab, slug);
+    // Mientras la hoja sale (la URL ya no dice `s`), sigue mostrando la sección que se editaba.
+    const [shownSlug, setShownSlug] = useState(slug);
+    if (target && slug !== shownSlug) setShownSlug(slug);
+    const shown = target ?? findEditable(tab, shownSlug);
+
+    // Un enlace con una sección que no existe o no se edita aquí: la hoja no se abre y sale de la URL,
+    // con su `s` (hide() de useSheet solo quita `sheet`; pedido en «requests»).
+    const [, setParams] = useSearchParams();
+    const invalidLink = editar.open && !target;
+    useEffect(() => {
+        if (!invalidLink) return;
+        setParams(
+            (prev) => {
+                const next = new URLSearchParams(prev);
+                next.delete('sheet');
+                next.delete('s');
+                return next;
+            },
+            { replace: true, preventScrollReset: true },
+        );
+    }, [invalidLink, setParams]);
+
+    // ─── Subir CV ───────────────────────────────────────────────────────────
     const cvIndex = tab.secciones.findIndex((s) => s.titulo === 'CV');
     const cvSection = tab.secciones[cvIndex];
     const currentCv: CvFile | undefined =
         cvSection?.tipo === 'archivo' ? { nombre: cvSection.nombre, detalle: cvSection.detalle } : undefined;
 
     // Quien abrió la hoja del CV («Subir CV» de «Te falta 1 cosa» o de la sección vacía) desaparece al
-    // guardar: el foco pasa a la tarjeta CV en vez de caer en <body>.
+    // guardar: cuando la hoja termina de cerrarse, el foco pasa a la tarjeta CV en vez de caer en <body>.
     const cvOpener = useRef<Element | null>(null);
+    const cvSaved = useRef(false);
     const cvCard = useRef<HTMLElement>(null);
-    const [cvSaved, setCvSaved] = useState(0);
     useEffect(() => {
-        if (cvSaved > 0 && !cvOpener.current?.isConnected) cvCard.current?.focus();
-    }, [cvSaved]);
+        if (cv.open || !cvSaved.current) return;
+        cvSaved.current = false;
+        if (!cvOpener.current?.isConnected) cvCard.current?.focus();
+    }, [cv.open]);
 
     const openCv = () => {
         cvOpener.current = document.activeElement;
-        setCv((c) => ({ key: c.key + 1, open: true }));
-    };
-    const openEdit = (index: number) => setEdit((e) => ({ index, key: (e?.key ?? 0) + 1, open: true }));
-
-    const onTip = (tip: DemoProfileTip) => {
-        if (tip.destino?.pantalla === 'verificacion') openRoute(paths.verificacion());
-        else if (isCvAction(tip.accion)) openCv();
-        // Una credencial por subir («Subir curso») se sube en Verificación y credenciales (VER-03).
-        else openRoute(paths.verificacion());
+        cv.show();
     };
 
-    const onEdit = (section: DemoProfileSection, index: number) => {
-        if (section.tipo === 'archivo') openCv();
-        // Credenciales: el lápiz lleva a Verificación y credenciales (VER-01), como en el prototipo.
-        else if (section.titulo === 'Credenciales') openRoute(paths.verificacion());
-        else if (isEditable(section)) openEdit(index);
+    const onTip = () => {
+        if (!tab.completitud) return;
+        const action = tipAction(tab.completitud);
+        if (action.kind === 'cv') openCv();
+        else openPath(action.path);
+    };
+
+    const onEdit = (section: DemoProfileSection) => {
+        switch (editAction(section)) {
+            case 'cv':
+                openCv();
+                break;
+            // Credenciales: el lápiz lleva a Verificación y credenciales (VER-01), como en el prototipo.
+            case 'verificacion':
+                openPath(paths.verificacion());
+                break;
+            case 'editar':
+                editar.show({ s: sectionSlug(section.titulo) });
+                break;
+        }
     };
 
     const saveSection = (index: number, next: EditableSection) => {
         onChange({ ...tab, secciones: tab.secciones.map((s, i) => (i === index ? next : s)) });
-        setEdit((e) => (e ? { ...e, open: false } : e));
+        editar.hide();
         show({ message: SAVED_BY_SECTION[next.titulo] ?? COPY.editar.guardado, tone: 'success' });
     };
 
@@ -78,46 +109,37 @@ export function ProfileTabContent({ tab, comuna, onChange }: ProfileTabContentPr
         // Con el CV arriba, «Te falta 1 cosa» ya no aplica.
         const completitud = tab.completitud && isCvAction(tab.completitud.accion) ? undefined : tab.completitud;
         onChange({ ...tab, secciones, completitud });
-        setCv((c) => ({ ...c, open: false }));
-        setCvSaved((n) => n + 1);
+        cvSaved.current = true;
+        cv.hide();
         show({ message: COPY.cv.guardado, tone: 'success' });
     };
 
-    const editing = edit ? tab.secciones[edit.index] : undefined;
     const last = tab.secciones.length - 1;
 
     return (
         <>
-            {tab.completitud && <ProfileTip tip={tab.completitud} onAction={() => tab.completitud && onTip(tab.completitud)} />}
+            {tab.completitud && <ProfileTip tip={tab.completitud} onAction={onTip} />}
             {tab.secciones.map((section, i) => (
                 <ProfileSection
                     key={section.titulo}
                     section={section}
-                    onEdit={() => onEdit(section, i)}
-                    onEmptyAction={section.titulo === 'CV' ? openCv : () => soon()}
+                    onEdit={() => onEdit(section)}
+                    onEmptyAction={section.titulo === 'CV' ? openCv : soon}
                     foot={i === last ? tab.pie : undefined}
                     focusRef={section.titulo === 'CV' ? cvCard : undefined}
                 />
             ))}
-            {edit && editing && isEditable(editing) && (
+            {shown && (
                 <EditSectionSheet
-                    key={edit.key}
-                    open={edit.open}
-                    section={editing}
+                    key={shownSlug ?? ''}
+                    open={editar.open && target !== undefined}
+                    section={shown.section}
                     comuna={comuna}
-                    onClose={() => setEdit({ ...edit, open: false })}
-                    onSave={(next) => saveSection(edit.index, next)}
+                    onClose={editar.hide}
+                    onSave={(next) => saveSection(shown.index, next)}
                 />
             )}
-            {cv.key > 0 && (
-                <CvSheet
-                    key={cv.key}
-                    open={cv.open}
-                    current={currentCv}
-                    onClose={() => setCv({ ...cv, open: false })}
-                    onSave={saveCv}
-                />
-            )}
+            <CvSheet open={cv.open} current={currentCv} onClose={cv.hide} onSave={saveCv} />
         </>
     );
 }

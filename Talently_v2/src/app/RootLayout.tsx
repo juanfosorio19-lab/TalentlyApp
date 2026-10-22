@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { Outlet, ScrollRestoration, useLocation, type Location } from 'react-router-dom';
 import { Dialog } from '../ui/Dialog';
 import { SnackbarProvider, useSnackbar } from '../ui/Snackbar';
+import { MatchHost } from '../features/publications/MatchHost';
 import { BackButtonManager, type BackPrompts } from './BackButtonManager';
 import { rememberTab } from './navigation/tabMemory';
 import { isTabRoot, tabOf } from './paths';
@@ -75,6 +76,7 @@ export function RootLayout() {
                     <BackButtonManager prompts={prompts}>
                         <TabMemory />
                         <Outlet />
+                        <MatchHost />
                         <ScrollRestoration getKey={scrollKey} />
                     </BackButtonManager>
                 )}

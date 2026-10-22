@@ -1,7 +1,8 @@
 // CFG-01 · Configuración (flujo 8): solo ajustes de la cuenta, con «Cerrar
 // sesión» (único lugar de la app) y «Eliminar cuenta» al final, y la versión
 // al pie una sola vez. Nada de acciones de producto ni gestión de perfiles.
-import { useState } from 'react';
+// Apariencia y «¿Cerrar sesión?» viven en la URL (`?sheet=apariencia`,
+// `?sheet=cerrar-sesion`): el atrás las cierra.
 import { useNavigate } from 'react-router-dom';
 import { AppBar, useScrolled } from '../../../ui/AppBar';
 import { Dialog } from '../../../ui/Dialog';
@@ -19,16 +20,23 @@ import { Stack } from '../../../ui/Layout';
 import { List, ListItem } from '../../../ui/ListItem';
 import { useSnackbar } from '../../../ui/Snackbar';
 import { useGoBack } from '../../../app/BackButtonManager';
+import { useOpenPath } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
 import { useTheme } from '../../../app/providers/ThemeProvider';
+import { useSheet } from '../../../app/sheets';
 import { getProfile } from '../../demo/data';
 import { useDemoSession } from '../../demo/session';
 import { AppearanceSheet, THEME_LABEL } from '../components/AppearanceSheet';
 import { APP_VERSION, COPY } from '../copy';
-import { useOpenRoute, useSoon } from '../useOpenRoute';
 import '../profile.css';
 
 export const screenId = 'CFG-01';
+
+/** Cuántas entradas de la app hay antes de esta en el historial (el índice que guarda React Router). */
+function historyDepth(): number {
+    const idx = (window.history.state as { idx?: unknown } | null)?.idx;
+    return typeof idx === 'number' && idx > 0 ? idx : 0;
+}
 
 const C = COPY.config;
 
@@ -37,20 +45,24 @@ export function SettingsScreen() {
     const navigate = useNavigate();
     const scrolled = useScrolled();
     const { show } = useSnackbar();
-    const openRoute = useOpenRoute();
-    const soon = useSoon();
+    const { open, linkProps, soon } = useOpenPath();
     const { preference } = useTheme();
     const { actor } = useDemoSession();
     // La cuenta es de la persona (auth.users, spec §2.1): con una organización activa, la de quien la administra.
     const { configuracion } = getProfile(actor.owner ?? actor.id);
-    const [appearance, setAppearance] = useState(false);
-    const [logout, setLogout] = useState(false);
+    const appearance = useSheet('apariencia');
+    const logout = useSheet('cerrar-sesion');
 
+    // Flujo 8: AUTH-01 Bienvenida, sin dejar atrás las pantallas de la sesión (el atrás no vuelve a ellas).
     const confirmLogout = () => {
-        setLogout(false);
-        // Demostración: no hay sesión real. Vuelve a Inicio y lo dice.
-        navigate(paths.inicio(), { replace: true });
-        show({ message: C.snackSesionDemo });
+        const toWelcome = () => open(paths.bienvenida(), { replace: true });
+        const depth = historyDepth();
+        if (depth === 0) {
+            toWelcome();
+            return;
+        }
+        window.addEventListener('popstate', toWelcome, { once: true });
+        navigate(-depth);
     };
 
     return (
@@ -60,32 +72,33 @@ export function SettingsScreen() {
                 <div className="tl-app-screen__content">
                     <Stack gap={4}>
                         <List>
-                            <ListItem icon={IconPerson} title={C.cuenta} sub={configuracion.cuenta} chevron onClick={() => soon()} />
+                            {/* CFG-02 a CFG-04 aún no tienen ruta en paths.ts: «Disponible pronto». */}
+                            <ListItem icon={IconPerson} title={C.cuenta} sub={configuracion.cuenta} chevron onClick={soon} />
                             <ListItem
                                 icon={IconBell}
                                 title={C.notificaciones}
                                 sub={configuracion.notificaciones}
                                 chevron
-                                onClick={() => soon()}
+                                onClick={soon}
                             />
-                            <ListItem icon={IconLock} title={C.privacidad} sub={C.privacidadSub} chevron onClick={() => soon()} />
+                            <ListItem icon={IconLock} title={C.privacidad} sub={C.privacidadSub} chevron onClick={soon} />
                             <ListItem
                                 icon={IconEye}
                                 title={C.apariencia}
                                 sub={COPY.tema.sub(THEME_LABEL[preference])}
                                 chevron
                                 aria-haspopup="dialog"
-                                onClick={() => setAppearance(true)}
+                                onClick={() => appearance.show()}
                             />
                         </List>
                         <List>
-                            <ListItem icon={IconHelp} title={C.ayuda} sub={C.ayudaSub} chevron onClick={() => openRoute(paths.ayuda())} />
+                            <ListItem icon={IconHelp} title={C.ayuda} sub={C.ayudaSub} chevron {...linkProps(paths.ayuda())} />
                             <ListItem
                                 icon={IconDocument}
                                 title={C.legal}
                                 sub={C.legalSub}
                                 chevron
-                                onClick={() => openRoute(paths.terminos())}
+                                {...linkProps(paths.terminos())}
                             />
                         </List>
                         <List>
@@ -95,7 +108,7 @@ export function SettingsScreen() {
                                 danger
                                 chevron={false}
                                 aria-haspopup="dialog"
-                                onClick={() => setLogout(true)}
+                                onClick={() => logout.show()}
                             />
                             <ListItem
                                 icon={IconTrash}
@@ -103,17 +116,19 @@ export function SettingsScreen() {
                                 sub={C.eliminarCuentaSub}
                                 danger
                                 chevron
-                                onClick={() => soon(C.snackEliminarDemo)}
+                                // CFG-06 no existe en la demostración: lo dice tal cual.
+                                onClick={() => show({ message: C.snackEliminarDemo })}
                             />
                         </List>
-                        <p className="caption prf-version">{`Talently ${APP_VERSION} · ${__BUILD_COMMIT__}`}</p>
+                        {/* Como en CFG-01: «Talently 3.0.0». El commit del build lo registra errorLogger, no se muestra. */}
+                        <p className="caption prf-version">{`Talently ${APP_VERSION}`}</p>
                     </Stack>
                 </div>
             </main>
-            <AppearanceSheet open={appearance} onClose={() => setAppearance(false)} />
+            <AppearanceSheet open={appearance.open} onClose={appearance.hide} />
             <Dialog
-                open={logout}
-                onClose={() => setLogout(false)}
+                open={logout.open}
+                onClose={logout.hide}
                 title={C.dialogTitulo}
                 cancelLabel={C.cancelar}
                 confirmLabel={C.cerrarSesion}

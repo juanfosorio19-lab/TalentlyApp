@@ -1,12 +1,13 @@
-// EXP-01 · Explorar · Empleos (/explorar?tipo=empleo&vista=deck|lista).
-// Deck de publicaciones (PublicationCardDeck) con «Ver lista» arriba a la
-// derecha; la lista usa PublicationCard compacta (EXP-01-lista). «Me interesa»
-// y «No me interesa» sacan la tarjeta del deck con Snackbar «Deshacer»; lo
-// marcado con «No me interesa» tampoco aparece en la lista. Tocar la tarjeta
-// abre DET-01 (/p/:id) con push. Filtros EXP-06: jornada, contrato, distancia
-// y «Solo organizaciones verificadas».
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+// EXP-01 · Explorar · Empleos (/explorar?tipo=empleo). Deck de publicaciones
+// (PublicationCardDeck) con «Ver lista» arriba a la derecha; la lista usa
+// PublicationCard compacta (EXP-01-lista). Tocar la tarjeta abre DET-01
+// (/p/:id) con push (flujo 3). «Me interesa» abre la postulación (spec §3.1:
+// DET-01 con DET-02 abierta); «No me interesa» la saca con Snackbar
+// «Deshacer». Lo decidido vive en demo/sessionStore: una oferta a la que ya
+// postuló (aquí o en DET-01) o que descartó en el detalle no vuelve al deck.
+// Filtros EXP-06 (en la URL): jornada, contrato, distancia y «Solo
+// organizaciones verificadas».
+import { useCallback, useRef, useState } from 'react';
 import { paths } from '../../../app/paths';
 import { IconOffers } from '../../../ui/icons';
 import { Stack } from '../../../ui/Layout';
@@ -16,105 +17,120 @@ import { useSnackbar } from '../../../ui/Snackbar';
 import { Switch } from '../../../ui/Switch';
 import { getExplore } from '../../demo/data';
 import { useDemoSession } from '../../demo/session';
+import { decide, undoDecision } from '../../demo/sessionStore';
 import type { DemoEmpleo } from '../../demo/types';
 import { ExploreBar } from '../components/ExploreBar';
 import { ExploreEmpty, fromDemo, type ExploreEmptyProps } from '../components/ExploreEmpty';
-import { ExploreLayout, type SegmentScreenProps } from '../components/ExploreLayout';
-import { ChipSection, FiltersSheet, useFiltersDraft } from '../components/FiltersSheet';
+import type { SegmentPanelProps } from '../components/ExploreLayout';
+import { ChipSection, FiltersSheet } from '../components/FiltersSheet';
+import { useDecisions, useExploreParams, useGo } from '../components/hooks';
 import { useDeckHeight } from '../components/useDeckHeight';
-import { useLinks } from '../components/useLinks';
-import { useVerificationSheet } from '../components/VerificationSheet';
+import { useShowVerification } from '../components/VerificationSheet';
 import { copy } from '../copy';
-import { explorarUrl, type ExploreVista } from '../explorePaths';
-import { useRemembered } from '../memory';
 import {
     CONTRATOS,
-    countEmpleoFiltros,
-    defaultEmpleoFiltros,
     DISTANCIAS,
     EMPLEO_SIN_FILTROS,
-    empleosOf,
     JORNADAS,
-    passesEmpleo,
-    publicationCard,
+    readEmpleoFiltros,
+    readVista,
+    writeEmpleoFiltros,
+    writeVista,
     type EmpleoFiltros,
-} from '../model';
+    type ExploreVista,
+} from '../filters';
+import { deckAndList, empleosOf, passesEmpleo, publicationCard } from '../model';
 
 export const screenId = 'EXP-01';
 
-export function EmpleosScreen(props: SegmentScreenProps) {
-    const { actor } = useDemoSession();
-    const explore = getExplore(actor.id);
-    const navigate = useNavigate();
-    const [params] = useSearchParams();
-    const links = useLinks();
-    const { show } = useSnackbar();
-    const [onVerify, verificationSheet] = useVerificationSheet();
-    const deckRef = useRef<HTMLDivElement>(null);
+/** DET-01 con la hoja Postular (DET-02) abierta: `?sheet=postular` (spec §5.4). */
+const postularPath = (id: string) => `${paths.publicacion(id)}?sheet=postular`;
 
-    const all = useMemo(() => empleosOf(explore), [explore]);
-    const [filtros, setFiltros] = useRemembered<EmpleoFiltros>(`${actor.id}:empleo:filtros`, () =>
-        defaultEmpleoFiltros(explore.filtrosActivos),
-    );
-    // Lo decidido en el deck, por publicación.
-    const [decididas, setDecididas] = useRemembered<Record<string, DeckDecision>>(`${actor.id}:empleo:deck`, () => ({}));
-    const sheet = useFiltersDraft(filtros, setFiltros);
+export function EmpleosScreen({ filtersSheet, focusPanel }: SegmentPanelProps) {
+    const { actor, recienRegistrado } = useDemoSession();
+    const explore = getExplore(actor.id);
+    const [params, update] = useExploreParams();
+    const { go, cardLink } = useGo();
+    const { show } = useSnackbar();
+    const showVerification = useShowVerification();
+    const decided = useDecisions(actor.id, recienRegistrado);
+    const deckRef = useRef<HTMLDivElement>(null);
     // Al decidir la última tarjeta, el foco pasa al EmptyState (README del deck).
     const [focusEmpty, setFocusEmpty] = useState(false);
+    // «Cambiar filtros» del EmptyState: al aplicar, ese botón ya no está y el foco va al panel.
+    const focusAfterFilters = useRef(false);
 
-    const param = params.get('vista');
-    const vista: ExploreVista = param === 'deck' || param === 'lista' ? param : explore.empleos.vista;
+    const activos = explore.filtrosActivos;
+    const filtros = readEmpleoFiltros(params, activos);
+    const vista = readVista(params, 'empleo', explore.empleos.vista);
+    const all = empleosOf(explore);
     const filtered = all.filter((p) => passesEmpleo(p, filtros));
-    const deck = filtered.filter((p) => !decididas[p.id]);
-    const list = filtered.filter((p) => decididas[p.id] !== 'no');
+    const { deck, list } = deckAndList(filtered, decided);
     // Lo que la vista actual mostraría sin filtros: en el deck, lo no decidido; en la lista, todo menos «No me interesa».
-    const inView = (p: DemoEmpleo) => (vista === 'deck' ? !decididas[p.id] : decididas[p.id] !== 'no');
+    const inView = (p: DemoEmpleo) => (vista === 'deck' ? decided(p.id) === undefined : decided(p.id) !== 'no');
     const hiddenByFilters = all.filter((p) => inView(p) && !passesEmpleo(p, filtros)).length;
     const cardMinHeight = useDeckHeight(deckRef, vista === 'deck' && deck.length > 0);
+    const focusOnMount = useCallback((el: HTMLDivElement | null) => el?.focus(), []);
 
-    const setVista = (next: ExploreVista) => navigate(explorarUrl({ tipo: 'empleo', vista: next }), { replace: true });
-    const toggleVista = () => setVista(vista === 'deck' ? 'lista' : 'deck');
+    const setFiltros = (next: EmpleoFiltros) => {
+        update((p) => writeEmpleoFiltros(p, next, activos));
+        if (focusAfterFilters.current) {
+            focusAfterFilters.current = false;
+            focusPanel();
+        }
+    };
+    const setVista = (next: ExploreVista) => update((p) => writeVista(p, 'empleo', next, explore.empleos.vista));
 
     const handlers = (p: DemoEmpleo) => ({
-        href: links.href(paths.publicacion(p.id)),
-        onOpen: links.open(paths.publicacion(p.id)),
-        onVerify,
+        ...cardLink(paths.publicacion(p.id)),
+        onVerify: () => showVerification({ publicacion: p.id }),
     });
 
     const onDecide = (decision: DeckDecision, card: PublicationDeckCard) => {
-        setDecididas((prev) => ({ ...prev, [card.id]: decision }));
+        decide(actor.id, card.id, decision);
+        if (decision === 'si') {
+            // «Me interesa» abre la hoja de postulación (spec §3.1) en el detalle: postular es un acto real.
+            go(postularPath(card.id));
+            return;
+        }
         setFocusEmpty(deck.length === 1);
         show({
-            message: decision === 'si' ? copy.empleos.meInteresa(card.title) : copy.empleos.noMeInteresa(card.title),
+            message: copy.empleos.noMeInteresa(card.title),
             action: {
                 label: copy.empleos.deshacer,
                 onAction: () => {
                     setFocusEmpty(false);
-                    setDecididas((prev) => {
-                        const next = { ...prev };
-                        delete next[card.id];
-                        return next;
-                    });
+                    undoDecision(actor.id, card.id);
                 },
             },
         });
     };
 
-    const draftCount = all.filter((p) => inView(p) && passesEmpleo(p, sheet.draft)).length;
-    const focusOnMount = useCallback((el: HTMLDivElement | null) => el?.focus(), []);
+    /** «Volver a ver las descartadas»: deshace los «No me interesa» de lo que se ve con estos filtros. */
+    const restoreDiscarded = () => {
+        for (const p of filtered) if (decided(p.id) === 'no') undoDecision(actor.id, p.id);
+        focusPanel();
+    };
+
     const hasEmpleos = all.length > 0;
 
     let content;
     if (!hasEmpleos) {
         const vacio = explore.empleos.vacio;
-        content = vacio ? <ExploreEmpty {...fromDemo(vacio, IconOffers, links.go)} /> : null;
+        content = vacio ? <ExploreEmpty {...fromDemo(vacio, IconOffers, actor.id, go)} /> : null;
     } else if (filtered.length === 0) {
         content = (
             <ExploreEmpty
                 icon={IconOffers}
                 title={copy.empleos.sinResultados.titulo}
                 text={copy.empleos.sinResultados.texto}
-                action={{ label: copy.empleos.sinResultados.accion, onClick: () => setFiltros(EMPLEO_SIN_FILTROS) }}
+                action={{
+                    label: copy.empleos.sinResultados.accion,
+                    onClick: () => {
+                        setFiltros(EMPLEO_SIN_FILTROS);
+                        focusPanel();
+                    },
+                }}
             />
         );
     } else if (vista === 'deck' && deck.length > 0) {
@@ -146,7 +162,13 @@ export function EmpleosScreen(props: SegmentScreenProps) {
                 icon: IconOffers,
                 title: titulo,
                 text: copy.empleos.deckVacio.conFiltros(hiddenByFilters),
-                action: { label: copy.empleos.deckVacio.cambiarFiltros, onClick: sheet.openSheet },
+                action: {
+                    label: copy.empleos.deckVacio.cambiarFiltros,
+                    onClick: () => {
+                        focusAfterFilters.current = true;
+                        filtersSheet.show();
+                    },
+                },
             };
         }
         if (vista === 'deck' && list.length > 0) {
@@ -154,63 +176,76 @@ export function EmpleosScreen(props: SegmentScreenProps) {
                 icon: IconOffers,
                 title: titulo,
                 text: copy.empleos.deckVacio.sinFiltros,
-                action: { label: copy.empleos.deckVacio.verLista, onClick: () => setVista('lista') },
+                action: {
+                    label: copy.empleos.deckVacio.verLista,
+                    onClick: () => {
+                        setVista('lista');
+                        focusPanel();
+                    },
+                },
             };
         }
-        return { icon: IconOffers, title: titulo, text: copy.empleos.listaVacia.texto };
+        // Todo lo que se ve con estos filtros quedó en «No me interesa».
+        return {
+            icon: IconOffers,
+            title: titulo,
+            text: copy.empleos.listaVacia.texto,
+            action: { label: copy.empleos.listaVacia.verDescartadas, onClick: restoreDiscarded },
+        };
     }
 
     return (
-        <ExploreLayout
-            {...props}
-            filterCount={hasEmpleos ? countEmpleoFiltros(filtros) : 0}
-            onFilters={hasEmpleos ? sheet.openSheet : undefined}
-        >
+        <>
             <Stack gap={3} className="explore-fill">
                 {hasEmpleos && (
                     <ExploreBar
                         text={explore.empleos.titulo}
                         toggleLabel={vista === 'deck' ? copy.empleos.verLista : copy.empleos.verDeAUna}
-                        onToggle={toggleVista}
+                        onToggle={() => setVista(vista === 'deck' ? 'lista' : 'deck')}
                     />
                 )}
                 {content}
             </Stack>
 
-            <FiltersSheet
-                open={sheet.open}
-                onClose={sheet.close}
-                onClear={() => sheet.setDraft(EMPLEO_SIN_FILTROS)}
-                onApply={sheet.apply}
-                applyLabel={copy.filtros.verEmpleos(draftCount)}
-            >
-                <ChipSection
-                    label={copy.filtros.jornada}
-                    options={JORNADAS.map((j) => ({ value: j, label: j }))}
-                    value={sheet.draft.jornadas}
-                    onChange={(jornadas) => sheet.setDraft({ ...sheet.draft, jornadas })}
-                />
-                <ChipSection
-                    label={copy.filtros.contrato}
-                    options={CONTRATOS.map((c) => ({ value: c, label: c }))}
-                    value={sheet.draft.contratos}
-                    onChange={(contratos) => sheet.setDraft({ ...sheet.draft, contratos })}
-                />
-                <ChipSection
-                    label={copy.filtros.distancia}
-                    single
-                    options={DISTANCIAS.map((km) => ({ value: km, label: copy.filtros.hasta(km) }))}
-                    value={sheet.draft.distancia === null ? [] : [sheet.draft.distancia]}
-                    onChange={([km]) => sheet.setDraft({ ...sheet.draft, distancia: km ?? null })}
-                />
-                <Switch
-                    label={copy.filtros.soloVerificadas}
-                    description={copy.filtros.soloVerificadasDesc}
-                    checked={sheet.draft.verificadas}
-                    onChange={(e) => sheet.setDraft({ ...sheet.draft, verificadas: e.target.checked })}
-                />
-            </FiltersSheet>
-            {verificationSheet}
-        </ExploreLayout>
+            {hasEmpleos && (
+                <FiltersSheet
+                    sheet={filtersSheet}
+                    applied={filtros}
+                    empty={EMPLEO_SIN_FILTROS}
+                    onApply={setFiltros}
+                    applyLabel={(d) => copy.filtros.verEmpleos(all.filter((p) => inView(p) && passesEmpleo(p, d)).length)}
+                >
+                    {(draft, setDraft) => (
+                        <>
+                            <ChipSection
+                                label={copy.filtros.jornada}
+                                options={JORNADAS.map((j) => ({ value: j, label: j }))}
+                                value={draft.jornadas}
+                                onChange={(jornadas) => setDraft({ ...draft, jornadas })}
+                            />
+                            <ChipSection
+                                label={copy.filtros.contrato}
+                                options={CONTRATOS.map((c) => ({ value: c, label: c }))}
+                                value={draft.contratos}
+                                onChange={(contratos) => setDraft({ ...draft, contratos })}
+                            />
+                            <ChipSection
+                                label={copy.filtros.distancia}
+                                single
+                                options={DISTANCIAS.map((km) => ({ value: km, label: copy.filtros.hasta(km) }))}
+                                value={draft.distancia === null ? [] : [draft.distancia]}
+                                onChange={([km]) => setDraft({ ...draft, distancia: km ?? null })}
+                            />
+                            <Switch
+                                label={copy.filtros.soloVerificadas}
+                                description={copy.filtros.soloVerificadasDesc}
+                                checked={draft.verificadas}
+                                onChange={(e) => setDraft({ ...draft, verificadas: e.target.checked })}
+                            />
+                        </>
+                    )}
+                </FiltersSheet>
+            )}
+        </>
     );
 }

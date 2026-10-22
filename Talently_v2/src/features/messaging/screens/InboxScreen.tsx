@@ -1,42 +1,46 @@
 // MSG-01 · Mensajes (/mensajes, prototipo MSG-01, MSG-01-jorge y
 // MSG-01-marta): bandeja única. Arriba, «Nuevos matches (n)» solo con los
-// matches sin mensajes; debajo, los filtros Todos · Empleo · Turno y las
-// conversaciones por último mensaje, cada una con su ContextChip, la hora
-// relativa y los no leídos reales. El filtro va en la URL (?tipo=, replace):
-// al volver a la pestaña se conserva (spec §5.3 regla 1).
-import { useMemo, type MouseEvent } from 'react';
+// matches sin mensajes; debajo, los filtros y las conversaciones por último
+// mensaje, cada una con su ContextChip, la hora relativa y los no leídos
+// reales. Persona: Todos · Empleo · Turno (?tipo=); organización: por
+// publicación (?pub=, spec §5.2). El filtro va en la URL con replace: al
+// volver de una conversación o de otra pestaña se conserva (spec §5.3 r. 1).
+import { useMemo, useRef, type MouseEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AppBar, useScrolled } from '../../../ui/AppBar';
 import { Avatar } from '../../../ui/Avatar';
 import { ContextChipInRow, contextChipText } from '../../../ui/ContextChip';
-import { EmptyState } from '../../../ui/EmptyState';
+import { EmptyState, type EmptyStateAction } from '../../../ui/EmptyState';
 import { IconChat } from '../../../ui/icons';
 import { Stack } from '../../../ui/Layout';
 import { List, ListItem } from '../../../ui/ListItem';
 import { NewMatches, type NewMatch } from '../../../ui/NewMatches';
+import { useOpenPath, type LinkTargetProps } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
 import { getConversations } from '../../demo/data';
+import { InboxFilterChips } from '../components/InboxFilterChips';
 import { NotificationsButton } from '../components/NotificationsButton';
-import { TypeFilter } from '../components/TypeFilter';
-import { copy, type InboxFilter } from '../copy';
-import { useLinks, useViewerId } from '../links';
-import { inboxRow, matchesFilter, parseFilter, peerKind, sortRows, type InboxRow } from '../model';
+import { copy } from '../copy';
+import { ALL, filteredEmpty, inboxFilters, inboxRow, matchesFilter, peerKind, selectedFilter, sortRows, type InboxRow } from '../model';
 import { EMPTY_STATE, useConversationStates } from '../store';
+import { useViewer, type Viewer } from '../viewer';
 import '../messaging.css';
 
 export const screenId = 'MSG-01';
 
 export function InboxScreen() {
-    const viewerId = useViewerId();
+    const viewer = useViewer();
+    const { viewerId, recienRegistrado, audience } = viewer;
     const scrolled = useScrolled();
     const [params, setParams] = useSearchParams();
     const states = useConversationStates();
-    const { go, linkProps } = useLinks();
-    const filter = parseFilter(params.get('tipo'));
+    const { open, linkProps } = useOpenPath();
+    const allChipRef = useRef<HTMLButtonElement>(null);
 
+    // Jorge recién registrado (INI-01-jorge-nuevo): todavía no tiene conversaciones.
     const rows = useMemo(
-        () => getConversations(viewerId).map((c) => inboxRow(c, states.get(c.id) ?? EMPTY_STATE)),
-        [viewerId, states],
+        () => (recienRegistrado ? [] : getConversations(viewerId).map((c) => inboxRow(c, states.get(c.id) ?? EMPTY_STATE))),
+        [viewerId, recienRegistrado, states],
     );
     const matches: NewMatch[] = rows
         .filter((r) => r.newMatch)
@@ -48,35 +52,49 @@ export function InboxScreen() {
             href: linkProps(paths.conversacion(r.conv.id)).href,
         }));
     const list = sortRows(rows.filter((r) => !r.newMatch));
-    const visible = list.filter((r) => matchesFilter(r, filter));
+    const filters = inboxFilters(list, audience);
+    const filter = selectedFilter(filters, filters ? params.get(filters.param) : null);
+    const visible = list.filter((r) => matchesFilter(r, filters, filter));
+    const emptyFilter = filteredEmpty(filters, filter);
 
-    const setFilter = (next: InboxFilter) => {
+    const setFilter = (next: string) => {
+        if (!filters) return;
         const nextParams = new URLSearchParams(params);
-        if (next === 'todos') nextParams.delete('tipo');
-        else nextParams.set('tipo', next);
-        setParams(nextParams, { replace: true });
+        if (next === ALL) nextParams.delete(filters.param);
+        else nextParams.set(filters.param, next);
+        setParams(nextParams, { replace: true, preventScrollReset: true });
+    };
+
+    // «Ver todas» desaparece al vaciar el filtro: el foco pasa al chip «Todos», que sigue en pantalla.
+    const showAll = () => {
+        allChipRef.current?.focus({ preventScroll: true });
+        setFilter(ALL);
     };
 
     const openMatch = (match: NewMatch, event: MouseEvent<HTMLElement>) => linkProps(paths.conversacion(match.id)).onClick(event);
 
     return (
         <>
-            <AppBar title={copy.inbox.title} scrolled={scrolled} actions={<NotificationsButton viewerId={viewerId} />} />
+            <AppBar
+                title={copy.inbox.title}
+                scrolled={scrolled}
+                actions={<NotificationsButton viewerId={viewerId} recienRegistrado={recienRegistrado} />}
+            />
             <main className="tl-app-screen__body" data-screen-id={screenId}>
                 <div className="tl-app-screen__content msg-content">
                     {rows.length === 0 ? (
                         <EmptyState
                             icon={IconChat}
                             title={copy.inbox.emptyTitle}
-                            text={copy.inbox.emptyText}
-                            action={{ label: copy.inbox.emptyAction, onClick: () => go(paths.explorar('turno')) }}
+                            text={viewer.seeksWork ? copy.inbox.emptyText : copy.inbox.publisherEmptyText}
+                            action={emptyAction(viewer, (path) => open(path, { replace: true }))}
                         />
                     ) : (
                         <>
                             <NewMatches matches={matches} onOpen={openMatch} />
                             {list.length > 0 && (
                                 <Stack gap={4}>
-                                    <TypeFilter value={filter} onChange={setFilter} />
+                                    {filters && <InboxFilterChips filters={filters} value={filter} onChange={setFilter} allRef={allChipRef} />}
                                     {visible.length > 0 ? (
                                         <List>
                                             {visible.map((row) => (
@@ -84,12 +102,12 @@ export function InboxScreen() {
                                             ))}
                                         </List>
                                     ) : (
-                                        filter !== 'todos' && (
+                                        emptyFilter && (
                                             <EmptyState
                                                 icon={IconChat}
-                                                title={copy.inbox.filteredTitle[filter]}
-                                                text={copy.inbox.filteredText[filter]}
-                                                action={{ label: copy.inbox.filteredAction, onClick: () => setFilter('todos') }}
+                                                title={emptyFilter.title}
+                                                text={emptyFilter.text}
+                                                action={{ label: copy.inbox.filteredAction, onClick: showAll }}
                                             />
                                         )
                                     )}
@@ -103,11 +121,21 @@ export function InboxScreen() {
     );
 }
 
-interface ConversationRowProps {
-    row: InboxRow;
-    href: string;
-    onClick: (event: MouseEvent<HTMLElement>) => void;
+/**
+ * Sin conversaciones: quien busca trabajo va a Explorar (turnos o empleos);
+ * quien publica, a sus publicaciones. Cambiar de pestaña hace replace (spec
+ * §5.3 regla 1).
+ */
+function emptyAction(viewer: Viewer, go: (path: string) => void): EmptyStateAction {
+    if (!viewer.seeksWork) {
+        return { label: copy.inbox.publisherEmptyAction, onClick: () => go(paths.actividad('publicaciones')) };
+    }
+    return viewer.explore === 'turno'
+        ? { label: copy.inbox.emptyAction, onClick: () => go(paths.explorar('turno')) }
+        : { label: copy.inbox.emptyActionJobs, onClick: () => go(paths.explorar('empleo')) };
 }
+
+type ConversationRowProps = { row: InboxRow } & LinkTargetProps;
 
 /** Una conversación (ListItem --chat): toda la fila abre el chat. */
 function ConversationRow({ row, href, onClick }: ConversationRowProps) {

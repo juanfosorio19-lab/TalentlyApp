@@ -10,7 +10,7 @@ import { Stack } from '../../../ui/Layout';
 import { OptionGroup } from '../../../ui/OptionCard';
 import { copy } from '../copy';
 
-export const sheetId = 'MSG-02b';
+export const screenId = 'MSG-02b';
 
 type Choice = 'existente' | 'nuevo';
 
@@ -28,7 +28,14 @@ interface CertificateSheetProps {
 }
 
 export function CertificateSheet({ open, onClose, peer, issued, onShare, onUpload }: CertificateSheetProps) {
-    const [choice, setChoice] = useState<Choice>(issued ? 'existente' : 'nuevo');
+    const initial: Choice = issued ? 'existente' : 'nuevo';
+    const [choice, setChoice] = useState<Choice>(initial);
+    // Cada vez que se abre parte de cero (también si se cerró con el atrás del navegador o de Android).
+    const [wasOpen, setWasOpen] = useState(open);
+    if (open !== wasOpen) {
+        setWasOpen(open);
+        if (open) setChoice(initial);
+    }
     const options = [
         ...(issued ? [{ value: 'existente' as const, icon: IconDocument, title: copy.share.existing, example: issued }] : []),
         { value: 'nuevo' as const, icon: IconUpload, title: copy.share.upload, example: copy.share.uploadSub },
@@ -44,7 +51,7 @@ export function CertificateSheet({ open, onClose, peer, issued, onShare, onUploa
                 </Button>
             }
         >
-            <Stack gap={6} data-screen-id={sheetId}>
+            <Stack gap={6} data-screen-id={screenId}>
                 <Stack gap={4}>
                     <p className="body-l msg-flush">{copy.share.intro}</p>
                     <Stack row gap={3}>
