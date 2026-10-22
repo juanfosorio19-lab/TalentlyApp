@@ -6,11 +6,14 @@ import { getProfile } from '../demo/data';
 import { useDemoSession } from '../demo/session';
 import { phonePendingAtStart, useSessionState } from '../demo/sessionStore';
 import type { DemoProfile, DemoProfileTab } from '../demo/types';
-import { composeProfile, recienRegistradoProfile } from './model';
-import { profileKey, saveProfileTabs, useEditedTabs } from './store';
+import { identityPendingAtStart } from './mock';
+import { composeProfile, recienRegistradoProfile, verificationDetails, withoutSessionTips, withPrototypeData } from './model';
+import { profileKey, saveProfileTabs, useProfileTabs } from './store';
 
 export interface ProfileState {
     profile: DemoProfile;
+    /** Hoja «Verificación de …»: insignia → cómo y cuándo se verificó. */
+    verificationDetails: Readonly<Record<string, string>>;
     /** Guarda un perfil (Trabajo, Hogar…) con sus cambios. */
     saveTab: (tab: DemoProfileTab) => void;
 }
@@ -19,18 +22,32 @@ export function useProfile(): ProfileState {
     const { actor, recienRegistrado } = useDemoSession();
     const { phoneVerified } = useSessionState();
     const key = profileKey(actor.id, recienRegistrado);
-    const tabs = useEditedTabs(key);
-    const phoneOk = phoneVerified.has(actor.id) || !phonePendingAtStart(actor.id);
+    const tabs = useProfileTabs(key);
+    const phoneVerifiedInSession = phoneVerified.has(actor.id);
 
     const profile = useMemo(() => {
-        const base = recienRegistrado ? recienRegistradoProfile(getProfile(actor.id)) : getProfile(actor.id);
-        return composeProfile(base, { phoneVerified: phoneOk, tabs });
-    }, [actor.id, recienRegistrado, phoneOk, tabs]);
+        const data = withPrototypeData(getProfile(actor.id));
+        const base = recienRegistrado ? recienRegistradoProfile(data) : data;
+        return composeProfile(base, {
+            phoneVerifiedInSession,
+            phonePendingAtStart: phonePendingAtStart(actor.id),
+            identityPendingAtStart: !recienRegistrado && identityPendingAtStart(actor.id),
+            // VER-02 guarda el envío en su propio feature: pedido en «requests» como
+            // `useIdentityStatus(personId)` en demo/sessionStore. Mientras, el Perfil no lo ve.
+            identitySubmitted: false,
+            tabs,
+        });
+    }, [actor.id, recienRegistrado, phoneVerifiedInSession, tabs]);
+
+    const details = useMemo(
+        () => verificationDetails(actor.id, profile.asiTeVen.verificaciones, phoneVerifiedInSession),
+        [actor.id, profile.asiTeVen.verificaciones, phoneVerifiedInSession],
+    );
 
     const saveTab = useCallback(
-        (tab: DemoProfileTab) => saveProfileTabs(key, profile.perfiles.map((t) => (t.id === tab.id ? tab : t))),
+        (tab: DemoProfileTab) => saveProfileTabs(key, withoutSessionTips(profile.perfiles.map((t) => (t.id === tab.id ? tab : t)))),
         [key, profile.perfiles],
     );
 
-    return { profile, saveTab };
+    return { profile, verificationDetails: details, saveTab };
 }

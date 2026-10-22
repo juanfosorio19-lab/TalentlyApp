@@ -1,9 +1,11 @@
 // Lo que la persona cambia en su perfil durante la sesión de demostración
 // (secciones editadas, CV subido) y el «Avisarme» de PRF-12. Vive en memoria
 // mientras la app está abierta: al volver a Perfil, los cambios siguen ahí.
-// demo/sessionStore todavía no tiene un lugar para esto (pedido en
-// «requests»: `saveProfileTabs` y `useProfileTabs` allá, para que Inicio
-// también vea, por ejemplo, que ya subió su CV); ese día este archivo se borra.
+// demo/sessionStore todavía no tiene un lugar para esto. Pedido en
+// «requests» con ESTA MISMA forma (`profileTabs`, `saveProfileTabs`,
+// `useProfileTabs`, `useBoostNotify` y el selector `useCvSubido` para que
+// Inicio deje de pedir el CV ya subido): ese día useProfile y BoostScreen
+// cambian solo el import y este archivo se borra.
 import { useCallback, useSyncExternalStore } from 'react';
 import type { DemoActorId, DemoProfileTab } from '../demo/types';
 
@@ -35,7 +37,7 @@ export function profileKey(actorId: DemoActorId, recienRegistrado: boolean): str
 }
 
 /** Los perfiles editados en la sesión, o `undefined` si aún no cambia nada. */
-export function useEditedTabs(key: string): readonly DemoProfileTab[] | undefined {
+export function useProfileTabs(key: string): readonly DemoProfileTab[] | undefined {
     return useSyncExternalStore(subscribe, snapshot, snapshot).tabs.get(key);
 }
 
