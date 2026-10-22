@@ -1,20 +1,20 @@
-// La campana del AppBar large (spec §5.1): contador real de no leídas de quien
-// mira (useInbox, el mismo de todas las campanas y de NOT-01) y abre NOT-01.
+// La campana del AppBar large (spec §5.1): contador real de no leídas y abre
+// NOT-01. Cuenta con useInbox (el mismo de todas las campanas) para el actor
+// de la sesión, igual que NOT-01: la cifra de la campana es la que se ve al
+// abrirla. En el flujo 10 (?demo=marta) quien mira la bandeja es Marta, pero
+// NOT-01 todavía es del actor de la sesión (pedido en requests: Marta como
+// actor de la demo); mientras tanto, campana y NOT-01 dicen lo mismo.
 import { IconButton } from '../../../ui/IconButton';
 import { IconBell } from '../../../ui/icons';
 import { useOpenPath } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
+import { useDemoSession } from '../../demo/session';
 import { useInbox } from '../../demo/sessionStore';
-import type { DemoViewerId } from '../../demo/types';
 import { copy } from '../copy';
 
-interface NotificationsButtonProps {
-    viewerId: DemoViewerId;
-    recienRegistrado: boolean;
-}
-
-export function NotificationsButton({ viewerId, recienRegistrado }: NotificationsButtonProps) {
+export function NotificationsButton() {
     const { open } = useOpenPath();
-    const { unread } = useInbox(viewerId, recienRegistrado);
+    const { actor, recienRegistrado } = useDemoSession();
+    const { unread } = useInbox(actor.id, recienRegistrado);
     return <IconButton icon={IconBell} label={copy.bell(unread)} count={unread} onClick={() => open(paths.notificaciones())} />;
 }

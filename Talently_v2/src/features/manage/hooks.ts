@@ -2,7 +2,7 @@
 // foco después de una acción que quita el botón tocado y los parámetros de la
 // URL que deben sobrevivir al volver de una pantalla apilada.
 import { useCallback, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { getManagedPublication } from '../demo/data';
 import { useDemoSession } from '../demo/session';
 import { useSessionState, type SessionApplication } from '../demo/sessionStore';
@@ -53,10 +53,12 @@ export function usePendingFocus(blocked: boolean): (target: () => HTMLElement | 
  * Un parámetro de la URL que cambia con `replace` (filtros y pestañas
  * internas): así se conserva al volver de una pantalla apilada y no llena el
  * historial. `fallback` es el valor cuando la URL no lo trae; el tercer valor
- * dice si la URL ya lo trae.
+ * dice si la URL ya lo trae. Conserva el estado de la entrada (GES-04 sabe
+ * así que está encima de GES-01, ver links.ts).
  */
 export function useReplaceParam(name: string, fallback: string): [string, (next: string) => void, boolean] {
     const [params, setParams] = useSearchParams();
+    const state: unknown = useLocation().state;
     const present = params.has(name);
     const value = params.get(name) ?? fallback;
     const setValue = useCallback(
@@ -67,10 +69,32 @@ export function useReplaceParam(name: string, fallback: string): [string, (next:
                     p.set(name, next);
                     return p;
                 },
-                { replace: true, preventScrollReset: true },
+                { replace: true, preventScrollReset: true, state },
             );
         },
-        [name, setParams],
+        [name, setParams, state],
     );
     return [value, setValue, present];
+}
+
+/** Cuánto espera el pedido de foco de ManageGate a que se monte la pantalla (con una redirección de por medio). */
+const TITLE_FOCUS_WINDOW_MS = 1500;
+let titleFocusUntil = 0;
+
+/**
+ * ManageGate, al cambiar de actor: su EmptyState y el botón tocado se van y
+ * se monta la pantalla de verdad (o la de su redirección). Esa pantalla lleva
+ * el foco a su título en vez de dejarlo en <body>.
+ */
+export function requestTitleFocus(): void {
+    titleFocusUntil = Date.now() + TITLE_FOCUS_WINDOW_MS;
+}
+
+/** GES-01, GES-02 y GES-04: al montarse justo después de cambiar de actor, el foco va a su h1 (tabIndex -1). */
+export function useTitleFocusOnMount(title: { readonly current: HTMLElement | null }): void {
+    useEffect(() => {
+        if (Date.now() > titleFocusUntil) return;
+        titleFocusUntil = 0;
+        title.current?.focus();
+    }, [title]);
 }

@@ -33,7 +33,7 @@ import '../publish.css';
 export const screenId = 'PUBL-03';
 
 export function TurnoWizardScreen({ step }: { step: number }) {
-    const { actor } = useDemoSession();
+    const { actor, recienRegistrado } = useDemoSession();
     const template = useMemo(() => turnoTemplate(actor.id), [actor.id]);
     const initial = useMemo(() => initialTurno(actor.id), [actor.id]);
     const entry = turnoDrafts.useEntry(actor.id);
@@ -51,6 +51,7 @@ export function TurnoWizardScreen({ step }: { step: number }) {
         hasErrors: hasErrors(errors),
         goTo: wizard.goTo,
         summary: () => summaryOf(actor, draft),
+        recienRegistrado,
     });
 
     // Un enlace a un paso posterior con algo pendiente antes lleva a ese paso.
@@ -100,7 +101,8 @@ export function TurnoWizardScreen({ step }: { step: number }) {
             onHelp={wizard.help}
             sheets={
                 <IdentitySheet
-                    open={flow.identitySheet.open}
+                    // Ya enviada (al volver con atrás desde PUBL-07), la hoja no vuelve a pedirla.
+                    open={flow.identitySheet.open && flow.identityPending}
                     onClose={flow.identitySheet.hide}
                     onVerify={flow.verifyIdentity}
                     que="turno"

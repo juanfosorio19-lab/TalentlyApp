@@ -9,7 +9,7 @@
 // verificar el celular, «No me interesa») va a demo/sessionStore para que
 // ACT-02, la Agenda, Inicio y el deck lo vean; el match (DET-03) lo muestra
 // MatchHost sobre cualquier pantalla.
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { useHref, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ActionPair } from '../../../ui/ActionPair';
 import { AppBar, useScrolled } from '../../../ui/AppBar';
@@ -33,7 +33,7 @@ import { useSheet } from '../../../app/sheets';
 import { NotFoundScreen } from '../../../app/system/NotFoundScreen';
 import { getPublication } from '../../demo/data';
 import { DEMO_ACTORS, useDemoSession, type DemoActorId } from '../../demo/session';
-import { applyTo, decide, scheduleMatch, useApplications, useSessionApplication, verifyPhone } from '../../demo/sessionStore';
+import { applyTo, decide, scheduleMatch, undoDecision, useApplications, useSessionApplication, verifyPhone } from '../../demo/sessionStore';
 import type { DemoInfoTag, DemoPublication } from '../../demo/types';
 import { ApplySheet } from '../components/ApplySheet';
 import {
@@ -144,6 +144,7 @@ function PublicationDetail({ pub }: { pub: DemoPublication }) {
 
     const [taking, setTaking] = useState(false);
     const ctaRef = useRef<HTMLButtonElement>(null);
+    const titleRef = useRef<HTMLHeadingElement>(null);
     // Postular quita «Me interesa» de la pantalla: al cerrar la hoja, el foco va al CTA nuevo.
     const focusCta = useRef(false);
     // La app misma está pasando de AUTH-08 a DET-02 o cerrando la hoja: la guarda de abajo no se mete.
@@ -170,6 +171,23 @@ function PublicationDetail({ pub }: { pub: DemoPublication }) {
         ctaRef.current?.focus({ preventScroll: true });
     });
 
+    // Una hoja que se abrió por enlace (el «Me interesa» del deck, una notificación) devuelve el foco al
+    // body al cerrarse: quien la abrió estaba en otra pantalla. Entonces va al CTA o, si no hay, al título.
+    const sheetOpen = applySheet.open || phoneSheet.open || verificationSheet.open || moreSheet.open;
+    const sheetWasOpen = useRef(sheetOpen);
+    useEffect(() => {
+        const closed = sheetWasOpen.current && !sheetOpen;
+        sheetWasOpen.current = sheetOpen;
+        if (!closed) return;
+        // Después de que la hoja devuelve el foco (al empezar a cerrar).
+        const frame = window.requestAnimationFrame(() => {
+            const active = document.activeElement;
+            if (active instanceof HTMLElement && active !== document.body && active.isConnected && !active.closest('[inert]')) return;
+            (ctaRef.current ?? titleRef.current)?.focus({ preventScroll: true });
+        });
+        return () => window.cancelAnimationFrame(frame);
+    }, [sheetOpen]);
+
     const takeShift = () => {
         setTaking(true);
         later(() => {
@@ -189,9 +207,14 @@ function PublicationDetail({ pub }: { pub: DemoPublication }) {
         else applySheet.show();
     };
     const onNotInterested = () => {
-        // Igual que en el deck: no vuelve a aparecer y la otra parte nunca lo sabe.
+        // Igual que en el deck: no vuelve a aparecer, la otra parte nunca lo sabe y se puede deshacer.
         decide(actor.id, pub.id, 'no');
         goBack();
+        // El Snackbar es de toda la app: sigue a la vista en la pantalla a la que se vuelve.
+        snackbar.show({
+            message: copy.notInterested(pub.titulo),
+            action: { label: copy.undo, onAction: () => undoDecision(actor.id, pub.id) },
+        });
     };
 
     const onPhoneVerified = () => {
@@ -208,7 +231,8 @@ function PublicationDetail({ pub }: { pub: DemoPublication }) {
     const onApplied = () => {
         applyTo(actor.id, pub.id, 'Postulado');
         // La organización responde un rato después: MatchHost lo muestra donde esté la persona.
-        if (matchConversation(actor.id, pub)) scheduleMatch(actor.id, pub.id);
+        // Jorge recién registrado aún no tiene conversaciones: sin una a la que llevar, no hay match.
+        if (matchConversation(actor.id, pub, recienRegistrado)) scheduleMatch(actor.id, pub.id);
         handingOff.current = true;
         focusCta.current = true;
         applySheet.hide();
@@ -278,7 +302,7 @@ function PublicationDetail({ pub }: { pub: DemoPublication }) {
             </Button>
         );
     } else if (cta.kind === 'open' && pub.tipo === 'empleo') {
-        action = <ActionPair onNo={onNotInterested} onYes={onInterested} />;
+        action = <ActionPair onNo={onNotInterested} onYes={onInterested} yesProps={{ ref: ctaRef }} />;
     } else if (cta.kind === 'open') {
         // Servicios (F3) y clases (F2): sus hojas aún no existen.
         action = (
@@ -297,6 +321,8 @@ function PublicationDetail({ pub }: { pub: DemoPublication }) {
         <div className="tl-app-screen">
             <AppBar
                 variant="transparent"
+                // El H1 es el título de la publicación, en el cuerpo (como StepLayout).
+                titleAs="p"
                 title={copy.appBar[pub.tipo]}
                 onBack={goBack}
                 scrolled={scrolled}
@@ -311,9 +337,9 @@ function PublicationDetail({ pub }: { pub: DemoPublication }) {
                 <DetailHero author={pub.autor} onVerification={() => verificationSheet.show()} />
                 <div className="tl-app-screen__content pub-content">
                     {pub.tipo === 'turno' ? (
-                        <ShiftBody pub={pub} badge={badge} forViewer={forViewer} />
+                        <ShiftBody pub={pub} badge={badge} forViewer={forViewer} titleRef={titleRef} />
                     ) : (
-                        <JobBody pub={pub} badge={badge} forViewer={forViewer} orgLink={linkProps(orgPath)} />
+                        <JobBody pub={pub} badge={badge} forViewer={forViewer} titleRef={titleRef} orgLink={linkProps(orgPath)} />
                     )}
                 </div>
             </main>
@@ -358,11 +384,15 @@ function PublicationDetail({ pub }: { pub: DemoPublication }) {
     );
 }
 
-/** Título, bajada (Casona en Las Condes) y el Badge de estado si corresponde. */
-function TitleBlock({ pub, badge }: { pub: DemoPublication; badge: BadgeStatus | null }) {
+type TitleRef = RefObject<HTMLHeadingElement | null>;
+
+/** Título (el único H1, con tabIndex -1 para recibir el foco), bajada (Casona en Las Condes) y el Badge de estado. */
+function TitleBlock({ pub, badge, titleRef }: { pub: DemoPublication; badge: BadgeStatus | null; titleRef: TitleRef }) {
     return (
         <>
-            <h1 className="h2 pub-flush">{pub.titulo}</h1>
+            <h1 ref={titleRef} tabIndex={-1} className="h2 pub-flush">
+                {pub.titulo}
+            </h1>
             {pub.detalle.subtitulo && <p className="body pub-muted pub-flush">{pub.detalle.subtitulo}</p>}
             {badge && (
                 <div>
@@ -383,12 +413,22 @@ function Rows({ pub }: { pub: DemoPublication }) {
 }
 
 /** Plantilla Turno: bloques por día, tarifa, forma de contratación, lugar, «Detalle del turno» y requisitos. */
-function ShiftBody({ pub, badge, forViewer }: { pub: Extract<DemoPublication, { tipo: 'turno' }>; badge: BadgeStatus | null; forViewer: boolean }) {
+function ShiftBody({
+    pub,
+    badge,
+    forViewer,
+    titleRef,
+}: {
+    pub: Extract<DemoPublication, { tipo: 'turno' }>;
+    badge: BadgeStatus | null;
+    forViewer: boolean;
+    titleRef: TitleRef;
+}) {
     const { contratacion, filasTitulo, filas, requisitos } = pub.detalle;
     return (
         <>
             <Stack gap={1}>
-                <TitleBlock pub={pub} badge={badge} />
+                <TitleBlock pub={pub} badge={badge} titleRef={titleRef} />
             </Stack>
             <ShiftBlocks>
                 {pub.bloques.map((b) => (
@@ -429,11 +469,13 @@ function JobBody({
     pub,
     badge,
     forViewer,
+    titleRef,
     orgLink,
 }: {
     pub: DemoPublication;
     badge: BadgeStatus | null;
     forViewer: boolean;
+    titleRef: TitleRef;
     /** «Sobre la organización» → su perfil público (linkProps de useOpenPath). */
     orgLink: LinkTargetProps;
 }) {
@@ -446,7 +488,7 @@ function JobBody({
     return (
         <>
             <Stack gap={2}>
-                <TitleBlock pub={pub} badge={badge} />
+                <TitleBlock pub={pub} badge={badge} titleRef={titleRef} />
                 <p className="pub-flush">
                     <Amount size="lg" {...amountOf(pub)} />
                 </p>

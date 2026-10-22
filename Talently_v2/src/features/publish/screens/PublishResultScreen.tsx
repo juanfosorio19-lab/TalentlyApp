@@ -13,7 +13,7 @@ import { NotFoundScreen } from '../../../app/system/NotFoundScreen';
 import { useDemoSession, type DemoActor } from '../../demo/session';
 import { copy } from '../copy';
 import { initialHogar } from '../model/hogar';
-import { publishedId, type WizardKind } from '../model/publisher';
+import { canPublish, publishedId, type WizardKind } from '../model/publisher';
 import { summaryOf } from '../model/summary';
 import { initialTurno } from '../model/turno';
 import {
@@ -25,6 +25,7 @@ import {
     usePublished,
     type PublishedSummary,
 } from '../store';
+import { NoPublisherScreen } from './PublishInfoScreens';
 import '../publish.css';
 
 export const screenId = 'PUBL-07';
@@ -33,14 +34,15 @@ export function PublishResultScreen() {
     const { tipo } = useParams();
     const { actor } = useDemoSession();
     if (tipo !== 'turno' && tipo !== 'hogar') return <NotFoundScreen />;
+    if (!canPublish(actor, tipo)) return <NoPublisherScreen tipo={tipo} />;
     return <PublishResult key={`${actor.id}:${tipo}`} kind={tipo} actor={actor} />;
 }
 
 /** El borrador del actor (el guardado o, si no hay, con el que parte el asistente). */
-function draftOf(kind: WizardKind, actor: DemoActor) {
+function draftOf(kind: WizardKind, actor: DemoActor, recienRegistrado: boolean) {
     return kind === 'turno'
         ? (turnoDrafts.get(actor.id)?.draft ?? initialTurno(actor.id))
-        : (hogarDrafts.get(actor.id)?.draft ?? initialHogar(actor.id));
+        : (hogarDrafts.get(actor.id)?.draft ?? initialHogar(actor.id, { recienRegistrado }));
 }
 
 function resultText(kind: WizardKind, actor: DemoActor, s: PublishedSummary): string {
@@ -50,19 +52,20 @@ function resultText(kind: WizardKind, actor: DemoActor, s: PublishedSummary): st
 }
 
 function PublishResult({ kind, actor }: { kind: WizardKind; actor: DemoActor }) {
+    const { recienRegistrado } = useDemoSession();
     const { open } = useOpenPath();
     const published = usePublished(actor.id, kind);
     const awaiting = useAwaitingIdentity(actor.id, kind);
     // Lo que se muestra mientras no hay nada publicado en la sesión (un enlace directo): el borrador.
-    const pending = useMemo(() => summaryOf(actor, draftOf(kind, actor)), [actor, kind]);
+    const pending = useMemo(() => summaryOf(actor, draftOf(kind, actor, recienRegistrado)), [actor, kind, recienRegistrado]);
 
     // Vuelve de VER-02 (flujo 5): el aviso guardado se publica, en revisión, y la identidad queda enviada.
     useEffect(() => {
         if (!awaiting) return;
-        markPublished(actor.id, { ...summaryOf(actor, draftOf(kind, actor)), review: true });
+        markPublished(actor.id, { ...summaryOf(actor, draftOf(kind, actor, recienRegistrado)), review: true });
         markIdentitySent(actor.id);
         (kind === 'turno' ? turnoDrafts : hogarDrafts).discard(actor.id);
-    }, [awaiting, actor, kind]);
+    }, [awaiting, actor, kind, recienRegistrado]);
 
     const s = published ?? pending;
     const id = publishedId(actor.id, kind);

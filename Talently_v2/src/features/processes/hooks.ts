@@ -1,8 +1,10 @@
-// Ayudas de Procesos y reseñas: scroll bajo el CTA fijo y acciones que salen
-// de una hoja en la URL (?sheet=).
-import { useCallback, useSyncExternalStore } from 'react';
+// Ayudas de Procesos y reseñas: scroll bajo el CTA fijo, hojas de la URL
+// (?sheet=) que la pantalla no siempre puede mostrar y acciones que salen de
+// una hoja.
+import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useOpenPath } from '../../app/navigation/useOpenPath';
+import { useSheet, type UrlSheet } from '../../app/sheets';
 
 function subscribeToLayout(onChange: () => void): () => void {
     window.addEventListener('scroll', onChange, { passive: true });
@@ -55,4 +57,37 @@ export function useOpenFromSheet(name: string): (path: string) => void {
         },
         [canOpen, location.pathname, location.search, location.state, name, navigate, soon],
     );
+}
+
+/**
+ * Una hoja de la URL (useSheet) que la pantalla solo muestra a veces:
+ * «Retirar postulación» con la postulación en pie, «Opciones» para quien
+ * contrata. Si llega `?sheet=` cuando no se puede mostrar (enlace, adelante
+ * del navegador, una postulación ya retirada), el parámetro se quita en vez
+ * de quedar en la URL sin nada en pantalla. Cada entrada del historial se
+ * cierra una sola vez: si la pantalla cierra la hoja y en el mismo cambio
+ * deja de poder mostrarla (confirmar «Retirar»), no vuelve atrás dos veces.
+ */
+export function useAvailableSheet(name: string, available: boolean): UrlSheet {
+    const sheet = useSheet(name);
+    const { key } = useLocation();
+    const { open, hide: hideSheet } = sheet;
+    const closedAt = useRef<string | null>(null);
+
+    // Otra entrada del historial (atrás, adelante): se puede volver a cerrar.
+    useEffect(() => {
+        if (closedAt.current !== key) closedAt.current = null;
+    }, [key]);
+
+    const hide = useCallback(() => {
+        if (closedAt.current === key) return;
+        closedAt.current = key;
+        hideSheet();
+    }, [hideSheet, key]);
+
+    useEffect(() => {
+        if (open && !available) hide();
+    }, [available, hide, open]);
+
+    return { ...sheet, open: open && available, hide };
 }

@@ -1,5 +1,6 @@
 // PUBL-04 · Aviso para mi hogar, el contenido de los pasos 1 a 4 (el
 // StepLayout, el CTA y la navegación los pone HogarWizardScreen).
+import { formatAmount } from '../../../ui/Amount';
 import { Banner } from '../../../ui/Banner';
 import { CheckboxGroup } from '../../../ui/Checkbox';
 import { ChipGroup } from '../../../ui/ChipGroup';
@@ -24,6 +25,7 @@ import {
     TAREAS,
     hogarTags,
     hogarTitle,
+    horasSemana,
     horasSemanaText,
     pideInhabilidades,
     type HogarDraft,
@@ -122,7 +124,7 @@ export function HogarStep2({ draft, errors, onPatch }: HogarStepProps) {
                 value={String(draft.colacion)}
                 onChange={(v) => onPatch({ colacion: Number(v) })}
             />
-            {draft.dias.length > 0 && !errors?.hasta && (
+            {horasSemana(draft) > 0 && (
                 <Note icon={IconClock} size="body">
                     {p.horasAntes}
                     <b>{horasSemanaText(draft)}</b>
@@ -207,7 +209,16 @@ export function HogarStep4({
             </Stack>
             <Stack gap={3}>
                 <p className="overline publish-flush publish-muted">{p.asiLoVeran}</p>
-                {/* Vista previa: se mira, no se toca. */}
+                {/* Vista previa: se mira, no se toca. El lector la oye en una línea. */}
+                <p className="tl-vh">
+                    {[
+                        hogarTitle(draft),
+                        previewAuthor(actor).name,
+                        ...hogarTags(draft).map((t) => t.label),
+                        formatAmount({ value: draft.sueldo, unit: draft.unidad, net: draft.neto }),
+                        actor.comuna,
+                    ].join(' · ')}
+                </p>
                 <div inert>
                     <PublicationCard
                         author={previewAuthor(actor)}

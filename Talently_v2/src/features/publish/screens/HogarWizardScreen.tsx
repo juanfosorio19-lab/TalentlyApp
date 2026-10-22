@@ -21,8 +21,8 @@ import '../publish.css';
 export const screenId = 'PUBL-04';
 
 export function HogarWizardScreen({ step }: { step: number }) {
-    const { actor } = useDemoSession();
-    const initial = useMemo(() => initialHogar(actor.id), [actor.id]);
+    const { actor, recienRegistrado } = useDemoSession();
+    const initial = useMemo(() => initialHogar(actor.id, { recienRegistrado }), [actor.id, recienRegistrado]);
     const entry = hogarDrafts.useEntry(actor.id);
     const draft = entry?.draft ?? initial;
     const changed = JSON.stringify(draft) !== JSON.stringify(initial);
@@ -38,6 +38,7 @@ export function HogarWizardScreen({ step }: { step: number }) {
         hasErrors: Object.keys(errors).length > 0,
         goTo: wizard.goTo,
         summary: () => summaryOf(actor, draft),
+        recienRegistrado,
     });
 
     const incomplete = firstIncompleteHogarStep(draft);
@@ -75,7 +76,8 @@ export function HogarWizardScreen({ step }: { step: number }) {
             onHelp={wizard.help}
             sheets={
                 <IdentitySheet
-                    open={flow.identitySheet.open}
+                    // Ya enviada (al volver con atrás desde PUBL-07), la hoja no vuelve a pedirla.
+                    open={flow.identitySheet.open && flow.identityPending}
                     onClose={flow.identitySheet.hide}
                     onVerify={flow.verifyIdentity}
                     que="aviso"

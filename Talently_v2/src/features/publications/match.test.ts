@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { DEMO_ACTORS } from '../demo/session';
 import type { PendingMatch } from '../demo/sessionStore';
-import { matchView, nextMatch, shortOrgName } from './match';
+import { getPublication } from '../demo/data';
+import { matchConversation, matchView, nextMatch, shortOrgName } from './match';
 
 const pending = (list: PendingMatch[]) => new Map(list.map((m) => [`${m.actorId}:${m.publicationId}`, m]));
 
@@ -35,5 +36,16 @@ describe('DET-03 · match', () => {
     it('sin conversación a la que llevar, no hay match que mostrar', () => {
         expect(matchView({ actorId: 'matias', publicationId: 'turno-garzones-matrimonio', dueAt: 0 }, DEMO_ACTORS.matias)).toBeUndefined();
         expect(matchView({ actorId: 'pedro', publicationId: 'no-existe', dueAt: 0 }, DEMO_ACTORS.pedro)).toBeUndefined();
+    });
+
+    it('Jorge recién registrado no tiene conversaciones: ni match ni «Enviar mensaje» a un callejón', () => {
+        const guardia = getPublication('empleo-guardia-4x4');
+        expect(guardia).toBeDefined();
+        if (!guardia) return;
+        expect(matchConversation('jorge', guardia)).toBeDefined();
+        expect(matchConversation('jorge', guardia, true)).toBeUndefined();
+        const match = { actorId: 'jorge' as const, publicationId: guardia.id, dueAt: 0 };
+        expect(matchView(match, DEMO_ACTORS.jorge)?.conversationId).toBeTruthy();
+        expect(matchView(match, DEMO_ACTORS.jorge, true)).toBeUndefined();
     });
 });

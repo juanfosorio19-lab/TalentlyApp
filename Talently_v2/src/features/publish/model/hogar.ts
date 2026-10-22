@@ -72,6 +72,9 @@ export const TAREAS: readonly CheckboxOption<Tarea>[] = [
     { value: 'mascotas', label: 'Cuidado de mascotas' },
 ];
 
+/** Tareas de cuidado que corresponden a un contexto del hogar (las mascotas no se precargan). */
+const CUIDADOS: readonly (Tarea & Contexto)[] = ['ninos', 'adulto-mayor'];
+
 /** Unidades del sueldo del aviso. */
 export const HOGAR_UNITS: readonly PayUnit[] = ['mes', 'dia'];
 
@@ -111,8 +114,9 @@ function contextoDelPerfil(actorId: DemoActorId): Contexto[] {
  * prototipo (PUBL-04 pasos 1 a 4); cualquier otro hogar, con la plantilla
  * legal y su contexto, sin sueldo ni nota.
  */
-export function initialHogar(actorId: DemoActorId): HogarDraft {
-    const contexto = contextoDelPerfil(actorId);
+export function initialHogar(actorId: DemoActorId, opciones: { recienRegistrado?: boolean } = {}): HogarDraft {
+    // Recién registrado (INI-01-jorge-nuevo) todavía no contó nada de su hogar.
+    const contexto = opciones.recienRegistrado ? [] : contextoDelPerfil(actorId);
     const base: HogarDraft = {
         kind: 'hogar',
         oficio: 'asesor-hogar',
@@ -122,7 +126,8 @@ export function initialHogar(actorId: DemoActorId): HogarDraft {
         hasta: '18:00',
         colacion: 60,
         contexto,
-        tareas: ['aseo', 'cocina', 'lavado', ...(contexto.includes('ninos') ? (['ninos'] as const) : [])],
+        // Las tareas de cuidado de quien vive en la casa parten marcadas (PUBL-04 paso 3: «Hay niños» → «Cuidado de niños»).
+        tareas: ['aseo', 'cocina', 'lavado', ...CUIDADOS.filter((t) => contexto.includes(t))],
         algoMas: '',
         neto: true,
         sueldo: null,

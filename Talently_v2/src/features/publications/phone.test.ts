@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupPhone, nextPhone, normalizePhone } from './phone';
+import { caretAfterDigits, digitsBefore, groupPhone, nextPhone, normalizePhone } from './phone';
 
 describe('normalizePhone', () => {
     it('deja los 8 dígitos tal cual', () => {
@@ -50,5 +50,33 @@ describe('groupPhone', () => {
         expect(groupPhone('1234')).toBe('1234');
         expect(groupPhone('12345')).toBe('1234 5');
         expect(groupPhone('12345678')).toBe('1234 5678');
+    });
+});
+
+describe('cursor del número agrupado', () => {
+    it('cuenta los dígitos antes del cursor', () => {
+        expect(digitsBefore('91234 5678', 1)).toBe(1);
+        expect(digitsBefore('1234 5678', 5)).toBe(4);
+        expect(digitsBefore('1234 5678', null)).toBe(8);
+        expect(digitsBefore('+56 9 1234', 6)).toBe(3);
+    });
+
+    it('deja el cursor después del mismo dígito (salta el espacio)', () => {
+        expect(caretAfterDigits('9234 5678', 1)).toBe(1);
+        expect(caretAfterDigits('1234 5678', 4)).toBe(4);
+        expect(caretAfterDigits('1234 5678', 5)).toBe(6);
+        expect(caretAfterDigits('1234 5678', 0)).toBe(0);
+        expect(caretAfterDigits('1234 5678', 11)).toBe(9);
+    });
+
+    it('Inicio + Supr + «9» sobre «1234 5678» deja «9234 5678» con el cursor tras el 9', () => {
+        // Supr: «234 5678», cursor 0.
+        const afterDelete = nextPhone('12345678', '234 5678');
+        expect(caretAfterDigits(groupPhone(afterDelete), digitsBefore('234 5678', 0))).toBe(0);
+        // «9» en el cursor: «9234 5678».
+        const raw = `9${groupPhone(afterDelete)}`;
+        const next = nextPhone(afterDelete, raw);
+        expect(groupPhone(next)).toBe('9234 5678');
+        expect(caretAfterDigits(groupPhone(next), digitsBefore(raw, 1))).toBe(1);
     });
 });

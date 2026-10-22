@@ -2,7 +2,9 @@
 // publicaciones activas, pausadas y cerradas; la persona, «Mis publicaciones»
 // (aviso del hogar, clases, servicios). Cada una abre su gestión (GES-01,
 // /publicaciones/:id). Al final, «Publicar» (spec §5.3 regla 9: Publicar va en
-// Inicio y en Actividad), que abre PUBL-01 aquí mismo como hoja.
+// Inicio y en Actividad), que abre PUBL-01 aquí mismo como hoja. Si se llega
+// con la hoja abierta (?sheet=publicar), al cerrarla el foco va a «Publicar».
+import { useRef } from 'react';
 import { Badge } from '../../../ui/Badge';
 import { Button } from '../../../ui/Button';
 import { EmptyState } from '../../../ui/EmptyState';
@@ -15,6 +17,7 @@ import { useDemoSession } from '../../demo/session';
 import type { DemoPublication } from '../../demo/types';
 import { ListGroup } from '../components/ListGroup';
 import { PublishSheet, usePublishSheet } from '../components/PublishSheet';
+import { useFocusAfterClose } from '../components/useFocusAfterClose';
 import { copy } from '../copy';
 import { groupOf, metricLine, publisherFor, type MyPublication, type PublicationGroup } from '../selectors';
 
@@ -70,6 +73,9 @@ export function MyPublicationsScreen({ publications }: MyPublicationsScreenProps
     const { actor } = useDemoSession();
     const publishSheet = usePublishSheet();
     const publish = () => publishSheet.show();
+    // El botón «Publicar» (de la lista o del estado vacío): ahí vuelve el foco si nada abrió la hoja.
+    const publishRef = useRef<HTMLButtonElement>(null);
+    useFocusAfterClose(publishSheet.open, publishRef);
     const sheet = (
         <PublishSheet
             as={actor.kind === 'organizacion' ? 'organizacion' : 'hogar'}
@@ -84,7 +90,7 @@ export function MyPublicationsScreen({ publications }: MyPublicationsScreenProps
                     icon={IconOffers}
                     title={copy.publications.emptyTitle}
                     text={copy.publications.emptyText}
-                    action={{ label: copy.publications.publish, onClick: publish, 'aria-haspopup': 'dialog' }}
+                    action={{ label: copy.publications.publish, onClick: publish, 'aria-haspopup': 'dialog', ref: publishRef }}
                 />
                 {sheet}
             </>
@@ -104,7 +110,7 @@ export function MyPublicationsScreen({ publications }: MyPublicationsScreenProps
                     </ListGroup>
                 );
             })}
-            <Button block icon={IconAdd} onClick={publish} aria-haspopup="dialog">
+            <Button ref={publishRef} block icon={IconAdd} onClick={publish} aria-haspopup="dialog">
                 {copy.publications.publish}
             </Button>
             {sheet}

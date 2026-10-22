@@ -3,8 +3,10 @@
 // (en la URL, con replace) y acciones rápidas «Avanzar» / «No seleccionar»
 // (hoja con un mensaje amable). Marta abre su proceso (PRC-01) desde el
 // nombre y su conversación desde «Ver conversación». Nunca la edad.
+// Un turno no tiene lista de postulantes: quienes postulan están en los cupos
+// de cada día, así que su /postulantes lleva a GES-04 (como «Ver cupos»).
 import { useRef, useState, type ReactNode } from 'react';
-import { useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 import { Amount } from '../../../ui/Amount';
 import { AppBar, useScrolled } from '../../../ui/AppBar';
 import { Avatar } from '../../../ui/Avatar';
@@ -29,10 +31,11 @@ import type { BadgeStatus, DemoApplicant, DemoManagedPublication } from '../../d
 import { ManageGate } from '../components/ManageGate';
 import { VerificationSheet } from '../components/VerificationSheet';
 import { copy } from '../copy';
-import { useOwnedPublication, usePendingFocus, useReplaceParam, useSessionApplications } from '../hooks';
+import { useOwnedPublication, usePendingFocus, useReplaceParam, useSessionApplications, useTitleFocusOnMount } from '../hooks';
 import {
     REJECT_MESSAGES,
     applicantsOf,
+    defaultRoster,
     filterSlug,
     firstName,
     isInProcess,
@@ -48,10 +51,22 @@ export const screenId = 'GES-02';
 export function ApplicantsScreen() {
     const { id } = useParams();
     const owned = useOwnedPublication(id);
-    if (owned.kind !== 'ok' || !owned.managed.postulantes) {
-        return <ManageGate title={copy.applicants.title} managed={owned.kind === 'missing' ? undefined : owned.managed} />;
+    const s = useManageState();
+    const applications = useSessionApplications();
+    if (owned.kind !== 'ok') {
+        return <ManageGate title={copy.applicants.title} managed={owned.kind === 'not-owner' ? owned.managed : undefined} />;
     }
-    return <Applicants key={owned.managed.publicationId} managed={owned.managed} />;
+    const { managed } = owned;
+    if (!managed.postulantes) {
+        // La dueña abrió /postulantes de un turno (una URL o un enlace externo): sus postulados
+        // están en GES-04, el mismo día que abre «Ver cupos». Sin cupos, su GES-01.
+        const roster = defaultRoster(managed, s, applications);
+        const to = roster
+            ? paths.cuposTurno(managed.publicationId, roster.id)
+            : paths.gestionarPublicacion(managed.publicationId);
+        return <Navigate to={to} replace />;
+    }
+    return <Applicants key={managed.publicationId} managed={managed} />;
 }
 
 /** El primer botón o enlace de las acciones de una fila (para devolverle el foco). */
@@ -71,6 +86,7 @@ function Applicants({ managed }: { managed: DemoManagedPublication }) {
     const listRef = useRef<HTMLUListElement>(null);
     const verifySheet = useSheet('verificacion');
     const focusAfter = usePendingFocus(rejectSheet.open || verifySheet.open);
+    useTitleFocusOnMount(titleRef);
 
     const pub = managed.publicationId;
     const data = managed.postulantes;

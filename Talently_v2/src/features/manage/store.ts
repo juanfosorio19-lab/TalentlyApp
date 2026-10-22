@@ -89,12 +89,29 @@ export function resetManage(): void {
 
 // ─── Publicación (GES-01) ───────────────────────────────────────────────────
 
-/** Pausar, reanudar o cerrar. `null` vuelve al estado de los datos («Deshacer»). */
+/**
+ * Pausar, reanudar o cerrar. `null` vuelve al estado de los datos («Deshacer»).
+ * Pausada o cerrada no recibe postulaciones: los postulados que estaban por
+ * llegar (el «salto de tiempo») no llegan. Al reanudar o deshacer, la llegada
+ * se vuelve a programar en la siguiente visita a GES-04.
+ */
 export function setPublicationStatus(publicationId: string, change: StatusChange | null): void {
     const status = new Map(state.status);
     if (change) status.set(publicationId, change);
     else status.delete(publicationId);
-    set({ status });
+    const next: Partial<ManageState> = { status };
+    if (change && change.estado !== 'Activa') {
+        const prefix = `${publicationId}:`;
+        const pending = new Set([...state.arriving.keys(), ...timers.keys()].filter((k) => k.startsWith(prefix)));
+        for (const key of pending) {
+            clearTimeout(timers.get(key));
+            timers.delete(key);
+        }
+        if ([...pending].some((k) => state.arriving.has(k))) {
+            next.arriving = new Map([...state.arriving].filter(([k]) => !pending.has(k)));
+        }
+    }
+    set(next);
 }
 
 export function renewPublication(publicationId: string): void {

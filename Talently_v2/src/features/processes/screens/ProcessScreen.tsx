@@ -3,7 +3,9 @@
 // dos lados. Quien postuló ve la entrevista agendada (SystemCard con «Agregar
 // al calendario»), la conversación, la publicación y «Retirar postulación»
 // (Dialog). Quien contrata para su hogar ve, ya contratada la persona, el
-// checklist legal «Para contratar como corresponde» y sus opciones.
+// checklist legal «Para contratar como corresponde» y sus opciones. La
+// postulación sale de la sesión (useApplications): si todavía no postula
+// (inicio de los flujos 2 y 3), un EmptyState lleva a la publicación.
 import { useEffect, useMemo, useRef, type MouseEvent } from 'react';
 import { useParams } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
@@ -26,12 +28,12 @@ import { Timeline } from '../../../ui/Timeline';
 import { useGoBack } from '../../../app/BackButtonManager';
 import { useOpenPath } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
-import { useSheet } from '../../../app/sheets';
 import { buildIcs } from '../../../domain/calendario';
 import { useDemoSession } from '../../demo/session';
+import { useApplications, useSessionApplication } from '../../demo/sessionStore';
 import type { DemoChecklist, DemoProcess, DemoSystemCard } from '../../demo/types';
 import { DT_URL, copy } from '../copy';
-import { useOpenFromSheet } from '../hooks';
+import { useAvailableSheet, useOpenFromSheet } from '../hooks';
 import {
     canWithdraw,
     counterpartPath,
@@ -43,6 +45,7 @@ import {
     resolveProcess,
     seeksWork,
     timelineSteps,
+    type ProcessTarget,
 } from '../model';
 import { useChecklist, useWithdrawn, withdraw } from '../store';
 import '../processes.css';
@@ -55,24 +58,36 @@ const OPTIONS_SHEET = 'opciones';
 export function ProcessScreen() {
     const { engagementId = '' } = useParams();
     const { actor, recienRegistrado } = useDemoSession();
-    const process = resolveProcess(engagementId, actor.id, recienRegistrado);
-    if (!process) return <ProcessNotFound />;
+    const applications = useApplications(actor.id, recienRegistrado);
+    const target = resolveProcess(engagementId, actor.id, applications, recienRegistrado);
+    if (target.kind !== 'process') return <NoProcess target={target} />;
     // Otro actor u otro proceso parten de cero (foco, hojas).
-    return <Process key={`${actor.id}:${process.id}`} process={process} />;
+    return <Process key={`${actor.id}:${target.process.id}`} process={target.process} />;
 }
 
-function ProcessNotFound() {
+function NoProcess({ target }: { target: Exclude<ProcessTarget, { kind: 'process' }> }) {
     const goBack = useGoBack();
     const { open } = useOpenPath();
     const { actor } = useDemoSession();
-    const action = seeksWork(actor)
-        ? { label: copy.process.seeApplications, onClick: () => open(paths.actividad('postulaciones')) }
-        : { label: copy.process.goHome, onClick: () => open(paths.inicio()) };
+    const content =
+        target.kind === 'not-applied'
+            ? {
+                  title: copy.process.notAppliedTitle,
+                  text: copy.process.notAppliedText,
+                  action: { label: copy.process.publication, onClick: () => open(paths.publicacion(target.publicationId)) },
+              }
+            : {
+                  title: copy.process.notFoundTitle,
+                  text: copy.process.notFoundText,
+                  action: seeksWork(actor)
+                      ? { label: copy.process.seeApplications, onClick: () => open(paths.actividad('postulaciones')) }
+                      : { label: copy.process.goHome, onClick: () => open(paths.inicio()) },
+              };
     return (
         <div className="tl-app-screen">
             <AppBar variant="standard" title={copy.process.fallbackTitle} onBack={goBack} />
             <main className="tl-app-screen__body">
-                <EmptyState icon={IconOffers} title={copy.process.notFoundTitle} text={copy.process.notFoundText} action={action} />
+                <EmptyState icon={IconOffers} title={content.title} text={content.text} action={content.action} />
             </main>
         </div>
     );
@@ -82,16 +97,21 @@ function Process({ process }: { process: DemoProcess }) {
     const goBack = useGoBack();
     const scrolled = useScrolled();
     const snackbar = useSnackbar();
-    const { linkProps } = useOpenPath();
+    const { canOpen, linkProps } = useOpenPath();
     const { actor } = useDemoSession();
-    const withdrawSheet = useSheet(WITHDRAW_SHEET);
-    const optionsSheet = useSheet(OPTIONS_SHEET);
-    const openFromOptions = useOpenFromSheet(OPTIONS_SHEET);
     const headingRef = useRef<HTMLHeadingElement>(null);
 
-    const withdrawn = useWithdrawn(actor.id, process.id);
+    // Si volvió a postular después de retirar (DET-01), la postulación está en pie otra vez.
+    const appliedAt = useSessionApplication(actor.id, process.publicationId)?.at;
+    const withdrawn = useWithdrawn(actor.id, process.id, appliedAt);
     const applicant = isApplicantView(process);
     const withdrawable = canWithdraw(process, withdrawn);
+    // Las hojas que no se pueden mostrar (ya retirada, o «Opciones» para quien postuló) no dejan ?sheet= colgando.
+    const withdrawSheet = useAvailableSheet(WITHDRAW_SHEET, withdrawable);
+    const optionsSheet = useAvailableSheet(OPTIONS_SHEET, !applicant);
+    const openFromOptions = useOpenFromSheet(OPTIONS_SHEET);
+    // «Ver perfil» solo cuando su pantalla existe (PRF-10/PRF-11): la hoja no ofrece «Disponible pronto».
+    const profilePath = counterpartPath(process.contraparte);
     const steps = useMemo(() => timelineSteps(process, withdrawn), [process, withdrawn]);
     const other = process.contraparte;
     const interview = process.entrevista;
@@ -223,7 +243,7 @@ function Process({ process }: { process: DemoProcess }) {
             </main>
 
             <Dialog
-                open={withdrawSheet.open && withdrawable}
+                open={withdrawSheet.open}
                 onClose={withdrawSheet.hide}
                 title={copy.process.withdrawTitle}
                 cancelLabel={copy.process.keep}
@@ -237,13 +257,15 @@ function Process({ process }: { process: DemoProcess }) {
             {!applicant && (
                 <BottomSheet open={optionsSheet.open} onClose={optionsSheet.hide} title={copy.process.optionsTitle}>
                     <List flat>
-                        <ListItem
-                            icon={IconPerson}
-                            title={copy.process.profile}
-                            sub={other.nombre}
-                            chevron
-                            onClick={() => openFromOptions(counterpartPath(other))}
-                        />
+                        {canOpen(profilePath) && (
+                            <ListItem
+                                icon={IconPerson}
+                                title={copy.process.profile}
+                                sub={other.nombre}
+                                chevron
+                                onClick={() => openFromOptions(profilePath)}
+                            />
+                        )}
                         <ListItem
                             icon={IconPeople}
                             title={copy.process.applicants}
@@ -261,6 +283,7 @@ function Process({ process }: { process: DemoProcess }) {
 /** «Para contratar como corresponde» (PRC-01-hogar): lo marcado queda en la sesión. */
 function LegalChecklist({ process, checklist }: { process: DemoProcess; checklist: DemoChecklist }) {
     const { actor } = useDemoSession();
+    const snackbar = useSnackbar();
     const initial = useMemo(() => checklist.pasos.map((p) => p.hecho), [checklist]);
     const [done, toggle] = useChecklist(actor.id, process.id, initial);
     const values = checklist.pasos.map((_, i) => String(i));
@@ -270,7 +293,9 @@ function LegalChecklist({ process, checklist }: { process: DemoProcess; checklis
         if (!Capacitor.isNativePlatform()) return;
         // En el teléfono, el sitio se abre en el navegador del sistema.
         event.preventDefault();
-        void import('@capacitor/browser').then(({ Browser }) => Browser.open({ url: DT_URL }));
+        void import('@capacitor/browser')
+            .then(({ Browser }) => Browser.open({ url: DT_URL }))
+            .catch(() => snackbar.show({ message: copy.process.dtError, tone: 'error' }));
     };
 
     return (

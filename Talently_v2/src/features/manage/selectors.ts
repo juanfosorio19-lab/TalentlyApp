@@ -209,6 +209,10 @@ export interface RosterView {
     /** El turno ya pasó: se marca asistencia y se evalúa. */
     past: boolean;
     closed: boolean;
+    /** La publicación está pausada: no recibe postulaciones, pero se confirma a quienes ya postularon. */
+    paused: boolean;
+    /** Recibe postulaciones: ni cerrada ni pausada, y el turno está por venir. */
+    accepting: boolean;
     /** Sus postulados todavía no llegan (antes del «salto de tiempo»). */
     waiting: boolean;
     /** Confirmar con un toque: publicación sin cerrar, turno por venir y cupos libres. */
@@ -274,7 +278,7 @@ export function rosterView(
     const free = Math.max(total - confirmados.length, 0);
     const fecha = rosterFecha(pub, roster);
     const past = isBeforeToday(fecha);
-    const closed = publicationView(m, s).closed;
+    const { closed, paused } = publicationView(m, s);
     const canConfirm = !closed && !past && free > 0;
 
     const favorites = new Set([...(ORG_FAVORITES[m.ownerId] ?? []), ...(roster.favoritos?.personIds ?? [])]);
@@ -301,6 +305,8 @@ export function rosterView(
         full: free === 0,
         past,
         closed,
+        paused,
+        accepting: !closed && !paused && !past,
         waiting,
         canConfirm,
         favorites,

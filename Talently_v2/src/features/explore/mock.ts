@@ -74,29 +74,37 @@ export const COMUNAS_RM: readonly string[] = [
 /**
  * EXP-07 · Sinónimos de búsqueda (spec §4.5 «synonyms»): palabras que la
  * gente escribe y que nunca se muestran en la interfaz. Sin tildes y en
- * minúsculas (como `fold`). Cuando exista el diccionario único en src/domain,
- * se usa ese.
+ * minúsculas (como `fold`). Cada uno lleva a los oficios con su nombre digno
+ * (brief M5·L1: «nana» → Asesor/a del hogar y Cuidador/a infantil;
+ * «mucama» → Camarero/a de pisos; «babysitter» → Cuidador/a infantil): esos
+ * son los Chips de sugerencia bajo el buscador y lo que se busca. Cuando
+ * exista el diccionario único en src/domain (categories.synonyms), se usa ese.
  */
 export const SINONIMOS: Readonly<Record<string, readonly string[]>> = {
-    nana: ['asesor', 'asesora'],
-    empleada: ['asesor', 'asesora'],
-    ninera: ['cuidador', 'cuidadora'],
-    mesero: ['garzon', 'garzona', 'garzones'],
-    mesera: ['garzon', 'garzona', 'garzones'],
-    barman: ['bartender'],
-    os10: ['guardia', 'seguridad'],
-    vigilante: ['guardia', 'seguridad'],
-    bodeguero: ['bodega'],
+    nana: ['Asesor/a del hogar', 'Cuidador/a infantil'],
+    empleada: ['Asesor/a del hogar'],
+    mucama: ['Camarero/a de pisos'],
+    babysitter: ['Cuidador/a infantil'],
+    ninera: ['Cuidador/a infantil'],
+    mesero: ['Garzón/a'],
+    mesera: ['Garzón/a'],
+    barman: ['Bartender'],
+    os10: ['Guardia de seguridad', 'Guardia de eventos'],
+    vigilante: ['Guardia de seguridad', 'Guardia de eventos'],
+    bodeguero: ['Operario/a de bodega'],
 };
 
 /**
- * Hoja «Verificación de …»: qué revisó Talently según la insignia. La demo
- * no trae la fecha de cada verificación; cuando la traiga, va en la línea.
+ * Hoja «Verificación de …»: qué revisó Talently según la insignia, con los
+ * mismos textos que DET-01, Actividad e Inicio (spec §4.5: un diccionario;
+ * pedido en «requests» moverlo a demo/). La demo no trae la fecha de cada
+ * verificación; cuando la traiga, va en la línea.
  */
 export const QUE_SE_VERIFICO: Readonly<Record<string, string>> = {
-    'Organización verificada': 'Talently revisó su RUT y los documentos de la organización.',
-    'Identidad verificada': 'Talently revisó su cédula y una selfie.',
-    'Teléfono verificado': 'Confirmó su número con un código.',
-    'Credencial SPD verificada': 'Talently revisó su credencial de seguridad privada vigente.',
-    'Apta para trabajar con menores': 'Talently revisó su certificado de inhabilidades vigente.',
+    'Organización verificada': 'RUT y documentos de la organización revisados',
+    'Teléfono verificado': 'Código por SMS',
+    'Identidad verificada': 'Cédula y selfie revisadas',
+    'Credencial SPD verificada': 'Credencial revisada con su vencimiento',
+    // no está en DET-01: ninguna publicación lo trae; mismo estilo que el resto.
+    'Apta para trabajar con menores': 'Certificado de inhabilidades revisado',
 };

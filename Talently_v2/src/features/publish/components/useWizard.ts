@@ -4,7 +4,7 @@
 // vuelve al paso anterior (useWizardBack), salir desde el paso 1 con cambios
 // pregunta «¿Descartar cambios?» (useDirtyGuard) y «Guardar y salir» deja el
 // borrador para seguir después desde ese paso.
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSnackbar } from '../../../ui/Snackbar';
 import { useDirtyGuard, useWizardBack } from '../../../app/navigation/backHandlers';
@@ -57,8 +57,11 @@ export function useWizard<T>({ kind, step, actorId, store, initial, changed }: W
 
     // Volver con el borrador guardado: sigue desde el paso en que salió. Solo al abrir el asistente.
     const [resumeTo] = useState(() => (step === 1 && entry?.saved && entry.savedStep > 1 ? entry.savedStep : null));
+    const resumed = useRef(false);
     useEffect(() => {
-        if (resumeTo) goTo(resumeTo);
+        if (!resumeTo || resumed.current) return;
+        resumed.current = true;
+        goTo(resumeTo);
     }, [resumeTo, goTo]);
 
     // Salir sin guardar (atrás con «Descartar», el atrás del navegador) borra lo escrito.

@@ -4,9 +4,10 @@
 // de espera (pestaña en la URL, con replace), confirmar con un toque (o a los
 // favoritos de una vez) y, después del turno, asistencia y evaluación.
 // Flujo 4: un turno recién publicado parte sin postulados y llegan un rato
-// después (el «salto de tiempo» del prototipo).
+// después (el «salto de tiempo» del prototipo), solo si la publicación sigue
+// recibiendo postulaciones (ni pausada ni cerrada).
 import { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppBar, useScrolled } from '../../../ui/AppBar';
 import { Avatar } from '../../../ui/Avatar';
 import { Banner } from '../../../ui/Banner';
@@ -23,13 +24,14 @@ import { SegmentedControl } from '../../../ui/SegmentedControl';
 import { CuposBar } from '../../../ui/ShiftBlock';
 import { useSnackbar } from '../../../ui/Snackbar';
 import { useGoBack } from '../../../app/BackButtonManager';
-import { useOpenPath } from '../../../app/navigation/useOpenPath';
+import { useOpenPath, type LinkTargetProps } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
 import { useSheet } from '../../../app/sheets';
 import type { DemoApplicant, DemoManagedPublication, DemoShiftRoster } from '../../demo/types';
 import { ManageGate } from '../components/ManageGate';
 import { copy } from '../copy';
-import { useOwnedPublication, usePendingFocus, useReplaceParam, useSessionApplications } from '../hooks';
+import { useOwnedPublication, usePendingFocus, useReplaceParam, useSessionApplications, useTitleFocusOnMount } from '../hooks';
+import { isSheetEntry, overManageOf, overManageState } from '../links';
 import { managePaths } from '../paths';
 import { firstName, isEvaluated, joinWithA, rosterFecha, rosterView, type RosterView } from '../selectors';
 import {
@@ -99,6 +101,11 @@ function ShiftRoster({ managed, roster }: { managed: DemoManagedPublication; ros
     const titleRef = useRef<HTMLHeadingElement>(null);
     const panelRef = useRef<HTMLDivElement>(null);
     const focusAfter = usePendingFocus(moreSheet.open || evaluateSheet.open);
+    useTitleFocusOnMount(titleRef);
+    const location = useLocation();
+    const navigate = useNavigate();
+    // ¿Se abrió justo encima de GES-01? Se lee al montar: con la hoja abierta, la entrada de arriba es la de la hoja.
+    const [overManage] = useState(() => overManageOf(location.state));
 
     const pub = managed.publicationId;
     const view = rosterView(managed, roster, s, applications);
@@ -112,11 +119,13 @@ function ShiftRoster({ managed, roster }: { managed: DemoManagedPublication; ros
         if (!tabInUrl) setTabParam(tab);
     }, [tabInUrl, tab, setTabParam]);
 
-    // El «salto de tiempo»: los postulados de un turno recién publicado llegan un rato después.
+    // El «salto de tiempo»: los postulados de un turno recién publicado llegan un rato después,
+    // solo mientras la publicación recibe postulaciones (pausarla o cerrarla cancela la llegada).
     const waiting = view.waiting;
+    const accepting = view.accepting;
     useEffect(() => {
-        if (waiting) scheduleArrival(pub, roster.id);
-    }, [waiting, pub, roster.id]);
+        if (waiting && accepting) scheduleArrival(pub, roster.id);
+    }, [waiting, accepting, pub, roster.id]);
     const wasWaiting = useRef(waiting);
     useEffect(() => {
         if (wasWaiting.current && !waiting && view.postulados.length > 0) {
@@ -203,6 +212,24 @@ function ShiftRoster({ managed, roster }: { managed: DemoManagedPublication; ros
 
     const otherRosters = (managed.cupos ?? []).filter((r) => r.id !== roster.id);
 
+    // «Más opciones» (spec §5.3 regla 2): si esta GES-04 está encima de GES-01, «Gestionar
+    // publicación» cierra la hoja y vuelve a esa GES-01 en vez de apilar otra. Si no (INI-02,
+    // NOT-01, un enlace), reemplaza la entrada de la hoja. Otro día reemplaza la hoja y queda
+    // una entrada más lejos de GES-01.
+    const onSheet = isSheetEntry(location.state, 'opciones');
+    const otherDayState = overManage ? overManageState(overManage + (onSheet ? 1 : 0)) : undefined;
+    const manageLink: LinkTargetProps = overManage
+        ? {
+              href: linkProps(paths.gestionarPublicacion(pub)).href,
+              onClick: (e) => {
+                  // Con Ctrl/⌘ o botón del medio, que el navegador abra otra pestaña.
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+                  e.preventDefault();
+                  navigate(-(overManage + (onSheet ? 1 : 0)));
+              },
+          }
+        : linkProps(paths.gestionarPublicacion(pub), { replace: true });
+
     return (
         <div className="tl-app-screen">
             <AppBar
@@ -225,6 +252,7 @@ function ShiftRoster({ managed, roster }: { managed: DemoManagedPublication; ros
                     </Stack>
 
                     {view.closed && !view.past && <Banner>{copy.shift.closedBanner}</Banner>}
+                    {view.paused && !view.past && <Banner>{copy.manage.pausedBanner}</Banner>}
                     {view.past &&
                         (view.toEvaluate.length > 0 ? (
                             <Banner>{copy.shift.pastBanner(view.toEvaluate.length, view.fecha)}</Banner>
@@ -277,7 +305,7 @@ function ShiftRoster({ managed, roster }: { managed: DemoManagedPublication; ros
                                             icon={IconPeople}
                                             title={copy.manage.optionsShift(rosterFecha(pub, r))}
                                             sub={`${copy.shift.tabConfirmed} ${rv.confirmados.length}/${rv.total}`}
-                                            {...linkProps(paths.cuposTurno(pub, r.id), { replace: true })}
+                                            {...linkProps(paths.cuposTurno(pub, r.id), { replace: true, state: otherDayState })}
                                         />
                                     );
                                 })}
@@ -289,7 +317,7 @@ function ShiftRoster({ managed, roster }: { managed: DemoManagedPublication; ros
                             icon={IconOffers}
                             title={copy.shift.manage}
                             sub={managed.titulo}
-                            {...linkProps(paths.gestionarPublicacion(pub), { replace: true })}
+                            {...manageLink}
                         />
                         <ListItem
                             icon={IconEye}
@@ -428,6 +456,11 @@ function AppliedPanel({ view, onConfirm, onConfirmFavorites, onInvite }: Applied
         if (view.full) {
             return (
                 <EmptyState className="manage-empty" icon={IconPeople} title={copy.shift.noAppliedTitle} text={copy.shift.fullBanner} />
+            );
+        }
+        if (view.paused) {
+            return (
+                <EmptyState className="manage-empty" icon={IconPeople} title={copy.shift.noAppliedTitle} text={copy.shift.noAppliedPaused} />
             );
         }
         const vacio = view.roster.vacio;

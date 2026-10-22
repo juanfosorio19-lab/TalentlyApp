@@ -48,7 +48,7 @@ export function SignUpScreen() {
     /** El nombre del registro precarga «Tus datos» (spec §6.1 regla 2). */
     const precargarDatos = () => {
         const { nombre, apellido } = separarNombre(cuenta.nombre);
-        if (nombre) setDatos(apellido ? { nombre, apellido } : { nombre });
+        if (nombre) setDatos({ nombre, apellido });
     };
 
     const crear = () => {

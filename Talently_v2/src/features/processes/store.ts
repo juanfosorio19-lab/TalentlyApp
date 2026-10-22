@@ -5,7 +5,8 @@
 //
 // Pedido en «requests»: subir `withdrawn` y `reviews` a demo/sessionStore
 // para que ACT-02, Inicio, Mensajes y DET-01 vean la postulación retirada y
-// el turno ya evaluado. Cuando esté allá, este archivo solo guarda el
+// el turno ya evaluado (y DET-01 deje volver a postular: `applyTo` después
+// de retirar la deja en pie, ver stillWithdrawn). Cuando esté allá, este archivo solo guarda el
 // checklist (o se borra) sin tocar las pantallas.
 import { useCallback, useSyncExternalStore } from 'react';
 import type { DemoActorId } from '../demo/session';
@@ -22,8 +23,8 @@ export interface SentReview {
 }
 
 interface ProcessesState {
-    /** `${actorId}:${processId}` de las postulaciones retiradas. */
-    withdrawn: ReadonlySet<string>;
+    /** `${actorId}:${processId}` → cuándo retiró su postulación (ms). */
+    withdrawn: ReadonlyMap<string, number>;
     /** `${actorId}:${processId}` → pasos del checklist legal marcados (por índice). */
     checklist: ReadonlyMap<string, readonly boolean[]>;
     /** `${actorId}:${publicationId}` → evaluación enviada. */
@@ -31,7 +32,7 @@ interface ProcessesState {
 }
 
 const INITIAL: ProcessesState = {
-    withdrawn: new Set(),
+    withdrawn: new Map(),
     checklist: new Map(),
     reviews: new Map(),
 };
@@ -64,18 +65,28 @@ function useProcessesState(): ProcessesState {
 
 // ─── Retirar postulación (PRC-01) ───────────────────────────────────────────
 
-export function withdraw(actorId: DemoActorId, processId: string): void {
-    const key = keyOf(actorId, processId);
-    if (state.withdrawn.has(key)) return;
-    set({ withdrawn: new Set([...state.withdrawn, key]) });
+/** Retira la postulación. Si vuelve a retirar después de postular de nuevo, cuenta la última vez. */
+export function withdraw(actorId: DemoActorId, processId: string, at = Date.now()): void {
+    const withdrawn = new Map(state.withdrawn);
+    withdrawn.set(keyOf(actorId, processId), at);
+    set({ withdrawn });
 }
 
-export function isWithdrawn(actorId: DemoActorId, processId: string): boolean {
-    return state.withdrawn.has(keyOf(actorId, processId));
+/**
+ * ¿Sigue retirada? Sí, salvo que haya vuelto a postular después de retirar
+ * (`appliedAt`: la postulación de esta sesión, useSessionApplication).
+ */
+export function stillWithdrawn(withdrawnAt: number | undefined, appliedAt: number | undefined): boolean {
+    if (withdrawnAt === undefined) return false;
+    return !(appliedAt !== undefined && appliedAt > withdrawnAt);
 }
 
-export function useWithdrawn(actorId: DemoActorId, processId: string): boolean {
-    return useProcessesState().withdrawn.has(keyOf(actorId, processId));
+export function isWithdrawn(actorId: DemoActorId, processId: string, appliedAt?: number): boolean {
+    return stillWithdrawn(state.withdrawn.get(keyOf(actorId, processId)), appliedAt);
+}
+
+export function useWithdrawn(actorId: DemoActorId, processId: string, appliedAt?: number): boolean {
+    return stillWithdrawn(useProcessesState().withdrawn.get(keyOf(actorId, processId)), appliedAt);
 }
 
 // ─── Checklist legal del hogar (PRC-01-hogar) ───────────────────────────────

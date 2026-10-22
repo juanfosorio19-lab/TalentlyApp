@@ -4,7 +4,7 @@
 // Pausar (Snackbar con «Deshacer»), Renovar (empleos y avisos) y Cerrar
 // publicación con motivo (hoja). Solo la ve quien la publicó.
 import { useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { AppBar, useScrolled } from '../../../ui/AppBar';
 import { Badge } from '../../../ui/Badge';
 import { Banner } from '../../../ui/Banner';
@@ -34,7 +34,8 @@ import { useSheet } from '../../../app/sheets';
 import type { DemoManagedPublication } from '../../demo/types';
 import { ManageGate } from '../components/ManageGate';
 import { copy } from '../copy';
-import { useOwnedPublication, usePendingFocus, useSessionApplications } from '../hooks';
+import { useOwnedPublication, usePendingFocus, useSessionApplications, useTitleFocusOnMount } from '../hooks';
+import { isSheetEntry, overManageState, shareUrl } from '../links';
 import { managePaths } from '../paths';
 import {
     CLOSE_REASONS,
@@ -70,6 +71,8 @@ function ManagePublication({ managed }: { managed: DemoManagedPublication }) {
     const closeSheet = useSheet('cerrar');
     const titleRef = useRef<HTMLHeadingElement>(null);
     const focusAfter = usePendingFocus(closeSheet.open || optionsSheet.open);
+    useTitleFocusOnMount(titleRef);
+    const location = useLocation();
 
     const pub = managed.publicationId;
     const view = publicationView(managed, s);
@@ -78,6 +81,9 @@ function ManagePublication({ managed }: { managed: DemoManagedPublication }) {
     const rosters = managed.cupos ?? [];
     const target = turno ? defaultRoster(managed, s, applications) : undefined;
     const reasons = turno ? CLOSE_REASONS.turno : CLOSE_REASONS.empleo;
+    // GES-04 abierta desde aquí queda justo encima de esta GES-01 (también desde la hoja
+    // «Opciones», que reemplaza su propia entrada): su «Gestionar publicación» vuelve aquí.
+    const optionsOverManage = isSheetEntry(location.state, 'opciones') ? overManageState(1) : undefined;
 
     // Hoja «Cerrar publicación»: el motivo se limpia al ABRIR (si se cerró con el atrás, no queda el anterior).
     const [reason, setReason] = useState<string | null>(null);
@@ -123,7 +129,8 @@ function ManagePublication({ managed }: { managed: DemoManagedPublication }) {
 
     const share = async () => {
         const href = linkProps(paths.publicacion(pub)).href;
-        const url = href ? new URL(href, window.location.href).href : undefined;
+        // Sin la query de la demo: quien abre el enlace ve la publicación como quien busca (igual que DET-01).
+        const url = href ? shareUrl(window.location, href) : undefined;
         const text = copy.manage.shareText(managed.titulo, managed.resumen);
         try {
             if (typeof navigator.share === 'function') {
@@ -191,7 +198,7 @@ function ManagePublication({ managed }: { managed: DemoManagedPublication }) {
                     </div>
 
                     {turno && target ? (
-                        <Button size="lg" block onClick={() => open(paths.cuposTurno(pub, target.id))}>
+                        <Button size="lg" block onClick={() => open(paths.cuposTurno(pub, target.id), { state: overManageState(1) })}>
                             {copy.manage.seeShifts}
                         </Button>
                     ) : (
@@ -268,7 +275,7 @@ function ManagePublication({ managed }: { managed: DemoManagedPublication }) {
                                     icon={IconPeople}
                                     title={copy.manage.optionsShift(rosterFecha(pub, r))}
                                     sub={`${copy.shift.tabConfirmed} ${rv.confirmados.length}/${rv.total}`}
-                                    {...linkProps(paths.cuposTurno(pub, r.id), { replace: true })}
+                                    {...linkProps(paths.cuposTurno(pub, r.id), { replace: true, state: optionsOverManage })}
                                 />
                             );
                         })}

@@ -5,14 +5,10 @@
 // el comentario «no está en el prototipo».
 
 export const COPY = {
-    pronto: 'Disponible pronto',
-
     bienvenida: {
         titulo: 'Trabajo, turnos, servicios y clases cerca de ti',
         sub: 'Con gente verificada en tu comuna',
         marca: 'Talently',
-        ilustracion:
-            'Ilustración: una garzona con bandeja, un guardia, una profesora con cuaderno, un gasfíter con llave y una asesora del hogar con ropa de calle',
         crear: 'Crear cuenta',
         tengo: 'Ya tengo cuenta',
     },
@@ -140,7 +136,6 @@ export const COPY = {
         errComuna: 'Elige tu comuna',
         errFecha: 'Escribe tu fecha de nacimiento, como 14/05/1985',
         errTelefono: 'Escribe los 8 dígitos de tu celular',
-        subiendoFoto: 'Subiendo foto…',
     },
 
     trabajo: {

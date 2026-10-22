@@ -14,9 +14,14 @@ export function shortOrgName(nombre: string): string {
     return nombre.replace(/\s+(Ltda\.|Limitada|SpA|S\.A\.|EIRL|E\.I\.R\.L\.)$/u, '');
 }
 
-/** La conversación que abre el match: la del actor sobre este empleo. */
-export function matchConversation(actorId: DemoActorId, pub: DemoPublication): DemoConversation | undefined {
-    if (pub.tipo !== 'empleo') return undefined;
+/**
+ * La conversación que abre el match: la del actor sobre este empleo. Jorge
+ * recién registrado (INI-01-jorge-nuevo) todavía no tiene conversaciones: sin
+ * una a la que llevar, no hay match (si no, «Enviar mensaje» terminaría en
+ * «No encontramos esta conversación»).
+ */
+export function matchConversation(actorId: DemoActorId, pub: DemoPublication, recienRegistrado = false): DemoConversation | undefined {
+    if (recienRegistrado || pub.tipo !== 'empleo') return undefined;
     return getConversations(actorId).find((c) => c.contexto.publicationId === pub.id);
 }
 
@@ -40,10 +45,14 @@ export interface MatchView {
 }
 
 /** Lo que dice el MatchModal; `undefined` si ya no hay publicación o conversación a la que llevar. */
-export function matchView(match: PendingMatch, actor: Pick<DemoActor, 'id' | 'fullName'>): MatchView | undefined {
+export function matchView(
+    match: PendingMatch,
+    actor: Pick<DemoActor, 'id' | 'fullName'>,
+    recienRegistrado = false,
+): MatchView | undefined {
     const pub = getPublication(match.publicationId);
     if (!pub || actor.id !== match.actorId) return undefined;
-    const conversation = matchConversation(actor.id, pub);
+    const conversation = matchConversation(actor.id, pub, recienRegistrado);
     if (!conversation) return undefined;
     return {
         publicationId: pub.id,

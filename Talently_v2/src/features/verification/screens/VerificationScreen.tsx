@@ -6,7 +6,6 @@
 // Jorge recién registrado ve lo que de verdad le falta: el teléfono y la
 // credencial SPD (INI-01-jorge-nuevo). Nunca RUT, fecha de nacimiento ni fotos.
 import { useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
 import { AppBar, useScrolled } from '../../../ui/AppBar';
 import { Badge } from '../../../ui/Badge';
 import { Button } from '../../../ui/Button';
@@ -39,17 +38,31 @@ export interface FromVerificationState {
 export function VerificationScreen() {
     const goBack = useGoBack();
     const scrolled = useScrolled();
-    const location = useLocation();
     const { open } = useOpenPath();
     const { show } = useSnackbar();
-    const { personId, isOrganization, levels, credentials } = useVerification();
+    const { personId, isOrganization, levels, credentials, phoneVerified } = useVerification();
     const phoneSheet = useSheet('telefono');
     const levelsRef = useRef<HTMLOListElement>(null);
     const focusLevels = useRef(false);
+    // AUTH-08 solo si hay un teléfono que verificar: ya verificado, o en una
+    // organización, un `?sheet=telefono` (enlace o el adelante del navegador) no abre nada.
+    const phoneOpen = phoneSheet.open && !phoneVerified && !isOrganization;
 
-    // La hoja parte de cero cada vez que se abre (también si se cerró con el atrás del navegador).
-    const [phoneKey, setPhoneKey] = useState(location.key);
-    if (phoneSheet.open && phoneKey !== location.key) setPhoneKey(location.key);
+    // La hoja parte de cero en CADA apertura: key nueva en cada paso de cerrada a
+    // abierta (también al volver a la misma entrada con el adelante del navegador).
+    const [phoneKey, setPhoneKey] = useState(0);
+    const [phoneWasOpen, setPhoneWasOpen] = useState(false);
+    if (phoneOpen !== phoneWasOpen) {
+        setPhoneWasOpen(phoneOpen);
+        if (phoneOpen) setPhoneKey((k) => k + 1);
+    }
+
+    // Un `?sheet=telefono` que ya no corresponde se quita de la URL (sin hoja fantasma).
+    // Recién verificado (focusLevels), quien cierra la hoja es onPhoneVerified.
+    const { hide: hidePhone } = phoneSheet;
+    useEffect(() => {
+        if (phoneSheet.open && !phoneOpen && !focusLevels.current) hidePhone();
+    }, [phoneSheet.open, phoneOpen, hidePhone]);
 
     // Al verificar, «Verificar teléfono» desaparece: el foco va a la escalera, que sigue en pantalla.
     useEffect(() => {
@@ -105,7 +118,7 @@ export function VerificationScreen() {
                     <p className="caption ver-muted ver-flush">{isOrganization ? C.notaOrganizacion : C.nota}</p>
                 </div>
             </main>
-            <PhoneSheet key={phoneKey} open={phoneSheet.open} onClose={phoneSheet.hide} onVerified={onPhoneVerified} />
+            <PhoneSheet key={phoneKey} open={phoneOpen} onClose={phoneSheet.hide} onVerified={onPhoneVerified} />
         </div>
     );
 }

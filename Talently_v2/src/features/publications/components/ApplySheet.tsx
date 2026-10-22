@@ -3,7 +3,7 @@
 // opcional de hasta 300 caracteres. «Postular» envía; el resultado (Snackbar
 // y, si la organización responde, el match) lo muestra el detalle. Mientras
 // Supabase está pausado, el CV elegido no se sube a ningún servidor.
-import { useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Avatar } from '../../../ui/Avatar';
 import { BottomSheet, SheetSection } from '../../../ui/BottomSheet';
 import { Button } from '../../../ui/Button';
@@ -13,6 +13,7 @@ import { List, ListItem } from '../../../ui/ListItem';
 import { MediaUploader } from '../../../ui/MediaUploader';
 import { RadioGroup } from '../../../ui/Radio';
 import { TextArea } from '../../../ui/TextArea';
+import { FieldFoot } from '../../../ui/TextField';
 import type { DemoPublication } from '../../demo/types';
 import { copy } from '../copy';
 import { cvProblem, sizeText, type CvProblem } from '../cv';
@@ -49,6 +50,11 @@ export function ApplySheet({ open, onClose, publication: pub, profileCv, onAppli
     const fileRef = useRef<HTMLInputElement>(null);
     const questionRef = useRef<HTMLDivElement>(null);
     const cvRef = useRef<HTMLDivElement>(null);
+    const changeRef = useRef<HTMLButtonElement>(null);
+    // Elegir un archivo en el MediaUploader lo cambia por la fila del CV (o por «Elegir otro»): el botón
+    // tocado sale del DOM y el foco caería al body, fuera de la hoja. Va a «Cambiar» (o al botón que quedó).
+    const refocusCv = useRef(false);
+    const cvErrorId = useId();
     const question = pub.detalle.postular?.pregunta;
     const needsCv = pub.detalle.postular?.pideCv ?? false;
 
@@ -63,6 +69,7 @@ export function ApplySheet({ open, onClose, publication: pub, profileCv, onAppli
     const pick = (files: File[]) => {
         const f = files[0];
         if (!f) return;
+        if (!cv) refocusCv.current = true;
         const problem = cvProblem(f);
         if (problem) {
             setCvError(problemText(problem));
@@ -71,6 +78,14 @@ export function ApplySheet({ open, onClose, publication: pub, profileCv, onAppli
         setCvError(null);
         setCv({ file: { nombre: f.name, detalle: sizeText(f.size) }, fromProfile: false });
     };
+
+    useEffect(() => {
+        if (!refocusCv.current) return;
+        refocusCv.current = false;
+        const active = document.activeElement;
+        if (active instanceof HTMLElement && active !== document.body && active.isConnected) return;
+        (changeRef.current ?? cvRef.current?.querySelector<HTMLButtonElement>('button'))?.focus({ preventScroll: true });
+    }, [cv, cvError]);
 
     const submit = () => {
         const noAnswer = Boolean(question) && answer === null;
@@ -138,17 +153,23 @@ export function ApplySheet({ open, onClose, publication: pub, profileCv, onAppli
                                         title={<span className="button-lg">{cv.file.nombre}</span>}
                                         sub={cv.fromProfile ? copy.apply.cvFromProfile(cv.file.detalle) : cv.file.detalle}
                                         end={
-                                            <Button variant="ghost" size="sm" onClick={() => fileRef.current?.click()}>
+                                            <Button
+                                                ref={changeRef}
+                                                variant="ghost"
+                                                size="sm"
+                                                aria-describedby={cvError ? cvErrorId : undefined}
+                                                onClick={() => fileRef.current?.click()}
+                                            >
                                                 {copy.apply.change}
                                             </Button>
                                         }
                                     />
                                 </List>
-                                {/* «Cambiar» eligió algo que no sirve: el CV de antes se queda y el motivo va debajo. */}
+                                {/* «Cambiar» eligió algo que no sirve: el CV de antes se queda y el motivo va debajo, como el error de un campo. */}
                                 {cvError && (
-                                    <p className="caption pub-fact--alert pub-cv-note" role="alert">
-                                        {cvError}
-                                    </p>
+                                    <div className="tl-field is-error" role="alert">
+                                        <FieldFoot helpId={`${cvErrorId}-h`} errorId={cvErrorId} error={cvError} />
+                                    </div>
                                 )}
                                 <input
                                     ref={fileRef}

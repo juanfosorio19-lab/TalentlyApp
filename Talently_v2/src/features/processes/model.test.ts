@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { buildIcs } from '../../domain/calendario';
-import { getApplications, getProcess } from '../demo/data';
-import type { DemoApplication } from '../demo/types';
+import { getApplications, getProcess, getPublication } from '../demo/data';
+import { startsWithoutApplication } from '../demo/sessionStore';
+import type { DemoActorId } from '../demo/session';
+import type { DemoApplication, DemoShiftBlock } from '../demo/types';
 import {
     addMinutes,
+    atLocal,
     canWithdraw,
+    demoNow,
     googleCalendarUrl,
     interviewEvent,
     isApplicantView,
@@ -13,6 +17,7 @@ import {
     publicationPath,
     resolveProcess,
     resolveReview,
+    shiftHasEnded,
     shiftRole,
     timelineSteps,
 } from './model';
@@ -24,16 +29,35 @@ const proc = (id: string) => {
 };
 
 describe('resolveProcess', () => {
+    /** Las postulaciones de los datos, ya enviadas en la sesión (también las del inicio de los flujos). */
+    const applied = (actorId: DemoActorId) => getApplications(actorId);
+    /** Sesión nueva: sin las que el prototipo muestra antes de postular (useApplications). */
+    const fresh = (actorId: DemoActorId) =>
+        getApplications(actorId).filter((a) => !startsWithoutApplication(actorId, a.publicationId));
+    const processId = (t: ReturnType<typeof resolveProcess>) => (t.kind === 'process' ? t.process.id : t.kind);
+
     it('abre el proceso de quien lo mira, por id de proceso o de postulación', () => {
-        expect(resolveProcess('proc-jorge-guardia-4x4', 'jorge')?.id).toBe('proc-jorge-guardia-4x4');
-        expect(resolveProcess('app-jorge-guardia-4x4', 'jorge')?.id).toBe('proc-jorge-guardia-4x4');
-        expect(resolveProcess('proc-carolina-marta', 'carolina')?.id).toBe('proc-carolina-marta');
+        expect(processId(resolveProcess('proc-jorge-guardia-4x4', 'jorge', applied('jorge')))).toBe('proc-jorge-guardia-4x4');
+        expect(processId(resolveProcess('app-jorge-guardia-4x4', 'jorge', applied('jorge')))).toBe('proc-jorge-guardia-4x4');
+        expect(processId(resolveProcess('proc-carolina-marta', 'carolina', []))).toBe('proc-carolina-marta');
     });
 
     it('no muestra el proceso de otra cuenta ni nada a Jorge recién registrado', () => {
-        expect(resolveProcess('proc-jorge-guardia-4x4', 'pedro')).toBeNull();
-        expect(resolveProcess('proc-jorge-guardia-4x4', 'jorge', true)).toBeNull();
-        expect(resolveProcess('no-existe', 'jorge')).toBeNull();
+        expect(resolveProcess('proc-jorge-guardia-4x4', 'pedro', applied('pedro')).kind).toBe('not-found');
+        expect(resolveProcess('proc-jorge-guardia-4x4', 'jorge', [], true).kind).toBe('not-found');
+        expect(resolveProcess('no-existe', 'jorge', applied('jorge')).kind).toBe('not-found');
+    });
+
+    it('sigue a la sesión: antes de postular (flujos 2 y 3) no hay proceso, sino la publicación', () => {
+        expect(resolveProcess('proc-pedro-mecanico', 'pedro', fresh('pedro'))).toEqual({
+            kind: 'not-applied',
+            publicationId: 'empleo-mecanico-automotriz',
+        });
+        expect(resolveProcess('app-jorge-guardia-4x4', 'jorge', fresh('jorge')).kind).toBe('not-applied');
+        // Las demás postulaciones de Jorge no parten de cero.
+        expect(processId(resolveProcess('proc-jorge-guardia-noche', 'jorge', fresh('jorge')))).toBe('proc-jorge-guardia-noche');
+        // Después de postular en la sesión, PRC-01 la muestra.
+        expect(processId(resolveProcess('proc-pedro-mecanico', 'pedro', applied('pedro')))).toBe('proc-pedro-mecanico');
     });
 });
 
@@ -134,10 +158,22 @@ describe('resolveReview', () => {
         expect(target.subject.tags).toEqual(['Pago a tiempo']);
     });
 
-    it('desde TUR-01 (id de la postulación confirmada) evalúa ese turno', () => {
-        const target = resolveReview('app-matias-coctel', matias, apps);
+    it('desde TUR-01 (id de la postulación confirmada) evalúa ese turno cuando terminó', () => {
+        const after = atLocal('2026-12-11', '00:30');
+        const target = resolveReview('app-matias-coctel', matias, apps, false, after);
         expect(target.kind === 'review' && target.subject.linea).toBe('Turno · Garzón · jue 10 dic');
         expect(target.kind === 'review' && target.subject.publicationId).toBe('turno-garzones-coctel-corporativo');
+        expect(resolveReview('turno-garzones-coctel-corporativo', matias, apps, false, after).kind).toBe('review');
+    });
+
+    it('un turno confirmado que todavía no termina no se evalúa (jue 10 dic, 13:00 en la demo)', () => {
+        expect(resolveReview('app-matias-coctel', matias, apps).kind).toBe('not-worked');
+        expect(resolveReview('turno-garzones-coctel-corporativo', matias, apps).kind).toBe('not-worked');
+        expect(resolveReview('app-jorge-eventos-12dic', { id: 'jorge' }, getApplications('jorge')).kind).toBe('not-worked');
+        expect(resolveReview('turno-guardia-eventos-12dic', { id: 'jorge' }, getApplications('jorge')).kind).toBe('not-worked');
+        // Justo a la hora de término ya se evalúa.
+        expect(resolveReview('app-matias-coctel', matias, apps, false, atLocal('2026-12-11', '00:00')).kind).toBe('review');
+        expect(resolveReview('app-matias-coctel', matias, apps, false, atLocal('2026-12-10', '23:59')).kind).toBe('not-worked');
     });
 
     it('un turno solo postulado, cancelado o de otra persona no se evalúa', () => {
@@ -163,5 +199,38 @@ describe('resolveReview', () => {
     it('el oficio sale de la conversación del turno o del oficio principal', () => {
         expect(shiftRole('matias', 'turno-garzones-finde-5dic')).toBe('Garzón');
         expect(shiftRole('jorge', 'turno-guardia-eventos-12dic')).toBeTruthy();
+    });
+});
+
+describe('shiftHasEnded', () => {
+    const block = (b: Partial<DemoShiftBlock>): DemoShiftBlock => ({
+        id: 'b',
+        weekday: 'jue',
+        day: 10,
+        month: 'dic',
+        time: '19:00–00:00',
+        duration: '5 h',
+        ...b,
+    });
+
+    it('hoy en la demo es jue 10 dic 2026 a las 13:00', () => {
+        expect(demoNow()).toBe(atLocal('2026-12-10', '13:00'));
+    });
+
+    it('un turno que cruza la medianoche termina al día siguiente', () => {
+        expect(shiftHasEnded(block({}))).toBe(false);
+        expect(shiftHasEnded(block({}), atLocal('2026-12-11', '00:00'))).toBe(true);
+        expect(shiftHasEnded(block({ day: 12, weekday: 'sáb', time: '18:00–02:00' }), atLocal('2026-12-13', '01:59'))).toBe(false);
+    });
+
+    it('los turnos pasados de la demo ya terminaron', () => {
+        const pub = getPublication('turno-garzones-finde-5dic');
+        const first = pub?.tipo === 'turno' ? pub.bloques[0] : undefined;
+        expect(first && shiftHasEnded(first)).toBe(true);
+        expect(shiftHasEnded(block({ day: 10, time: '08:00–12:00' }))).toBe(true);
+    });
+
+    it('sin horario que se entienda no se da por terminado', () => {
+        expect(shiftHasEnded(block({ time: 'por confirmar' }), atLocal('2027-06-01', '00:00'))).toBe(false);
     });
 });

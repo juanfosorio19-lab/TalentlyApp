@@ -3,8 +3,15 @@
 // acción y cómo se nombra una sección en la URL (?sheet=editar&s=…). Sin
 // React: lo prueban model.test.ts y lo usan las pantallas.
 import { paths } from '../../app/paths';
-import type { DemoActor } from '../demo/session';
+import type { DemoActor, DemoActorId } from '../demo/session';
 import type { DemoProfile, DemoProfileSection, DemoProfileTab, DemoProfileTip, DemoRow, DemoVerification } from '../demo/types';
+import {
+    IDENTITY_DETAIL_REVIEW,
+    IDENTITY_TIP,
+    PHONE_DETAIL_TODAY,
+    PHONE_VERIFIED_IN_PROTOTYPE,
+    VERIFICATION_DETAIL,
+} from './mock';
 
 // ─── Quién trabaja ──────────────────────────────────────────────────────────
 
@@ -16,6 +23,9 @@ export function trabaja(actor: DemoActor): boolean {
 // ─── Perfil con lo que pasó en la sesión ────────────────────────────────────
 
 const TELEFONO_VERIFICADO = 'Teléfono verificado';
+const IDENTIDAD_VERIFICADA = 'Identidad verificada';
+/** Insignia de la identidad enviada en VER-02 y aún sin respuesta. no está en el prototipo. */
+export const IDENTIDAD_EN_REVISION = 'Identidad en revisión';
 /** Detalle de «Verificación y credenciales» sin insignias (el mismo de demo/data). */
 const SIN_VERIFICACIONES = 'Aún no verificas nada';
 
@@ -33,27 +43,119 @@ function withVerifications(profile: DemoProfile, verificaciones: DemoVerificatio
     };
 }
 
+/**
+ * Lo que el prototipo dice del actor y demo/data aún no trae (pedido en
+ * «requests»): el teléfono verificado de Carolina (PUBL-04-identidad y VER-01).
+ */
+export function withPrototypeData(profile: DemoProfile): DemoProfile {
+    const { verificaciones } = profile.asiTeVen;
+    if (!PHONE_VERIFIED_IN_PROTOTYPE.includes(profile.actorId)) return profile;
+    if (verificaciones.some((v) => v.label === TELEFONO_VERIFICADO)) return profile;
+    return withVerifications(profile, [{ label: TELEFONO_VERIFICADO, status: 'verified' }, ...verificaciones]);
+}
+
 export interface SessionProfileState {
+    /** Verificó el teléfono en esta sesión (AUTH-08 o VER-01; demo/sessionStore `verifyPhone`). */
+    phoneVerifiedInSession: boolean;
     /**
-     * ¿Tiene el teléfono verificado en esta sesión? Matías lo verifica en
-     * AUTH-08 al tomar su primer turno (flujo 2): antes, su perfil no muestra
-     * la insignia (demo/sessionStore: `phonePendingAtStart`, `verifyPhone`).
+     * Los datos traen el «después» y el actor parte sin teléfono verificado
+     * (Matías lo verifica en AUTH-08, flujo 2; demo/sessionStore `phonePendingAtStart`).
      */
-    phoneVerified: boolean;
+    phonePendingAtStart: boolean;
+    /** Lo mismo con la identidad (Carolina la verifica en VER-02, flujo 5). */
+    identityPendingAtStart: boolean;
+    /** Envió VER-02 en esta sesión: la identidad queda en revisión. */
+    identitySubmitted: boolean;
     /** Los perfiles (Trabajo, Hogar…) con lo que la persona editó en esta sesión. */
     tabs?: readonly DemoProfileTab[];
 }
 
+/** Las insignias con lo que pasó en la sesión (el mismo orden de VER-01: teléfono, identidad, el resto). */
+function sessionVerifications(base: readonly DemoVerification[], session: SessionProfileState): DemoVerification[] {
+    let out = [...base];
+    const has = (label: string) => out.some((v) => v.label === label);
+    if (session.phoneVerifiedInSession) {
+        if (!has(TELEFONO_VERIFICADO)) out = [{ label: TELEFONO_VERIFICADO, status: 'verified' }, ...out];
+    } else if (session.phonePendingAtStart) {
+        out = out.filter((v) => v.label !== TELEFONO_VERIFICADO);
+    }
+    if (session.identityPendingAtStart) {
+        out = out.filter((v) => v.label !== IDENTIDAD_VERIFICADA && v.label !== IDENTIDAD_EN_REVISION);
+        if (session.identitySubmitted) {
+            const at = out.findIndex((v) => v.label === TELEFONO_VERIFICADO) + 1;
+            out.splice(at, 0, { label: IDENTIDAD_EN_REVISION, status: 'review' });
+        }
+    }
+    return out;
+}
+
+const sameVerifications = (a: readonly DemoVerification[], b: readonly DemoVerification[]) =>
+    a.length === b.length && a.every((v, i) => v.label === b[i]?.label && v.status === b[i]?.status);
+
+const DATOS_ORGANIZACION = 'Datos de la organización';
+const COMUNA = 'Comuna';
+
+/** La comuna que dice «Datos de la organización» (PRF-02), si la hay. */
+export function orgComuna(tabs: readonly DemoProfileTab[]): string | undefined {
+    for (const tab of tabs) {
+        for (const s of tab.secciones) {
+            if (s.tipo !== 'filas' || s.titulo !== DATOS_ORGANIZACION) continue;
+            const value = s.filas.find((r) => r.label === COMUNA)?.value;
+            if (value) return value;
+        }
+    }
+    return undefined;
+}
+
 /** El perfil tal como se ve ahora: datos de la demostración + lo que cambió en la sesión. */
 export function composeProfile(base: DemoProfile, session: SessionProfileState): DemoProfile {
-    let profile = base;
-    if (!session.phoneVerified && base.asiTeVen.verificaciones.some((v) => v.label === TELEFONO_VERIFICADO)) {
-        profile = withVerifications(
-            profile,
-            base.asiTeVen.verificaciones.filter((v) => v.label !== TELEFONO_VERIFICADO),
-        );
+    const verificaciones = sessionVerifications(base.asiTeVen.verificaciones, session);
+    let profile = sameVerifications(verificaciones, base.asiTeVen.verificaciones) ? base : withVerifications(base, verificaciones);
+
+    if (session.tabs) {
+        profile = { ...profile, perfiles: [...session.tabs] };
+        // «Así te ven» dice la comuna que la organización guardó en sus datos.
+        const comuna = orgComuna(session.tabs);
+        if (comuna && comuna !== profile.asiTeVen.comuna) profile = { ...profile, asiTeVen: { ...profile.asiTeVen, comuna } };
     }
-    return session.tabs ? { ...profile, perfiles: [...session.tabs] } : profile;
+
+    // Identidad pendiente: el Hogar pide verificarla, igual que el de Jorge (VER-02).
+    if (session.identityPendingAtStart && !session.identitySubmitted) {
+        profile = {
+            ...profile,
+            perfiles: profile.perfiles.map((t) => (t.id === 'hogar' && !t.completitud ? { ...t, completitud: IDENTITY_TIP } : t)),
+        };
+    }
+    return profile;
+}
+
+/**
+ * Los perfiles tal como se guardan: sin la tarjeta que pone la sesión (la
+ * identidad pendiente), que vuelve a decidirse cada vez que se arma el perfil.
+ */
+export function withoutSessionTips(tabs: readonly DemoProfileTab[]): DemoProfileTab[] {
+    return tabs.map((t) => (t.completitud === IDENTITY_TIP ? { ...t, completitud: undefined } : t));
+}
+
+/**
+ * Hoja «Verificación de …»: cómo y cuándo se verificó cada insignia. Lo
+ * verificado en esta sesión dice «hoy» (VER-01: «Verificado hoy»).
+ */
+export function verificationDetails(
+    actorId: DemoActorId,
+    verificaciones: readonly DemoVerification[],
+    phoneVerifiedInSession: boolean,
+): Record<string, string> {
+    const known = VERIFICATION_DETAIL[actorId] ?? {};
+    const out: Record<string, string> = {};
+    for (const v of verificaciones) {
+        let detalle: string | undefined;
+        if (v.label === TELEFONO_VERIFICADO) detalle = phoneVerifiedInSession ? PHONE_DETAIL_TODAY : (known[v.label] ?? PHONE_DETAIL_TODAY);
+        else if (v.label === IDENTIDAD_EN_REVISION) detalle = IDENTITY_DETAIL_REVIEW;
+        else detalle = known[v.label] ?? v.vence;
+        if (detalle) out[v.label] = detalle;
+    }
+    return out;
 }
 
 // ─── Jorge recién registrado (INI-01-jorge-nuevo) ───────────────────────────
@@ -203,4 +305,40 @@ export function findEditable(tab: DemoProfileTab, slug: string | null): { index:
     const index = tab.secciones.findIndex((s) => sectionSlug(s.titulo) === slug);
     const section = tab.secciones[index];
     return section && isEditable(section) ? { index, section } : undefined;
+}
+
+// ─── Hojas en la URL ────────────────────────────────────────────────────────
+
+const CV = 'CV';
+
+/** ¿El perfil tiene la sección CV (vacía o con su archivo)? Solo ahí se sube un CV. */
+export const hasCvSection = (tab: DemoProfileTab): boolean => tab.secciones.some((s) => s.titulo === CV);
+
+export interface ProfileSheetContext {
+    /** SHT-ACTOR solo si la persona pertenece a una organización. */
+    canSwitch: boolean;
+    /** El perfil abierto (Trabajo, Hogar, Organización), si hay. */
+    tab: DemoProfileTab | undefined;
+    /** Cuántas insignias tiene «Así te ven». */
+    verificaciones: number;
+}
+
+/**
+ * ¿La hoja que pide la URL (un enlace, una notificación, TabMemory) aplica a
+ * este actor? Las del Perfil que no aplican no se abren y salen de la URL.
+ * Una hoja que no es del Perfil (`?sheet=` de otra capa) no se toca.
+ */
+export function profileSheetApplies(sheet: string, s: string | null, ctx: ProfileSheetContext): boolean {
+    switch (sheet) {
+        case 'actor':
+            return ctx.canSwitch;
+        case 'editar':
+            return ctx.tab !== undefined && findEditable(ctx.tab, s) !== undefined;
+        case 'cv':
+            return ctx.tab !== undefined && hasCvSection(ctx.tab);
+        case 'verificacion':
+            return ctx.verificaciones > 0;
+        default:
+            return true;
+    }
 }

@@ -45,6 +45,10 @@ export const copy = {
         empleo: (titulo: string) => `Postulaste a ${titulo}`,
     },
 
+    /** «No me interesa» del detalle: el mismo Snackbar que el deck (explore), con «Deshacer». */
+    notInterested: (titulo: string) => `No te mostraremos más ${titulo}`,
+    undo: 'Deshacer',
+
     /** «Gestionar publicación» de Rosa como persona: pasa a su organización (como SHT-ACTOR, flujo 7). */
     switched: (nombre: string) => `Cambiaste a ${nombre}`,
 

@@ -25,9 +25,11 @@ interface FlowOptions<T> {
     goTo: (step: number) => void;
     /** Lo que muestra PUBL-07, armado con el borrador. */
     summary: () => PublishedSummary;
+    /** INI-01-jorge-nuevo: aún no verifica su teléfono. */
+    recienRegistrado?: boolean;
 }
 
-export function usePublishFlow<T>({ kind, step, actor, store, initial, hasErrors, goTo, summary }: FlowOptions<T>) {
+export function usePublishFlow<T>({ kind, step, actor, store, initial, hasErrors, goTo, summary, recienRegistrado }: FlowOptions<T>) {
     const navigate = useNavigate();
     const { open } = useOpenPath();
     const identitySheet = useSheet(IDENTITY_SHEET);
@@ -71,7 +73,7 @@ export function usePublishFlow<T>({ kind, step, actor, store, initial, hasErrors
         onContinue,
         identitySheet,
         verifyIdentity,
-        phoneVerified: isPhoneVerified(actor.id, phoneVerifiedInData(actor.id)),
+        phoneVerified: !recienRegistrado && isPhoneVerified(actor.id, phoneVerifiedInData(actor.id)),
         identityPending: needsIdentity(actor, identitySent),
     };
 }

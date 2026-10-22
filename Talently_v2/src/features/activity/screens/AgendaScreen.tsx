@@ -4,7 +4,9 @@
 // cubiertos). Lee las postulaciones de la sesión (useApplications), así un
 // turno cancelado en TUR-01 o una postulación nueva se ven igual que en ACT-02
 // e Inicio. La vista y el día van en la URL (?seg=agenda&vista=dia&dia=…):
-// atrás y la memoria de la pestaña vuelven a lo mismo.
+// atrás y la memoria de la pestaña vuelven a lo mismo. Un día o una vista que
+// no aplican se corrigen también en la URL (replace), como ?seg en
+// ActivityScreen: la memoria de la pestaña nunca guarda un día falso.
 //
 // Se arma con las piezas de CalendarWeek (SegmentedControl «Día · Semana»,
 // WeekStrip y AgendaEvent) porque CalendarWeek aún no admite un compromiso
@@ -12,7 +14,7 @@
 // tocarlo y su texto vacío dice siempre «Sin turnos este día» (pedido en
 // requests). Así cada compromiso se toca igual en las dos vistas. CalendarWeek
 // aún no cambia de semana: lo que viene después va en «Más adelante».
-import { Fragment, useMemo } from 'react';
+import { Fragment, useCallback, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Badge } from '../../../ui/Badge';
 import { AgendaEvent, WeekStrip, addDays, formatDayShort, type CalendarView, type IsoDate } from '../../../ui/CalendarWeek';
@@ -34,6 +36,7 @@ import {
     WEEK_END,
     WEEK_START,
     agendaFor,
+    agendaParamsFix,
     eventLabel,
     groupByDay,
     seeksWork,
@@ -64,22 +67,33 @@ export function AgendaScreen() {
     const thisWeek = items.filter((i) => i.date >= WEEK_START && i.date <= WEEK_END);
     const later = items.filter((i) => i.date > WEEK_END);
 
-    const view: CalendarView = params.get('vista') === 'dia' ? 'day' : 'week';
+    const viewParam = params.get('vista');
+    const view: CalendarView = viewParam === 'dia' ? 'day' : 'week';
     const dayParam = params.get('dia');
     // El día de la vista Día siempre está en la tira: si el de la URL no, hoy.
     const day: IsoDate =
         dayParam && ISO_DAY.test(dayParam) && WEEK.includes(dayParam) ? dayParam : WEEK.includes(TODAY) ? TODAY : WEEK_START;
 
     // Vista y día en la URL, en una sola navegación (tocar un día cambia los dos).
-    const write = (next: Record<string, string>) =>
-        setParams(
-            (prev) => {
-                const p = new URLSearchParams(prev);
-                for (const [k, v] of Object.entries(next)) p.set(k, v);
-                return p;
-            },
-            { replace: true, preventScrollReset: true },
-        );
+    const write = useCallback(
+        (next: Record<string, string>) =>
+            setParams(
+                (prev) => {
+                    const p = new URLSearchParams(prev);
+                    for (const [k, v] of Object.entries(next)) p.set(k, v);
+                    return p;
+                },
+                { replace: true, preventScrollReset: true },
+            ),
+        [setParams],
+    );
+
+    // Un ?dia fuera de la semana (o que no es una fecha) o una ?vista desconocida se corrigen en la
+    // URL con lo que se ve: hoy y Semana. Sin ?dia ni ?vista no se escribe nada.
+    useEffect(() => {
+        const fix = agendaParamsFix(dayParam, viewParam, day);
+        if (Object.keys(fix).length) write(fix);
+    }, [dayParam, day, viewParam, write]);
 
     const pathOf = (item: AgendaItem) => targetPath(item.target, actor.id);
     // Sin hora de término, el nombre accesible no dice «de 10:00 a …».

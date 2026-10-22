@@ -88,6 +88,7 @@ function Review({ subject }: { subject: ReviewSubject }) {
     const [ratingError, setRatingError] = useState(false);
     const [sending, setSending] = useState(false);
     const timer = useRef<number | undefined>(undefined);
+    const starsRef = useRef<HTMLDivElement>(null);
     // Si la persona sale mientras se envía, no se envía a sus espaldas.
     useEffect(() => () => window.clearTimeout(timer.current), []);
 
@@ -101,7 +102,8 @@ function Review({ subject }: { subject: ReviewSubject }) {
                 variant="success"
                 title={copy.review.sentTitle}
                 text={copy.review.sentText}
-                action={{ label: copy.review.exploreShifts, onClick: () => open(paths.explorar('turno')) }}
+                // Al terminar un flujo, replace hacia su destino natural (spec §5.3 regla 6): atrás no vuelve al resultado.
+                action={{ label: copy.review.exploreShifts, onClick: () => open(paths.explorar('turno'), { replace: true }) }}
                 secondaryAction={{ label: copy.review.back, onClick: goBack }}
             />
         );
@@ -111,7 +113,7 @@ function Review({ subject }: { subject: ReviewSubject }) {
         if (rating === null) {
             setRatingError(true);
             // El error queda junto a las estrellas: el foco va a la primera.
-            document.querySelector<HTMLButtonElement>('.tl-stars [role="radio"]')?.focus();
+            starsRef.current?.querySelector<HTMLButtonElement>('[role="radio"]')?.focus();
             return;
         }
         setSending(true);
@@ -144,6 +146,7 @@ function Review({ subject }: { subject: ReviewSubject }) {
                     <Stack gap={2}>
                         <h2 className="h2 prc-flush">{subject.pregunta}</h2>
                         <RatingInput
+                            ref={starsRef}
                             size="lg"
                             label={copy.review.ratingLabel}
                             value={rating}

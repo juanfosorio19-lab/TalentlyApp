@@ -4,12 +4,14 @@
 // confirmación de asistencia 24 h y 2 h antes, la conversación, compartir el
 // turno y cancelarlo (con la regla de 12 h). Si el turno ya pasó, o hay uno
 // anterior por evaluar (la evaluación se pide antes de postular al siguiente,
-// spec §5.2), «Dejar reseña» lleva a REV-01 (flujo 2). Cancelado, queda el
+// spec §5.2), «Dejar reseña» lleva a REV-01 (flujo 2); la tarjeta del turno
+// anterior deja de pedirse cuando ya fue a evaluarlo (reviewReminders). Cancelado, queda el
 // bloque con su Badge «Cancelaste» y la conversación. La postulación sale de
 // la sesión (useApplications) y la cancelación se guarda allí (cancelShift):
 // ACT-02, la Agenda e Inicio la ven igual. El :assignmentId es el id de la
 // postulación (DemoApplication) mientras Supabase está pausado. La hoja de
-// verificación y el diálogo de cancelar van en la URL (?sheet=).
+// verificación y el diálogo de cancelar van en la URL (?sheet=); si se llega
+// con uno abierto, al cerrarlo el foco va al título (useFocusAfterClose).
 import { useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
@@ -50,8 +52,10 @@ import { targetPath } from '../../demo/targets';
 import type { DemoApplication, DemoMyShift, DemoRow } from '../../demo/types';
 import { DetailRow } from '../components/DetailRow';
 import { FactList } from '../components/FactList';
+import { useFocusAfterClose } from '../components/useFocusAfterClose';
 import { VerificationSheet } from '../components/VerificationSheet';
 import { copy } from '../copy';
+import { markReviewStarted, useReviewsStarted } from '../reviewReminders';
 import {
     googleCalendarUrl,
     hasEnded,
@@ -122,10 +126,12 @@ interface ReviewCardProps {
     path: string;
     /** El turno ya pasó: evaluarlo es la acción principal de la pantalla. */
     primary?: boolean;
+    /** Al tocar «Dejar reseña», antes de ir a REV-01. */
+    onOpen?: () => void;
 }
 
 /** «Dejar reseña» → REV-01. */
-function ReviewCard({ title, text, path, primary }: ReviewCardProps) {
+function ReviewCard({ title, text, path, primary, onOpen }: ReviewCardProps) {
     const { open } = useOpenPath();
     return (
         <Card>
@@ -134,7 +140,14 @@ function ReviewCard({ title, text, path, primary }: ReviewCardProps) {
                     <h2 className="button-lg act-text">{title}</h2>
                     <p className="body act-muted">{text}</p>
                 </Stack>
-                <Button variant={primary ? 'primary' : 'tonal'} icon={IconStar} onClick={() => open(path)}>
+                <Button
+                    variant={primary ? 'primary' : 'tonal'}
+                    icon={IconStar}
+                    onClick={() => {
+                        onOpen?.();
+                        open(path);
+                    }}
+                >
                     {copy.shift.review}
                 </Button>
             </Stack>
@@ -164,7 +177,9 @@ function MyShift({ application, shift }: { application: DemoApplication; shift: 
     const fecha = `${shift.bloque.weekday} ${shift.bloque.day} ${shift.bloque.month}`;
     const address = rowValue(shift, 'Dirección');
     const reviewPath = targetPath({ pantalla: 'evaluar', publicationId: application.publicationId }, actor.id);
-    const pendingReviews = pendingReviewsFor(notifications, actor.id, application.publicationId);
+    // Las que ya fue a evaluar desde aquí no se vuelven a pedir al volver de REV-01.
+    const reviewsStarted = useReviewsStarted(actor.id);
+    const pendingReviews = pendingReviewsFor(notifications, actor.id, application.publicationId, reviewsStarted);
 
     // Al cancelar se van «Cancelar turno» y su diálogo: el foco pasa al título (no queda en el body).
     // El diálogo se cierra en el mismo cambio (y su foco vuelve a un botón que ya no está): esto corre después.
@@ -173,6 +188,11 @@ function MyShift({ application, shift }: { application: DemoApplication; shift: 
         focusTitleAfterCancel.current = false;
         titleRef.current?.focus();
     }, [cancelled]);
+
+    // Llegó con la hoja o el diálogo abierto (enlace, notificación): nada en pantalla lo abrió y,
+    // al cerrarlo, el foco quedaría en el body. Va al título.
+    useFocusAfterClose(verificationSheet.open, titleRef);
+    useFocusAfterClose(cancelDialog.open && active, titleRef);
 
     const addToCalendar = async (w: ShiftWindow) => {
         const event = shiftCalendarEvent(
@@ -328,6 +348,7 @@ function MyShift({ application, shift }: { application: DemoApplication; shift: 
                                 title={r.title}
                                 text={copy.shift.pendingReviewNote(r.from)}
                                 path={targetPath(r.target, actor.id)}
+                                onOpen={() => markReviewStarted(actor.id, r.publicationId)}
                             />
                         ))}
 

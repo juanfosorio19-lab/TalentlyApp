@@ -6,9 +6,17 @@ import { paths } from '../../app/paths';
 import type { AmountFormatOptions } from '../../ui/Amount';
 import { IconAdd, IconBell, IconChat, IconClock, IconOffers, type IconComponent } from '../../ui/icons';
 import type { PublicationCardData, PublicationRequirement, PublicationVerification } from '../../ui/PublicationCard';
-import { getExplore, getHomeFeed, getManagedPublication, getOrgDashboard, getPerson, getPublication } from '../demo/data';
-import type { DemoActor } from '../demo/session';
-import type { DeckDecision } from '../demo/sessionStore';
+import {
+    getApplications,
+    getExplore,
+    getHomeFeed,
+    getManagedPublication,
+    getOrgDashboard,
+    getPerson,
+    getPublication,
+} from '../demo/data';
+import { DEMO_ACTORS, type DemoActor, type DemoActorId } from '../demo/session';
+import { isPhoneVerified, keyOf, startsWithoutApplication, type DeckDecision, type SessionApplication } from '../demo/sessionStore';
 import type {
     DemoAmount,
     DemoEmpleo,
@@ -21,7 +29,15 @@ import type {
     DemoVerification,
 } from '../demo/types';
 import { copy } from './copy';
-import type { EmpleoFiltros, PersonaFiltros, Segment, TurnoFiltros } from './filters';
+import {
+    PARAM_PUBLICACION,
+    type EmpleoFiltros,
+    type Franja,
+    type PersonaFiltros,
+    type Segment,
+    type TarifaUnidad,
+    type TurnoFiltros,
+} from './filters';
 import { CANDIDATOS_POR_PUBLICACION, OFICIO_DEL_TURNO, SINONIMOS } from './mock';
 
 // ─── Segmentos (spec §5.2) ──────────────────────────────────────────────────
@@ -103,6 +119,34 @@ export function comunaOf(lugar: string): string {
 
 const isVerifiedOrg = (p: DemoPublication) => p.autor.verificaciones.some((v) => v.status === 'verified');
 
+/** Postulaciones de esta sesión (useSessionState().applications): `${actorId}:${publicationId}`. */
+export type Applications = ReadonlyMap<string, SessionApplication>;
+
+const isDemoActor = (id: string): id is DemoActorId => Object.hasOwn(DEMO_ACTORS, id);
+
+const PHONE = 'Teléfono verificado';
+
+/**
+ * ¿El actor ya verificó su celular? Lo pide AUTH-08 antes del primer acto
+ * transaccional, igual que DET-01: Matías lo verifica en el flujo 2 y Jorge
+ * recién registrado todavía no lo tiene.
+ */
+export function actorPhoneVerified(actorId: DemoActorId, recienRegistrado: boolean): boolean {
+    const inData = getPerson(actorId)?.verificaciones.some((v) => v.label === PHONE && v.status === 'verified') ?? false;
+    return isPhoneVerified(actorId, !recienRegistrado && inData);
+}
+
+/**
+ * Las insignias de una persona como las ve esta sesión: un actor de la demo
+ * que verifica su celular en AUTH-08 (Matías) no tiene «Teléfono verificado»
+ * hasta que lo verifica, igual que en su PRF-01 y en DET-01. Quien la lee
+ * se suscribe a la sesión (useSessionState) para ver el cambio.
+ */
+export function personVerifications(person: DemoPerson): readonly DemoVerification[] {
+    if (!isDemoActor(person.id) || isPhoneVerified(person.id, true)) return person.verificaciones;
+    return person.verificaciones.filter((v) => v.label !== PHONE);
+}
+
 export function amountOf(monto: DemoAmount | null, negotiableLabel?: string): AmountFormatOptions {
     if (!monto) return { value: null, unit: 'a_convenir', negotiableLabel };
     return { value: monto.value, unit: monto.unit, net: monto.net, durationMin: monto.durationMin };
@@ -176,11 +220,16 @@ const withinKm = (p: DemoPublication, km: number | null) => {
     return d === undefined || d <= km;
 };
 
+/** Sueldo líquido al mes, o nada si es a convenir o en otra unidad (no se puede comparar). */
+const sueldoMes = (p: DemoEmpleo) => (p.monto?.unit === 'mes' ? p.monto.value : undefined);
+
 export function passesEmpleo(p: DemoEmpleo, f: EmpleoFiltros): boolean {
+    const sueldo = sueldoMes(p);
     return (
         tagIn(p, 'jornada', f.jornadas) &&
         tagIn(p, 'contrato', f.contratos) &&
         withinKm(p, f.distancia) &&
+        (f.sueldoMin === null || (sueldo !== undefined && sueldo >= f.sueldoMin)) &&
         (!f.verificadas || isVerifiedOrg(p))
     );
 }
@@ -214,17 +263,72 @@ export const hasTurnos = (explore: DemoExplore) => explore.turnos.dias.some((d) 
 /** Chips de oficio de la demo, sin «Todos» (que es no elegir ninguno). */
 export const oficioChipsOf = (explore: DemoExplore) => explore.turnos.filtros.filter((f) => f !== copy.turnos.todos);
 
-/** Días con sus turnos, filtrados por los chips de oficio y la hoja de filtros. Sin días vacíos. */
-export function turnoDays(explore: DemoExplore, oficios: readonly string[], f: TurnoFiltros): TurnoDay[] {
+/**
+ * Franja (`time_band`, spec §4.5) de un bloque según su hora de inicio
+ * («22:00–06:00» → noche): Mañana 07–13 · Tarde 13–19 · Noche 19–01 · Madrugada 01–07.
+ */
+export function franjaOf(time: string): Franja | undefined {
+    const m = /^(\d{1,2}):/.exec(time.trim());
+    if (!m?.[1]) return undefined;
+    const h = Number(m[1]);
+    if (h >= 7 && h < 13) return 'manana';
+    if (h >= 13 && h < 19) return 'tarde';
+    if (h >= 19 || h < 1) return 'noche';
+    return 'madrugada';
+}
+
+/** «8 h», «Hoy · 5 h» → horas del bloque. */
+export function hoursOf(duration: string): number | undefined {
+    const m = /(\d+(?:,\d+)?) h\b/.exec(duration);
+    return m?.[1] ? Number(m[1].replace(',', '.')) : undefined;
+}
+
+/** Lo que paga un turno en la unidad pedida: por hora × horas del bloque, o por turno ÷ horas. */
+export function rateIn(p: DemoTurno, unidad: TarifaUnidad): number | undefined {
+    if (!p.monto) return undefined;
+    if (p.monto.unit === unidad) return p.monto.value;
+    const horas = hoursOf(p.bloques[0]?.duration ?? '');
+    if (!horas) return undefined;
+    if (p.monto.unit === 'hora' && unidad === 'turno') return p.monto.value * horas;
+    if (p.monto.unit === 'turno' && unidad === 'hora') return Math.floor(p.monto.value / horas);
+    return undefined;
+}
+
+/** La hoja de filtros de EXP-02 (sin fecha ni oficio, que se miran por día y en los chips). */
+export function passesTurno(p: DemoTurno, f: TurnoFiltros): boolean {
+    const rate = f.tarifaMin === null ? undefined : rateIn(p, f.tarifaUnidad);
+    return (
+        withinKm(p, f.distancia) &&
+        (!f.verificadas || isVerifiedOrg(p)) &&
+        (f.franjas.length === 0 || p.bloques.some((b) => {
+            const franja = franjaOf(b.time);
+            return franja !== undefined && f.franjas.includes(franja);
+        })) &&
+        (f.tarifaMin === null || (rate !== undefined && rate >= f.tarifaMin))
+    );
+}
+
+const turnosOfDay = (ids: readonly string[]) =>
+    ids.map((id) => getPublication(id)).filter((p): p is DemoTurno => p?.tipo === 'turno');
+
+/** ¿Hay turnos en esta comuna (sin mirar los filtros)? Sin comuna, los de cerca del actor. */
+export const hasTurnosIn = (explore: DemoExplore, comuna: string | null) =>
+    explore.turnos.dias.some((d) => turnosOfDay(d.publicaciones).some((p) => comuna === null || comunaOf(p.lugar) === comuna));
+
+/**
+ * Días con sus turnos, filtrados por la comuna y los chips de oficio de la
+ * cabecera y por la hoja de filtros. Sin días vacíos. `comuna` null = los
+ * turnos cerca de la comuna del actor (todos los de su Explorar).
+ */
+export function turnoDays(explore: DemoExplore, oficios: readonly string[], f: TurnoFiltros, comuna: string | null = null): TurnoDay[] {
     return explore.turnos.dias
         .filter((d) => f.fechas.length === 0 || (f.fechas as readonly string[]).includes(d.titulo))
         .map((d) => ({
             titulo: d.titulo,
-            turnos: d.publicaciones
-                .map((id) => getPublication(id))
-                .filter((p): p is DemoTurno => p?.tipo === 'turno')
+            turnos: turnosOfDay(d.publicaciones)
+                .filter((p) => comuna === null || comunaOf(p.lugar) === comuna)
                 .filter((p) => oficios.length === 0 || oficios.includes(OFICIO_DEL_TURNO[p.id] ?? ''))
-                .filter((p) => withinKm(p, f.distancia) && (!f.verificadas || isVerifiedOrg(p))),
+                .filter((p) => passesTurno(p, f)),
         }))
         .filter((d) => d.turnos.length > 0);
 }

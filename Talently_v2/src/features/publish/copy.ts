@@ -177,11 +177,23 @@ export const copy = {
         servicio: { appBar: 'Publicar servicio', titulo: 'Publicar servicios llega en junio', texto: 'Te avisaremos cuando abramos los servicios.' },
         inicio: 'Ir a Inicio',
     },
+    // no está en el prototipo: un asistente abierto por enlace por quien no publica eso.
     sinPerfil: {
-        // no está en el prototipo: alguien sin organización ni hogar abre un asistente por enlace.
         appBar: 'Publicar',
         titulo: 'Publicas desde una organización o un hogar',
         texto: 'Para publicar, agrega tu perfil de hogar o cambia a tu organización desde Inicio.',
         accion: 'Ir a Inicio',
+    },
+    soloHogar: {
+        appBar: 'Aviso para mi hogar',
+        titulo: 'Los avisos del hogar los publica un hogar',
+        texto: 'Como organización, publicas empleos y turnos.',
+        accion: 'Publicar un turno',
+    },
+    soloOrganizacion: {
+        appBar: 'Publicar empleo',
+        titulo: 'Los empleos los publica una organización',
+        texto: 'Desde tu hogar publicas tu aviso o un turno para un evento en tu casa.',
+        accion: 'Publicar tu aviso',
     },
 } as const;

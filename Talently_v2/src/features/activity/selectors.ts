@@ -181,11 +181,55 @@ export interface AgendaItem {
     target: DemoTarget;
 }
 
-/** Organización: «5/8 confirmados» del bloque del turno, si se conoce. */
-function coverageOf(t: DemoTarget): string | undefined {
-    if (t.pantalla !== 'cupos') return undefined;
+// ─── Lo que la organización cambia en GES-01 y GES-04 ───────────────────────
+
+/**
+ * Una publicación tal como quedó en la sesión después de GES-01 (pausar,
+ * cerrar) y GES-04 (confirmar). Hoy ese estado vive en features/manage, que
+ * Actividad no puede leer: pedido en requests subirlo a demo/sessionStore
+ * (useManagedView). Mientras no esté, las pantallas no lo pasan y todo sale
+ * de los datos; cuando esté, ActivityScreen y AgendaScreen lo pasan aquí y
+ * ACT-01 y ACT-03 dicen lo mismo que GES-01, GES-04 e INI-02.
+ */
+export interface ManagedSession {
+    /** «Pausada», «Cerrada»… Sin valor, el de los datos. */
+    estado?: BadgeStatus;
+    /** Las métricas de GES-01 recalculadas con lo confirmado y lo revisado. */
+    metricas?: DemoManagedPublication['metricas'];
+    /** Bloque del turno → personas confirmadas ahora (las de los datos y las de la sesión). */
+    confirmados?: ReadonlyMap<string, number>;
+}
+
+/** Lo de la sesión para una publicación (o nada: la de los datos). */
+export type ManagedSessionOf = (publicationId: string) => ManagedSession | undefined;
+
+/** La publicación de los datos con lo que cambió en la sesión. */
+function withSession(m: DemoManagedPublication, s: ManagedSession | undefined): DemoManagedPublication {
+    if (!s || (s.estado === undefined && s.metricas === undefined)) return m;
+    return { ...m, estado: s.estado ?? m.estado, metricas: s.metricas ?? m.metricas };
+}
+
+/** Estados de la publicación que se ven en la Agenda en lugar de los del turno («Activa», «Cupos completos»). */
+const STOPPED: ReadonlySet<BadgeStatus> = new Set<BadgeStatus>(['Pausada', 'Cerrada', 'Expirada']);
+
+/**
+ * Organización: «5/8 confirmados» del bloque del turno y su estado, con lo
+ * confirmado en la sesión. Si la publicación se pausó o cerró, ese estado;
+ * si se llenaron los cupos, «Cupos completos».
+ */
+function coverageOf(
+    t: DemoTarget,
+    estado: BadgeStatus,
+    sessionOf?: ManagedSessionOf,
+): { where?: string; status: BadgeStatus } {
+    if (t.pantalla !== 'cupos') return { status: estado };
     const block = getManagedPublication(t.publicationId)?.cupos?.find((b) => b.id === t.bloqueId);
-    return block ? copy.agenda.coverage(block.confirmados.length, block.total) : undefined;
+    if (!block) return { status: estado };
+    const s = sessionOf?.(t.publicationId);
+    const confirmed = s?.confirmados?.get(t.bloqueId) ?? block.confirmados.length;
+    const status =
+        s?.estado && STOPPED.has(s.estado) ? s.estado : confirmed >= block.total ? ('Cupos completos' as BadgeStatus) : estado;
+    return { where: copy.agenda.coverage(confirmed, block.total), status };
 }
 
 /** Estados de un turno pendiente que la Agenda muestra con su Badge (README de CalendarWeek). */
@@ -253,12 +297,14 @@ const byDateAndStart = (a: AgendaItem, b: AgendaItem) =>
  * La agenda del actor en orden de fecha y hora: lo confirmado, las entrevistas
  * y los turnos pendientes con su estado. `applications` son las de la sesión
  * (useApplications): sin las canceladas y sin lo que el actor aún no postuló.
- * Recién registrado, vacía.
+ * `sessionOf`: lo que la organización cambió en GES-01 y GES-04 (ver
+ * ManagedSession). Recién registrado, vacía.
  */
 export function agendaFor(
     actor: DemoActor,
     applications: readonly DemoApplication[],
     { recienRegistrado }: ActivityOptions,
+    sessionOf?: ManagedSessionOf,
 ): AgendaItem[] {
     if (recienRegistrado) return [];
     const items: AgendaItem[] = [];
@@ -266,6 +312,8 @@ export function agendaFor(
     for (const e of events) {
         const date = isoFromDayText(e.fecha);
         if (!date) continue;
+        const { where, status } =
+            actor.kind === 'organizacion' ? coverageOf(e.destino, e.estado, sessionOf) : { where: undefined, status: e.estado };
         items.push({
             id: e.id,
             date,
@@ -275,12 +323,24 @@ export function agendaFor(
             kind: e.tipo,
             title: e.titulo,
             who: e.detalle,
-            where: actor.kind === 'organizacion' ? coverageOf(e.destino) : undefined,
-            status: e.estado,
+            where,
+            status,
             target: e.destino,
         });
     }
     return items.sort(byDateAndStart);
+}
+
+/**
+ * Lo que hay que corregir en la URL de la Agenda para que diga lo que se ve:
+ * un ?dia que no es un día de la tira pasa a `day` (el que se muestra) y una
+ * ?vista desconocida, a «semana». Sin ?dia ni ?vista, nada.
+ */
+export function agendaParamsFix(dayParam: string | null, viewParam: string | null, day: IsoDate): Record<string, string> {
+    const fix: Record<string, string> = {};
+    if (dayParam !== null && dayParam !== day) fix.dia = day;
+    if (viewParam !== null && viewParam !== 'dia' && viewParam !== 'semana') fix.vista = 'semana';
+    return fix;
 }
 
 /** Lo que dibuja AgendaEvent. Sin hora de término, la columna de la hora muestra solo el inicio. */
@@ -334,9 +394,14 @@ export type MyPublication =
 /**
  * Lo que publicó el actor. Organización: las de su panel (INI-02). Persona:
  * su aviso de Inicio («Tu aviso»; recién registrado, ninguno). features/demo
- * aún no trae una función por dueño (pedida en requests).
+ * aún no trae una función por dueño (pedida en requests). Con `sessionOf`, el
+ * estado y las métricas son los de GES-01 (una pausada pasa a «Pausadas»).
  */
-export function publicationsFor(actor: DemoActor, { recienRegistrado }: ActivityOptions): MyPublication[] {
+export function publicationsFor(
+    actor: DemoActor,
+    { recienRegistrado }: ActivityOptions,
+    sessionOf?: ManagedSessionOf,
+): MyPublication[] {
     if (recienRegistrado) return [];
     const ids =
         actor.kind === 'organizacion'
@@ -344,7 +409,8 @@ export function publicationsFor(actor: DemoActor, { recienRegistrado }: Activity
             : getHomeFeed(actor.id).bloques.flatMap((b) => (b.tipo === 'tu-aviso' ? [b.publicationId] : []));
     const list: MyPublication[] = [];
     for (const id of ids) {
-        const managed = getManagedPublication(id);
+        const data = getManagedPublication(id);
+        const managed = data && withSession(data, sessionOf?.(id));
         const publication = getPublication(id);
         if (managed) list.push({ kind: 'managed', id, managed, publication });
         else if (publication) list.push({ kind: 'summary', id, publication });
@@ -446,28 +512,32 @@ export interface PendingReview {
     title: string;
     /** «Banquetería Rosa SpA». */
     from: string;
+    /** El turno por evaluar. */
+    publicationId: string;
     target: DemoTarget;
 }
 
 /**
  * Evaluaciones que el actor tiene pendientes (spec §5.2: la evaluación mutua
  * se pide antes de postular al siguiente turno), salvo la del turno que se
- * está mirando. Salen de su bandeja (useInbox): la notificación «Evalúa tu
- * turno del …» lleva a REV-01.
+ * está mirando y las que ya fue a evaluar (`started`, publicaciones). Salen
+ * de su bandeja (useInbox): la notificación «Evalúa tu turno del …» lleva a
+ * REV-01.
  */
 export function pendingReviewsFor(
     notifications: readonly DemoNotification[],
     actorId: DemoActorId,
     exceptPublicationId?: string,
+    started: ReadonlySet<string> = new Set(),
 ): PendingReview[] {
     const seen = new Set<string>();
     const reviews: PendingReview[] = [];
     for (const n of notifications) {
         const t = n.destino;
         if (n.actorId !== actorId || t?.pantalla !== 'evaluar' || t.publicationId === exceptPublicationId) continue;
-        if (seen.has(t.publicationId)) continue;
+        if (seen.has(t.publicationId) || started.has(t.publicationId)) continue;
         seen.add(t.publicationId);
-        reviews.push({ id: n.id, title: n.titulo, from: n.origen, target: t });
+        reviews.push({ id: n.id, title: n.titulo, from: n.origen, publicationId: t.publicationId, target: t });
     }
     return reviews;
 }

@@ -46,14 +46,6 @@ export const VERIFICATION_DATES: Record<DemoActorId, VerificationDates> = {
 /** Jorge recién registrado (INI-01-jorge-nuevo): la cuenta es de hoy. */
 export const NEW_ACCOUNT_DATE = 'hoy';
 
-/**
- * Flujo 5: Carolina verifica su identidad en VER-02 antes de publicar su aviso
- * (PUBL-04-identidad: «Falta verificar tu identidad»). Los datos traen el
- * «después» (NOT-01: «Verificamos tu identidad»); como `phonePendingAtStart`
- * de demo/sessionStore, parte sin verificar. Pedido para sessionStore.
- */
-export const IDENTITY_PENDING_AT_START: readonly DemoActorId[] = ['carolina'];
-
 /** Nombre de la credencial SPD tal como la nombran los requisitos de la demo. */
 export const SPD_LABEL = 'Credencial SPD (ex OS-10)';
 

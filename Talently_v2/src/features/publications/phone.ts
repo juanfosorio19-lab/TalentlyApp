@@ -35,3 +35,21 @@ export function nextPhone(previous: string, raw: string): string {
 export function groupPhone(digits: string): string {
     return digits.length > 4 ? `${digits.slice(0, 4)} ${digits.slice(4)}` : digits;
 }
+
+/** Cuántos dígitos hay antes del cursor en lo que quedó escrito en el campo. */
+export function digitsBefore(text: string, caret: number | null): number {
+    return text.slice(0, caret ?? text.length).replace(/\D/g, '').length;
+}
+
+/**
+ * Dónde va el cursor en el número agrupado para que queden `digits` dígitos
+ * antes de él: corregir un dígito en medio no lo manda al final.
+ */
+export function caretAfterDigits(grouped: string, digits: number): number {
+    if (digits <= 0) return 0;
+    let seen = 0;
+    for (let i = 0; i < grouped.length; i++) {
+        if (/\d/.test(grouped.charAt(i)) && ++seen === digits) return i + 1;
+    }
+    return grouped.length;
+}

@@ -115,6 +115,7 @@ export const copy = {
         noConfirmedAction: 'Ver postulados', // no está en el prototipo
         noAppliedTitle: 'Aún no hay postulados',
         noAppliedText: 'Avisamos a quienes buscan turnos cerca. También puedes invitar a tus favoritos.', // no está en el prototipo (variante sin oficio)
+        noAppliedPaused: 'Mientras esté pausada, nadie nuevo puede postular. La reanudas desde Gestionar publicación.', // no está en el prototipo
         inviteFavorites: 'Invitar a mis favoritos',
         noMoreTitle: 'Nadie más postuló', // no está en el prototipo
         noMoreText: 'Esta publicación ya no recibe postulaciones.', // no está en el prototipo

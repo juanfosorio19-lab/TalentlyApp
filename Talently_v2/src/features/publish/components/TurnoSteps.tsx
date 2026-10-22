@@ -10,7 +10,8 @@ import { IconButton } from '../../../ui/IconButton';
 import { Stack } from '../../../ui/Layout';
 import { MoneyField } from '../../../ui/MoneyField';
 import { OptionGroup } from '../../../ui/OptionCard';
-import { PublicationCard } from '../../../ui/PublicationCard';
+import { formatAmount } from '../../../ui/Amount';
+import { PublicationCard, cuposLabel } from '../../../ui/PublicationCard';
 import { SectionCard } from '../../../ui/SectionCard';
 import { SegmentedControl } from '../../../ui/SegmentedControl';
 import { Select } from '../../../ui/Select';
@@ -260,6 +261,7 @@ export function TurnoStep2({ draft, errors, onPatch }: TurnoStepProps) {
     return (
         <Stack gap={6}>
             {draft.bloques.map((b, i) =>
+                // Sin fecha, el bloque siempre está abierto (isOpen ya lo dice; aquí lo sabe también el tipo).
                 isOpen(b) || b.fecha === null ? (
                     <ShiftEditor
                         key={b.id}
@@ -413,7 +415,17 @@ export function TurnoStep4({ actor, draft }: { actor: DemoActor; draft: TurnoDra
         <Stack gap={6}>
             <Stack gap={2}>
                 <p className="overline publish-flush publish-muted">{p.asiLaVeran}</p>
-                {/* Vista previa: se mira, no se toca (el detalle y «Tomar turno» existen al publicar). */}
+                {/* Vista previa: se mira, no se toca (el detalle y «Tomar turno» existen al publicar). El lector la oye en una línea. */}
+                <p className="tl-vh">
+                    {[
+                        draft.titulo.trim(),
+                        previewAuthor(actor).name,
+                        ...shiftTags(draft).map((t) => t.label),
+                        formatAmount({ value: draft.tarifa, unit: draft.unidad, net: draft.neto, negotiableLabel: 'A convenir' }),
+                        cuposLabel({ left: total, total }),
+                        actor.comuna,
+                    ].join(' · ')}
+                </p>
                 <div inert>
                     <PublicationCard
                         author={previewAuthor(actor)}

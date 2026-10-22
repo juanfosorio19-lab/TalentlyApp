@@ -135,6 +135,14 @@ function IdentityWizard({ hogar, volver, onSent }: IdentityWizardProps) {
     const galleryRef = useRef<HTMLInputElement>(null);
     const consentRef = useRef<HTMLInputElement>(null);
     const consentBox = useRef<HTMLDivElement>(null);
+    // Checkbox cambia de raíz al mostrar o quitar el error y su input se monta de
+    // nuevo: el foco se pone DESPUÉS del render, sobre el input nuevo. Así el
+    // lector de pantalla lee la casilla con su motivo (aria-describedby).
+    const [focusConsent, setFocusConsent] = useState(0);
+    useEffect(() => {
+        if (!focusConsent) return;
+        consentRef.current?.focus({ preventScroll: true });
+    }, [focusConsent]);
 
     // Las fotos son de esta pantalla: al salir (o al cambiar una), se sueltan.
     const urls = useRef(new Set<string>());
@@ -193,7 +201,7 @@ function IdentityWizard({ hogar, volver, onSent }: IdentityWizardProps) {
         }
         if (!consent) {
             setConsentError(true);
-            consentRef.current?.focus({ preventScroll: true });
+            setFocusConsent((n) => n + 1);
             // El motivo queda a la vista, sobre el CTA fijo.
             requestAnimationFrame(() => consentBox.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }));
             return;
@@ -347,8 +355,13 @@ function IdentityWizard({ hogar, volver, onSent }: IdentityWizardProps) {
                                 description={T.consentimientoDetalle}
                                 checked={consent}
                                 onChange={(e) => {
-                                    setConsent(e.currentTarget.checked);
-                                    if (e.currentTarget.checked) setConsentError(false);
+                                    const on = e.currentTarget.checked;
+                                    setConsent(on);
+                                    if (on && consentError) {
+                                        // El error se va y el input se monta de nuevo: el foco lo sigue.
+                                        setConsentError(false);
+                                        setFocusConsent((n) => n + 1);
+                                    }
                                 }}
                                 error={consentError ? T.consentimientoError : undefined}
                             />

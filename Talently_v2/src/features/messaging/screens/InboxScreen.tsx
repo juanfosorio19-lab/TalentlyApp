@@ -55,7 +55,7 @@ export function InboxScreen() {
     const filters = inboxFilters(list, audience);
     const filter = selectedFilter(filters, filters ? params.get(filters.param) : null);
     const visible = list.filter((r) => matchesFilter(r, filters, filter));
-    const emptyFilter = filteredEmpty(filters, filter);
+    const emptyFilter = filteredEmpty(filters, filter, viewer.seeksWork);
 
     const setFilter = (next: string) => {
         if (!filters) return;
@@ -75,11 +75,7 @@ export function InboxScreen() {
 
     return (
         <>
-            <AppBar
-                title={copy.inbox.title}
-                scrolled={scrolled}
-                actions={<NotificationsButton viewerId={viewerId} recienRegistrado={recienRegistrado} />}
-            />
+            <AppBar title={copy.inbox.title} scrolled={scrolled} actions={<NotificationsButton />} />
             <main className="tl-app-screen__body" data-screen-id={screenId}>
                 <div className="tl-app-screen__content msg-content">
                     {rows.length === 0 ? (

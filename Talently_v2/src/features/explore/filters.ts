@@ -8,6 +8,7 @@
 // organizaciones verificadas» según `filtrosActivos` de la demo, la vista que
 // trae la demo y ningún chip elegido.
 import type { ExploreType } from '../../app/paths';
+import type { AvailabilityBand } from '../../ui/AvailabilityGrid';
 
 export type Segment = Extract<ExploreType, 'empleo' | 'turno' | 'personas'>;
 export type ExploreVista = 'deck' | 'lista';
@@ -65,16 +66,50 @@ export function withParams(params: URLSearchParams, edit: (next: URLSearchParams
     return next;
 }
 
+/** Monto mínimo (CLP, entero positivo); cualquier otra cosa = sin mínimo. */
+function readMoney(params: URLSearchParams, name: string): number | null {
+    const raw = params.get(name);
+    if (raw === null || !/^\d{1,10}$/.test(raw)) return null;
+    const n = Number(raw);
+    return n > 0 ? n : null;
+}
+
+function writeMoney(params: URLSearchParams, name: string, value: number | null): void {
+    if (value === null || value <= 0) params.delete(name);
+    else params.set(name, String(value));
+}
+
 // ─── Vista (deck o lista) ───────────────────────────────────────────────────
+
+/**
+ * `vista=lista` sin prefijo: así llega desde otras pantallas (ONB-99,
+ * «Ver empleos en lista»). Vale para el segmento de `tipo` mientras
+ * paths.explorar no arme `empleo.vista` (pedido en «requests»).
+ */
+const VISTA_ALIAS = 'vista';
+
+const isVista = (raw: string | null): raw is ExploreVista => raw === 'deck' || raw === 'lista';
 
 export function readVista(params: URLSearchParams, segment: Segment, fallback: ExploreVista): ExploreVista {
     const raw = params.get(key(segment, 'vista'));
-    return raw === 'deck' || raw === 'lista' ? raw : fallback;
+    if (isVista(raw)) return raw;
+    const alias = params.get(VISTA_ALIAS);
+    return isVista(alias) && params.get(PARAM_TIPO) === segment ? alias : fallback;
 }
 
 export function writeVista(params: URLSearchParams, segment: Segment, vista: ExploreVista, fallback: ExploreVista): void {
+    params.delete(VISTA_ALIAS);
     if (vista === fallback) params.delete(key(segment, 'vista'));
     else params.set(key(segment, 'vista'), vista);
+}
+
+/** ¿La URL trae `vista=` sin prefijo? Se pasa a la clave del segmento (normalizeVista). */
+export const hasVistaAlias = (params: URLSearchParams) => params.has(VISTA_ALIAS);
+
+/** Deja la vista del alias en su clave con prefijo (o la quita si es la de partida) y borra el alias. */
+export function normalizeVista(params: URLSearchParams, segment: Segment, fallback: ExploreVista | null): void {
+    if (fallback !== null) writeVista(params, segment, readVista(params, segment, fallback), fallback);
+    params.delete(VISTA_ALIAS);
 }
 
 // ─── Catálogos de los filtros (EXP-06) ──────────────────────────────────────
@@ -86,12 +121,18 @@ export const DISTANCIAS = [5, 10, 20] as const;
 export const FECHAS = ['Hoy', 'Mañana', 'Este fin de semana', 'Más adelante'] as const;
 /** Nota mínima de Personas sugeridas. */
 export const NOTAS = [4.5, 4.8] as const;
+/** Franjas del diccionario (`time_band`, spec §4.5), en su orden: Mañana 07–13 · Tarde 13–19 · Noche 19–01 · Madrugada 01–07. */
+export const FRANJAS = ['manana', 'tarde', 'noche', 'madrugada'] as const satisfies readonly AvailabilityBand[];
+/** Unidades de la tarifa mínima de un turno. */
+export const TARIFA_UNIDADES = ['turno', 'hora'] as const;
 
 export type Jornada = (typeof JORNADAS)[number];
 export type Contrato = (typeof CONTRATOS)[number];
 export type Distancia = (typeof DISTANCIAS)[number];
 export type Fecha = (typeof FECHAS)[number];
 export type Nota = (typeof NOTAS)[number];
+export type Franja = (typeof FRANJAS)[number];
+export type TarifaUnidad = (typeof TARIFA_UNIDADES)[number];
 
 /** La distancia de partida: 20 km si la demo trae al menos un filtro activo. */
 const kmDePartida = (activos: number): Distancia | null => (activos >= 1 ? 20 : null);
@@ -104,16 +145,19 @@ export interface EmpleoFiltros {
     jornadas: Jornada[];
     contratos: Contrato[];
     distancia: Distancia | null;
+    /** Sueldo líquido mínimo al mes; null = cualquiera. */
+    sueldoMin: number | null;
     verificadas: boolean;
 }
 
-export const EMPLEO_SIN_FILTROS: EmpleoFiltros = { jornadas: [], contratos: [], distancia: null, verificadas: false };
+export const EMPLEO_SIN_FILTROS: EmpleoFiltros = { jornadas: [], contratos: [], distancia: null, sueldoMin: null, verificadas: false };
 
 export function readEmpleoFiltros(params: URLSearchParams, activos: number): EmpleoFiltros {
     return {
         jornadas: readList(params, key('empleo', 'jornada'), JORNADAS),
         contratos: readList(params, key('empleo', 'contrato'), CONTRATOS),
         distancia: readKm(params, key('empleo', 'km'), kmDePartida(activos)),
+        sueldoMin: readMoney(params, key('empleo', 'min')),
         verificadas: readFlag(params, key('empleo', 'verificadas'), verificadasDePartida(activos)),
     };
 }
@@ -122,39 +166,81 @@ export function writeEmpleoFiltros(params: URLSearchParams, f: EmpleoFiltros, ac
     writeList(params, key('empleo', 'jornada'), f.jornadas);
     writeList(params, key('empleo', 'contrato'), f.contratos);
     writeKm(params, key('empleo', 'km'), f.distancia, kmDePartida(activos));
+    writeMoney(params, key('empleo', 'min'), f.sueldoMin);
     writeFlag(params, key('empleo', 'verificadas'), f.verificadas, verificadasDePartida(activos));
 }
 
 export function countEmpleoFiltros(f: EmpleoFiltros): number {
-    return f.jornadas.length + f.contratos.length + (f.distancia !== null ? 1 : 0) + (f.verificadas ? 1 : 0);
+    return (
+        f.jornadas.length +
+        f.contratos.length +
+        (f.distancia !== null ? 1 : 0) +
+        (f.sueldoMin !== null ? 1 : 0) +
+        (f.verificadas ? 1 : 0)
+    );
 }
 
 // ─── EXP-02 · Turnos ────────────────────────────────────────────────────────
 
 export interface TurnoFiltros {
     fechas: Fecha[];
+    franjas: Franja[];
     distancia: Distancia | null;
+    /** Tarifa líquida mínima en `tarifaUnidad`; null = cualquiera. */
+    tarifaMin: number | null;
+    tarifaUnidad: TarifaUnidad;
     verificadas: boolean;
 }
 
-export const TURNO_SIN_FILTROS: TurnoFiltros = { fechas: [], distancia: null, verificadas: false };
+export const TURNO_SIN_FILTROS: TurnoFiltros = {
+    fechas: [],
+    franjas: [],
+    distancia: null,
+    tarifaMin: null,
+    tarifaUnidad: 'turno',
+    verificadas: false,
+};
 
 export function readTurnoFiltros(params: URLSearchParams, activos: number): TurnoFiltros {
     return {
         fechas: readList(params, key('turno', 'fecha'), FECHAS),
+        franjas: readList(params, key('turno', 'franja'), FRANJAS),
         distancia: readKm(params, key('turno', 'km'), kmDePartida(activos)),
+        tarifaMin: readMoney(params, key('turno', 'min')),
+        tarifaUnidad: params.get(key('turno', 'unidad')) === 'hora' ? 'hora' : 'turno',
         verificadas: readFlag(params, key('turno', 'verificadas'), verificadasDePartida(activos)),
     };
 }
 
 export function writeTurnoFiltros(params: URLSearchParams, f: TurnoFiltros, activos: number): void {
     writeList(params, key('turno', 'fecha'), f.fechas);
+    writeList(params, key('turno', 'franja'), f.franjas);
     writeKm(params, key('turno', 'km'), f.distancia, kmDePartida(activos));
+    writeMoney(params, key('turno', 'min'), f.tarifaMin);
+    // La unidad solo importa con un monto: sin él, la de partida (por turno).
+    if (f.tarifaMin !== null && f.tarifaUnidad !== 'turno') params.set(key('turno', 'unidad'), f.tarifaUnidad);
+    else params.delete(key('turno', 'unidad'));
     writeFlag(params, key('turno', 'verificadas'), f.verificadas, verificadasDePartida(activos));
 }
 
 export function countTurnoFiltros(f: TurnoFiltros): number {
-    return f.fechas.length + (f.distancia !== null ? 1 : 0) + (f.verificadas ? 1 : 0);
+    return (
+        f.fechas.length + f.franjas.length + (f.distancia !== null ? 1 : 0) + (f.tarifaMin !== null ? 1 : 0) + (f.verificadas ? 1 : 0)
+    );
+}
+
+/**
+ * Comuna del Chip de EXP-02 (SHT-COMUNA). Sin ella (o la del actor), los
+ * turnos cerca de su comuna; con otra, solo los de esa comuna.
+ */
+export function readComuna(params: URLSearchParams, comunas: readonly string[], home: string): string {
+    const raw = params.get(key('turno', 'comuna'));
+    return raw !== null && comunas.includes(raw) ? raw : home;
+}
+
+export function writeComuna(params: URLSearchParams, comuna: string, home: string): void {
+    if (comuna === home) params.delete(key('turno', 'comuna'));
+    else params.set(key('turno', 'comuna'), comuna);
 }
 
 /** Chips de oficio de EXP-02 («Garzón», «Bodega»…); vacío = «Todos». */

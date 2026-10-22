@@ -60,7 +60,8 @@ describe('bandeja', () => {
         };
         const rows = getConversations('jorge').map((c) => inboxRow(c, c.id === 'conv-jorge-hotel-andino' ? state : EMPTY_STATE));
         const hotel = rows.find((r) => r.conv.id === 'conv-jorge-hotel-andino');
-        expect(hotel).toMatchObject({ newMatch: false, preview: 'Tú: Hola', when: '13:00' });
+        // Lo de esta sesión es lo más nuevo: «ahora», no «13:00» sobre filas que dicen «hace 10 min».
+        expect(hotel).toMatchObject({ newMatch: false, preview: 'Tú: Hola', when: 'ahora' });
         expect(sortRows(rows.filter((r) => !r.newMatch))[0]?.conv.id).toBe('conv-jorge-hotel-andino');
     });
     it('abrirla deja sus no leídos en 0', () => {
@@ -91,7 +92,18 @@ describe('filtros', () => {
         expect(filters?.options.map((o) => o.label)).toEqual(['Todos', 'Empleo', 'Turno']);
         expect(selectedFilter(filters, 'clase')).toBe(ALL);
         expect(rows.filter((r) => matchesFilter(r, filters, 'turno')).map((r) => r.conv.id)).toEqual(['conv-jorge-punto-activo-28nov']);
-        expect(filteredEmpty(filters, 'empleo')?.title).toBe('No tienes conversaciones de empleos');
+        expect(filteredEmpty(filters, 'empleo', true)).toEqual({
+            title: 'No tienes conversaciones de empleos',
+            text: 'Cuando hagas match en un empleo, aquí podrás hablar con quien lo publica.',
+        });
+    });
+    it('a quien solo publica (Carolina) el filtro vacío le habla de quienes postulan', () => {
+        const filters = inboxFilters(rowsOf('carolina'), 'persona');
+        expect(filteredEmpty(filters, 'turno', false)).toEqual({
+            title: 'No tienes conversaciones de turnos',
+            text: 'Cuando alguien postule a tus turnos, aquí podrás hablar con esa persona.',
+        });
+        expect(filteredEmpty(filters, 'empleo', false)?.text).toBe('Cuando alguien postule a tus empleos, aquí podrás hablar con esa persona.');
     });
     it('una organización filtra por publicación (spec §5.2), sin «Empleo» ni «Turno»', () => {
         const rows = rowsOf('banqueteria');
@@ -105,7 +117,7 @@ describe('filtros', () => {
         const value = selectedFilter(filters, 'turno-garzones-matrimonio');
         expect(rows.filter((r) => matchesFilter(r, filters, value)).map((r) => r.conv.con.nombre)).toHaveLength(3);
         expect(selectedFilter(filters, 'turno')).toBe(ALL);
-        expect(filteredEmpty(filters, value)).toBeNull();
+        expect(filteredEmpty(filters, value, false)).toBeNull();
     });
     it('con una sola publicación no hay nada que filtrar', () => {
         expect(inboxFilters(rowsOf('carolina'), 'organizacion')).toBeNull();
@@ -142,9 +154,9 @@ describe('certificado (flujo 10)', () => {
         expect(certificateActive(twice)).toBe(true);
         expect(certificatePending(marta, twice)).toBe(false);
     });
-    it('la fila de la bandeja dice «Tú: Certificado de antecedentes» a la hora en que se compartió', () => {
+    it('la fila de la bandeja dice «Tú: Certificado de antecedentes» «ahora»', () => {
         const shared: ConversationState = { ...EMPTY_STATE, touched: 1, entries: [{ kind: 'certificado', id: 'c1', off: false, hora: '13:00' }] };
-        expect(inboxRow(marta, shared)).toMatchObject({ preview: 'Tú: Certificado de antecedentes', when: '13:00' });
+        expect(inboxRow(marta, shared)).toMatchObject({ preview: 'Tú: Certificado de antecedentes', when: 'ahora' });
     });
     it('la fecha de emisión del que ya subió va en la hoja', () => {
         expect(certificateIssued(marta)).toBe('Emitido el 30-11-2026');

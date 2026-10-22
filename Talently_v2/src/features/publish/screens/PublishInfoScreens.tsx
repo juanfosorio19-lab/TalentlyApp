@@ -46,17 +46,15 @@ function InfoScreen({
     );
 }
 
-/** PUBL-02 · Publicar empleo: una organización puede, mientras tanto, publicar un turno. */
+/** PUBL-02 · Publicar empleo (solo organizaciones): mientras tanto, puede publicar un turno. */
 export function EmpleoScreen() {
-    const { actor } = useDemoSession();
-    const turno = canPublish(actor, 'turno');
     return (
         <InfoScreen
             appBar={copy.empleo.appBar}
             icon={IconOffers}
             title={copy.empleo.titulo}
             text={copy.empleo.texto}
-            action={turno ? { label: copy.empleo.accion, to: paths.publicar('turno') } : { label: copy.pronto.inicio, to: paths.inicio() }}
+            action={{ label: copy.empleo.accion, to: paths.publicar('turno') }}
         />
     );
 }
@@ -75,15 +73,21 @@ export function SoonScreen({ tipo }: { tipo: 'clase' | 'servicio' }) {
     );
 }
 
-/** Sin organización ni hogar desde donde publicar. */
-export function NoPublisherScreen() {
-    return (
-        <InfoScreen
-            appBar={copy.sinPerfil.appBar}
-            icon={IconHome}
-            title={copy.sinPerfil.titulo}
-            text={copy.sinPerfil.texto}
-            action={{ label: copy.sinPerfil.accion, to: paths.inicio() }}
-        />
-    );
+/**
+ * Quien abre por enlace un asistente que no le corresponde: una organización
+ * no publica avisos del hogar, un hogar no publica empleos y quien solo
+ * busca trabajo publica desde una organización o un hogar.
+ */
+export function NoPublisherScreen({ tipo }: { tipo: 'empleo' | 'turno' | 'hogar' }) {
+    const { actor } = useDemoSession();
+    if (actor.kind === 'organizacion' && tipo === 'hogar') {
+        const c = copy.soloHogar;
+        return <InfoScreen appBar={c.appBar} icon={IconHome} title={c.titulo} text={c.texto} action={{ label: c.accion, to: paths.publicar('turno') }} />;
+    }
+    if (canPublish(actor, 'hogar') && tipo === 'empleo') {
+        const c = copy.soloOrganizacion;
+        return <InfoScreen appBar={c.appBar} icon={IconOffers} title={c.titulo} text={c.texto} action={{ label: c.accion, to: paths.publicar('hogar') }} />;
+    }
+    const c = copy.sinPerfil;
+    return <InfoScreen appBar={c.appBar} icon={IconHome} title={c.titulo} text={c.texto} action={{ label: c.accion, to: paths.inicio() }} />;
 }

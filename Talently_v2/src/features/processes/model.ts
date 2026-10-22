@@ -27,16 +27,40 @@ import type {
 
 // ─── PRC-01 · Proceso ───────────────────────────────────────────────────────
 
+export type ProcessTarget =
+    | { kind: 'process'; process: DemoProcess }
+    /**
+     * El proceso es de quien mira, pero en esta sesión todavía no postula
+     * (inicio de los flujos 2 y 3, startsWithoutApplication): «Ver publicación».
+     */
+    | { kind: 'not-applied'; publicationId: string }
+    | { kind: 'not-found' };
+
 /**
  * El proceso que abre `/procesos/:engagementId`: el id del proceso o, si
  * llega el de la postulación (ACT-02), el proceso de esa postulación. Solo lo
  * ve quien es parte de él; Jorge recién registrado todavía no tiene ninguno.
+ * Quien postuló lo ve solo si la postulación está en `applications` (las de
+ * esta sesión, useApplications): así PRC-01 dice lo mismo que DET-01, ACT-02,
+ * la Agenda e Inicio.
  */
-export function resolveProcess(engagementId: string, actorId: DemoActorId, recienRegistrado = false): DemoProcess | null {
-    if (recienRegistrado) return null;
+export function resolveProcess(
+    engagementId: string,
+    actorId: DemoActorId,
+    applications: readonly DemoApplication[],
+    recienRegistrado = false,
+): ProcessTarget {
+    if (recienRegistrado) return { kind: 'not-found' };
     const process = getProcess(engagementId) ?? processOfApplication(engagementId);
-    if (!process || process.viewerId !== actorId) return null;
-    return process;
+    if (!process || process.viewerId !== actorId) return { kind: 'not-found' };
+    if (isApplicantView(process) && !hasApplied(process, applications)) {
+        return { kind: 'not-applied', publicationId: process.publicationId };
+    }
+    return { kind: 'process', process };
+}
+
+function hasApplied(process: DemoProcess, applications: readonly DemoApplication[]): boolean {
+    return applications.some((a) => a.processId === process.id || a.publicationId === process.publicationId);
 }
 
 function processOfApplication(applicationId: string): DemoProcess | undefined {
@@ -164,6 +188,57 @@ export function googleCalendarUrl(event: CalendarEvent): string {
     return `https://calendar.google.com/calendar/render?${query.toString()}&dates=${stamp(event.start)}/${stamp(event.end)}`;
 }
 
+// ─── Fin del turno (REV-01) ─────────────────────────────────────────────────
+// Copia local de shiftWindow/hasEnded de TUR-01 (features/activity), que no se
+// puede importar desde otro feature: pedido en «requests» subirlos a
+// src/domain (p. ej. domain/turnos.ts · shiftHasEnded) junto con la hora de la
+// demo. Mientras tanto, misma regla: el turno terminó si su hora de término
+// (al día siguiente si cruza la medianoche) ya pasó.
+
+/** Hora de hoy en la demo: el índice del prototipo F1 dice «jue 10 dic 2026, 13:00» (data.ts solo trae el día). */
+export const DEMO_NOW_TIME = '13:00';
+
+function minutesOfDay(hhmm: string): number | null {
+    const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm.trim());
+    return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+}
+
+/** Un día y una hora locales como minutos (para comparar, sin zona horaria). `day` puede pasarse del mes. */
+function localMinutes(year: number, month: number, day: number, minutes: number): number {
+    return Date.UTC(year, month, day) / 60_000 + minutes;
+}
+
+/** «2026-12-11», «01:00» → minutos, para pasar otro «ahora» a resolveReview (pruebas). */
+export function atLocal(isoDate: string, hhmm: string): number {
+    const [y = 1970, mo = 1, d = 1] = isoDate.split('-').map(Number);
+    return localMinutes(y, mo - 1, d, minutesOfDay(hhmm) ?? 0);
+}
+
+/** Ahora en la demo (jue 10 dic 2026, 13:00), en minutos locales. */
+export function demoNow(): number {
+    const today = demoToday();
+    const m = /(\d{1,2})\s+[a-zé]+/i.exec(DEMO_TODAY);
+    return localMinutes(today.year, today.month, m ? Number(m[1]) : 1, minutesOfDay(DEMO_NOW_TIME) ?? 0);
+}
+
+/**
+ * ¿El bloque del turno ya terminó a la hora `now`? «jue 10 dic · 19:00–00:00»
+ * termina el vie 11 a las 00:00. El año es el de la demo (o el siguiente si
+ * el mes quedó más de medio año atrás, como en TUR-01). Si el día o el
+ * horario no se entienden, no se da por terminado.
+ */
+export function shiftHasEnded(block: DemoShiftBlock, now: number = demoNow()): boolean {
+    const month = monthIndex(block.month);
+    const [startText = '', endText = ''] = block.time.split(/[–-]/);
+    const start = minutesOfDay(startText);
+    const end = minutesOfDay(endText);
+    if (month < 0 || start === null || end === null) return false;
+    const today = demoToday();
+    const year = month < today.month - 6 ? today.year + 1 : today.year;
+    const endsAt = localMinutes(year, month, block.day + (end <= start ? 1 : 0), end);
+    return endsAt <= now;
+}
+
 // ─── REV-01 · Evaluación ────────────────────────────────────────────────────
 
 /** Etiquetas al evaluar a quien publicó el turno (01-super-prompt, REV-01). */
@@ -194,13 +269,15 @@ export type ReviewTarget =
  * `/resena/:engagementId`: el id de una postulación (DemoApplication) o el de
  * una publicación (las notificaciones «Evalúa tu turno del sáb 5 dic»).
  * `applications` son las del actor en esta sesión (useApplications): un turno
- * que canceló ya no se evalúa.
+ * que canceló ya no se evalúa. Solo se evalúa un turno que ya terminó, con la
+ * hora de la demo (`now`), como en TUR-01 («al cerrar el turno», spec §3.2).
  */
 export function resolveReview(
     engagementId: string,
     actor: Pick<DemoActor, 'id'>,
     applications: readonly DemoApplication[],
     recienRegistrado = false,
+    now: number = demoNow(),
 ): ReviewTarget {
     if (recienRegistrado) return { kind: 'not-found' };
     const application = applications.find((a) => a.id === engagementId);
@@ -209,6 +286,7 @@ export function resolveReview(
         if (application.tipo !== 'turno' || application.estado !== 'Confirmado') return { kind: 'not-worked' };
         const block = application.miTurno?.bloque ?? (pub?.tipo === 'turno' ? pub.bloques[0] : undefined);
         if (!block) return { kind: 'not-found' };
+        if (!shiftHasEnded(block, now)) return { kind: 'not-worked' };
         return { kind: 'review', subject: subjectOf(actor.id, application.publicationId, application.autor, block) };
     }
 
@@ -221,11 +299,18 @@ export function resolveReview(
     }
     if (pub.tipo !== 'turno') return { kind: 'not-worked' };
     // Trabajó el turno: lo confirmaron en un bloque (GES-04) o su postulación quedó confirmada.
-    const roster = managed?.cupos?.find((c) => c.confirmados.some((p) => p.personId === actor.id));
+    const rostered = (managed?.cupos ?? [])
+        .filter((c) => c.confirmados.some((p) => p.personId === actor.id))
+        .map((c) => pub.bloques.find((b) => b.id === c.id));
     const confirmed = applications.find((a) => a.publicationId === pub.id && a.estado === 'Confirmado');
-    if (!roster && !confirmed) return { kind: 'not-worked' };
-    const block = pub.bloques.find((b) => b.id === roster?.id) ?? confirmed?.miTurno?.bloque ?? pub.bloques[0];
-    if (!block) return { kind: 'not-found' };
+    if (!rostered.length && !confirmed) return { kind: 'not-worked' };
+    const worked = [...rostered, confirmed ? (confirmed.miTurno?.bloque ?? pub.bloques[0]) : undefined].filter(
+        (b): b is DemoShiftBlock => b !== undefined,
+    );
+    if (!worked.length) return { kind: 'not-found' };
+    // De los bloques que trabajó, el que ya terminó; si ninguno, todavía no se evalúa.
+    const block = worked.find((b) => shiftHasEnded(b, now));
+    if (!block) return { kind: 'not-worked' };
     return { kind: 'review', subject: subjectOf(actor.id, pub.id, pub.autor, block) };
 }
 

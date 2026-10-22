@@ -31,6 +31,13 @@ export const copy = {
             empleo: 'Cuando hagas match en un empleo, aquí podrás hablar con quien lo publica.',
             turno: 'Cuando postules a un turno, aquí podrás hablar con quien lo publica.',
         },
+        /** Quien solo publica (Carolina): le habla a quien recibe postulaciones. */
+        publisherFilteredText: {
+            empleo: 'Cuando alguien postule a tus empleos, aquí podrás hablar con esa persona.',
+            turno: 'Cuando alguien postule a tus turnos, aquí podrás hablar con esa persona.',
+        },
+        /** Fila con actividad de esta sesión: lo más nuevo, en la escala relativa de la bandeja. */
+        justNow: 'ahora',
         filteredAction: 'Ver todas',
     },
 

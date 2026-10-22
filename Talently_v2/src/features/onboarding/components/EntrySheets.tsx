@@ -91,7 +91,7 @@ export function StartSheet({ intenciones, bloques, value, onChange, onStart }: S
                 </Button>
             }
         >
-            <p className="body onb-muted onb-flush">{COPY.empezar.texto}</p>
+            <p className="body onb-muted onb-sheet-text">{COPY.empezar.texto}</p>
             <OptionGroup<Bloque>
                 mode="single"
                 legend={COPY.empezar.titulo}

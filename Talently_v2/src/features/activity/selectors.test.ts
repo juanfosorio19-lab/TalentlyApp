@@ -4,18 +4,22 @@ import { getApplication, getApplications, getNotifications } from '../demo/data'
 import { DEMO_ACTORS } from '../demo/session';
 import { applyTo, cancelShift, getSessionState, keyOf, resetSession, startsWithoutApplication } from '../demo/sessionStore';
 import type { DemoApplication } from '../demo/types';
+import { getReviewsStarted, markReviewStarted, resetReviewReminders } from './reviewReminders';
 import {
     TODAY,
     WEEK_END,
     WEEK_START,
     agendaFor,
+    agendaParamsFix,
     applicationPath,
     eventLabel,
     googleCalendarUrl,
     groupByDay,
+    groupOf,
     hasEnded,
     icsFileName,
     isoFromDayText,
+    metricLine,
     pendingReviewsFor,
     publicationsFor,
     publisherFor,
@@ -24,6 +28,8 @@ import {
     shiftWindow,
     toEventData,
     whenText,
+    type ManagedSession,
+    type ManagedSessionOf,
 } from './selectors';
 
 const NOT_NEW = { recienRegistrado: false };
@@ -39,7 +45,16 @@ function sessionApplications(actorId: keyof typeof DEMO_ACTORS): DemoApplication
         .map((a) => (cancelledShifts.has(a.id) ? { ...a, estado: 'Cancelaste' } : a));
 }
 
-afterEach(() => resetSession());
+afterEach(() => {
+    resetSession();
+    resetReviewReminders();
+});
+
+/** Lo que GES-01 y GES-04 cambiaron en la sesión, por publicación. */
+const sessionOf =
+    (changes: Record<string, ManagedSession>): ManagedSessionOf =>
+    (publicationId) =>
+        changes[publicationId];
 
 describe('fechas de la demo', () => {
     it('hoy es el jue 10 dic 2026 y la semana va de lunes a domingo', () => {
@@ -119,6 +134,35 @@ describe('ACT-01 · Agenda', () => {
         expect(coctel?.target).toEqual({ pantalla: 'cupos', publicationId: 'turno-garzones-coctel-corporativo', bloqueId: 'coctel-jue-10' });
     });
 
+    it('la cobertura y el estado de un turno salen de lo confirmado en la sesión (GES-04)', () => {
+        const before = agendaFor(DEMO_ACTORS.banqueteria, [], NOT_NEW).find((i) => i.id === 'ag-br-matrimonio');
+        expect(before?.where).toBe('5/8 confirmados');
+        expect(before?.status).toBe('Activa');
+        // «Confirmar a mis favoritos (2)» en GES-04: 7/8, igual que GES-04 e INI-02.
+        const confirmed = sessionOf({ 'turno-garzones-matrimonio': { confirmados: new Map([['matrimonio-sab-12', 7]]) } });
+        const after = agendaFor(DEMO_ACTORS.banqueteria, [], NOT_NEW, confirmed).find((i) => i.id === 'ag-br-matrimonio');
+        expect(after?.where).toBe('7/8 confirmados');
+        expect(after?.status).toBe('Activa');
+        const full = sessionOf({ 'turno-garzones-matrimonio': { confirmados: new Map([['matrimonio-sab-12', 8]]) } });
+        expect(agendaFor(DEMO_ACTORS.banqueteria, [], NOT_NEW, full).find((i) => i.id === 'ag-br-matrimonio')?.status).toBe(
+            'Cupos completos',
+        );
+        const paused = sessionOf({ 'turno-garzones-matrimonio': { estado: 'Pausada' } });
+        const item = agendaFor(DEMO_ACTORS.banqueteria, [], NOT_NEW, paused).find((i) => i.id === 'ag-br-matrimonio');
+        expect(item?.status).toBe('Pausada');
+        expect(item?.where).toBe('5/8 confirmados');
+    });
+
+    it('la URL dice el día y la vista que se ven (un ?dia o una ?vista que no aplican se corrigen)', () => {
+        expect(agendaParamsFix('2027-01-01', 'dia', TODAY)).toEqual({ dia: TODAY });
+        expect(agendaParamsFix('hola', null, TODAY)).toEqual({ dia: TODAY });
+        expect(agendaParamsFix(null, 'mes', TODAY)).toEqual({ vista: 'semana' });
+        expect(agendaParamsFix('2027-01-01', 'mes', TODAY)).toEqual({ dia: TODAY, vista: 'semana' });
+        expect(agendaParamsFix('2026-12-12', 'dia', '2026-12-12')).toEqual({});
+        expect(agendaParamsFix(null, 'semana', TODAY)).toEqual({});
+        expect(agendaParamsFix(null, null, TODAY)).toEqual({});
+    });
+
     it('va en orden de fecha y hora, y se agrupa por día', () => {
         const items = agendaFor(DEMO_ACTORS.banqueteria, [], NOT_NEW);
         const keys = items.map((i) => `${i.date} ${i.start}`);
@@ -147,6 +191,31 @@ describe('ACT-03 · Publicaciones', () => {
         expect(publisherFor(DEMO_ACTORS.carolina, carolina)).toBe('Familia en Ñuñoa');
         const org = publicationsFor(DEMO_ACTORS.banqueteria, NOT_NEW);
         expect(publisherFor(DEMO_ACTORS.banqueteria, org)).toBe('Banquetería Rosa SpA');
+    });
+
+    it('una publicación pausada en GES-01 pasa a «Pausadas» con su estado y sus métricas de la sesión', () => {
+        const bartender = publicationsFor(DEMO_ACTORS.banqueteria, NOT_NEW).find((p) => p.id === 'empleo-bartender');
+        if (bartender?.kind !== 'managed') throw new Error('sin Bartender');
+        expect(groupOf(bartender)).toBe('activas');
+        expect(metricLine(bartender.managed)).toBe('5 postulantes · sin revisar');
+
+        const changed = sessionOf({
+            'empleo-bartender': {
+                estado: 'Pausada',
+                metricas: [
+                    { label: 'Vistas', valor: '96' },
+                    { label: 'Postulantes', valor: '5', detalle: '3 nuevos' },
+                ],
+            },
+        });
+        const after = publicationsFor(DEMO_ACTORS.banqueteria, NOT_NEW, changed).find((p) => p.id === 'empleo-bartender');
+        if (after?.kind !== 'managed') throw new Error('sin Bartender');
+        expect(after.managed.estado).toBe('Pausada');
+        expect(groupOf(after)).toBe('pausadas');
+        expect(metricLine(after.managed)).toBe('5 postulantes · 3 nuevos');
+        // Las demás quedan como en los datos.
+        const others = publicationsFor(DEMO_ACTORS.banqueteria, NOT_NEW, changed).filter((p) => p.id !== 'empleo-bartender');
+        expect(others).toEqual(publicationsFor(DEMO_ACTORS.banqueteria, NOT_NEW).filter((p) => p.id !== 'empleo-bartender'));
     });
 });
 
@@ -191,10 +260,20 @@ describe('TUR-01 · Mi turno', () => {
                 id: 'not-matias-evaluar',
                 title: 'Evalúa tu turno del sáb 5 dic',
                 from: 'Banquetería Rosa SpA',
+                publicationId: 'turno-garzones-finde-5dic',
                 target: { pantalla: 'evaluar', publicationId: 'turno-garzones-finde-5dic' },
             },
         ]);
         expect(pendingReviewsFor(getNotifications('matias'), 'matias', 'turno-garzones-finde-5dic')).toEqual([]);
         expect(pendingReviewsFor(getNotifications('jorge'), 'jorge')).toEqual([]);
+    });
+
+    it('después de ir a evaluar desde TUR-01 (REV-01), ya no se pide de nuevo', () => {
+        markReviewStarted('matias', 'turno-garzones-finde-5dic');
+        expect(getReviewsStarted('matias')).toEqual(new Set(['turno-garzones-finde-5dic']));
+        expect(getReviewsStarted('jorge').size).toBe(0);
+        expect(
+            pendingReviewsFor(getNotifications('matias'), 'matias', 'turno-garzones-coctel-corporativo', getReviewsStarted('matias')),
+        ).toEqual([]);
     });
 });

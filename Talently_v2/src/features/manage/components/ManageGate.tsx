@@ -1,7 +1,8 @@
 // Lo que ve quien abre GES-01, GES-02 o GES-04 de una publicación que no
 // existe o que no es suya: un EmptyState honesto. Si puede usar Talently como
-// la organización dueña (SHT-ACTOR), se ofrece el cambio; si no, el detalle
-// público de la publicación.
+// la organización dueña (SHT-ACTOR) y no la está usando ya, se ofrece el
+// cambio; si no, el detalle público de la publicación. Después del cambio, la
+// pantalla que se monta lleva el foco a su título (el botón tocado se va).
 import { AppBar } from '../../../ui/AppBar';
 import { EmptyState } from '../../../ui/EmptyState';
 import { IconLock, IconOffers } from '../../../ui/icons';
@@ -13,6 +14,7 @@ import { getPublication } from '../../demo/data';
 import { DEMO_ACTORS, useDemoSession } from '../../demo/session';
 import type { DemoManagedPublication } from '../../demo/types';
 import { copy } from '../copy';
+import { requestTitleFocus } from '../hooks';
 
 export interface ManageGateProps {
     /** Título del AppBar de la pantalla («Publicación», «Postulantes», «Cupos del turno»). */
@@ -25,7 +27,7 @@ export function ManageGate({ title, managed }: ManageGateProps) {
     const goBack = useGoBack();
     const { open } = useOpenPath();
     const snackbar = useSnackbar();
-    const { switchable, setActor, recienRegistrado } = useDemoSession();
+    const { actor, switchable, setActor, recienRegistrado } = useDemoSession();
 
     let body;
     if (!managed) {
@@ -40,12 +42,14 @@ export function ManageGate({ title, managed }: ManageGateProps) {
     } else {
         const owner = DEMO_ACTORS[managed.ownerId];
         const ownerName = getPublication(managed.publicationId)?.autor.nombre ?? owner.fullName;
-        const canSwitch = !recienRegistrado && switchable.some((a) => a.id === owner.id);
+        // Nunca se ofrece cambiarse a la cuenta que ya se usa (sería un botón fantasma).
+        const canSwitch = !recienRegistrado && owner.id !== actor.id && switchable.some((a) => a.id === owner.id);
         const publication = getPublication(managed.publicationId);
         const action = canSwitch
             ? {
                   label: copy.common.switchTo(owner.fullName),
                   onClick: () => {
+                      requestTitleFocus();
                       setActor(owner.id);
                       snackbar.show({ message: copy.common.switched(owner.fullName), tone: 'success' });
                   },

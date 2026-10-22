@@ -166,6 +166,26 @@ describe('rosterView (GES-04)', () => {
         expect(rosterView(m, roster(m), getManageState(), apps())).toMatchObject({ closed: true, canConfirm: false });
     });
 
+    it('pausada o cerrada no recibe postulaciones (el salto de tiempo no se programa); pausada sí confirma', () => {
+        const m = managed('turno-garzones-finde');
+        expect(rosterView(m, roster(m), getManageState(), apps())).toMatchObject({ accepting: true, paused: false });
+
+        setPublicationStatus(m.publicationId, { estado: 'Pausada' });
+        expect(rosterView(m, roster(m), getManageState(), apps())).toMatchObject({
+            paused: true,
+            accepting: false,
+            canConfirm: true,
+            waiting: true,
+        });
+
+        setPublicationStatus(m.publicationId, { estado: 'Cerrada', motivo: 'Otro motivo' });
+        expect(rosterView(m, roster(m), getManageState(), apps())).toMatchObject({ closed: true, accepting: false, canConfirm: false });
+
+        // El turno que ya pasó tampoco recibe postulaciones.
+        const past = managed('turno-garzones-finde-5dic');
+        expect(rosterView(past, roster(past), getManageState(), apps())).toMatchObject({ past: true, accepting: false });
+    });
+
     it('confirmar nunca pasa de los cupos libres con los favoritos', () => {
         const m = managed('turno-garzones-matrimonio');
         confirmPeople(m.publicationId, 'matrimonio-sab-12', ['nicolas-vargas', 'antonia-reyes']);

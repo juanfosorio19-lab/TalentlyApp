@@ -212,10 +212,13 @@ export function inboxRow(conv: DemoConversation, state: ConversationState): Inbo
         : last.kind === 'texto'
           ? `${last.own ? copy.chat.youPrefix : ''}${last.texto}`
           : `${copy.chat.youPrefix}${last.tarjeta.titulo}`;
+    // Lo hecho en esta sesión es lo más nuevo de la bandeja: «ahora», en la misma
+    // escala relativa que «hace 5 min» (spec §5.2), no la hora del mensaje («13:00»).
+    const fresh = last !== undefined && state.entries.some((e) => e.id === last.id);
     return {
         ...base,
         preview,
-        when: last?.hora ?? conv.cuando,
+        when: fresh ? copy.inbox.justNow : (last?.hora ?? conv.cuando),
         // Con el primer mensaje, el match sale de «Nuevos matches» y pasa a la lista.
         newMatch: false,
     };
@@ -287,10 +290,19 @@ export function matchesFilter(row: InboxRow, filters: InboxFilters | null, value
     return filters.param === 'tipo' ? row.conv.contexto.tipo === value : row.conv.contexto.publicationId === value;
 }
 
-/** Filtro de tipo sin conversaciones: su EmptyState («No tienes conversaciones de turnos»). */
-export function filteredEmpty(filters: InboxFilters | null, value: string): { title: string; text: string } | null {
+/**
+ * Filtro de tipo sin conversaciones: su EmptyState («No tienes conversaciones
+ * de turnos»). A quien busca trabajo le habla de postular; a quien solo
+ * publica (Carolina), de quienes postulan a lo suyo.
+ */
+export function filteredEmpty(
+    filters: InboxFilters | null,
+    value: string,
+    seeksWork: boolean,
+): { title: string; text: string } | null {
     if (filters?.param !== 'tipo' || (value !== 'empleo' && value !== 'turno')) return null;
-    return { title: copy.inbox.filteredTitle[value], text: copy.inbox.filteredText[value] };
+    const text = seeksWork ? copy.inbox.filteredText[value] : copy.inbox.publisherFilteredText[value];
+    return { title: copy.inbox.filteredTitle[value], text };
 }
 
 // ─── Fechas de la demo ──────────────────────────────────────────────────────

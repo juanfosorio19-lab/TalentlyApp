@@ -54,7 +54,8 @@
 /* ONB-T4 · La credencial recibe el foco cuando el botón tocado desaparece. */
 .onb-slot:focus { outline: 0; }
 
-/* Hojas: listas planas cuyas filas llegan al borde de la hoja. */
+/* Hojas: el texto de entrada a 12 de las tarjetas y las listas planas, cuyas filas llegan al borde. */
+.onb-sheet-text { margin: 0 0 var(--space-3); }
 .onb-sheet-list { margin: var(--space-1) calc(-1 * var(--space-4)) 0; }
 
 /* ONB-99 · Contador del encabezado y filas de la sección «Perfil de trabajo». */

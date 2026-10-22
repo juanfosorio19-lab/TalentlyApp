@@ -4,7 +4,7 @@
 // verifica solo al completarse, «Reenviar código (en 0:45)» con cuenta
 // regresiva real y «Cambiar número». Mientras Supabase está pausado no se
 // envía ningún SMS: el código que se escriba se acepta.
-import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { BottomSheet } from '../../../ui/BottomSheet';
 import { Button } from '../../../ui/Button';
 import { CodeInput, formatCountdown, useCountdown } from '../../../ui/CodeInput';
@@ -13,7 +13,7 @@ import { RadioGroup } from '../../../ui/Radio';
 import { FieldFoot, FieldLabel, describedBy, hasFieldError } from '../../../ui/TextField';
 import { copy } from '../copy';
 import { DEMO_LATENCY_MS } from '../mock';
-import { PHONE_DIGITS, groupPhone, nextPhone } from '../phone';
+import { PHONE_DIGITS, caretAfterDigits, digitsBefore, groupPhone, nextPhone } from '../phone';
 import { useLater } from './useLater';
 import '../publications.css';
 
@@ -42,6 +42,18 @@ function PhoneField({
     const helpId = `${id}-h`;
     const errorId = `${id}-e`;
     const isError = hasFieldError(error);
+    // El campo se vuelve a agrupar en cada cambio y React deja el cursor al final: se lleva de vuelta a
+    // después del mismo dígito, así corregir uno en medio no manda lo siguiente al final del número.
+    const caretDigits = useRef<number | null>(null);
+    const placeCaret = () => {
+        const n = caretDigits.current;
+        caretDigits.current = null;
+        const el = inputRef.current;
+        if (n === null || !el || document.activeElement !== el) return;
+        const pos = caretAfterDigits(el.value, n);
+        el.setSelectionRange(pos, pos);
+    };
+    useLayoutEffect(placeCaret);
     return (
         <div className={cx('tl-field', isError && 'is-error')}>
             <FieldLabel htmlFor={id}>{copy.phone.label}</FieldLabel>
@@ -58,7 +70,15 @@ function PhoneField({
                     autoComplete="tel-national"
                     value={groupPhone(value)}
                     // Pegado como venga («+56 9 1234 5678»): quedan los 8 dígitos (phone.ts).
-                    onChange={(e) => onChange(nextPhone(value, e.target.value))}
+                    onChange={(e) => {
+                        const { value: raw, selectionStart } = e.target;
+                        caretDigits.current = digitsBefore(raw, selectionStart);
+                        const next = nextPhone(value, raw);
+                        onChange(next);
+                        // Sin cambio (una letra, un dígito de más) no se vuelve a pintar: React repone el valor
+                        // al terminar el evento y el cursor se ubica después.
+                        if (next === value) queueMicrotask(placeCaret);
+                    }}
                     aria-invalid={isError || undefined}
                     aria-describedby={describedBy(isError ? errorId : helpId)}
                 />
