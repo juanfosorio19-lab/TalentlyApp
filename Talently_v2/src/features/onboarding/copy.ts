@@ -98,7 +98,9 @@ export const COPY = {
     // ONB-02 (04-perfiles-y-onboarding.md §4.2): no está en el prototipo F1.
     empezar: {
         titulo: '¿Con cuál empiezas?',
-        texto: 'Completa uno ahora. Los demás quedan guardados en Inicio para cuando quieras.',
+        // 04 §4.2 dice «Los demás quedan guardados en Inicio para cuando quieras», pero Inicio aún no
+        // muestra los bloques pendientes (pedido en «requests»): mientras, el texto promete solo lo que hay.
+        texto: 'Completa uno ahora. Los demás los puedes agregar después.',
         cta: 'Empezar con este',
         trabajoAmbos: 'Buscar empleo y tomar turnos',
     },
@@ -183,6 +185,8 @@ export const COPY = {
             noDecir: 'Prefiero no decir',
             vestimenta: 'Tengo vestimenta propia',
             unidad: 'Unidad',
+            // El buscador de la hoja, como en MoneyField de src/ui.
+            buscarUnidad: 'Buscar unidad',
         },
         requisitos: {
             titulo: 'Requisitos de tu oficio',

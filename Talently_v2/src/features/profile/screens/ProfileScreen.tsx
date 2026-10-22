@@ -4,6 +4,7 @@
 // engranaje a Configuración) lo pone routes.tsx, el mismo para PRF-01 y PRF-02.
 // El perfil elegido en «Mis perfiles» vive en la URL (`?perfil=hogar`): sigue
 // elegido al volver de una pantalla apilada o de otra pestaña.
+import { useLayoutEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { EmptyState } from '../../../ui/EmptyState';
 import { IconAdd } from '../../../ui/icons';
@@ -18,18 +19,36 @@ import { ProfileTabContent } from '../components/ProfileTabContent';
 import { ProfileTabs } from '../components/ProfileTabs';
 import { resolveTab, visibleLinks } from '../model';
 import { useProfile } from '../useProfile';
+import { useSheetGuard } from '../useSheetGuard';
 import '../profile.css';
 
 export const screenId = 'PRF-01';
 
 export function ProfileScreen() {
-    const { actor } = useDemoSession();
-    const { profile, saveTab } = useProfile();
+    const { actor, switchable } = useDemoSession();
+    const { profile, verificationDetails, saveTab } = useProfile();
     const { open, soon } = useOpenPath();
     const [params, setParams] = useSearchParams();
     const tab = resolveTab(profile.perfiles, params.get('perfil'));
+    useSheetGuard({ canSwitch: switchable.length > 1, tab, verificaciones: profile.asiTeVen.verificaciones.length });
 
-    const chooseTab = (id: DemoProfileTab['id']) =>
+    // RootLayout guarda el scroll de /perfil por ruta y búsqueda: `?perfil=hogar` y `?perfil=trabajo`
+    // tienen cada uno el suyo y ScrollRestoration movía la página al cambiar de chip. Se queda donde
+    // se tocó (como useStillSheet con las hojas; pedido en «requests» que la clave ignore `perfil`).
+    const chipScroll = useRef<number | null>(null);
+    useLayoutEffect(() => {
+        const y = chipScroll.current;
+        if (y === null) return;
+        chipScroll.current = null;
+        // ScrollRestoration corre después en este mismo commit: se corrige antes del próximo cuadro.
+        requestAnimationFrame(() => {
+            if (window.scrollY !== y) window.scrollTo(0, y);
+        });
+    }, [tab?.id]);
+
+    const chooseTab = (id: DemoProfileTab['id']) => {
+        if (id === tab?.id) return;
+        chipScroll.current = window.scrollY;
         setParams(
             (prev) => {
                 const next = new URLSearchParams(prev);
@@ -38,12 +57,13 @@ export function ProfileScreen() {
             },
             { replace: true, preventScrollReset: true },
         );
+    };
 
     return (
         <main className="tl-app-screen__body">
             <div className="tl-app-screen__content prf-content">
                 <Stack gap={4}>
-                    <AsiTeVen actorId={actor.id} asiTeVen={profile.asiTeVen} kind="person" />
+                    <AsiTeVen asiTeVen={profile.asiTeVen} details={verificationDetails} kind="person" />
                     {tab ? (
                         <>
                             <ProfileTabs

@@ -45,7 +45,7 @@ export function SettingsScreen() {
     const navigate = useNavigate();
     const scrolled = useScrolled();
     const { show } = useSnackbar();
-    const { open, linkProps, soon } = useOpenPath();
+    const { canOpen, linkProps, soon } = useOpenPath();
     const { preference } = useTheme();
     const { actor } = useDemoSession();
     // La cuenta es de la persona (auth.users, spec §2.1): con una organización activa, la de quien la administra.
@@ -53,16 +53,27 @@ export function SettingsScreen() {
     const appearance = useSheet('apariencia');
     const logout = useSheet('cerrar-sesion');
 
-    // Flujo 8: AUTH-01 Bienvenida, sin dejar atrás las pantallas de la sesión (el atrás no vuelve a ellas).
+    // Flujo 8: AUTH-01 Bienvenida, sin dejar las pantallas de la sesión en el historial: ni atrás (se
+    // vuelve a la primera entrada y se reemplaza) ni adelante (un push las descarta y se vuelve a ella;
+    // adelante solo queda otra AUTH-01). Pedido en «requests» como `leaveSession` en src/app/navigation.
     const confirmLogout = () => {
-        const toWelcome = () => open(paths.bienvenida(), { replace: true });
-        const depth = historyDepth();
-        if (depth === 0) {
-            toWelcome();
+        const welcome = paths.bienvenida();
+        if (!canOpen(welcome)) {
+            soon();
             return;
         }
-        window.addEventListener('popstate', toWelcome, { once: true });
-        navigate(-depth);
+        const toWelcome = async () => {
+            await navigate(welcome, { replace: true });
+            await navigate(welcome);
+            await navigate(-1);
+        };
+        const depth = historyDepth();
+        if (depth === 0) {
+            void toWelcome();
+            return;
+        }
+        window.addEventListener('popstate', () => void toWelcome(), { once: true });
+        void navigate(-depth);
     };
 
     return (

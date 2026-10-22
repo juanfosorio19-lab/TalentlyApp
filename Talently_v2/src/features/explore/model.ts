@@ -5,7 +5,7 @@ import type { MouseEventHandler } from 'react';
 import { paths } from '../../app/paths';
 import type { AmountFormatOptions } from '../../ui/Amount';
 import { IconAdd, IconBell, IconChat, IconClock, IconOffers, type IconComponent } from '../../ui/icons';
-import type { PublicationCardData, PublicationRequirement, PublicationVerification } from '../../ui/PublicationCard';
+import type { PublicationCardData, PublicationRequirement, PublicationTag, PublicationVerification } from '../../ui/PublicationCard';
 import {
     getApplications,
     getExplore,
@@ -22,7 +22,6 @@ import type {
     DemoEmpleo,
     DemoEmptyState,
     DemoExplore,
-    DemoManagedPublication,
     DemoPerson,
     DemoPublication,
     DemoTurno,
@@ -349,17 +348,32 @@ export function turnoCta(p: DemoTurno, decided: Decided): TurnoCta {
 
 // ─── EXP-05 · Personas sugeridas ────────────────────────────────────────────
 
+/** Dónde está una persona en una publicación propia (GES-04: cupos; GES-02: postulantes). */
+export type MemberKind = 'confirmado' | 'postulado' | 'espera' | 'postulante';
+
+export interface Membership {
+    kind: MemberKind;
+    /** El turno (bloque de GES-04) en que está; sin él, GES-02. */
+    rosterId?: string;
+}
+
 export interface Suggestion {
     person: DemoPerson;
     porQue: string;
     /** «sáb 5 dic»: trabajó con quien publica en un turno ya terminado. */
     trabajoEl?: string;
+    /** La publicación propia con la que calza. */
+    publicationId: string;
+    publicationTitle: string;
+    /** Si ya está en esa publicación (EXP-07 también muestra a quienes postularon). */
+    membership?: Membership;
 }
 
 export type PersonasEstado =
     | { tipo: 'sugeridas'; sugeridas: Suggestion[] }
     | { tipo: 'completo'; total: number }
-    | { tipo: 'postularon'; postulados: number };
+    | { tipo: 'postularon'; postulados: number }
+    | { tipo: 'nadie' };
 
 /**
  * Lo decidido sobre una persona sugerida se guarda en demo/sessionStore
@@ -368,14 +382,44 @@ export type PersonasEstado =
  */
 export const suggestionId = (publicationId: string, personId: string) => `${publicationId}/${personId}`;
 
-/** Quienes ya están en la publicación: confirmados, postulados, lista de espera o postulantes. */
-function inPublication(m: DemoManagedPublication | undefined): Set<string> {
-    const ids = new Set<string>();
-    for (const c of m?.cupos ?? []) {
-        for (const a of [...c.confirmados, ...c.postulados, ...c.listaEspera]) ids.add(a.personId);
+/**
+ * ¿Cuenta una persona que traen los datos? El actor que el prototipo muestra
+ * ANTES de postular (Matías en «Garzones para matrimonio», flujo 2) solo
+ * cuando ya postuló en la sesión: la misma regla que GES-02 y GES-04
+ * (pedido en «requests» un selector compartido en demo/sessionStore).
+ */
+function countsFromData(personId: string, publicationId: string, applications: Applications): boolean {
+    if (!isDemoActor(personId) || !startsWithoutApplication(personId, publicationId)) return true;
+    return applications.has(keyOf(personId, publicationId));
+}
+
+/**
+ * Quienes ya están en la publicación, como los ven GES-02 y GES-04 en esta
+ * sesión: confirmados, postulados y lista de espera de cada turno o
+ * postulantes, más quienes postularon ahora (DET-01) y los datos no traen.
+ */
+export function membersOf(publicationId: string, applications: Applications): Map<string, Membership> {
+    const m = getManagedPublication(publicationId);
+    const out = new Map<string, Membership>();
+    const add = (personId: string, member: Membership) => {
+        if (!out.has(personId)) out.set(personId, member);
+    };
+    const visible = (personId: string) => countsFromData(personId, publicationId, applications);
+    const rosters = m?.cupos ?? [];
+    for (const c of rosters) for (const a of c.confirmados) add(a.personId, { kind: 'confirmado', rosterId: c.id });
+    for (const c of rosters) {
+        for (const a of c.postulados) if (visible(a.personId)) add(a.personId, { kind: 'postulado', rosterId: c.id });
+        for (const a of c.listaEspera) if (visible(a.personId)) add(a.personId, { kind: 'espera', rosterId: c.id });
     }
-    for (const a of m?.postulantes?.personas ?? []) ids.add(a.personId);
-    return ids;
+    for (const a of m?.postulantes?.personas ?? []) if (visible(a.personId)) add(a.personId, { kind: 'postulante' });
+    const firstRoster = rosters[0]?.id;
+    for (const [key, a] of applications) {
+        const [who = '', pub] = key.split(':');
+        if (pub !== publicationId) continue;
+        if (!firstRoster) add(who, { kind: 'postulante' });
+        else add(who, { kind: a.estado === 'En lista de espera' ? 'espera' : 'postulado', rosterId: firstRoster });
+    }
+    return out;
 }
 
 /** Personas que trabajaron con el actor en turnos ya terminados, con la fecha («sáb 5 dic»). */
@@ -409,24 +453,40 @@ export function pickPublication(pubs: readonly DemoPublication[], requested: str
     return pubs.find((p) => p.id === requested) ?? pubs[0];
 }
 
-/** Lo que muestra EXP-05 para una publicación propia. */
-export function personasFor(actor: DemoActor, pub: DemoPublication): PersonasEstado {
+/** Las personas que calzan con el oficio de la publicación (sin quien publica). */
+function candidatesFor(actor: DemoActor, pub: DemoPublication): DemoPerson[] {
+    return (CANDIDATOS_POR_PUBLICACION[pub.id] ?? [])
+        .filter((id) => id !== actor.id && id !== actor.owner)
+        .map((id) => getPerson(id))
+        .filter((p): p is DemoPerson => p !== undefined);
+}
+
+/**
+ * Lo que muestra EXP-05 para una publicación propia. Quienes ya están en
+ * ella y la cifra de «Revisa a las N personas que postularon» salen de la
+ * sesión (membersOf), así que dicen lo mismo que GES-02 y GES-04.
+ */
+export function personasFor(actor: DemoActor, pub: DemoPublication, applications: Applications): PersonasEstado {
     const m = getManagedPublication(pub.id);
     const cupos = m?.cupos ?? [];
     const total = cupos.reduce((n, c) => n + c.total, 0);
-    const confirmados = cupos.reduce((n, c) => n + c.confirmados.length, 0);
+    const members = membersOf(pub.id, applications);
+    const confirmados = [...members.values()].filter((x) => x.kind === 'confirmado').length;
     if (cupos.length > 0 && confirmados >= total) return { tipo: 'completo', total };
 
-    const taken = inPublication(m);
     const worked = workedWith(actor);
     const comuna = comunaOf(pub.lugar);
-    const sugeridas = (CANDIDATOS_POR_PUBLICACION[pub.id] ?? [])
-        .filter((id) => !taken.has(id) && id !== actor.id && id !== actor.owner)
-        .map((id) => getPerson(id))
-        .filter((p): p is DemoPerson => p !== undefined)
-        .map((person) => {
+    const sugeridas = candidatesFor(actor, pub)
+        .filter((person) => !members.has(person.id))
+        .map((person): Suggestion => {
             const trabajoEl = worked.get(person.id);
-            return { person, porQue: porQueOf(trabajoEl, person.comuna, comuna), trabajoEl };
+            return {
+                person,
+                porQue: porQueOf(trabajoEl, person.comuna, comuna),
+                trabajoEl,
+                publicationId: pub.id,
+                publicationTitle: pub.titulo,
+            };
         })
         // Primero quienes ya trabajaron contigo; luego, por nota.
         .sort(
@@ -435,18 +495,54 @@ export function personasFor(actor: DemoActor, pub: DemoPublication): PersonasEst
         );
 
     if (sugeridas.length > 0) return { tipo: 'sugeridas', sugeridas };
-    const postulados = cupos.length
-        ? cupos.reduce((n, c) => n + c.postulados.length + c.listaEspera.length, 0)
-        : (m?.postulantes?.total ?? 0);
-    return { tipo: 'postularon', postulados };
+    const postulados = [...members.values()].filter((x) => x.kind !== 'confirmado').length;
+    return postulados > 0 ? { tipo: 'postularon', postulados } : { tipo: 'nadie' };
 }
 
-/** Dónde se revisa a quienes postularon: los cupos del turno (GES-04) o los postulantes (GES-02). */
-export function reviewPathOf(pub: DemoPublication): { path: string; label: string } {
-    const firstBlock = getManagedPublication(pub.id)?.cupos?.[0];
-    return firstBlock
-        ? { path: paths.cuposTurno(pub.id, firstBlock.id), label: copy.personas.verCupos }
-        : { path: paths.postulantes(pub.id), label: copy.personas.verPostulantes };
+/** Pestaña de GES-04 (`?ver=`). */
+type RosterTab = 'confirmados' | 'postulados' | 'espera';
+
+/** GES-04 en una pestaña (pedido en «requests» que paths.cuposTurno acepte `ver`). */
+const rosterPath = (publicationId: string, rosterId: string, ver: RosterTab) =>
+    `${paths.cuposTurno(publicationId, rosterId)}?ver=${ver}`;
+
+export interface ReviewLink {
+    path: string;
+    label: string;
+}
+
+/**
+ * Dónde se revisa a quienes ya están en la publicación: GES-02 (postulantes)
+ * o GES-04. Con `postulados`, el turno y la pestaña donde están quienes
+ * postularon («Revisa a las 4 personas que postularon» → Postulados); con
+ * `confirmados`, los cupos (cupos completos).
+ */
+export function reviewPathOf(pub: DemoPublication, applications: Applications, ver: 'postulados' | 'confirmados'): ReviewLink {
+    const rosters = getManagedPublication(pub.id)?.cupos ?? [];
+    const first = rosters[0];
+    if (!first) return { path: paths.postulantes(pub.id), label: copy.personas.verPostulantes };
+    if (ver === 'confirmados') return { path: rosterPath(pub.id, first.id, 'confirmados'), label: copy.personas.verCupos };
+    const members = [...membersOf(pub.id, applications).values()];
+    const pending = members.find((x) => x.kind === 'postulado') ?? members.find((x) => x.kind === 'espera');
+    const rosterId = pending?.rosterId ?? first.id;
+    return {
+        path: rosterPath(pub.id, rosterId, pending?.kind === 'espera' ? 'espera' : 'postulados'),
+        label: copy.personas.verPostulados,
+    };
+}
+
+/**
+ * Adónde lleva una persona encontrada en EXP-07: si ya está en la
+ * publicación, a GES-02 o a su pestaña de GES-04; si no, a EXP-05 de esa
+ * publicación para invitarla (`?p=`, pedido en «requests» que
+ * paths.explorar lo acepte).
+ */
+export function suggestionPath(s: Suggestion): string {
+    const m = s.membership;
+    if (!m) return `${paths.explorar('personas')}&${PARAM_PUBLICACION}=${encodeURIComponent(s.publicationId)}`;
+    if (!m.rosterId) return paths.postulantes(s.publicationId);
+    const tab: RosterTab = m.kind === 'confirmado' ? 'confirmados' : m.kind === 'espera' ? 'espera' : 'postulados';
+    return rosterPath(s.publicationId, m.rosterId, tab);
 }
 
 export function passesPersona(s: Suggestion, f: PersonaFiltros): boolean {
@@ -455,16 +551,25 @@ export function passesPersona(s: Suggestion, f: PersonaFiltros): boolean {
     return true;
 }
 
-/** Una persona sugerida para PublicationCard (deck o lista): nunca la edad. */
-export function personCard(s: Suggestion, h: CardHandlers, opts: { deck?: boolean } = {}): PublicationCardData {
+/**
+ * Una persona sugerida para PublicationCard (deck o lista): nunca la edad.
+ * Con `publicacion` (EXP-07), el primer dato dice con qué publicación calza
+ * («Para Garzones fin de semana») o a cuál ya postuló.
+ */
+export function personCard(s: Suggestion, h: CardHandlers, opts: { deck?: boolean; publicacion?: boolean } = {}): PublicationCardData {
     const p = s.person;
+    const tags: PublicationTag[] = [];
+    if (opts.publicacion) {
+        tags.push({ label: s.membership ? copy.buscar.postulo(s.publicationTitle) : copy.buscar.para(s.publicationTitle) });
+    }
+    if (p.experiencia) tags.push({ kind: 'experiencia', label: `${p.experiencia} de experiencia` });
     return {
         author: { name: p.nombre, kind: 'person', initials: p.iniciales },
-        verifications: verificationsOf(p.verificaciones, h.onVerify),
+        verifications: verificationsOf(personVerifications(p), h.onVerify),
         title: p.oficio ?? p.nombre,
         href: h.href,
         onOpen: h.onOpen,
-        tags: p.experiencia ? [{ kind: 'experiencia', label: `${p.experiencia} de experiencia` }] : undefined,
+        tags: tags.length > 0 ? tags : undefined,
         rating: { value: p.nota?.value ?? null, count: p.nota?.count ?? 0 },
         reliability: p.confiabilidad === null ? 'Aún sin turnos suficientes' : p.confiabilidad,
         place: p.comuna,
@@ -479,6 +584,35 @@ export function fold(text: string): string {
     return text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
+/**
+ * Un texto ya plegado con sus formas «/a» resueltas: «asesor/a del hogar»
+ * también es «asesor del hogar» y «asesora del hogar»; «camarero/a», «camarero»
+ * y «camarera». Así «asesora» encuentra «Asesor/a del hogar» y al revés.
+ */
+export function genderVariants(text: string): string[] {
+    if (!text.includes('/a')) return [text];
+    const masc = text.replace(/\/a\b/g, '');
+    const fem = text.replace(/o\/a\b/g, 'a').replace(/\/a\b/g, 'a');
+    return [text, masc, fem];
+}
+
+/**
+ * Oficios con su nombre digno para un sinónimo escrito («nana» → «Asesor/a
+ * del hogar», «Cuidador/a infantil»): los Chips de sugerencia bajo el
+ * buscador. El sinónimo nunca se muestra.
+ */
+export function synonymSuggestions(query: string): readonly string[] {
+    return SINONIMOS[fold(query)] ?? [];
+}
+
+/** Lo que se busca: el texto y, si es un sinónimo, sus oficios; con sus formas «/a». */
+export function searchTerms(query: string): string[] {
+    const q = fold(query);
+    if (!q) return [];
+    const terms = [q, ...synonymSuggestions(q).map(fold)].flatMap(genderVariants);
+    return [...new Set(terms)];
+}
+
 export interface SearchResults {
     empleos: DemoEmpleo[];
     turnos: DemoTurno[];
@@ -486,55 +620,90 @@ export interface SearchResults {
     personas: Suggestion[];
 }
 
-const turnosOf = (explore: DemoExplore) =>
-    explore.turnos.dias
-        .flatMap((d) => d.publicaciones)
-        .map((id) => getPublication(id))
-        .filter((p): p is DemoTurno => p?.tipo === 'turno');
+const turnosOf = (explore: DemoExplore) => explore.turnos.dias.flatMap((d) => turnosOfDay(d.publicaciones));
 
 /**
- * Las personas que calzan con las publicaciones propias del actor (también
- * las que ya postularon o están en los cupos), una vez cada una.
+ * Todas las publicaciones activas de empleo y turno de la demo: EXP-07 es
+ * una búsqueda global (spec §5.4). Mientras demo/data no traiga
+ * getPublications() (pedido en «requests»), se juntan las que la demo
+ * muestra en algún lugar a cualquier actor: Explorar, Inicio, postulaciones
+ * y publicaciones propias. Sin repetir.
  */
-function allCandidates(actor: DemoActor, recienRegistrado: boolean): Suggestion[] {
+export function searchablePublications(): (DemoEmpleo | DemoTurno)[] {
+    const ids: string[] = [];
+    for (const actor of Object.values(DEMO_ACTORS)) {
+        const explore = getExplore(actor.id);
+        ids.push(...explore.empleos.publicaciones, ...explore.turnos.dias.flatMap((d) => d.publicaciones));
+        for (const b of getHomeFeed(actor.id).bloques) {
+            if (b.tipo === 'turnos' || b.tipo === 'empleos') ids.push(...b.publicaciones);
+            if (b.tipo === 'tu-aviso') ids.push(b.publicationId);
+        }
+        ids.push(...getApplications(actor.id).map((a) => a.publicationId));
+        ids.push(...ownPublications(actor).map((p) => p.id));
+    }
+    return [...new Set(ids)]
+        .map((id) => getPublication(id))
+        .filter((p): p is DemoEmpleo | DemoTurno => (p?.tipo === 'empleo' || p?.tipo === 'turno') && p.estado === 'Activa');
+}
+
+/** Orden de una persona encontrada: primero quien espera revisión, luego a quién invitar y al final quien ya tiene cupo. */
+const MEMBERSHIP_RANK: Record<MemberKind | 'invitar', number> = { postulado: 0, espera: 0, postulante: 0, invitar: 1, confirmado: 2 };
+const rankOf = (s: Suggestion) => MEMBERSHIP_RANK[s.membership?.kind ?? 'invitar'];
+
+/**
+ * Las personas que calzan con las publicaciones propias del actor, una vez
+ * cada una, con la publicación por la que calzan: la que espera revisión
+ * (ya postuló), si no una a la que invitarla, y si no donde ya tiene cupo.
+ */
+function allCandidates(actor: DemoActor, recienRegistrado: boolean, applications: Applications): Suggestion[] {
     const out = new Map<string, Suggestion>();
     for (const pub of ownPublications(actor, recienRegistrado)) {
         const comuna = comunaOf(pub.lugar);
-        for (const id of CANDIDATOS_POR_PUBLICACION[pub.id] ?? []) {
-            if (out.has(id) || id === actor.id || id === actor.owner) continue;
-            const person = getPerson(id);
-            if (person) out.set(id, { person, porQue: porQueOf(undefined, person.comuna, comuna) });
+        const members = membersOf(pub.id, applications);
+        for (const person of candidatesFor(actor, pub)) {
+            const s: Suggestion = {
+                person,
+                porQue: porQueOf(undefined, person.comuna, comuna),
+                publicationId: pub.id,
+                publicationTitle: pub.titulo,
+                membership: members.get(person.id),
+            };
+            const prev = out.get(person.id);
+            if (!prev || rankOf(s) < rankOf(prev)) out.set(person.id, s);
         }
     }
     return [...out.values()];
 }
 
-/** Lo que el actor puede buscar: lo que ve en sus segmentos de Explorar. */
-export function searchScope(actor: DemoActor, recienRegistrado = false): SearchResults {
-    const segs = segmentsOf(actor, recienRegistrado);
+/**
+ * Lo que el actor puede buscar: todos los empleos y turnos activos (primero
+ * los de su Explorar, que están cerca; sin los propios) y, para quien
+ * contrata, las personas que calzan con sus publicaciones.
+ */
+export function searchScope(actor: DemoActor, recienRegistrado: boolean, applications: Applications): SearchResults {
+    const own = new Set(ownPublications(actor).map((p) => p.id));
     const explore = getExplore(actor.id);
+    const near = new Set([...explore.empleos.publicaciones, ...turnosOf(explore).map((p) => p.id)]);
+    const all = searchablePublications().filter((p) => !own.has(p.id));
+    const sorted = [...all.filter((p) => near.has(p.id)), ...all.filter((p) => !near.has(p.id))];
     return {
-        empleos: segs.includes('empleo') ? empleosOf(explore) : [],
-        turnos: segs.includes('turno') ? turnosOf(explore) : [],
-        personas: segs.includes('personas') ? allCandidates(actor, recienRegistrado) : [],
+        empleos: sorted.filter((p): p is DemoEmpleo => p.tipo === 'empleo'),
+        turnos: sorted.filter((p): p is DemoTurno => p.tipo === 'turno'),
+        personas: allCandidates(actor, recienRegistrado, applications),
     };
 }
 
-export const isEmptyScope = (s: SearchResults) => s.empleos.length + s.turnos.length + s.personas.length === 0;
-
 /** Busca en el título, quien publica, el lugar, los datos clave y el oficio; en personas, nombre, oficio y comuna. */
 export function searchIn(scope: SearchResults, query: string): SearchResults {
-    const q = fold(query);
-    if (!q) return { empleos: [], turnos: [], personas: [] };
-    // «nana» también encuentra «Asesor/a del hogar» (el sinónimo nunca se muestra).
-    const terms = [q, ...(SINONIMOS[q] ?? [])];
+    const terms = searchTerms(query);
+    if (terms.length === 0) return { empleos: [], turnos: [], personas: [] };
     const matches = (text: string) => {
-        const t = fold(text);
-        return terms.some((term) => t.includes(term));
+        const hay = genderVariants(fold(text)).join(' | ');
+        return terms.some((term) => hay.includes(term));
     };
     const hit = (p: DemoPublication) =>
-        matches([p.titulo, p.autor.nombre, p.lugar, OFICIO_DEL_TURNO[p.id] ?? '', ...p.tags.map((t) => t.text)].join(' '));
-    const hitPerson = (s: Suggestion) => matches([s.person.nombre, s.person.oficio ?? '', s.person.comuna].join(' '));
+        matches([p.titulo, p.autor.nombre, p.lugar, OFICIO_DEL_TURNO[p.id] ?? '', ...p.tags.map((t) => t.text)].join(' · '));
+    const hitPerson = (s: Suggestion) => matches([s.person.nombre, s.person.oficio ?? '', s.person.comuna].join(' · '));
     return {
         empleos: scope.empleos.filter(hit),
         turnos: scope.turnos.filter(hit),

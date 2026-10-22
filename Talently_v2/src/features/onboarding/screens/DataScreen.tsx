@@ -39,7 +39,8 @@ export function DataScreen() {
     const { datos, intenciones } = draft;
     const bloque = draft.bloque ?? bloquesDe(intenciones)[0] ?? 'trabajo';
     const conNacimiento = pideNacimiento(intenciones);
-    const { uploading, pick } = usePickPhoto();
+    const fotoRef = useRef<HTMLDivElement>(null);
+    const { uploading, pick } = usePickPhoto(fotoRef);
     const [intentado, setIntentado] = useState(false);
     const fotoLabelId = useId();
     const nombreRef = useRef<HTMLInputElement>(null);
@@ -125,7 +126,8 @@ export function DataScreen() {
                             comunaSheet.show();
                         }}
                     />
-                    <div role="group" aria-labelledby={fotoLabelId}>
+                    {/* Recibe el foco si el botón de cámara del avatar desaparece mientras sube. */}
+                    <div ref={fotoRef} tabIndex={-1} className="onb-slot" role="group" aria-labelledby={fotoLabelId}>
                         <span className="tl-field__label onb-label" id={fotoLabelId}>
                             {C.foto} <span className="tl-field__opt">(opcional)</span>
                         </span>
@@ -138,7 +140,8 @@ export function DataScreen() {
                                 actions={false}
                                 onSelect={pick}
                             />
-                            <UploadActions className="onb-photo__actions" capture="user" onSelect={pick} disabled={uploading} />
+                            {/* Habilitados mientras sube (el spinner del avatar lo avisa): elegir otra la reemplaza. */}
+                            <UploadActions className="onb-photo__actions" capture="user" onSelect={pick} />
                         </div>
                         <FieldFoot helpId={`${fotoLabelId}-h`} errorId={`${fotoLabelId}-e`} help={C.fotoAyuda[bloque]} />
                     </div>

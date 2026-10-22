@@ -59,6 +59,9 @@ export const CANDIDATOS_POR_PUBLICACION: Readonly<Record<string, readonly string
     'aviso-asesor-hogar': ASESORAS,
 };
 
+/** Lo que tarda «Tomar turno» en responder en la demo (igual que DET-01). */
+export const TOMAR_TURNO_MS = 600;
+
 /** SHT-COMUNA: las 52 comunas de la Región Metropolitana (no hay catálogo en src/domain todavía). */
 export const COMUNAS_RM: readonly string[] = [
     'Alhué', 'Buin', 'Calera de Tango', 'Cerrillos', 'Cerro Navia', 'Colina', 'Conchalí', 'Curacaví',

@@ -5,13 +5,15 @@
 // DET-01 con DET-02 abierta); «No me interesa» la saca con Snackbar
 // «Deshacer». Lo decidido vive en demo/sessionStore: una oferta a la que ya
 // postuló (aquí o en DET-01) o que descartó en el detalle no vuelve al deck.
-// Filtros EXP-06 (en la URL): jornada, contrato, distancia y «Solo
-// organizaciones verificadas».
-import { useCallback, useRef, useState } from 'react';
+// En la lista, las que ya postuló o marcó con «Me interesa» lo dicen en su
+// primer dato. Filtros EXP-06 (en la URL): jornada, contrato, distancia,
+// sueldo líquido mínimo y «Solo organizaciones verificadas».
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { paths } from '../../../app/paths';
 import { IconOffers } from '../../../ui/icons';
 import { Stack } from '../../../ui/Layout';
-import { PublicationCard } from '../../../ui/PublicationCard';
+import { MoneyField } from '../../../ui/MoneyField';
+import { PublicationCard, type PublicationCardData } from '../../../ui/PublicationCard';
 import { PublicationCardDeck, type DeckDecision, type PublicationDeckCard } from '../../../ui/PublicationCardDeck';
 import { useSnackbar } from '../../../ui/Snackbar';
 import { Switch } from '../../../ui/Switch';
@@ -39,9 +41,18 @@ import {
     type EmpleoFiltros,
     type ExploreVista,
 } from '../filters';
-import { deckAndList, empleosOf, passesEmpleo, publicationCard } from '../model';
+import { deckAndList, empleosOf, passesEmpleo, publicationCard, type Decided } from '../model';
 
 export const screenId = 'EXP-01';
+
+/** Los empleos de la demo pagan al mes: el sueldo mínimo se compara al mes. */
+const SUELDO_UNIDADES = ['mes'] as const;
+
+/** En la lista, lo ya decidido va primero entre sus datos («Postulaste», «Te interesa»): la compacta muestra 2. */
+function withState(card: PublicationCardData, decided: Decided): PublicationCardData {
+    const label = decided === 'postulado' ? copy.empleos.postulaste : decided === 'si' ? copy.empleos.teInteresa : null;
+    return label ? { ...card, tags: [{ label }, ...(card.tags ?? [])] } : card;
+}
 
 /** DET-01 con la hoja Postular (DET-02) abierta: `?sheet=postular` (spec §5.4). */
 const postularPath = (id: string) => `${paths.publicacion(id)}?sheet=postular`;
@@ -51,7 +62,7 @@ export function EmpleosScreen({ filtersSheet, focusPanel }: SegmentPanelProps) {
     const explore = getExplore(actor.id);
     const [params, update] = useExploreParams();
     const { go, cardLink } = useGo();
-    const { show } = useSnackbar();
+    const { show, hide } = useSnackbar();
     const showVerification = useShowVerification();
     const decided = useDecisions(actor.id, recienRegistrado);
     const deckRef = useRef<HTMLDivElement>(null);
@@ -59,6 +70,8 @@ export function EmpleosScreen({ filtersSheet, focusPanel }: SegmentPanelProps) {
     const [focusEmpty, setFocusEmpty] = useState(false);
     // «Cambiar filtros» del EmptyState: al aplicar, ese botón ya no está y el foco va al panel.
     const focusAfterFilters = useRef(false);
+    // «Deshacer» de la última tarjeta: el EmptyState que tenía el foco se va y la tarjeta vuelve.
+    const focusAfterUndo = useRef(false);
 
     const activos = explore.filtrosActivos;
     const filtros = readEmpleoFiltros(params, activos);
@@ -71,6 +84,17 @@ export function EmpleosScreen({ filtersSheet, focusPanel }: SegmentPanelProps) {
     const hiddenByFilters = all.filter((p) => inView(p) && !passesEmpleo(p, filtros)).length;
     const cardMinHeight = useDeckHeight(deckRef, vista === 'deck' && deck.length > 0);
     const focusOnMount = useCallback((el: HTMLDivElement | null) => el?.focus(), []);
+
+    // Después de deshacer, si el foco quedó en el body (se fue el EmptyState), pasa al ActionPair de la tarjeta que volvió.
+    useEffect(() => {
+        if (!focusAfterUndo.current) return;
+        focusAfterUndo.current = false;
+        const active = document.activeElement;
+        if (active instanceof HTMLElement && active !== document.body && active.isConnected) return;
+        const target = deckRef.current?.querySelector<HTMLButtonElement>('.tl-ap');
+        if (target) target.focus();
+        else focusPanel();
+    });
 
     const setFiltros = (next: EmpleoFiltros) => {
         update((p) => writeEmpleoFiltros(p, next, activos));
@@ -100,6 +124,7 @@ export function EmpleosScreen({ filtersSheet, focusPanel }: SegmentPanelProps) {
                 label: copy.empleos.deshacer,
                 onAction: () => {
                     setFocusEmpty(false);
+                    focusAfterUndo.current = true;
                     undoDecision(actor.id, card.id);
                 },
             },
@@ -109,6 +134,8 @@ export function EmpleosScreen({ filtersSheet, focusPanel }: SegmentPanelProps) {
     /** «Volver a ver las descartadas»: deshace los «No me interesa» de lo que se ve con estos filtros. */
     const restoreDiscarded = () => {
         for (const p of filtered) if (decided(p.id) === 'no') undoDecision(actor.id, p.id);
+        // El «Deshacer» del último «No me interesa» ya no deshace nada.
+        hide();
         focusPanel();
     };
 
@@ -146,7 +173,7 @@ export function EmpleosScreen({ filtersSheet, focusPanel }: SegmentPanelProps) {
         content = (
             <Stack gap={3}>
                 {list.map((p) => (
-                    <PublicationCard key={p.id} variant="compact" {...publicationCard(p, handlers(p))} />
+                    <PublicationCard key={p.id} variant="compact" {...withState(publicationCard(p, handlers(p)), decided(p.id))} />
                 ))}
             </Stack>
         );
@@ -235,6 +262,16 @@ export function EmpleosScreen({ filtersSheet, focusPanel }: SegmentPanelProps) {
                                 options={DISTANCIAS.map((km) => ({ value: km, label: copy.filtros.hasta(km) }))}
                                 value={draft.distancia === null ? [] : [draft.distancia]}
                                 onChange={([km]) => setDraft({ ...draft, distancia: km ?? null })}
+                            />
+                            <MoneyField
+                                label={copy.filtros.sueldoMin}
+                                help={copy.filtros.sueldoMinAyuda}
+                                value={draft.sueldoMin}
+                                onChange={(sueldoMin) => setDraft({ ...draft, sueldoMin })}
+                                unit="mes"
+                                onUnitChange={() => undefined}
+                                units={SUELDO_UNIDADES}
+                                unitSheetTitle={copy.filtros.unidad}
                             />
                             <Switch
                                 label={copy.filtros.soloVerificadas}

@@ -16,8 +16,8 @@ export const onbPaths = {
     listo: () => paths.onboarding('listo'),
     /** Primer paso de un bloque (`/onboarding/:bloque/1`). Solo Trabajo existe en la demostración. */
     bloque: (bloque: Bloque) => paths.onboarding(bloque, 1),
-    /** EXP-01 en lista, como el prototipo (ONB-99 → EXP-01-lista). */
-    empleosEnLista: () => `${paths.explorar('empleo')}&vista=lista`,
+    /** EXP-01 en lista, como el prototipo (ONB-99 → EXP-01-lista). Explorar lee la vista en `empleo.vista`. */
+    empleosEnLista: () => `${paths.explorar('empleo')}&${new URLSearchParams({ 'empleo.vista': 'lista' })}`,
     turnos: () => paths.explorar('turno'),
     inicio: () => paths.inicio(),
     ayuda: () => paths.ayuda(),

@@ -1,37 +1,51 @@
 // EXP-07 · Buscar (/buscar?q=): se abre con la lupa del AppBar de Explorar.
-// Busca en lo que el actor ve en Explorar, sin tildes y con sinónimos
-// («nana» encuentra «Asesor/a del hogar»): empleos y turnos para quien
-// trabaja; personas sugeridas para una organización o un hogar (por nombre,
-// oficio o comuna). Agrupa por tipo: «Empleos (2)», «Turnos (3)», «Personas
-// sugeridas (4)», con PublicationCard compacta que abre DET-01 o el perfil.
+// Búsqueda global (spec §5.4): todos los empleos y turnos activos (primero
+// los de su Explorar) y, para quien contrata, las personas que calzan con sus
+// publicaciones (por nombre, oficio o comuna). Sin tildes y con sinónimos:
+// «nana» encuentra «Asesor/a del hogar» y «Cuidador/a infantil», y bajo el
+// buscador aparecen esos oficios como Chips de sugerencia (el sinónimo nunca
+// se muestra). Agrupa por tipo: «Empleos (2)», «Turnos (3)», «Personas (4)»,
+// con PublicationCard compacta: una publicación abre DET-01; una persona,
+// GES-02 o GES-04 si ya postuló, o EXP-05 de la publicación para invitarla.
 // Lo escrito va en la URL (replace): atrás desde el detalle vuelve con la
-// misma búsqueda. Si el actor no tiene nada que buscar (sin perfiles), el
-// EmptyState de la demo con su acción real. Sin historial (enlace directo o
-// recarga), volver lleva a Explorar, de donde sale la búsqueda.
-import { useMemo, useState } from 'react';
+// misma búsqueda. Rosa sin perfiles ve, bajo el buscador, su EmptyState con
+// «Agregar un perfil». Sin historial (enlace directo o recarga), volver lleva
+// a Explorar, de donde sale la búsqueda.
+import { useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useGoBack } from '../../../app/BackButtonManager';
 import { hasInternalHistory } from '../../../app/navigation/backHandlers';
 import { lastUrlOf } from '../../../app/navigation/tabMemory';
 import { paths } from '../../../app/paths';
 import { AppBar, useScrolled } from '../../../ui/AppBar';
-import { IconAdd, IconOffers, IconSearch } from '../../../ui/icons';
+import { Chip } from '../../../ui/Chip';
+import { IconAdd, IconSearch } from '../../../ui/icons';
 import { ScreenSection, Stack } from '../../../ui/Layout';
 import { PublicationCard } from '../../../ui/PublicationCard';
 import { SearchField } from '../../../ui/SearchField';
 import { getExplore } from '../../demo/data';
 import { useDemoSession } from '../../demo/session';
+import { useSessionState } from '../../demo/sessionStore';
 import type { DemoPublication } from '../../demo/types';
 import { ExploreEmpty, fromDemo } from '../components/ExploreEmpty';
 import { useGo, useSheetKeepsScroll } from '../components/hooks';
 import { useShowVerification, VerificationSheet } from '../components/VerificationSheet';
 import { copy } from '../copy';
-import { isEmptyScope, personCard, publicationCard, searchHints, searchIn, searchScope, segmentsOf, type Suggestion } from '../model';
+import {
+    personCard,
+    publicationCard,
+    searchHints,
+    searchIn,
+    searchScope,
+    suggestionPath,
+    synonymSuggestions,
+    type Suggestion,
+} from '../model';
 import '../explore.css';
 
 export const screenId = 'EXP-07';
 
-type Alcance = 'trabajo' | 'personas' | 'todo';
+type Alcance = 'trabajo' | 'todo';
 
 export function SearchScreen() {
     const goBack = useGoBack();
@@ -40,17 +54,33 @@ export function SearchScreen() {
     const [params, setParams] = useSearchParams();
     const { go, cardLink } = useGo();
     const showVerification = useShowVerification();
+    // Quién ya postuló (personas); también vuelve a pintar las insignias cuando alguien verifica su celular (AUTH-08).
+    const { applications } = useSessionState();
     useSheetKeepsScroll();
 
     // El texto vive en el campo (si esperara a la URL, que cambia en una transición, se perderían letras);
     // la URL lo guarda con replace para volver a la misma búsqueda.
     const [q, setQ] = useState(() => params.get('q') ?? '');
-    const scope = useMemo(() => searchScope(actor, recienRegistrado), [actor, recienRegistrado]);
+    const scope = useMemo(() => searchScope(actor, recienRegistrado, applications), [actor, recienRegistrado, applications]);
     const results = useMemo(() => searchIn(scope, q), [scope, q]);
     const hints = useMemo(() => searchHints(scope), [scope]);
+    const sugerencias = synonymSuggestions(q);
     const total = results.empleos.length + results.turnos.length + results.personas.length;
-    const trabajo = scope.empleos.length + scope.turnos.length > 0;
-    const alcance: Alcance = trabajo && scope.personas.length > 0 ? 'todo' : trabajo ? 'trabajo' : 'personas';
+    const alcance: Alcance = scope.personas.length > 0 ? 'todo' : 'trabajo';
+    // Rosa sin perfiles: busca igual, pero antes de escribir ve cómo empezar.
+    const sinPerfiles = actor.kind === 'persona' && actor.capabilities.length === 0;
+    const vacio = sinPerfiles ? getExplore(actor.id).empleos.vacio : undefined;
+
+    const inputRef = useRef<HTMLInputElement>(null);
+    const write = (next: string) => {
+        setQ(next);
+        setParams(next ? { q: next } : {}, { replace: true, preventScrollReset: true });
+    };
+    /** Chip de sugerencia: escribe el oficio en el campo. El chip se va con el sinónimo: el foco vuelve al campo. */
+    const suggest = (oficio: string) => {
+        write(oficio);
+        inputRef.current?.focus();
+    };
 
     // Sin historial interno, el atrás del AppBar vuelve a Explorar (no a Inicio).
     const onBack = () => (hasInternalHistory() ? goBack() : go(lastUrlOf('explorar')));
@@ -69,64 +99,43 @@ export function SearchScreen() {
         <PublicationCard
             key={s.person.id}
             variant="compact"
-            {...personCard(s, {
-                ...cardLink(paths.perfilPublico(s.person.id, 'trabajo')),
-                onVerify: () => showVerification({ persona: s.person.id }),
-            })}
+            {...personCard(
+                s,
+                { ...cardLink(suggestionPath(s)), onVerify: () => showVerification({ persona: s.person.id }) },
+                { publicacion: true },
+            )}
         />
     );
 
-    let body;
-    if (isEmptyScope(scope)) {
-        // Nada que buscar todavía: qué hacer para tenerlo. Quien contrata, publicar; Rosa sin perfiles, agregar uno.
-        const vacio = getExplore(actor.id).empleos.vacio;
-        if (segmentsOf(actor, recienRegistrado).includes('personas')) {
-            body = (
-                <ExploreEmpty
-                    icon={IconOffers}
-                    title={copy.personas.sinPublicaciones.titulo}
-                    text={copy.personas.sinPublicaciones.texto}
-                    action={{ label: copy.personas.sinPublicaciones.accion, onClick: () => go(paths.inicio()) }}
-                />
-            );
-        } else body = vacio ? <ExploreEmpty {...fromDemo(vacio, IconAdd, actor.id, go)} /> : null;
+    const inicio = copy.buscar.inicio[alcance];
+    let below;
+    if (!q.trim()) {
+        below = vacio ? (
+            <ExploreEmpty {...fromDemo(vacio, IconAdd, actor.id, go)} />
+        ) : (
+            <ExploreEmpty icon={IconSearch} title={inicio.titulo} text={inicio.texto} />
+        );
+    } else if (total === 0) {
+        below = (
+            <ExploreEmpty icon={IconSearch} title={copy.buscar.sinResultados.titulo(q.trim())} text={copy.buscar.sinResultados.texto(hints)} />
+        );
     } else {
-        const inicio = copy.buscar.inicio[alcance];
-        body = (
+        below = (
             <>
-                <SearchField
-                    label={copy.buscar.campo[alcance]}
-                    placeholder={copy.buscar.placeholder[alcance]}
-                    value={q}
-                    autoFocus={!q}
-                    onChange={(e) => {
-                        const next = e.target.value;
-                        setQ(next);
-                        setParams(next ? { q: next } : {}, { replace: true, preventScrollReset: true });
-                    }}
-                />
-                {!q.trim() ? (
-                    <ExploreEmpty icon={IconSearch} title={inicio.titulo} text={inicio.texto} />
-                ) : total === 0 ? (
-                    <ExploreEmpty icon={IconSearch} title={copy.buscar.sinResultados.titulo(q.trim())} text={copy.buscar.sinResultados.texto(hints)} />
-                ) : (
-                    <>
-                        {results.empleos.length > 0 && (
-                            <ScreenSection title={copy.buscar.empleos(results.empleos.length)}>
-                                <Stack gap={3}>{results.empleos.map(card)}</Stack>
-                            </ScreenSection>
-                        )}
-                        {results.turnos.length > 0 && (
-                            <ScreenSection title={copy.buscar.turnos(results.turnos.length)}>
-                                <Stack gap={3}>{results.turnos.map(card)}</Stack>
-                            </ScreenSection>
-                        )}
-                        {results.personas.length > 0 && (
-                            <ScreenSection title={copy.buscar.personas(results.personas.length)}>
-                                <Stack gap={3}>{results.personas.map(personItem)}</Stack>
-                            </ScreenSection>
-                        )}
-                    </>
+                {results.empleos.length > 0 && (
+                    <ScreenSection title={copy.buscar.empleos(results.empleos.length)}>
+                        <Stack gap={3}>{results.empleos.map(card)}</Stack>
+                    </ScreenSection>
+                )}
+                {results.turnos.length > 0 && (
+                    <ScreenSection title={copy.buscar.turnos(results.turnos.length)}>
+                        <Stack gap={3}>{results.turnos.map(card)}</Stack>
+                    </ScreenSection>
+                )}
+                {results.personas.length > 0 && (
+                    <ScreenSection title={copy.buscar.personas(results.personas.length)}>
+                        <Stack gap={3}>{results.personas.map(personItem)}</Stack>
+                    </ScreenSection>
                 )}
             </>
         );
@@ -136,7 +145,28 @@ export function SearchScreen() {
         <div className="tl-app-screen" data-screen-id={screenId}>
             <AppBar variant="standard" title={copy.buscar.titulo} onBack={onBack} scrolled={scrolled} />
             <main className="tl-app-screen__body explore-main">
-                <div className="tl-app-screen__content explore-panel">{body}</div>
+                <div className="tl-app-screen__content explore-panel">
+                    <Stack gap={3}>
+                        <SearchField
+                            ref={inputRef}
+                            label={copy.buscar.campo[alcance]}
+                            placeholder={copy.buscar.placeholder[alcance]}
+                            value={q}
+                            autoFocus={!q}
+                            onChange={(e) => write(e.target.value)}
+                        />
+                        {sugerencias.length > 0 && (
+                            <div className="tl-chipgroup__chips" role="group" aria-label={copy.buscar.sugerencias}>
+                                {sugerencias.map((oficio) => (
+                                    <Chip key={oficio} variant="suggestion" onClick={() => suggest(oficio)}>
+                                        {oficio}
+                                    </Chip>
+                                ))}
+                            </div>
+                        )}
+                    </Stack>
+                    {below}
+                </div>
             </main>
             <VerificationSheet />
         </div>

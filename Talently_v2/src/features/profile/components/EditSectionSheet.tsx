@@ -39,6 +39,7 @@ const DE_EXPERIENCIA = ' de experiencia';
 const SEP = ' · ';
 const ASI_LO_VEN = 'Así lo ven en tus avisos';
 const FAMILIA_EN = 'Familia en ';
+const DATOS_ORGANIZACION = 'Datos de la organización';
 
 /** Errores humanos (sin código). no está en el prototipo. */
 const ERRORS = {
@@ -75,7 +76,9 @@ function kindOf(row: DemoRow, sectionTitle: string): FieldKind {
         case 'Turnos por día':
             return 'franjas';
         case 'Comuna':
-            return 'comuna';
+            // La de la organización sale en «Así te ven», SHT-ACTOR (también el de Inicio) y sus avisos:
+            // mientras eso no lea el perfil de la sesión (pedido en «requests»), no se ofrece cambiarla.
+            return sectionTitle === DATOS_ORGANIZACION ? 'fijo' : 'comuna';
         case 'Tamaño':
             return 'select';
         // Se arma solo con la comuna; quien administra la organización no se cambia aquí.

@@ -2,7 +2,6 @@
 // 1 cosa», sus secciones editables y las hojas que abren, en la URL (spec
 // §5.4): PRF-03 es `?sheet=editar&s=<sección>` y Subir CV, `?sheet=cv`.
 import { useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { useSnackbar } from '../../../ui/Snackbar';
 import { paths } from '../../../app/paths';
 import { useOpenPath } from '../../../app/navigation/useOpenPath';
@@ -36,24 +35,10 @@ export function ProfileTabContent({ tab, comuna, onChange }: ProfileTabContentPr
     if (target && slug !== shownSlug) setShownSlug(slug);
     const shown = target ?? findEditable(tab, shownSlug);
 
-    // Un enlace con una sección que no existe o no se edita aquí: la hoja no se abre y sale de la URL,
-    // con su `s` (hide() de useSheet solo quita `sheet`; pedido en «requests»).
-    const [, setParams] = useSearchParams();
-    const invalidLink = editar.open && !target;
-    useEffect(() => {
-        if (!invalidLink) return;
-        setParams(
-            (prev) => {
-                const next = new URLSearchParams(prev);
-                next.delete('sheet');
-                next.delete('s');
-                return next;
-            },
-            { replace: true, preventScrollReset: true },
-        );
-    }, [invalidLink, setParams]);
+    // Un enlace con una sección que no existe o no se edita aquí no abre la hoja; useSheetGuard
+    // (PRF-01 y PRF-02) la saca de la URL.
 
-    // ─── Subir CV ───────────────────────────────────────────────────────────
+    // ─── Subir CV (solo en el perfil que tiene la sección CV) ────────────────
     const cvIndex = tab.secciones.findIndex((s) => s.titulo === 'CV');
     const cvSection = tab.secciones[cvIndex];
     const currentCv: CvFile | undefined =
@@ -105,7 +90,7 @@ export function ProfileTabContent({ tab, comuna, onChange }: ProfileTabContentPr
 
     const saveCv = (file: CvFile) => {
         const archivo: DemoProfileSection = { tipo: 'archivo', titulo: 'CV', nombre: file.nombre, detalle: file.detalle, editable: true };
-        const secciones = cvIndex >= 0 ? tab.secciones.map((s, i) => (i === cvIndex ? archivo : s)) : [...tab.secciones, archivo];
+        const secciones = tab.secciones.map((s, i) => (i === cvIndex ? archivo : s));
         // Con el CV arriba, «Te falta 1 cosa» ya no aplica.
         const completitud = tab.completitud && isCvAction(tab.completitud.accion) ? undefined : tab.completitud;
         onChange({ ...tab, secciones, completitud });
@@ -139,7 +124,7 @@ export function ProfileTabContent({ tab, comuna, onChange }: ProfileTabContentPr
                     onSave={(next) => saveSection(shown.index, next)}
                 />
             )}
-            <CvSheet open={cv.open} current={currentCv} onClose={cv.hide} onSave={saveCv} />
+            <CvSheet open={cv.open && cvIndex >= 0} current={currentCv} onClose={cv.hide} onSave={saveCv} />
         </>
     );
 }

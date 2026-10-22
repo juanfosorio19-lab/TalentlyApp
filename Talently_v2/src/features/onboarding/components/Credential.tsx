@@ -2,7 +2,7 @@
 // ahora» o «Después» y la hoja para elegir el archivo (`?sheet=credencial`,
 // SHT-SUBIR del prototipo). La subida se simula (Supabase está pausado) y
 // queda «En revisión».
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSheet } from '../../../app/sheets';
 import { Badge } from '../../../ui/Badge';
 import { BottomSheet } from '../../../ui/BottomSheet';
@@ -75,8 +75,14 @@ export function CredentialCard({ credencial, onUpload }: { credencial: Credencia
 /** Elegir el archivo: el contenido se monta al abrir, así un error anterior no queda. */
 function CredentialPicker({ onPicked }: { onPicked: () => void }) {
     const [error, setError] = useState<string | null>(null);
+    const boxRef = useRef<HTMLDivElement>(null);
+    // Con el error, «Elegir archivo» (que tenía el foco) desaparece: el foco pasa a «Elegir otro».
+    useEffect(() => {
+        if (error) boxRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
+    }, [error]);
     return (
         <MediaUploader
+            ref={boxRef}
             variant="document"
             title={C.credencialNombre}
             state={error ? 'error' : 'empty'}

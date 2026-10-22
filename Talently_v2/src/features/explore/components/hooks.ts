@@ -50,6 +50,9 @@ export function useSheetKeepsScroll(): void {
     }, [sheetOpen, location.key]);
 }
 
+/** ¿La ruta es la raíz de una pestaña? (se abre con replace, spec §5.3 regla 1). */
+const toTabRoot = (path: string) => isTabRoot(path.split('?')[0] ?? path);
+
 /**
  * Navegar desde Explorar: una pantalla apilada con push (spec §5.3 regla 2);
  * la raíz de otra pestaña con replace (regla 1). Si la pantalla todavía no
@@ -57,11 +60,11 @@ export function useSheetKeepsScroll(): void {
  */
 export function useGo() {
     const { open, linkProps } = useOpenPath();
-    const go = useCallback((path: string) => open(path, { replace: isTabRoot(path.split('?')[0] ?? path) }), [open]);
+    const go = useCallback((path: string) => open(path, { replace: toTabRoot(path) }), [open]);
     /** href y onClick de una tarjeta (el enlace del título que se estira sobre toda la tarjeta). */
     const cardLink = useCallback(
         (path: string): Pick<CardHandlers, 'href' | 'onOpen'> => {
-            const link = linkProps(path);
+            const link = linkProps(path, { replace: toTabRoot(path) });
             return {
                 // Sin pantalla todavía (perfil público): sin destino real; el toque muestra «Disponible pronto».
                 href: link.href ?? '#',
@@ -90,4 +93,23 @@ export function useDecisions(actorId: DemoActorId, recienRegistrado: boolean): (
         },
         [actorId, recienRegistrado, decided, applications, decisions],
     );
+}
+
+/** Ejecuta algo un rato después (la latencia de la demo); se cancela si la pantalla se desmonta. */
+export function useLater(): (fn: () => void, ms: number) => void {
+    const timers = useRef(new Set<number>());
+    useEffect(() => {
+        const pending = timers.current;
+        return () => {
+            pending.forEach((id) => window.clearTimeout(id));
+            pending.clear();
+        };
+    }, []);
+    return useCallback((fn: () => void, ms: number) => {
+        const id = window.setTimeout(() => {
+            timers.current.delete(id);
+            fn();
+        }, ms);
+        timers.current.add(id);
+    }, []);
 }

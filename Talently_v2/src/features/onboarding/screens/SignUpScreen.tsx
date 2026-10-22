@@ -17,7 +17,7 @@ import { useLater } from '../components/useLater';
 import { useFlow, useFlowEntry, useStepBack } from '../flow';
 import { correoValido, separarNombre } from '../model';
 import { onbPaths } from '../paths';
-import { setCuenta, setDatos, useDraft } from '../store';
+import { getClave, setClave as guardarClave, setCuenta, setDatos, useDraft } from '../store';
 import '../onboarding.css';
 
 export const screenId = 'AUTH-02';
@@ -33,8 +33,9 @@ export function SignUpScreen() {
     const { linkProps } = useOpenPath();
     const later = useLater();
     const { cuenta } = useDraft();
-    // La contraseña no se guarda en el borrador: vive solo en esta pantalla.
-    const [clave, setClave] = useState('');
+    // La contraseña no se guarda en el borrador ni en el teléfono: solo en
+    // memoria, para que siga escrita al volver de Términos o Privacidad.
+    const [clave, setClave] = useState(getClave);
     const [intentado, setIntentado] = useState(false);
     const [creando, setCreando] = useState(false);
     const nombreRef = useRef<HTMLInputElement>(null);
@@ -127,7 +128,10 @@ export function SignUpScreen() {
                 <PasswordField
                     ref={claveRef}
                     value={clave}
-                    onChange={(e) => setClave(e.target.value)}
+                    onChange={(e) => {
+                        setClave(e.target.value);
+                        guardarClave(e.target.value);
+                    }}
                     showMissing={intentado}
                 />
             </Stack>

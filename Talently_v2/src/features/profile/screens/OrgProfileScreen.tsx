@@ -14,21 +14,23 @@ import { ProfileTabContent } from '../components/ProfileTabContent';
 import { COPY } from '../copy';
 import { ORG_EXTRA_LINKS } from '../mock';
 import { useProfile } from '../useProfile';
+import { useSheetGuard } from '../useSheetGuard';
 import '../profile.css';
 
 export const screenId = 'PRF-02';
 
 export function OrgProfileScreen() {
-    const { actor } = useDemoSession();
-    const { profile, saveTab } = useProfile();
+    const { actor, switchable } = useDemoSession();
+    const { profile, verificationDetails, saveTab } = useProfile();
     const { open } = useOpenPath();
     const tab = profile.perfiles[0];
+    useSheetGuard({ canSwitch: switchable.length > 1, tab, verificaciones: profile.asiTeVen.verificaciones.length });
 
     return (
         <main className="tl-app-screen__body">
             <div className="tl-app-screen__content prf-content">
                 <Stack gap={4}>
-                    <AsiTeVen actorId={actor.id} asiTeVen={profile.asiTeVen} kind="org">
+                    <AsiTeVen asiTeVen={profile.asiTeVen} details={verificationDetails} kind="org">
                         {/* PRF-11, lo que ve un tercero. */}
                         <Button variant="ghost" size="sm" icon={IconEye} onClick={() => open(paths.organizacion(actor.id))}>
                             {COPY.perfil.verComoMeVen}

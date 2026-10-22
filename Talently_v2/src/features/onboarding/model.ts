@@ -128,6 +128,8 @@ export interface DatosDraft {
     comuna: string | null;
     /** URL de la foto elegida (object URL), o null. */
     foto: string | null;
+    /** La foto elegida se está subiendo (sigue aunque se cambie de paso). */
+    fotoSubiendo: boolean;
     /** «DD/MM/AAAA» tal como se escribe. */
     nacimiento: string;
     /** Solo los 8 dígitos, sin el «+56 9». */
@@ -203,7 +205,7 @@ export function borradorInicial(): OnboardingDraft {
         cuenta: { nombre: '', correo: '', acepta: false },
         intenciones: [],
         bloque: null,
-        datos: { nombre: 'Jorge', apellido: 'Muñoz', comuna: 'puente-alto', foto: null, nacimiento: '14/05/1985', telefono: '' },
+        datos: { nombre: 'Jorge', apellido: 'Muñoz', comuna: 'puente-alto', foto: null, fotoSubiendo: false, nacimiento: '14/05/1985', telefono: '' },
         trabajo: {
             oficios: [
                 { id: 'guardia-seguridad', experiencia: '5_10' },

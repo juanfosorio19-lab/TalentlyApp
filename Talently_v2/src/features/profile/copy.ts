@@ -72,6 +72,8 @@ export const COPY = {
     verificacion: {
         titulo: (nombre: string) => `Verificación de ${nombre}`,
         nota: 'Nunca mostramos tu RUT, tu fecha de nacimiento ni las fotos de tu cédula.',
+        // La de la organización en VER-01.
+        notaOrganizacion: 'Revisamos el RUT, el giro y el inicio de actividades en el SII, y el dominio del correo.',
     },
     // Hoja de edición de una sección (PRF-03). no está en el prototipo.
     editar: {

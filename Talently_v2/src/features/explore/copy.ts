@@ -33,6 +33,8 @@ export const copy = {
         verLista: 'Ver lista',
         verDeAUna: 'Ver de a una',
         noMeInteresa: (titulo: string) => `No te mostraremos más ${titulo}`,
+        postulaste: 'Postulaste',
+        teInteresa: 'Te interesa',
         deshacer: 'Deshacer',
         deckVacio: {
             titulo: 'Viste todas las ofertas cerca',
@@ -59,10 +61,17 @@ export const copy = {
         comuna: 'Comuna',
         todos: 'Todos',
         tomarTurno: 'Tomar turno',
+        tomando: 'Tomando el turno…',
         listaEspera: 'Unirme a la lista de espera',
+        /** Los mismos avisos que DET-01 al tomar el turno. */
+        tomado: 'Postulaste al turno. Te avisaremos cuando te confirmen',
+        tomadoEspera: 'Te uniste a la lista de espera. Te avisaremos si se libera un cupo',
         verPostulaciones: 'Ver mis postulaciones',
-        comunaPronto: (comuna: string) =>
-            `Por ahora ves turnos cerca de ${comuna}. Cambiar de comuna estará disponible pronto.`,
+        sinTurnosEn: {
+            titulo: (comuna: string) => `No hay turnos en ${comuna}`,
+            texto: 'Por ahora no hay turnos publicados en esa comuna.',
+            accion: (comuna: string) => `Ver turnos cerca de ${comuna}`,
+        },
         buscarComuna: 'Buscar comuna',
         grupoComunas: 'Región Metropolitana · 52 comunas',
         sinComunaTexto: 'Revisa cómo lo escribiste o busca solo el nombre de la comuna.',
@@ -85,6 +94,7 @@ export const copy = {
         descartaste: (nombre: string) => `No te sugeriremos más a ${nombrePila(nombre)}`,
         deshacer: 'Deshacer',
         verPostulantes: 'Ver postulantes',
+        verPostulados: 'Ver postulados',
         verCupos: 'Ver cupos',
         cambiarPublicacion: 'Cambiar de publicación',
         porque: {
@@ -103,6 +113,10 @@ export const copy = {
                 n === 1
                     ? `Revisa a la persona que postuló a ${titulo}.`
                     : `Revisa a las ${n} personas que postularon a ${titulo}.`,
+        },
+        nadie: {
+            titulo: 'Aún no hay personas sugeridas',
+            texto: (titulo: string) => `Por ahora nadie más calza con ${titulo}.`,
         },
         revisasteTodas: {
             titulo: 'Revisaste a todas las personas sugeridas',
@@ -135,6 +149,12 @@ export const copy = {
         jornada: 'Jornada',
         contrato: 'Contrato',
         nota: 'Nota mínima',
+        franja: 'Franja',
+        sueldoMin: 'Sueldo líquido mínimo',
+        sueldoMinAyuda: 'Solo ofertas que pagan esto o más al mes.',
+        tarifaMin: 'Tarifa líquida mínima',
+        tarifaMinAyuda: 'Solo turnos que pagan esto o más.',
+        unidad: 'Unidad',
         soloVerificadas: 'Solo organizaciones verificadas',
         soloVerificadasDesc: 'Revisamos su RUT y sus documentos.',
         yaTrabajaron: 'Solo quienes ya trabajaron contigo',
@@ -153,14 +173,17 @@ export const copy = {
     // EXP-07 · Buscar
     buscar: {
         titulo: 'Buscar',
-        campo: { trabajo: 'Buscar empleos y turnos', personas: 'Buscar personas', todo: 'Buscar empleos, turnos y personas' },
-        placeholder: { trabajo: 'Oficio, organización o comuna', personas: 'Nombre, oficio o comuna', todo: 'Oficio, nombre o comuna' },
+        campo: { trabajo: 'Buscar empleos y turnos', todo: 'Buscar empleos, turnos y personas' },
+        placeholder: { trabajo: 'Oficio, organización o comuna', todo: 'Oficio, nombre o comuna' },
         empleos: (n: number) => `Empleos (${n})`,
         turnos: (n: number) => `Turnos (${n})`,
         personas: (n: number) => `Personas (${n})`,
+        /** Primer dato de una persona encontrada: con qué publicación propia calza. */
+        para: (titulo: string) => `Para ${titulo}`,
+        postulo: (titulo: string) => `Postuló a ${titulo}`,
+        sugerencias: 'Oficios sugeridos',
         inicio: {
             trabajo: { titulo: 'Busca empleos y turnos', texto: 'Escribe un oficio, una organización o una comuna.' },
-            personas: { titulo: 'Busca personas para tus publicaciones', texto: 'Escribe un nombre, un oficio o una comuna.' },
             todo: { titulo: 'Busca empleos, turnos y personas', texto: 'Escribe un oficio, un nombre o una comuna.' },
         },
         sinResultados: {

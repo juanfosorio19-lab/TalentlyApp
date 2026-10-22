@@ -6,20 +6,21 @@ import { Avatar } from '../../../ui/Avatar';
 import { Stack } from '../../../ui/Layout';
 import { RatingStars } from '../../../ui/RatingStars';
 import { VerificationBadge } from '../../../ui/VerificationBadge';
-import type { DemoActorId, DemoProfile } from '../../demo/types';
+import type { DemoProfile } from '../../demo/types';
 import { COPY } from '../copy';
 import { useStillSheet } from '../useStillSheet';
 import { VerificationSheet } from './VerificationSheet';
 
 export interface AsiTeVenProps {
-    actorId: DemoActorId;
     asiTeVen: DemoProfile['asiTeVen'];
+    /** Hoja «Verificación de …»: insignia → cómo y cuándo se verificó (useProfile). */
+    details: Readonly<Record<string, string>>;
     kind: 'person' | 'org';
     /** Bajo las notas (PRF-02: «Ver cómo me ven», que en la persona va junto a «Mis perfiles»). */
     children?: ReactNode;
 }
 
-export function AsiTeVen({ actorId, asiTeVen, kind, children }: AsiTeVenProps) {
+export function AsiTeVen({ asiTeVen, details, kind, children }: AsiTeVenProps) {
     const sheet = useStillSheet('verificacion');
     const { nombre, iniciales, comuna, verificaciones, notas } = asiTeVen;
     const verified = verificaciones.some((v) => v.status === 'verified');
@@ -54,8 +55,9 @@ export function AsiTeVen({ actorId, asiTeVen, kind, children }: AsiTeVenProps) {
                 // Sin insignias (un enlace viejo con la hoja abierta) no hay nada que contar.
                 open={sheet.open && verificaciones.length > 0}
                 onClose={sheet.hide}
-                actorId={actorId}
+                kind={kind}
                 nombre={nombre}
+                details={details}
                 verificaciones={verificaciones}
             />
         </Stack>

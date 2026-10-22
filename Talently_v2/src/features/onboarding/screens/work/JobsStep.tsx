@@ -1,6 +1,7 @@
 // ONB-T1 · ¿En qué quieres trabajar? (/onboarding/trabajo/1). Hasta 3
 // oficios (SHT-OFICIO, `?sheet=oficio`), uno principal y los años de
-// experiencia de cada uno.
+// experiencia de cada uno (`?sheet=experiencia&oficio=<id>`: la hoja vive en
+// la URL y el atrás la cierra sin salir del paso, spec §5.3 regla 3).
 import { useEffect, useId, useRef, useState } from 'react';
 import { useSheet } from '../../../../app/sheets';
 import { Badge } from '../../../../ui/Badge';
@@ -12,6 +13,7 @@ import { IconAdd, IconAlert, IconTrash } from '../../../../ui/icons';
 import { IconButton } from '../../../../ui/IconButton';
 import { Stack } from '../../../../ui/Layout';
 import { Select } from '../../../../ui/Select';
+import { SheetPicker } from '../../../../ui/SheetPicker';
 import { StepLayout } from '../../../../ui/StepLayout';
 import { EXPERIENCIAS, getOficio, type Experiencia } from '../../catalog';
 import { COPY } from '../../copy';
@@ -27,11 +29,17 @@ export const screenId = 'ONB-T1';
 const C = COPY.trabajo.oficios;
 
 const experienceId = (oficioId: string) => `onb-exp-${oficioId}`;
+const nameId = (oficioId: string) => `onb-name-${oficioId}`;
+
+/** La hoja «Años de experiencia» (Select de cada oficio), con el oficio en `oficio`. */
+const EXPERIENCIA_SHEET = 'experiencia';
 
 export function JobsStep() {
     const { draft, layout, next } = useWorkStep(1);
     const { trabajo } = draft;
     const oficioSheet = useSheet(OFICIO_SHEET);
+    const expSheet = useSheet(EXPERIENCIA_SHEET);
+    const expOficio = trabajo.oficios.find((o) => o.id === expSheet.param('oficio')) ?? null;
     const labelId = useId();
     const addRef = useRef<HTMLButtonElement>(null);
     const [intentado, setIntentado] = useState(false);
@@ -47,6 +55,12 @@ export function JobsStep() {
         else if (target === 'title') document.querySelector<HTMLElement>('.tl-steplayout__title')?.focus();
         else document.getElementById(experienceId(target.experiencia))?.focus();
     }, [oficioSheet.open, trabajo.oficios, trabajo.principal]);
+
+    // Un `?sheet=experiencia` de un oficio que ya no está (enlace viejo, adelante del navegador) se quita.
+    const { open: expOpen, hide: hideExp } = expSheet;
+    useEffect(() => {
+        if (expOpen && !expOficio) hideExp();
+    }, [expOpen, expOficio, hideExp]);
 
     const sinOficios = trabajo.oficios.length === 0;
     const errorOficios = intentado && sinOficios ? C.errOficios : undefined;
@@ -95,7 +109,9 @@ export function JobsStep() {
                                             </span>
                                             <Stack gap={2} align="start" className="onb-grow">
                                                 <div>
-                                                    <p className="button-lg onb-flush">{oficio.name}</p>
+                                                    <p id={nameId(elegido.id)} className="button-lg onb-flush">
+                                                        {oficio.name}
+                                                    </p>
                                                     <p className="body onb-muted onb-flush">{categoryName(oficio)}</p>
                                                 </div>
                                                 {principal ? (
@@ -105,7 +121,7 @@ export function JobsStep() {
                                                         variant="ghost"
                                                         size="sm"
                                                         className="onb-pull"
-                                                        aria-describedby={experienceId(elegido.id)}
+                                                        aria-describedby={nameId(elegido.id)}
                                                         onClick={() => {
                                                             pendingFocus.current = 'title';
                                                             setTrabajo({ principal: elegido.id });
@@ -134,6 +150,11 @@ export function JobsStep() {
                                             onChange={(v) => setExperiencia(elegido.id, v)}
                                             searchable={false}
                                             error={intentado && elegido.experiencia === null ? C.errExperiencia : undefined}
+                                            // La hoja vive en la URL (`?sheet=experiencia`): la propia del Select no se abre.
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                expSheet.show({ oficio: elegido.id });
+                                            }}
                                         />
                                     </Stack>
                                 </Card>
@@ -159,6 +180,17 @@ export function JobsStep() {
                     </div>
                 </div>
             </StepLayout>
+            <SheetPicker<Experiencia>
+                open={expSheet.open && expOficio !== null}
+                onClose={expSheet.hide}
+                title={C.experiencia}
+                options={EXPERIENCIAS}
+                value={expOficio?.experiencia ?? null}
+                onChange={(v) => {
+                    if (expOficio) setExperiencia(expOficio.id, v);
+                }}
+                searchable={false}
+            />
             <OficioSheet
                 options={oficiosDisponibles(trabajo)}
                 onChange={(id) => {

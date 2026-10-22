@@ -4,10 +4,11 @@
 // `?sheet=publicacion`) y vista lista o deck con el mismo ActionPair. «Me
 // interesa» invita a postular (Snackbar «Invitaste a Javiera a postular ·
 // Deshacer»); «No me interesa» la saca de las sugeridas. Lo decidido vive en
-// demo/sessionStore. Nunca la edad. Si no hay a quién sugerir, un EmptyState
-// con una acción real: cupos completos, ya postularon todas, revisaste a
-// todas o no hay publicaciones activas. Filtros EXP-06: nota mínima y «Solo
-// quienes ya trabajaron contigo».
+// demo/sessionStore. Nunca la edad. Quienes ya están en la publicación y la
+// cifra de postulados salen de la sesión (como en GES-02 y GES-04). Si no hay
+// a quién sugerir, un EmptyState con una acción real: cupos completos, ya
+// postularon todas, revisaste a todas o no hay publicaciones activas.
+// Filtros EXP-06: nota mínima y «Solo quienes ya trabajaron contigo».
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSheet } from '../../../app/sheets';
 import { paths } from '../../../app/paths';
@@ -21,7 +22,7 @@ import { useSnackbar } from '../../../ui/Snackbar';
 import { Switch } from '../../../ui/Switch';
 import { getManagedPublication } from '../../demo/data';
 import { useDemoSession } from '../../demo/session';
-import { decide, undoDecision, useDecided } from '../../demo/sessionStore';
+import { decide, undoDecision, useDecided, useSessionState } from '../../demo/sessionStore';
 import type { DemoPublication } from '../../demo/types';
 import { ExploreBar } from '../components/ExploreBar';
 import { ExploreEmpty, type ExploreEmptyProps } from '../components/ExploreEmpty';
@@ -95,18 +96,22 @@ export function PersonasScreen({ filtersSheet, focusPanel }: SegmentPanelProps) 
     const showVerification = useShowVerification();
     const pubSheet = useSheet(PUBLICATION_SHEET);
     const decided = useDecided(actor.id);
+    // También vuelve a pintar las insignias cuando alguien verifica su celular (AUTH-08).
+    const { applications } = useSessionState();
     const deckRef = useRef<HTMLDivElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
     const [focusEmpty, setFocusEmpty] = useState(false);
     // Al invitar desde la lista la tarjeta sale: el foco pasa al CTA de la que queda en su lugar.
     const focusNext = useRef<string | null>(null);
+    // «Deshacer»: la persona vuelve y el EmptyState que tenía el foco se va (deck: su ActionPair; lista: su CTA).
+    const focusAfterUndo = useRef<{ from: 'deck' | 'lista'; personId: string } | null>(null);
 
     const pubs = useMemo(() => ownPublications(actor, recienRegistrado), [actor, recienRegistrado]);
     const pub = pickPublication(pubs, params.get(PARAM_PUBLICACION));
     const vista = readVista(params, 'personas', 'lista');
     const filtros = readPersonaFiltros(params);
 
-    const estado = useMemo(() => (pub ? personasFor(actor, pub) : null), [actor, pub]);
+    const estado = useMemo(() => (pub ? personasFor(actor, pub, applications) : null), [actor, pub, applications]);
     const sugeridas = estado?.tipo === 'sugeridas' ? estado.sugeridas : [];
     const decisionOf = (s: Suggestion) => (pub ? decided(suggestionId(pub.id, s.person.id)) : undefined);
     const filtered = sugeridas.filter((s) => passesPersona(s, filtros));
@@ -115,11 +120,25 @@ export function PersonasScreen({ filtersSheet, focusPanel }: SegmentPanelProps) 
     const cardMinHeight = useDeckHeight(deckRef, vista === 'deck' && pending.length > 0);
     const focusOnMount = useCallback((el: HTMLDivElement | null) => el?.focus(), []);
 
+    const ctaOf = (personId: string) =>
+        listRef.current?.querySelector<HTMLElement>(`[data-sugerida="${CSS.escape(personId)}"] .tl-pub__cta button`);
+
     useEffect(() => {
         const id = focusNext.current;
         if (!id) return;
         focusNext.current = null;
-        listRef.current?.querySelector<HTMLElement>(`[data-sugerida="${CSS.escape(id)}"] .tl-pub__cta button`)?.focus();
+        ctaOf(id)?.focus();
+    });
+
+    useEffect(() => {
+        const undo = focusAfterUndo.current;
+        if (!undo) return;
+        focusAfterUndo.current = null;
+        const active = document.activeElement;
+        if (active instanceof HTMLElement && active !== document.body && active.isConnected) return;
+        const target = undo.from === 'deck' ? deckRef.current?.querySelector<HTMLElement>('.tl-ap') : ctaOf(undo.personId);
+        if (target) target.focus();
+        else focusPanel();
     });
 
     const setFiltros = useCallback((next: PersonaFiltros) => update((p) => writePersonaFiltros(p, next)), [update]);
@@ -139,6 +158,7 @@ export function PersonasScreen({ filtersSheet, focusPanel }: SegmentPanelProps) 
                 label: copy.personas.deshacer,
                 onAction: () => {
                     setFocusEmpty(false);
+                    focusAfterUndo.current = { from, personId: s.person.id };
                     undoDecision(actor.id, id);
                 },
             },
@@ -152,10 +172,10 @@ export function PersonasScreen({ filtersSheet, focusPanel }: SegmentPanelProps) 
             { deck },
         );
 
-    /** Otra publicación (si hay) o revisar a quienes postularon a esta. */
-    const nextStep = (p: DemoPublication): ExploreEmptyProps['action'] => {
+    /** Otra publicación (si hay) o revisar a quienes ya están en esta (sus cupos o quienes postularon). */
+    const nextStep = (p: DemoPublication, ver: 'postulados' | 'confirmados'): ExploreEmptyProps['action'] => {
         if (pubs.length > 1) return { label: copy.personas.cambiarPublicacion, onClick: () => pubSheet.show() };
-        const review = reviewPathOf(p);
+        const review = reviewPathOf(p, applications, ver);
         return { label: review.label, onClick: () => go(review.path) };
     };
 
@@ -173,10 +193,17 @@ export function PersonasScreen({ filtersSheet, focusPanel }: SegmentPanelProps) 
             icon: IconPeople,
             title: copy.personas.cuposCompletos.titulo,
             text: copy.personas.cuposCompletos.texto(pub.titulo, estado.total),
-            action: nextStep(pub),
+            action: nextStep(pub, 'confirmados'),
+        };
+    } else if (estado.tipo === 'nadie') {
+        empty = {
+            icon: IconPeople,
+            title: copy.personas.nadie.titulo,
+            text: copy.personas.nadie.texto(pub.titulo),
+            action: pubs.length > 1 ? nextStep(pub, 'postulados') : undefined,
         };
     } else if (estado.tipo === 'postularon') {
-        const review = reviewPathOf(pub);
+        const review = reviewPathOf(pub, applications, 'postulados');
         empty = {
             icon: IconPeople,
             title: copy.personas.todosPostularon.titulo,
@@ -201,7 +228,7 @@ export function PersonasScreen({ filtersSheet, focusPanel }: SegmentPanelProps) 
             icon: IconPeople,
             title: copy.personas.revisasteTodas.titulo,
             text: copy.personas.revisasteTodas.texto(invitadas, pub.titulo),
-            action: nextStep(pub),
+            action: nextStep(pub, 'postulados'),
         };
     } else if (vista === 'deck') {
         content = (

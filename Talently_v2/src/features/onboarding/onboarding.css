@@ -21,6 +21,8 @@
   padding: var(--space-6) var(--space-4) 0;
 }
 .onb-welcome__title { margin: 0 0 var(--space-2); }
+/* Recibe el foco al llegar (como .tl-steplayout__title en app.css): no es un control, sin contorno. */
+.onb-welcome__title:focus { outline: 0; }
 
 /* Tonos y márgenes de texto sobre las clases de tokens.css (.body, .body-l…). */
 .onb-muted { color: var(--color-text-2); }
