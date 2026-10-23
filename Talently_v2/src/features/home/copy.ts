@@ -7,6 +7,8 @@ export const copy = {
 
     home: {
         publicar: 'Publicar',
+        // no está en el prototipo: Jorge recién registrado, después de postular en la sesión.
+        tusPostulaciones: 'Tus postulaciones',
     },
 
     org: {

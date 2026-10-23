@@ -3,15 +3,18 @@
 // salen de src/features/demo y lo que cambia en la sesión, de
 // demo/sessionStore (las pantallas se lo pasan a estas funciones).
 import type { DemoActorId } from '../demo/session';
-import { targetPath } from '../demo/targets';
+import { processPublicationId, targetPath } from '../demo/targets';
 import type {
     DemoAgendaEvent,
     DemoApplication,
     DemoHomeBlock,
+    DemoNews,
     DemoNotification,
     DemoNotificationGroup,
     DemoProfileTip,
+    DemoTarget,
 } from '../demo/types';
+import { copy } from './copy';
 
 // ─── INI-01 ─────────────────────────────────────────────────────────────────
 
@@ -34,11 +37,63 @@ export interface HomeSessionState {
     cvSubido: boolean;
 }
 
+/**
+ * ¿La novedad habla de algo que el actor tiene en esta sesión? Los datos
+ * traen el «después» del prototipo: Jorge y Pedro parten sin postular a
+ * Guardia 4x4 y a Mecánico/a automotriz (inicio de los flujos 3 y de apoyo),
+ * así que «te citó a entrevista» no se muestra hasta que postulan (y PRC-01
+ * o ACT-02 dirían lo contrario). Los destinos que no son de una postulación
+ * se quedan.
+ */
+function newsBelongsToSession(destino: DemoTarget, applications: readonly DemoApplication[]): boolean {
+    switch (destino.pantalla) {
+        case 'proceso':
+            return applications.some((a) => a.publicationId === processPublicationId(destino.processId));
+        case 'publicacion':
+            return applications.some((a) => a.publicationId === destino.publicationId);
+        case 'mi-turno':
+            return applications.some((a) => a.id === destino.applicationId);
+        default:
+            return true;
+    }
+}
+
+/** A dónde lleva una postulación: PRC-01 (empleo), TUR-01 (turno confirmado) o su detalle. */
+function applicationTarget(a: DemoApplication): DemoTarget {
+    if (a.processId) return { pantalla: 'proceso', processId: a.processId };
+    if (a.miTurno) return { pantalla: 'mi-turno', applicationId: a.id };
+    return { pantalla: 'publicacion', publicationId: a.publicationId };
+}
+
+/**
+ * «Tus postulaciones» // no está en el prototipo: en vez de «Aún no tienes
+ * actividad» cuando Jorge recién registrado ya postuló en la sesión (las
+ * mismas filas de ACT-02, con su estado).
+ */
+export function applicationsBlock(applications: readonly DemoApplication[]): DemoHomeBlock {
+    const items: DemoNews[] = applications.map((a) => ({
+        id: a.id,
+        iniciales: a.autor.iniciales,
+        titulo: a.titulo,
+        detalle: a.detalle,
+        estado: a.estado,
+        destino: applicationTarget(a),
+    }));
+    return { tipo: 'novedades', titulo: copy.home.tusPostulaciones, items };
+}
+
 /** Los bloques de Inicio al día con la sesión (los datos traen el estado inicial). */
 export function homeBlocks(bloques: readonly DemoHomeBlock[], session: HomeSessionState): DemoHomeBlock[] {
+    const { applications } = session;
     return bloques.flatMap((b): DemoHomeBlock[] => {
-        if (b.tipo === 'agenda') return [{ ...b, eventos: currentAgenda(b.eventos, session.applications) }];
+        if (b.tipo === 'agenda') return [{ ...b, eventos: currentAgenda(b.eventos, applications) }];
         if (b.tipo === 'completar' && session.cvSubido && isCvTip(b.aviso)) return [];
+        if (b.tipo === 'novedades') {
+            const items = b.items.filter((n) => newsBelongsToSession(n.destino, applications));
+            return items.length ? [{ ...b, items }] : [];
+        }
+        // «Aún no tienes actividad» deja de ser cierto en cuanto postula (ACT-02 ya lo muestra).
+        if (b.tipo === 'vacio' && applications.length > 0) return [applicationsBlock(applications)];
         return [b];
     });
 }

@@ -200,7 +200,11 @@ export function PersonasScreen({ filtersSheet, focusPanel }: SegmentPanelProps) 
             icon: IconPeople,
             title: copy.personas.nadie.titulo,
             text: copy.personas.nadie.texto(pub.titulo),
-            action: pubs.length > 1 ? nextStep(pub, 'postulados') : undefined,
+            // Con una sola publicación: ir a ella (GES-01).
+            action:
+                pubs.length > 1
+                    ? nextStep(pub, 'postulados')
+                    : { label: copy.personas.verPublicacion, onClick: () => go(paths.gestionarPublicacion(pub.id)) },
         };
     } else if (estado.tipo === 'postularon') {
         const review = reviewPathOf(pub, applications, 'postulados');
