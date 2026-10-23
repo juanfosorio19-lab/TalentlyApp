@@ -2,6 +2,7 @@
 // AUTH-08), tal como los dice el prototipo F1 de Claude Design. Lo que el
 // prototipo no muestra (estados sin captura) sigue su misma voz y va marcado
 // con «// no está en el prototipo».
+import { SHARE_COPY } from '../../app/navigation/share';
 
 export const copy = {
     appBar: {
@@ -55,9 +56,10 @@ export const copy = {
     // no está en el prototipo: una organización mira la publicación de otra (CTA sin botón, solo el aviso).
     orgCannotApply: 'Las organizaciones no postulan. Para postular, usa Talently como persona.',
 
+    // Los mismos avisos que GES-01 (src/app/navigation/share.ts).
     share: {
-        copied: 'Copiamos el enlace',
-        error: 'No pudimos copiar el enlace. Intenta de nuevo.',
+        copied: SHARE_COPY.copiado,
+        error: SHARE_COPY.error,
     },
 
     more: {

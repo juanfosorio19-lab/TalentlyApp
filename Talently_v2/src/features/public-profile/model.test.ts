@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { getManageState, resetManage, setPublicationStatus } from '../demo/manageState';
+import { getManageState, publishInSession, resetManage, setPublicationStatus } from '../demo/manageState';
 import { resetSession, submitIdentity, verifyPhone } from '../demo/sessionStore';
 import { activePublicationsOf, isPublicView, publicOrg, publicPerson } from './model';
 
@@ -75,6 +75,9 @@ describe('PRF-11 · perfil público de organización', () => {
     });
 
     it('lista solo lo activo en la sesión: pausar en GES-01 la saca', () => {
+        // «Garzones fin de semana» existe recién cuando Rosa la publica (flujo 4).
+        expect(activePublicationsOf('banqueteria', getManageState()).map((p) => p.id)).not.toContain('turno-garzones-finde');
+        publishInSession('turno-garzones-finde');
         const before = activePublicationsOf('banqueteria', getManageState()).map((p) => p.id);
         expect(before).toContain('turno-garzones-finde');
         setPublicationStatus('turno-garzones-finde', { estado: 'Pausada' });

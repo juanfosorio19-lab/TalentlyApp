@@ -21,6 +21,6 @@ export const onbPaths = {
     ayuda: () => paths.ayuda(),
     terminos: () => paths.terminos(),
     privacidad: () => paths.privacidad(),
-    /** CFG-06 · Eliminar cuenta (spec §5.4: «Accesible también durante el onboarding»). */
-    eliminarCuenta: () => paths.eliminarCuenta(),
+    // CFG-06 · Eliminar cuenta (spec §5.4: «Accesible también durante el onboarding») no existe en la
+    // demostración: el menú ⋯ lo dice con un aviso (demo/copy.ts). Cuando exista, va paths.eliminarCuenta().
 } as const;

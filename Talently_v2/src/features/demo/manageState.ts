@@ -1,5 +1,5 @@
 // Lo que quien publica (organización u hogar) hace con sus publicaciones
-// durante la sesión de demostración: pausar, cerrar con motivo, renovar,
+// durante la sesión de demostración: publicar (flujo 4), pausar, cerrar con motivo, renovar,
 // confirmar cupos, la llegada de postulados después del «salto de tiempo»,
 // avanzar o no seleccionar postulantes, marcar asistencia y evaluar.
 // UN solo lugar para GES-01, GES-02, GES-04, Actividad (ACT-01 y ACT-03),
@@ -22,6 +22,8 @@ export interface StatusChange {
 }
 
 export interface ManageState {
+    /** Publicaciones de STARTS_UNPUBLISHED ya publicadas en esta sesión (PUBL-03/PUBL-04 → PUBL-07). */
+    published: ReadonlySet<string>;
     /** Publicación → estado cambiado en esta sesión (sin entrada = el de los datos). */
     status: ReadonlyMap<string, StatusChange>;
     /** Publicaciones renovadas hoy (30 días desde hoy). */
@@ -41,6 +43,7 @@ export interface ManageState {
 }
 
 const INITIAL: ManageState = {
+    published: new Set(),
     status: new Map(),
     renewed: new Set(),
     confirmed: new Map(),
@@ -85,6 +88,32 @@ export function resetManage(): void {
     timers.forEach((t) => clearTimeout(t));
     timers.clear();
     set(INITIAL);
+}
+
+// ─── Publicar (PUBL-07) ──────────────────────────────────────────────────────
+
+/**
+ * Publicaciones que un flujo del prototipo PUBLICA en la sesión: los datos
+ * traen el «después» (GES-01-turno: «Publicada hoy · Vistas 0 · recién
+ * publicada»), pero antes de PUBL-07 no existen. Hasta que quien publica la
+ * publica, no aparecen en INI-02, ACT-01, ACT-03, Explorar, la búsqueda ni
+ * PRF-11 (es la misma idea que FLOW_START de ./sessionStore para las
+ * postulaciones). Flujo 4: Rosa publica «Garzones fin de semana».
+ */
+export const STARTS_UNPUBLISHED: readonly string[] = ['turno-garzones-finde'];
+
+/** ¿Existe ya como publicada en la sesión? Las que no están en STARTS_UNPUBLISHED, siempre. */
+export function isPublishedIn(s: ManageState, publicationId: string): boolean {
+    return !STARTS_UNPUBLISHED.includes(publicationId) || s.published.has(publicationId);
+}
+
+/** Lo mismo con el estado actual (las funciones de acceso de ./data, sin React). */
+export const isPublishedNow = (publicationId: string): boolean => isPublishedIn(state, publicationId);
+
+/** PUBL-07: la publicación de los datos que representa lo recién publicado pasa a existir. */
+export function publishInSession(publicationId: string): void {
+    if (state.published.has(publicationId)) return;
+    set({ published: new Set([...state.published, publicationId]) });
 }
 
 // ─── Publicación (GES-01) ───────────────────────────────────────────────────

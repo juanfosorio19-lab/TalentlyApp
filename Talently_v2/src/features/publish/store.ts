@@ -2,12 +2,14 @@
 // borrador de cada actor (lo escrito se conserva al ir y volver entre pasos,
 // y «Guardar y salir» lo deja para después), lo recién publicado (PUBL-07) y
 // la identidad enviada a revisión al publicar (PUBL-04-identidad → VER-02).
-// Solo lo usa este feature; lo que otra pestaña debe ver (la publicación en
-// ACT-03, la identidad en VER-01) está pedido para demo/sessionStore.
+// Solo lo usa este feature; lo que otra pestaña debe ver vive en demo/: la
+// publicación recién publicada (demo/manageState.publishInSession: INI-02,
+// ACT-03, Explorar) y la identidad (demo/sessionStore.submitIdentity: VER-01).
 import { useSyncExternalStore } from 'react';
+import { publishInSession } from '../demo/manageState';
 import type { DemoActorId } from '../demo/session';
 import type { HogarDraft } from './model/hogar';
-import type { WizardKind } from './model/publisher';
+import { publishedId, type WizardKind } from './model/publisher';
 import type { TurnoDraft } from './model/turno';
 
 function createExternal<S>(initial: S) {
@@ -115,6 +117,9 @@ const session = createExternal<PublishState>(INITIAL);
 const keyOf = (actorId: DemoActorId, kind: WizardKind) => `${actorId}:${kind}`;
 
 export function markPublished(actorId: DemoActorId, summary: PublishedSummary): void {
+    // La publicación de los datos que representa lo publicado pasa a existir para todas las pestañas (flujo 4).
+    const id = publishedId(actorId, summary.kind);
+    if (id) publishInSession(id);
     const s = session.get();
     const key = keyOf(actorId, summary.kind);
     const published = new Map(s.published);

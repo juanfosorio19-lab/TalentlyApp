@@ -3,6 +3,7 @@
 // Lo que el prototipo no muestra y hacía falta (errores, la hoja de
 // «Ya tengo cuenta», el menú ⋯) sigue 04-perfiles-y-onboarding.md y lleva
 // el comentario «no está en el prototipo».
+import { DEMO_COPY } from '../demo/copy';
 
 export const COPY = {
     bienvenida: {
@@ -66,8 +67,8 @@ export const COPY = {
         cerrarSesion: 'Cerrar sesión',
         eliminar: 'Eliminar cuenta',
         // no está en el prototipo: CFG-06 no existe en la demostración. El mismo texto que «Eliminar
-        // cuenta» de CFG-01 (profile/copy.ts snackEliminarDemo), hasta que pase a demo/ (pendiente).
-        eliminarDemo: 'Sesión de demostración: no hay cuenta que eliminar',
+        // cuenta» de CFG-01 (demo/copy.ts).
+        eliminarDemo: DEMO_COPY.sinCuentaQueEliminar,
         cerrarTitulo: '¿Cerrar sesión?',
         cerrarTexto: 'Tu avance queda guardado.',
     },

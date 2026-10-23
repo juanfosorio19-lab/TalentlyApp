@@ -5,6 +5,7 @@
 // no está en él lleva el comentario «// no está en el prototipo».
 // Cuando vuelva la base de datos, cada get… se reemplaza por su consulta real
 // con el mismo tipo de retorno (types.ts) y las pantallas no cambian.
+import { isPublishedNow } from './manageState';
 import { DEMO_ACTORS } from './session';
 import type {
     DemoActorId,
@@ -189,6 +190,7 @@ const PERSONS = {
         id: 'marta', nombre: 'Marta Huanca', iniciales: 'MH', comuna: 'La Florida',
         verificaciones: [aptaMenores('11/2027')], oficio: 'Asesora del hogar', experiencia: 'Más de 10 años',
         nota: { value: 4.9, count: 14 },
+        desde: '12 may 2025', // no está en el prototipo: VER-01 de Marta (con 14 reseñas, no es una cuenta de hoy)
     },
     gladys: {
         id: 'gladys-mamani', nombre: 'Gladys Mamani', iniciales: 'GM', comuna: 'Puente Alto',
@@ -971,18 +973,21 @@ export const DEMO_PROCESSES: DemoProcess[] = [
         entrevista: ENTREVISTA_PEDRO, conversationId: 'conv-pedro-taller', puedeRetirar: true,
     },
     {
-        // PRC-01-hogar: el final del flujo 5 (Marta ya contratada, con el checklist legal).
-        // GES-02 la muestra aún «En proceso»: son dos momentos del prototipo.
+        // PRC-01-hogar (flujo 5), hoy jue 10 dic a las 13:00: Marta sigue «En proceso», como en GES-02-hogar, y la
+        // entrevista está por coordinar («Te escribo en la tarde para coordinar una entrevista», 11:02 en
+        // MSG-02b-familia y MSG-02b-marta): ni Carolina ni Marta la tienen en su Agenda. El prototipo muestra además
+        // el final del flujo (Entrevista vie 11 dic · 10:00, Oferta vie 11 dic · 12:30, Contratado lun 14 dic ·
+        // 09:15); en la app, «Marcar como contratada» lo cierra hoy y aparece el checklist legal.
         id: 'proc-carolina-marta', viewerId: 'carolina', publicationId: 'aviso-asesor-hogar', appBarTitulo: 'Proceso',
         titulo: 'Marta Huanca', subtitulo: 'Asesor/a del hogar puertas afuera',
-        contraparte: autorPersona(PERSONS.marta), estado: 'Contratado',
+        contraparte: autorPersona(PERSONS.marta), estado: 'En proceso',
         pasos: [
             { etapa: 'Postulado', estado: 'done', fecha: '8 dic · 20:15' },
             { etapa: 'Visto', estado: 'done', fecha: '9 dic · 19:10' },
             { etapa: 'En proceso', estado: 'done', fecha: '9 dic · 19:20' },
-            { etapa: 'Entrevista', estado: 'done', fecha: 'vie 11 dic · 10:00' },
-            { etapa: 'Oferta', estado: 'done', fecha: 'vie 11 dic · 12:30' },
-            { etapa: 'Contratado', estado: 'done', fecha: 'lun 14 dic · 09:15' },
+            { etapa: 'Entrevista', estado: 'current', fecha: 'por coordinar' },
+            { etapa: 'Oferta', estado: 'pending' },
+            { etapa: 'Contratado', estado: 'pending' },
         ],
         checklist: {
             titulo: 'Para contratar como corresponde',
@@ -1368,6 +1373,7 @@ export const DEMO_NOTIFICATIONS: DemoNotification[] = [
     {
         id: 'not-rosa-identidad', viewerId: 'rosa', actorId: 'rosa', grupo: 'Hoy',
         titulo: 'Verificamos tu identidad', origen: 'Rosa Muñoz', cuando: 'hace 3 h', sinLeer: true, icono: 'verificacion',
+        anuncia: 'identidad-verificada',
         destino: { pantalla: 'verificacion' },
     },
     {
@@ -1474,7 +1480,10 @@ export const DEMO_NOTIFICATIONS: DemoNotification[] = [
     },
     {
         id: 'not-carolina-identidad', viewerId: 'carolina', actorId: 'carolina', grupo: 'Esta semana',
+        // Carolina verifica su identidad en el flujo 5 (VER-02 la deja «en revisión»): mientras no esté verificada en la
+        // sesión, la bandeja no la muestra (sessionStore.inboxItems).
         titulo: 'Verificamos tu identidad', origen: 'Carolina', cuando: '8 dic', sinLeer: false, icono: 'verificacion',
+        anuncia: 'identidad-verificada',
         destino: { pantalla: 'verificacion' },
     },
     // Marta (1 sin leer en MSG-01-marta).
@@ -1510,11 +1519,7 @@ export const DEMO_AGENDA: DemoAgendaEvent[] = [
         titulo: 'Entrevista · Mecánico/a automotriz', detalle: 'Taller Los Aromos · Av. Macul 4321, Macul',
         estado: 'Entrevista', tipo: 'entrevista', destino: { pantalla: 'proceso', processId: 'proc-pedro-mecanico' },
     },
-    {
-        id: 'ag-carolina-entrevista', viewerId: 'carolina', fecha: 'vie 11 dic', esHoy: false, inicio: '10:00',
-        titulo: 'Entrevista · Asesor/a del hogar', detalle: 'Marta Huanca · en tu casa, Ñuñoa',
-        estado: 'Entrevista', tipo: 'entrevista', destino: { pantalla: 'proceso', processId: 'proc-carolina-marta' },
-    },
+    // Carolina: la entrevista con Marta está por coordinar (MSG-02b-familia, 11:02): todavía no está en la Agenda.
     // Banquetería Rosa SpA: sus turnos de los próximos días.
     {
         id: 'ag-br-coctel', viewerId: 'banqueteria', fecha: 'jue 10 dic', esHoy: true, inicio: '19:00', fin: '00:00',
@@ -2522,9 +2527,13 @@ export function getNotifications(viewerId: DemoViewerId): DemoNotification[] {
     return DEMO_NOTIFICATIONS.filter((n) => n.viewerId === inbox);
 }
 
-/** ACT-01 · Agenda, en orden de fecha. «Hoy en tu agenda» son los de `esHoy`. */
+/**
+ * ACT-01 · Agenda, en orden de fecha. «Hoy en tu agenda» son los de `esHoy`.
+ * Sin los turnos de una publicación que todavía no se publica en la sesión
+ * (manageState.STARTS_UNPUBLISHED: «Garzones fin de semana» del flujo 4).
+ */
 export function getAgenda(actorId: DemoActorId): DemoAgendaEvent[] {
-    return DEMO_AGENDA.filter((e) => e.viewerId === actorId);
+    return DEMO_AGENDA.filter((e) => e.viewerId === actorId && (!('publicationId' in e.destino) || isPublishedNow(e.destino.publicationId)));
 }
 
 /** PRF-01 y CFG-01. */
@@ -2547,11 +2556,14 @@ export function getManagedPublication(publicationId: string): DemoManagedPublica
 /**
  * Lo que publicó un actor (ACT-03, EXP-05, INI-02): una organización, en el
  * orden de su panel (INI-02); una persona, sus avisos («Tu aviso» de Carolina).
+ * Lo que todavía no se publica en la sesión (manageState.STARTS_UNPUBLISHED)
+ * no está, como no estaría en la base de datos; GES-01 lo abre por su id
+ * (getManagedPublication) recién publicado, desde PUBL-07.
  */
 export function getManagedPublications(ownerId: DemoActorId): DemoManagedPublication[] {
     const panel = getOrgDashboard(ownerId)?.publicaciones;
-    if (panel) return panel.flatMap((id) => getManagedPublication(id) ?? []);
-    return DEMO_MANAGED_PUBLICATIONS.filter((m) => m.ownerId === ownerId);
+    const own = panel ? panel.flatMap((id) => getManagedPublication(id) ?? []) : DEMO_MANAGED_PUBLICATIONS.filter((m) => m.ownerId === ownerId);
+    return own.filter((m) => isPublishedNow(m.publicationId));
 }
 
 export function getOrg(id: string): DemoOrg | undefined {

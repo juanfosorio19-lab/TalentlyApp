@@ -40,7 +40,7 @@ export const paths = {
     /** GES-01 · Editar: reutiliza los pasos del asistente con los datos cargados (aún sin pantalla). */
     editarPublicacion: (id: string) => `/publicaciones/${id}/editar`,
     postulantes: (id: string) => `/publicaciones/${id}/postulantes`,
-    sugeridos: (id: string) => `/publicaciones/${id}/sugeridos`,
+    // Las personas sugeridas de una publicación (EXP-05) viven en Explorar: paths.explorar('personas', { p: id }).
     cuposTurno: (id: string, shiftId: string, ver?: RosterTab) => `/publicaciones/${id}/turnos/${shiftId}${q({ ver })}`,
     proceso: (engagementId: string) => `/procesos/${engagementId}`,
     miTurno: (assignmentId: string) => `/turnos/${assignmentId}`,

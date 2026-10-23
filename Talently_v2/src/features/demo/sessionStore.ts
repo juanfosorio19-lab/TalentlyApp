@@ -228,20 +228,39 @@ function isRead(n: DemoNotification, readNotifications: ReadonlySet<string>, rea
 }
 
 /** Lo que la bandeja lee de la sesión. */
-type InboxSource = Pick<SessionState, 'readNotifications' | 'readConversations' | 'applications' | 'pendingMatches'>;
+type InboxSource = Pick<SessionState, 'readNotifications' | 'readConversations' | 'applications' | 'pendingMatches' | 'identitySubmitted'>;
+
+/**
+ * ¿Ya pasó lo que anuncia? «Verificamos tu identidad» existe solo con la
+ * identidad verificada en la sesión: Carolina (flujo 5) parte pendiente y,
+ * después de VER-02, queda en revisión; la campana no dice otra cosa que
+ * VER-01 y Perfil.
+ */
+function announcedInSession(n: DemoNotification, identitySubmitted: ReadonlyMap<DemoActorId, number>): boolean {
+    if (n.anuncia !== 'identidad-verificada') return true;
+    return (
+        identityStatusOf({
+            inData: identityInData(n.actorId),
+            pendingAtStart: identityPendingAtStart(n.actorId),
+            submitted: identitySubmitted.has(n.actorId),
+        }) === 'verified'
+    );
+}
 
 /**
  * La bandeja del actor. `recienRegistrado` (INI-01-jorge-nuevo) todavía no
  * tiene notificaciones. Sin las que hablan de una postulación que la sesión
- * todavía no tiene (notificationInSession) y con «te escribió» leída si ya
+ * todavía no tiene (notificationInSession) ni las que anuncian una identidad
+ * que la sesión no tiene verificada (announcedInSession), y con «te escribió» leída si ya
  * abrió esa conversación (la campana y Mensajes no se contradicen). TODAS las
  * campanas, el contador y «Marcar todo como leído» usan esta lista.
  */
 export function useInbox(viewerId: DemoViewerId, recienRegistrado = false): Inbox {
-    const { readNotifications, readConversations, applications, pendingMatches } = useSessionState();
+    const { readNotifications, readConversations, applications, pendingMatches, identitySubmitted } = useSessionState();
     const items = useMemo(
-        () => inboxItems(viewerId, recienRegistrado, { readNotifications, readConversations, applications, pendingMatches }),
-        [viewerId, recienRegistrado, readNotifications, readConversations, applications, pendingMatches],
+        () =>
+            inboxItems(viewerId, recienRegistrado, { readNotifications, readConversations, applications, pendingMatches, identitySubmitted }),
+        [viewerId, recienRegistrado, readNotifications, readConversations, applications, pendingMatches, identitySubmitted],
     );
     const unread = items.filter((n) => n.sinLeer).length;
     const markRead = useCallback((id: string) => markNotificationsRead([id]), []);
@@ -252,9 +271,9 @@ export function useInbox(viewerId: DemoViewerId, recienRegistrado = false): Inbo
 /** La bandeja sin React (para pruebas): lo leído al día y sin lo que la sesión todavía no tiene. */
 export function inboxItems(viewerId: DemoViewerId, recienRegistrado: boolean, source: InboxSource = state): DemoNotification[] {
     if (recienRegistrado) return [];
-    const { readNotifications, readConversations, applications, pendingMatches } = source;
+    const { readNotifications, readConversations, applications, pendingMatches, identitySubmitted } = source;
     return getNotifications(viewerId)
-        .filter((n) => notificationInSession(n, applications, pendingMatches))
+        .filter((n) => notificationInSession(n, applications, pendingMatches) && announcedInSession(n, identitySubmitted))
         .map((n) => (n.sinLeer && isRead(n, readNotifications, readConversations) ? { ...n, sinLeer: false } : n));
 }
 

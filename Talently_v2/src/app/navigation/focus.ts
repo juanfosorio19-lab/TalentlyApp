@@ -8,19 +8,28 @@
 //   2. si no, al título de la pantalla: el h1 que la pantalla ya dejó
 //      enfocable (`main h1[tabindex="-1"]`, GES-01, GES-04, DET-01) o el
 //      primer h1 visible (el del AppBar; en MSG-02, el h1 oculto del AppBar chat).
-// Nada se mueve antes de que la persona toque o teclee algo: al abrir la app
-// el foco es del navegador. Las pantallas que mueven el foco por su cuenta
+// Nada se mueve antes de que la persona toque, teclee o use el atrás de
+// Android (BackButtonManager llama a markInteraction): al abrir la app el foco
+// es del navegador. Las pantallas que mueven el foco por su cuenta
 // (StepLayout, ResultScreen, las capas) no se tocan: el foco ya no está en el body.
 import { useEffect, useLayoutEffect, useRef } from 'react';
 
-/** ¿Ya tocó o tecleó algo? Antes de eso (la app recién abierta, en cualquier ruta) el foco no se mueve. */
+/** ¿Ya tocó, tecleó o usó el atrás de Android? Antes de eso (la app recién abierta, en cualquier ruta) el foco no se mueve. */
 let interacted = false;
+
+/**
+ * La persona hizo algo. Toques y teclas se cuentan solos; el atrás de Android
+ * (Capacitor `backButton`) no pasa por el DOM: BackButtonManager lo avisa aquí
+ * antes de navegar, así la app abierta por un enlace en /mensajes que vuelve a
+ * Inicio con el atrás deja el foco en el título de Inicio y no en el body.
+ */
+export function markInteraction(): void {
+    interacted = true;
+}
+
 if (typeof window !== 'undefined') {
-    const mark = () => {
-        interacted = true;
-    };
-    window.addEventListener('pointerdown', mark, { capture: true, once: true });
-    window.addEventListener('keydown', mark, { capture: true, once: true });
+    window.addEventListener('pointerdown', markInteraction, { capture: true, once: true });
+    window.addEventListener('keydown', markInteraction, { capture: true, once: true });
 }
 
 /** Solo pruebas: simula que la persona ya interactuó (o no). */

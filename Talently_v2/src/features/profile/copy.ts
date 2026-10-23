@@ -1,6 +1,7 @@
 // Textos del feature Perfil y configuración (PRF-01, PRF-02, PRF-12, CFG-01).
 // Salen tal cual del prototipo F1 (docs/rediseno/diseno/prototipo-f1); lo que
 // no está en él lleva el comentario «no está en el prototipo».
+import { DEMO_COPY } from '../demo/copy';
 
 /** Versión de la app que se ve al pie de Configuración (CFG-01: «Talently 3.0.0»). */
 export const APP_VERSION = '3.0.0';
@@ -49,8 +50,8 @@ export const COPY = {
         dialogTexto:
             'Para volver a entrar necesitarás tu correo y tu contraseña. Tus perfiles y conversaciones quedan guardados.',
         cancelar: 'Cancelar',
-        // no está en el prototipo: CFG-06 no existe en la demostración.
-        snackEliminarDemo: 'Sesión de demostración: no hay cuenta que eliminar',
+        // no está en el prototipo: CFG-06 no existe en la demostración (el mismo texto del menú del registro).
+        snackEliminarDemo: DEMO_COPY.sinCuentaQueEliminar,
     },
     // Hoja de Apariencia (spec §5.2: Sistema · Claro · Oscuro). no está en el prototipo.
     tema: {

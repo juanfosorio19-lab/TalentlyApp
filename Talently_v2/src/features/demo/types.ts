@@ -409,6 +409,12 @@ export interface DemoNotification {
     sinLeer: boolean;
     icono: DemoNotificationIcon;
     destino?: DemoTarget;
+    /**
+     * Anuncia que se verificó la identidad de `actorId` («Verificamos tu
+     * identidad»): la bandeja la muestra solo si la sesión la tiene verificada
+     * (sessionStore.useIdentityStatus), igual que VER-01 y Perfil.
+     */
+    anuncia?: 'identidad-verificada';
 }
 
 export interface DemoAgendaEvent {
@@ -643,6 +649,12 @@ export interface DemoOnboardingResult {
     credencial: DemoCredentialState | null;
     /** ONB-T5: «Guardia de seguridad en Condominio Los Peumos · 2021 a 2026», si lo dejó. */
     ultimoTrabajo?: string;
+    /**
+     * El correo de AUTH-02 (el que AUTH-03 mostró y CFG-01 muestra en «Cuenta»).
+     * Abriendo INI-01-jorge-nuevo sin recorrer el registro no lo hay: CFG-01
+     * muestra el de los datos.
+     */
+    correo?: string;
 }
 
 // ─── Explorar (EXP-01, EXP-02) ──────────────────────────────────────────────

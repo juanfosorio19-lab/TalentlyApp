@@ -17,6 +17,7 @@ import {
     sendReview,
     startsWithoutApplication,
     stillWithdrawn,
+    submitIdentity,
     undoDecision,
     withdrawApplication,
 } from './sessionStore';
@@ -103,6 +104,18 @@ describe('sesión de demostración', () => {
         // Marta (flujo 10) es actor de la demo: su bandeja es la suya.
         expect(ids('marta')).toEqual(['not-marta-mensaje']);
         expect(inboxItems('jorge', true)).toEqual([]);
+    });
+
+    it('«Verificamos tu identidad» solo con la identidad verificada en la sesión (flujo 5)', () => {
+        const ids = (viewer: 'carolina' | 'rosa') => inboxItems(viewer, false).map((n) => n.id);
+        // Carolina parte pendiente (VER-01 «Pendiente», Perfil «Te falta 1 cosa»): la campana no dice otra cosa.
+        expect(ids('carolina')).not.toContain('not-carolina-identidad');
+        expect(ids('carolina')).toContain('not-carolina-publicado');
+        // Enviada en VER-02 queda en revisión: todavía no está verificada.
+        submitIdentity('carolina');
+        expect(ids('carolina')).not.toContain('not-carolina-identidad');
+        // Rosa la tiene verificada en los datos: NOT-01 del prototipo.
+        expect(ids('rosa')).toContain('not-rosa-identidad');
     });
 
     it('mientras el match viene en camino, la bandeja todavía no trae lo de después (flujo 3)', () => {

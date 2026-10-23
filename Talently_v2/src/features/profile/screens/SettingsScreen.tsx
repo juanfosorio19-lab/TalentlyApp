@@ -26,7 +26,6 @@ import { useTheme } from '../../../app/providers/ThemeProvider';
 import { useSheet } from '../../../app/sheets';
 import { getProfile } from '../../demo/data';
 import { useDemoSession } from '../../demo/session';
-import type { DemoOnboardingResult } from '../../demo/types';
 import { AppearanceSheet, THEME_LABEL } from '../components/AppearanceSheet';
 import { APP_VERSION, COPY } from '../copy';
 import '../profile.css';
@@ -34,16 +33,6 @@ import '../profile.css';
 export const screenId = 'CFG-01';
 
 const C = COPY.config;
-
-/**
- * El correo con que se creó la cuenta en el registro (AUTH-02, el mismo que
- * AUTH-03 mostró). Lo deja onboarding/model.resultadoOnboarding junto al
- * resultado mientras DemoOnboardingResult no tenga el campo (pedido a demo/).
- */
-function correoDelRegistro(onboarding: DemoOnboardingResult | undefined): string | undefined {
-    if (!onboarding || !('correo' in onboarding) || typeof onboarding.correo !== 'string') return undefined;
-    return onboarding.correo || undefined;
-}
 
 export function SettingsScreen() {
     const goBack = useGoBack();
@@ -54,8 +43,8 @@ export function SettingsScreen() {
     const { actor, onboarding } = useDemoSession();
     // La cuenta es de la persona (auth.users, spec §2.1): con una organización activa, la de quien la administra.
     const { configuracion } = getProfile(actor.owner ?? actor.id);
-    // Recién registrada: el correo que escribió en el registro, no el de los datos.
-    const cuenta = correoDelRegistro(onboarding) ?? configuracion.cuenta;
+    // Recién registrada: el correo que escribió en el registro (AUTH-02), no el de los datos.
+    const cuenta = onboarding?.correo || configuracion.cuenta;
     const appearance = useSheet('apariencia');
     const logout = useSheet('cerrar-sesion');
 

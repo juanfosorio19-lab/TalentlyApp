@@ -4,7 +4,7 @@ import { getApplications, getProcess, getPublication } from '../demo/data';
 import { getManageState, resetManage, setApplicantStatus } from '../demo/manageState';
 import { getSessionState, startsWithoutApplication } from '../demo/sessionStore';
 import type { DemoActorId } from '../demo/session';
-import type { DemoApplication, DemoShiftBlock } from '../demo/types';
+import type { DemoApplication, DemoProcessStep, DemoShiftBlock } from '../demo/types';
 import {
     HIRED,
     addMinutes,
@@ -248,7 +248,16 @@ describe('PRC-01 de quien contrata (flujo 5)', () => {
     const statusNow = () => hiringApplicantOf(marta(), getManageState(), getSessionState().applications)?.estado;
 
     it('un paso «hecho» con fecha futura todavía no pasa: queda como el actual, con su fecha', () => {
-        const steps = stepsAsOf(marta().pasos);
+        // El final del flujo 5 en PRC-01-hogar del prototipo, visto el jue 10 dic a las 13:00.
+        const final: DemoProcessStep[] = [
+            { etapa: 'Postulado', estado: 'done', fecha: '8 dic · 20:15' },
+            { etapa: 'Visto', estado: 'done', fecha: '9 dic · 19:10' },
+            { etapa: 'En proceso', estado: 'done', fecha: '9 dic · 19:20' },
+            { etapa: 'Entrevista', estado: 'done', fecha: 'vie 11 dic · 10:00' },
+            { etapa: 'Oferta', estado: 'done', fecha: 'vie 11 dic · 12:30' },
+            { etapa: 'Contratado', estado: 'done', fecha: 'lun 14 dic · 09:15' },
+        ];
+        const steps = stepsAsOf(final);
         expect(steps.map((s) => [s.etapa, s.estado, s.fecha])).toEqual([
             ['Postulado', 'done', '8 dic · 20:15'],
             ['Visto', 'done', '9 dic · 19:10'],
@@ -257,18 +266,19 @@ describe('PRC-01 de quien contrata (flujo 5)', () => {
             ['Oferta', 'pending', undefined],
             ['Contratado', 'pending', undefined],
         ]);
-        // Lo que ya pasó no cambia (PRC-01 de Jorge).
+        // Lo que ya pasó no cambia (PRC-01 de Jorge), ni lo que no trae día y hora (la entrevista por coordinar con Marta).
         expect(stepsAsOf(proc('proc-jorge-guardia-4x4').pasos)).toEqual(proc('proc-jorge-guardia-4x4').pasos);
+        expect(stepsAsOf(marta().pasos)).toEqual(marta().pasos);
     });
 
-    it('dice lo mismo que GES-02: «En proceso», con la entrevista del vie 11 por delante y sin checklist', () => {
+    it('dice lo mismo que GES-02 y el chat: «En proceso», con la entrevista por coordinar y sin checklist', () => {
         expect(statusNow()).toBe('En proceso');
         const view = hiringView(marta(), statusNow());
         expect(view.estado).toBe('En proceso');
         expect(view.checklist).toBeUndefined();
         expect(timelineSteps(view, false).find((s) => s.status === 'current')).toMatchObject({
             label: 'Entrevista',
-            date: 'vie 11 dic · 10:00',
+            date: 'por coordinar',
         });
         expect(canMarkHired(marta(), statusNow())).toBe(true);
     });

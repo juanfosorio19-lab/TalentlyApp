@@ -13,7 +13,7 @@ import {
     getPerson,
     getPublication,
 } from './data';
-import { applicantKey, rosterKey, slotKey, type ManageState } from './manageState';
+import { applicantKey, isPublishedIn, rosterKey, slotKey, type ManageState } from './manageState';
 import { DEMO_ACTORS, type DemoActorId } from './session';
 import { keyOf, startsWithoutApplication, type SessionApplication } from './sessionStore';
 import type {
@@ -198,8 +198,12 @@ export function publicationStatus(publicationId: string, s: ManageState): BadgeS
     return getPublication(publicationId)?.estado;
 }
 
-/** ¿Recibe postulaciones en la sesión? Ni pausada ni cerrada (Explorar y la búsqueda la dejan fuera si no). */
-export const isPublicationActive = (publicationId: string, s: ManageState) => publicationStatus(publicationId, s) === 'Activa';
+/**
+ * ¿Recibe postulaciones en la sesión? Ya publicada (manageState.STARTS_UNPUBLISHED),
+ * ni pausada ni cerrada (Explorar, la búsqueda y PRF-11 la dejan fuera si no).
+ */
+export const isPublicationActive = (publicationId: string, s: ManageState) =>
+    isPublishedIn(s, publicationId) && publicationStatus(publicationId, s) === 'Activa';
 
 // ─── Personas ───────────────────────────────────────────────────────────────
 
@@ -418,7 +422,9 @@ export function newDetail(nuevos: number, total: number): string | undefined {
 /**
  * Las métricas de los datos, recalculadas con la sesión: Confirmados con lo
  * confirmado en GES-04, Postulantes con lo decidido en GES-02 y Vistas, como
- * mínimo, quienes ya postularon (nadie postula sin verla).
+ * mínimo, quienes ya postularon (nadie postula sin verla). Si Vistas sube, su
+ * detalle de los datos («recién publicada», del 0 de GES-01-turno) ya no vale:
+ * dice de dónde sale la cifra («4 postularon»).
  */
 export function metricsOf(m: DemoManagedPublication, s: ManageState, applications: SessionApplications): Metric[] {
     const rosters = (m.cupos ?? []).map((r) => rosterView(m, r, s, applications));
@@ -438,7 +444,9 @@ export function metricsOf(m: DemoManagedPublication, s: ManageState, application
         }
         if (metric.label === 'Vistas') {
             const vistas = Number(metric.valor.replace(/\D/g, '')) || 0;
-            return vistas >= people.size ? metric : { ...metric, valor: String(people.size) };
+            if (vistas >= people.size) return metric;
+            const n = people.size;
+            return { label: metric.label, valor: String(n), detalle: n === 1 ? '1 postuló' : `${n} postularon` };
         }
         return metric;
     });
@@ -583,6 +591,7 @@ export function attentionItemView(
 ): DemoAttentionItem | undefined {
     const d = item.destino;
     if (d.pantalla !== 'cupos' && d.pantalla !== 'postulantes' && d.pantalla !== 'evaluar') return item;
+    if (!isPublishedIn(s, d.publicationId)) return undefined;
     const m = getManagedPublication(d.publicationId);
     if (!m) return item;
     if (item.icono === 'postulantes') {
@@ -625,7 +634,8 @@ export function orgDashboardView(
     applications: SessionApplications,
     overrides: Partial<Record<string, string>> = {},
 ): DemoOrgDashboard {
-    const publications = panel.publicaciones.flatMap((id) => getManagedPublication(id) ?? []);
+    // Lo que todavía no se publica en la sesión no cuenta (flujo 4: «Garzones fin de semana» antes de PUBL-07).
+    const publications = panel.publicaciones.flatMap((id) => (isPublishedIn(s, id) && getManagedPublication(id)) || []);
     const kpis = panel.kpis.map((kpi): DemoKpi => {
         const override = overrides[kpi.id];
         if (override !== undefined) return { ...kpi, valor: override };
@@ -640,7 +650,7 @@ export function orgDashboardView(
         return kpi;
     });
     const atencion = panel.atencion.flatMap((item) => attentionItemView(item, s, applications) ?? []);
-    return { ...panel, kpis, atencion };
+    return { ...panel, kpis, atencion, publicaciones: panel.publicaciones.filter((id) => isPublishedIn(s, id)) };
 }
 
 /** «6 postulantes nuevos» de «Tu aviso» (INI-01 de Carolina), con la misma cuenta que GES-02. */

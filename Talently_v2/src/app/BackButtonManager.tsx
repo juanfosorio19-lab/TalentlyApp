@@ -16,6 +16,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { closeTopOverlay } from '../ui/overlay';
 import { hasDirtyForm, hasInternalHistory, runWizardBack } from './navigation/backHandlers';
+import { markInteraction } from './navigation/focus';
 import { isTabRoot, paths, tabOf } from './paths';
 
 const EXIT_WINDOW_MS = 2000;
@@ -96,7 +97,11 @@ export function BackButtonManager({ prompts, children }: { prompts: BackPrompts;
         let remove: (() => void) | undefined;
         let cancelled = false;
         import('@capacitor/app').then(({ App }) =>
-            App.addListener('backButton', () => void onHardwareBack()).then((h) => {
+            App.addListener('backButton', () => {
+                // El atrás de Android cuenta como interacción (FocusRescue): no pasa por pointerdown ni keydown.
+                markInteraction();
+                void onHardwareBack();
+            }).then((h) => {
                 if (cancelled) void h.remove();
                 else remove = () => void h.remove();
             }),

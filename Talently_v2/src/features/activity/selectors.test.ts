@@ -180,14 +180,14 @@ describe('ACT-01 · Agenda', () => {
         expect(agendaFor(DEMO_ACTORS.pedro, sessionApplications('pedro'), NOT_NEW).map((i) => i.id)).toEqual(['ag-pedro-entrevista']);
     });
 
-    it('Carolina ve la entrevista con Marta hasta que la marca «Contratado» en PRC-01 (flujo 5)', () => {
+    it('la entrevista de Carolina con Marta está por coordinar (el chat): ninguna de las dos la tiene en la Agenda', () => {
         const lookup = () => hiringStatusLookup(getManageState(), getSessionState().applications);
-        const ids = () => agendaFor(DEMO_ACTORS.carolina, [], NOT_NEW, undefined, lookup()).map((i) => i.id);
         expect(lookup()('proc-carolina-marta')).toBe('En proceso');
-        expect(ids()).toContain('ag-carolina-entrevista');
+        expect(agendaFor(DEMO_ACTORS.carolina, [], NOT_NEW, undefined, lookup())).toEqual([]);
+        expect(agendaFor(DEMO_ACTORS.marta, sessionApplications('marta'), NOT_NEW)).toEqual([]);
         setApplicantStatus('aviso-asesor-hogar', 'marta', 'Contratado');
         expect(lookup()('proc-carolina-marta')).toBe('Contratado');
-        expect(ids()).not.toContain('ag-carolina-entrevista');
+        expect(agendaFor(DEMO_ACTORS.carolina, [], NOT_NEW, undefined, lookup())).toEqual([]);
     });
 
     it('un turno cancelado en TUR-01 sale de la Agenda', () => {

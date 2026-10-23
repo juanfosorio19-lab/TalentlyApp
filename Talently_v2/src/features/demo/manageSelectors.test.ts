@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { getHomeFeed, getManagedPublication, getOrgDashboard, getPublication } from './data';
+import { getAgenda, getHomeFeed, getManagedPublication, getManagedPublications, getOrgDashboard, getPublication } from './data';
 import { applyTo, resetSession, getSessionState } from './sessionStore';
 import type { DemoManagedPublication } from './types';
 import {
@@ -30,6 +30,7 @@ import {
     confirmPeople,
     evaluate,
     getManageState,
+    publishInSession,
     renewPublication,
     resetManage,
     setApplicantStatus,
@@ -265,8 +266,8 @@ describe('métricas de GES-01', () => {
         confirmPeople(m.publicationId, 'finde-sab-19', ['martin-silva', 'fernanda-castro']);
         const [vistas, confirmados] = metricsOf(m, getManageState(), apps());
         expect(confirmados).toEqual({ label: 'Confirmados', valor: '2/12', detalle: '8 el sáb y 4 el dom' });
-        // Nadie postula sin verla: 4 personas postularon.
-        expect(vistas).toEqual({ label: 'Vistas', valor: '4', detalle: 'recién publicada' });
+        // Nadie postula sin verla: 4 personas postularon. «recién publicada» era el detalle del 0.
+        expect(vistas).toEqual({ label: 'Vistas', valor: '4', detalle: '4 postularon' });
     });
 
     it('«9 · 6 nuevos» y «5 · sin revisar», como en los datos', () => {
@@ -322,6 +323,7 @@ describe('INI-02 al día con la sesión (orgDashboardView)', () => {
     });
 
     it('los postulados del «salto de tiempo» suman al llegar y no cuentan si se pausa', () => {
+        publishInSession('turno-garzones-finde');
         arrive('turno-garzones-finde', 'finde-sab-19');
         expect(kpi('postulantes')).toBe('16');
         setPublicationStatus('turno-garzones-finde', { estado: 'Cerrada', motivo: 'Otro motivo' });
@@ -381,6 +383,7 @@ describe('Actividad y Explorar leen lo mismo que GES-01 y GES-04', () => {
     });
 
     it('isPublicationActive sigue la pausa y el cierre de GES-01', () => {
+        publishInSession('turno-garzones-finde');
         expect(isPublicationActive('turno-garzones-finde', getManageState())).toBe(true);
         setPublicationStatus('turno-garzones-finde', { estado: 'Pausada' });
         expect(isPublicationActive('turno-garzones-finde', getManageState())).toBe(false);
@@ -401,5 +404,36 @@ describe('la publicación vista por quien postula (publicationWithSession)', () 
         expect(publicationWithSession(pub, getManageState(), apps()).estado).toBe('Pausada');
         const otra = getPublication('turno-bodega-noche');
         if (otra) expect(publicationWithSession(otra, getManageState(), apps())).toBe(otra);
+    });
+});
+
+describe('flujo 4: «Garzones fin de semana» existe recién cuando Rosa la publica (STARTS_UNPUBLISHED)', () => {
+    const ids = () => getManagedPublications('banqueteria').map((m) => m.publicationId);
+    const agenda = () => getAgenda('banqueteria').map((e) => e.id);
+
+    it('antes de PUBL-07 no está en ACT-03, la Agenda, INI-02, Explorar ni la búsqueda', () => {
+        expect(ids()).not.toContain('turno-garzones-finde');
+        expect(agenda()).not.toContain('ag-br-finde-sab');
+        expect(agenda()).not.toContain('ag-br-finde-dom');
+        expect(isPublicationActive('turno-garzones-finde', getManageState())).toBe(false);
+        const panel = getOrgDashboard('banqueteria');
+        if (!panel) throw new Error('Sin panel');
+        const view = orgDashboardView(panel, getManageState(), apps());
+        expect(view.publicaciones).not.toContain('turno-garzones-finde');
+        // Los KPI del prototipo (INI-02 y INI-02--f7) no cambian: el turno es del 19 y 20 dic y parte sin postulados.
+        expect(view.kpis.map((k) => k.valor)).toEqual(['12', '4/6 cubiertos', '3', '2 h']);
+    });
+
+    it('al publicar aparece en todas, recién publicada: 0/12 y sin postulados', () => {
+        publishInSession('turno-garzones-finde');
+        expect(ids()).toContain('turno-garzones-finde');
+        expect(agenda()).toEqual(expect.arrayContaining(['ag-br-finde-sab', 'ag-br-finde-dom']));
+        expect(isPublicationActive('turno-garzones-finde', getManageState())).toBe(true);
+        const m = managed('turno-garzones-finde');
+        expect(metricsOf(m, getManageState(), apps())).toEqual([
+            { label: 'Vistas', valor: '0', detalle: 'recién publicada' },
+            { label: 'Confirmados', valor: '0/12', detalle: '8 el sáb y 4 el dom' },
+        ]);
+        expect(m.cupos?.map((r) => rosterView(m, r, getManageState(), apps()).postulados.length)).toEqual([0, 0]);
     });
 });

@@ -1,6 +1,7 @@
 // Textos de Gestionar publicaciones (GES-01, GES-02, GES-04). Los que están
 // en el prototipo F1 van tal cual; los que no, con el comentario
 // «no está en el prototipo».
+import { SHARE_COPY } from '../../app/navigation/share';
 
 export const copy = {
     common: {
@@ -52,8 +53,9 @@ export const copy = {
         closed: 'Cerraste la publicación', // no está en el prototipo
         closedBanner: 'Ya no recibe postulaciones. Sus cupos y postulantes siguen aquí.', // no está en el prototipo
         shareText: (titulo: string, resumen: string) => `${titulo} · ${resumen}`,
-        linkCopied: 'Copiamos el enlace de la publicación', // no está en el prototipo
-        shareError: 'No pudimos compartir. Intenta de nuevo.', // no está en el prototipo
+        // Los mismos avisos que DET-01 (src/app/navigation/share.ts).
+        linkCopied: SHARE_COPY.copiado,
+        shareError: SHARE_COPY.error,
     },
     applicants: {
         title: 'Postulantes',

@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { getManagedPublications } from '../demo/data';
+import { resetManage } from '../demo/manageState';
 import { initialTurno } from './model/turno';
 import {
     awaitIdentity,
@@ -53,5 +55,19 @@ describe('borrador del asistente', () => {
         markPublished('carolina', { kind: 'hogar', titulo: 'Asesor/a del hogar puertas afuera', hasta: null, review: true });
         expect(getPublished('carolina', 'hogar')?.review).toBe(true);
         expect(getPublished('carolina', 'turno')).toBeUndefined();
+    });
+});
+
+describe('lo publicado existe para las otras pestañas (demo/manageState)', () => {
+    beforeEach(() => {
+        resetPublishStore();
+        resetManage();
+    });
+
+    it('flujo 4: «Garzones fin de semana» aparece en ACT-03 recién al publicar', () => {
+        const own = () => getManagedPublications('banqueteria').map((m) => m.publicationId);
+        expect(own()).not.toContain('turno-garzones-finde');
+        markPublished('banqueteria', { kind: 'turno', titulo: 'Garzones fin de semana', hasta: 'hasta el dom 20 dic', review: false });
+        expect(own()).toContain('turno-garzones-finde');
     });
 });

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { getExplore, getPublication } from '../demo/data';
-import { arrive, getManageState, resetManage, setPublicationStatus } from '../demo/manageState';
+import { arrive, getManageState, publishInSession, resetManage, setPublicationStatus } from '../demo/manageState';
 import { DEMO_ACTORS } from '../demo/session';
 import type { DemoTurno } from '../demo/types';
 import { EMPLEO_SIN_FILTROS, TURNO_SIN_FILTROS } from './filters';
@@ -147,7 +147,16 @@ describe('EXP-05 · quienes ya están en la publicación', () => {
         if (estado?.tipo === 'sugeridas') expect(estado.sugeridas.map((s) => s.person.id)).not.toContain('martin-silva');
     });
 
+    it('antes de publicarla en PUBL-07 (flujo 4) no está en EXP-05 ni en la búsqueda', () => {
+        expect(ownPublications(DEMO_ACTORS.banqueteria, false, manage()).map((p) => p.id)).not.toContain('turno-garzones-finde');
+        expect(searchScope(DEMO_ACTORS.matias, false, noApplications, manage()).turnos.map((p) => p.id)).not.toContain('turno-garzones-finde');
+        publishInSession('turno-garzones-finde');
+        expect(ownPublications(DEMO_ACTORS.banqueteria, false, manage()).map((p) => p.id)).toContain('turno-garzones-finde');
+        expect(searchScope(DEMO_ACTORS.matias, false, noApplications, manage()).turnos.map((p) => p.id)).toContain('turno-garzones-finde');
+    });
+
     it('pausar o cerrar en GES-01 la saca de EXP-05 y de la búsqueda', () => {
+        publishInSession('turno-garzones-finde');
         expect(ownPublications(DEMO_ACTORS.banqueteria, false, manage()).map((p) => p.id)).toContain('turno-garzones-finde');
         setPublicationStatus('turno-garzones-finde', { estado: 'Pausada' });
         expect(ownPublications(DEMO_ACTORS.banqueteria, false, manage()).map((p) => p.id)).not.toContain('turno-garzones-finde');
@@ -188,6 +197,7 @@ describe('EXP-07 · buscar', () => {
 
     it('lo decidido en EXP-05 manda: «No me interesa» la saca y a quien invitaste lo dice', () => {
         const pub = 'turno-garzones-finde';
+        publishInSession(pub);
         const decisions: Record<string, Decided> = {
             [suggestionId(pub, 'javiera-contreras')]: 'si',
             [suggestionId(pub, 'felipe-araya')]: 'no',
