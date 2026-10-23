@@ -97,6 +97,7 @@ export const copy = {
         verPostulados: 'Ver postulados',
         verCupos: 'Ver cupos',
         cambiarPublicacion: 'Cambiar de publicación',
+        verPublicacion: 'Ver tu publicación',
         porque: {
             oficio: 'calza con el oficio que buscas',
             trabajo: (fecha: string) => `ya trabajó contigo el ${fecha}`,
@@ -181,6 +182,8 @@ export const copy = {
         /** Primer dato de una persona encontrada: con qué publicación propia calza. */
         para: (titulo: string) => `Para ${titulo}`,
         postulo: (titulo: string) => `Postuló a ${titulo}`,
+        /** Ya la invitaste desde EXP-05 («Invitar a postular»). */
+        invitada: (titulo: string) => `Invitaste a postular a ${titulo}`,
         sugerencias: 'Oficios sugeridos',
         inicio: {
             trabajo: { titulo: 'Busca empleos y turnos', texto: 'Escribe un oficio, una organización o una comuna.' },

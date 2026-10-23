@@ -6,7 +6,10 @@
 // buscador aparecen esos oficios como Chips de sugerencia (el sinónimo nunca
 // se muestra). Agrupa por tipo: «Empleos (2)», «Turnos (3)», «Personas (4)»,
 // con PublicationCard compacta: una publicación abre DET-01; una persona,
-// GES-02 o GES-04 si ya postuló, o EXP-05 de la publicación para invitarla.
+// GES-02 o GES-04 si ya postuló, o EXP-05 de la publicación para invitarla
+// (con push: atrás vuelve a la búsqueda y a su scroll). Lo decidido en EXP-05
+// manda: a quien marcaste «No me interesa» ya no calza con esa publicación y a
+// quien invitaste lo dice («Invitaste a postular a …»).
 // Lo escrito va en la URL (replace): atrás desde el detalle vuelve con la
 // misma búsqueda. Rosa sin perfiles ve, bajo el buscador, su EmptyState con
 // «Agregar un perfil». Sin historial (enlace directo o recarga), volver lleva
@@ -25,7 +28,7 @@ import { PublicationCard } from '../../../ui/PublicationCard';
 import { SearchField } from '../../../ui/SearchField';
 import { getExplore } from '../../demo/data';
 import { useDemoSession } from '../../demo/session';
-import { useSessionState } from '../../demo/sessionStore';
+import { useDecided, useSessionState } from '../../demo/sessionStore';
 import type { DemoPublication } from '../../demo/types';
 import { ExploreEmpty, fromDemo } from '../components/ExploreEmpty';
 import { useGo, useSheetKeepsScroll } from '../components/hooks';
@@ -37,6 +40,7 @@ import {
     searchHints,
     searchIn,
     searchScope,
+    sinPerfiles,
     suggestionPath,
     synonymSuggestions,
     type Suggestion,
@@ -56,20 +60,24 @@ export function SearchScreen() {
     const showVerification = useShowVerification();
     // Quién ya postuló (personas); también vuelve a pintar las insignias cuando alguien verifica su celular (AUTH-08).
     const { applications } = useSessionState();
+    // Lo decidido en EXP-05 (invitar o «No me interesa»), con la clave suggestionId.
+    const decided = useDecided(actor.id);
     useSheetKeepsScroll();
 
     // El texto vive en el campo (si esperara a la URL, que cambia en una transición, se perderían letras);
     // la URL lo guarda con replace para volver a la misma búsqueda.
     const [q, setQ] = useState(() => params.get('q') ?? '');
-    const scope = useMemo(() => searchScope(actor, recienRegistrado, applications), [actor, recienRegistrado, applications]);
+    const scope = useMemo(
+        () => searchScope(actor, recienRegistrado, applications, decided),
+        [actor, recienRegistrado, applications, decided],
+    );
     const results = useMemo(() => searchIn(scope, q), [scope, q]);
     const hints = useMemo(() => searchHints(scope), [scope]);
     const sugerencias = synonymSuggestions(q);
     const total = results.empleos.length + results.turnos.length + results.personas.length;
     const alcance: Alcance = scope.personas.length > 0 ? 'todo' : 'trabajo';
     // Rosa sin perfiles: busca igual, pero antes de escribir ve cómo empezar.
-    const sinPerfiles = actor.kind === 'persona' && actor.capabilities.length === 0;
-    const vacio = sinPerfiles ? getExplore(actor.id).empleos.vacio : undefined;
+    const vacio = sinPerfiles(actor) ? getExplore(actor.id).empleos.vacio : undefined;
 
     const inputRef = useRef<HTMLInputElement>(null);
     const write = (next: string) => {
@@ -83,7 +91,7 @@ export function SearchScreen() {
     };
 
     // Sin historial interno, el atrás del AppBar vuelve a Explorar (no a Inicio).
-    const onBack = () => (hasInternalHistory() ? goBack() : go(lastUrlOf('explorar')));
+    const onBack = () => (hasInternalHistory() ? goBack() : go(lastUrlOf('explorar'), { replace: true }));
 
     const card = (p: DemoPublication) => {
         const detalle = paths.publicacion(p.id);

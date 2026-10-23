@@ -89,13 +89,36 @@ export const SINONIMOS: Readonly<Record<string, readonly string[]>> = {
     mucama: ['Camarero/a de pisos'],
     babysitter: ['Cuidador/a infantil'],
     ninera: ['Cuidador/a infantil'],
+    // Garzón: la forma femenina y el plural no calzan con «Garzón» ni con «Garzones» al revés.
+    garzona: ['Garzón/a'],
+    garzones: ['Garzón/a'],
+    garzonas: ['Garzón/a'],
     mesero: ['Garzón/a'],
     mesera: ['Garzón/a'],
+    // Las mismas palabras que reconoce el catálogo de oficios del onboarding (keywords).
+    camarero: ['Garzón/a'],
     barman: ['Bartender'],
+    coctelero: ['Bartender'],
     os10: ['Guardia de seguridad', 'Guardia de eventos'],
+    'os-10': ['Guardia de seguridad', 'Guardia de eventos'],
+    nochero: ['Guardia de seguridad'],
     vigilante: ['Guardia de seguridad', 'Guardia de eventos'],
     bodeguero: ['Operario/a de bodega'],
+    bodeguera: ['Operario/a de bodega'],
+    'auxiliar de bodega': ['Operario/a de bodega'],
+    'empleada domestica': ['Asesor/a del hogar'],
 };
+
+/**
+ * Turnos recién publicados cuyos postulados llegan después del «salto de
+ * tiempo» (flujo 4: GES-04 parte «Aún no hay postulados»). La misma regla que
+ * usa GES-04; pedido en «requests» que la sesión de Gestionar (llegada,
+ * pausa, cierre y confirmados) pase a demo/sessionStore. Mientras tanto, en
+ * Explorar estos postulados todavía no están.
+ */
+export const POSTULADOS_POR_LLEGAR: readonly { publicationId: string; rosterId: string }[] = [
+    { publicationId: 'turno-garzones-finde', rosterId: 'finde-sab-19' },
+];
 
 /**
  * Hoja «Verificación de …»: qué revisó Talently según la insignia, con los

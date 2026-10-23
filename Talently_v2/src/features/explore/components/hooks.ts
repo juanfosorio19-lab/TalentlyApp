@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, type MouseEvent } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useOpenPath } from '../../../app/navigation/useOpenPath';
-import { isTabRoot } from '../../../app/paths';
+import { isTabRoot, tabOf } from '../../../app/paths';
 import type { DemoActorId } from '../../demo/session';
 import { keyOf, useDecided, useSessionState } from '../../demo/sessionStore';
 import { withParams } from '../filters';
@@ -50,28 +50,45 @@ export function useSheetKeepsScroll(): void {
     }, [sheetOpen, location.key]);
 }
 
-/** ¿La ruta es la raíz de una pestaña? (se abre con replace, spec §5.3 regla 1). */
-const toTabRoot = (path: string) => isTabRoot(path.split('?')[0] ?? path);
+const pathnameOf = (path: string) => path.split('?')[0] ?? path;
+
+/**
+ * ¿Se abre con replace? Solo al cambiar de pestaña (spec §5.3 regla 1: la
+ * raíz de OTRA pestaña) o al cambiar los parámetros de la misma raíz. Desde
+ * Buscar (apilada sobre Explorar), Explorar con otra publicación es un paso
+ * más: push, para que atrás vuelva a la búsqueda y a su scroll (regla 2).
+ * Las pantallas de este feature son de Explorar (/buscar no tiene pestaña).
+ */
+export function replacesFrom(fromPathname: string, path: string): boolean {
+    const to = pathnameOf(path);
+    if (!isTabRoot(to)) return false;
+    return tabOf(to) !== (tabOf(fromPathname) ?? 'explorar') || to === fromPathname;
+}
 
 /**
  * Navegar desde Explorar: una pantalla apilada con push (spec §5.3 regla 2);
  * la raíz de otra pestaña con replace (regla 1). Si la pantalla todavía no
- * existe, useOpenPath muestra «Disponible pronto».
+ * existe, useOpenPath muestra «Disponible pronto». `replace` explícito para
+ * los atrás que navegan (Buscar sin historial vuelve a Explorar).
  */
 export function useGo() {
     const { open, linkProps } = useOpenPath();
-    const go = useCallback((path: string) => open(path, { replace: toTabRoot(path) }), [open]);
+    const { pathname } = useLocation();
+    const go = useCallback(
+        (path: string, options?: { replace?: boolean }) => open(path, { replace: options?.replace ?? replacesFrom(pathname, path) }),
+        [open, pathname],
+    );
     /** href y onClick de una tarjeta (el enlace del título que se estira sobre toda la tarjeta). */
     const cardLink = useCallback(
         (path: string): Pick<CardHandlers, 'href' | 'onOpen'> => {
-            const link = linkProps(path, { replace: toTabRoot(path) });
+            const link = linkProps(path, { replace: replacesFrom(pathname, path) });
             return {
                 // Sin pantalla todavía (perfil público): sin destino real; el toque muestra «Disponible pronto».
                 href: link.href ?? '#',
                 onOpen: (e: MouseEvent<HTMLAnchorElement>) => link.onClick(e),
             };
         },
-        [linkProps],
+        [linkProps, pathname],
     );
     return { go, cardLink };
 }

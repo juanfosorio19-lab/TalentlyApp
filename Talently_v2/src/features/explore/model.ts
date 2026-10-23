@@ -37,7 +37,7 @@ import {
     type TarifaUnidad,
     type TurnoFiltros,
 } from './filters';
-import { CANDIDATOS_POR_PUBLICACION, OFICIO_DEL_TURNO, SINONIMOS } from './mock';
+import { CANDIDATOS_POR_PUBLICACION, OFICIO_DEL_TURNO, POSTULADOS_POR_LLEGAR, SINONIMOS } from './mock';
 
 // ─── Segmentos (spec §5.2) ──────────────────────────────────────────────────
 
@@ -367,6 +367,8 @@ export interface Suggestion {
     publicationTitle: string;
     /** Si ya está en esa publicación (EXP-07 también muestra a quienes postularon). */
     membership?: Membership;
+    /** Ya la invitaste a postular desde EXP-05 («Me interesa»); EXP-07 lo dice. */
+    invitada?: boolean;
 }
 
 export type PersonasEstado =
@@ -393,6 +395,10 @@ function countsFromData(personId: string, publicationId: string, applications: A
     return applications.has(keyOf(personId, publicationId));
 }
 
+/** ¿Los postulados de este turno todavía no llegan? (GES-04 parte «Aún no hay postulados», flujo 4). */
+const arrivesLater = (publicationId: string, rosterId: string) =>
+    POSTULADOS_POR_LLEGAR.some((x) => x.publicationId === publicationId && x.rosterId === rosterId);
+
 /**
  * Quienes ya están en la publicación, como los ven GES-02 y GES-04 en esta
  * sesión: confirmados, postulados y lista de espera de cada turno o
@@ -408,7 +414,8 @@ export function membersOf(publicationId: string, applications: Applications): Ma
     const rosters = m?.cupos ?? [];
     for (const c of rosters) for (const a of c.confirmados) add(a.personId, { kind: 'confirmado', rosterId: c.id });
     for (const c of rosters) {
-        for (const a of c.postulados) if (visible(a.personId)) add(a.personId, { kind: 'postulado', rosterId: c.id });
+        const postulados = arrivesLater(publicationId, c.id) ? [] : c.postulados;
+        for (const a of postulados) if (visible(a.personId)) add(a.personId, { kind: 'postulado', rosterId: c.id });
         for (const a of c.listaEspera) if (visible(a.personId)) add(a.personId, { kind: 'espera', rosterId: c.id });
     }
     for (const a of m?.postulantes?.personas ?? []) if (visible(a.personId)) add(a.personId, { kind: 'postulante' });
@@ -539,6 +546,8 @@ export function reviewPathOf(pub: DemoPublication, applications: Applications, v
  */
 export function suggestionPath(s: Suggestion): string {
     const m = s.membership;
+    // Ya invitada: EXP-05 ya no la muestra; su tarjeta abre su perfil, como en EXP-05.
+    if (!m && s.invitada) return paths.perfilPublico(s.person.id, 'trabajo');
     if (!m) return `${paths.explorar('personas')}&${PARAM_PUBLICACION}=${encodeURIComponent(s.publicationId)}`;
     if (!m.rosterId) return paths.postulantes(s.publicationId);
     const tab: RosterTab = m.kind === 'confirmado' ? 'confirmados' : m.kind === 'espera' ? 'espera' : 'postulados';
@@ -560,7 +569,12 @@ export function personCard(s: Suggestion, h: CardHandlers, opts: { deck?: boolea
     const p = s.person;
     const tags: PublicationTag[] = [];
     if (opts.publicacion) {
-        tags.push({ label: s.membership ? copy.buscar.postulo(s.publicationTitle) : copy.buscar.para(s.publicationTitle) });
+        const label = s.membership
+            ? copy.buscar.postulo(s.publicationTitle)
+            : s.invitada
+              ? copy.buscar.invitada(s.publicationTitle)
+              : copy.buscar.para(s.publicationTitle);
+        tags.push({ label });
     }
     if (p.experiencia) tags.push({ kind: 'experiencia', label: `${p.experiencia} de experiencia` });
     return {
@@ -578,6 +592,9 @@ export function personCard(s: Suggestion, h: CardHandlers, opts: { deck?: boolea
 }
 
 // ─── EXP-07 · Buscar ────────────────────────────────────────────────────────
+
+/** Rosa sin perfiles: busca igual, pero antes de escribir ve cómo empezar (su EmptyState con «Agregar un perfil»). */
+export const sinPerfiles = (actor: DemoActor) => actor.kind === 'persona' && actor.capabilities.length === 0;
 
 /** Minúsculas y sin tildes («Ñuñoa» → «nunoa»). */
 export function fold(text: string): string {
@@ -646,27 +663,54 @@ export function searchablePublications(): (DemoEmpleo | DemoTurno)[] {
         .filter((p): p is DemoEmpleo | DemoTurno => (p?.tipo === 'empleo' || p?.tipo === 'turno') && p.estado === 'Activa');
 }
 
-/** Orden de una persona encontrada: primero quien espera revisión, luego a quién invitar y al final quien ya tiene cupo. */
-const MEMBERSHIP_RANK: Record<MemberKind | 'invitar', number> = { postulado: 0, espera: 0, postulante: 0, invitar: 1, confirmado: 2 };
-const rankOf = (s: Suggestion) => MEMBERSHIP_RANK[s.membership?.kind ?? 'invitar'];
+/**
+ * Orden de una persona encontrada: primero quien espera revisión, luego a
+ * quién invitar, después a quien ya invitaste y al final quien ya tiene cupo.
+ */
+const MEMBERSHIP_RANK: Record<MemberKind | 'invitar' | 'invitada', number> = {
+    postulado: 0,
+    espera: 0,
+    postulante: 0,
+    invitar: 1,
+    invitada: 2,
+    confirmado: 3,
+};
+const rankOf = (s: Suggestion) => MEMBERSHIP_RANK[s.membership?.kind ?? (s.invitada ? 'invitada' : 'invitar')];
+
+/** Lo decidido en EXP-05 sobre una persona sugerida, con la clave suggestionId (useDecided del actor). */
+export type SuggestionDecided = (suggestionId: string) => Decided;
+
+const nothingDecided: SuggestionDecided = () => undefined;
 
 /**
  * Las personas que calzan con las publicaciones propias del actor, una vez
  * cada una, con la publicación por la que calzan: la que espera revisión
  * (ya postuló), si no una a la que invitarla, y si no donde ya tiene cupo.
+ * Lo decidido en EXP-05 manda: con «No me interesa» ya no calza con esa
+ * publicación («No te sugeriremos más a …»); con «Invitar a postular» dice
+ * que ya la invitaste.
  */
-function allCandidates(actor: DemoActor, recienRegistrado: boolean, applications: Applications): Suggestion[] {
+function allCandidates(
+    actor: DemoActor,
+    recienRegistrado: boolean,
+    applications: Applications,
+    decided: SuggestionDecided,
+): Suggestion[] {
     const out = new Map<string, Suggestion>();
     for (const pub of ownPublications(actor, recienRegistrado)) {
         const comuna = comunaOf(pub.lugar);
         const members = membersOf(pub.id, applications);
         for (const person of candidatesFor(actor, pub)) {
+            const membership = members.get(person.id);
+            const decision = membership ? undefined : decided(suggestionId(pub.id, person.id));
+            if (decision === 'no') continue;
             const s: Suggestion = {
                 person,
                 porQue: porQueOf(undefined, person.comuna, comuna),
                 publicationId: pub.id,
                 publicationTitle: pub.titulo,
-                membership: members.get(person.id),
+                membership,
+                invitada: decision === 'si' || undefined,
             };
             const prev = out.get(person.id);
             if (!prev || rankOf(s) < rankOf(prev)) out.set(person.id, s);
@@ -680,7 +724,12 @@ function allCandidates(actor: DemoActor, recienRegistrado: boolean, applications
  * los de su Explorar, que están cerca; sin los propios) y, para quien
  * contrata, las personas que calzan con sus publicaciones.
  */
-export function searchScope(actor: DemoActor, recienRegistrado: boolean, applications: Applications): SearchResults {
+export function searchScope(
+    actor: DemoActor,
+    recienRegistrado: boolean,
+    applications: Applications,
+    decided: SuggestionDecided = nothingDecided,
+): SearchResults {
     const own = new Set(ownPublications(actor).map((p) => p.id));
     const explore = getExplore(actor.id);
     const near = new Set([...explore.empleos.publicaciones, ...turnosOf(explore).map((p) => p.id)]);
@@ -689,7 +738,7 @@ export function searchScope(actor: DemoActor, recienRegistrado: boolean, applica
     return {
         empleos: sorted.filter((p): p is DemoEmpleo => p.tipo === 'empleo'),
         turnos: sorted.filter((p): p is DemoTurno => p.tipo === 'turno'),
-        personas: allCandidates(actor, recienRegistrado, applications),
+        personas: allCandidates(actor, recienRegistrado, applications, decided),
     };
 }
 
