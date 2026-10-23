@@ -138,6 +138,21 @@ export function isAwaitingIdentity(actorId: DemoActorId, kind: WizardKind): bool
     return session.get().awaitingIdentity.has(keyOf(actorId, kind));
 }
 
+/** Volvió de VER-02 sin enviar (atrás): PUBL-07 ya no termina de publicar por su cuenta. */
+export function cancelAwaitIdentity(actorId: DemoActorId, kind: WizardKind): void {
+    const s = session.get();
+    const key = keyOf(actorId, kind);
+    if (!s.awaitingIdentity.has(key)) return;
+    const awaitingIdentity = new Set(s.awaitingIdentity);
+    awaitingIdentity.delete(key);
+    session.set({ ...s, awaitingIdentity });
+}
+
+/** Lo publicado en esta sesión, sin React (al montar un asistente). */
+export function getPublished(actorId: DemoActorId, kind: WizardKind): PublishedSummary | undefined {
+    return session.get().published.get(keyOf(actorId, kind));
+}
+
 export function markIdentitySent(actorId: DemoActorId): void {
     const s = session.get();
     if (s.identitySent.has(actorId)) return;

@@ -4,13 +4,12 @@ import { formatAmount } from '../../../ui/Amount';
 import { Banner } from '../../../ui/Banner';
 import { CheckboxGroup } from '../../../ui/Checkbox';
 import { ChipGroup } from '../../../ui/ChipGroup';
-import { IconCalendar, IconClock, IconHome, IconShield } from '../../../ui/icons';
+import { IconCalendar, IconClock, IconHome, IconInfo, IconShield } from '../../../ui/icons';
 import { Stack } from '../../../ui/Layout';
 import { MoneyField } from '../../../ui/MoneyField';
 import { OptionGroup } from '../../../ui/OptionCard';
 import { PublicationCard } from '../../../ui/PublicationCard';
 import { SegmentedControl } from '../../../ui/SegmentedControl';
-import { Select } from '../../../ui/Select';
 import { TextArea } from '../../../ui/TextArea';
 import type { DemoActor } from '../../demo/session';
 import { copy } from '../copy';
@@ -21,8 +20,11 @@ import {
     DIAS,
     HOGAR_OFICIOS,
     HOGAR_UNITS,
+    LEGAL,
     MODALIDADES,
     TAREAS,
+    descansoCorto,
+    excedeJornada,
     hogarTags,
     hogarTitle,
     horasSemana,
@@ -38,6 +40,7 @@ import { timeOptions } from '../model/time';
 import { amountPreview } from '../model/turno';
 import { Note } from './Parts';
 import { fieldId } from './TurnoSteps';
+import { UrlSelect } from './UrlSelect';
 
 export interface HogarStepProps {
     draft: HogarDraft;
@@ -51,7 +54,8 @@ export function HogarStep1({ draft, errors, onPatch }: HogarStepProps) {
     const p = copy.hogar.paso1;
     return (
         <Stack gap={6}>
-            <Select<HogarOficio>
+            <UrlSelect<HogarOficio>
+                sheet="oficio"
                 id={fieldId('oficio')}
                 label={p.oficio}
                 placeholder={p.oficio}
@@ -74,7 +78,12 @@ export function HogarStep1({ draft, errors, onPatch }: HogarStepProps) {
                 }))}
                 error={errors?.modalidad}
             />
-            {draft.modalidad && <p className="caption publish-flush publish-muted">{p.seLlamara(hogarTitle(draft))}</p>}
+            {draft.modalidad && (
+                <div className="publish-after-group">
+                    <p className="caption publish-flush publish-muted">{p.seLlamara(hogarTitle(draft))}</p>
+                </div>
+            )}
+            <Note icon={IconInfo}>{LEGAL.ley}</Note>
         </Stack>
     );
 }
@@ -93,10 +102,11 @@ export function HogarStep2({ draft, errors, onPatch }: HogarStepProps) {
                 options={DIAS}
                 value={draft.dias}
                 onChange={(dias) => onPatch({ dias })}
-                error={errors?.dias}
+                error={errors?.dias ?? errors?.horas}
             />
             <div className="publish-grid">
-                <Select
+                <UrlSelect
+                    sheet="desde"
                     id={fieldId('desde')}
                     label={p.desde}
                     placeholder="--:--"
@@ -105,7 +115,8 @@ export function HogarStep2({ draft, errors, onPatch }: HogarStepProps) {
                     value={draft.desde}
                     onChange={(desde) => onPatch({ desde })}
                 />
-                <Select
+                <UrlSelect
+                    sheet="hasta"
                     id={fieldId('hasta')}
                     label={p.hasta}
                     placeholder="--:--"
@@ -116,7 +127,8 @@ export function HogarStep2({ draft, errors, onPatch }: HogarStepProps) {
                     error={errors?.hasta}
                 />
             </div>
-            <Select
+            <UrlSelect
+                sheet="colacion"
                 label={p.colacion}
                 placeholder={p.colacion}
                 options={COLACIONES}
@@ -125,12 +137,15 @@ export function HogarStep2({ draft, errors, onPatch }: HogarStepProps) {
                 onChange={(v) => onPatch({ colacion: Number(v) })}
             />
             {horasSemana(draft) > 0 && (
-                <Note icon={IconClock} size="body">
+                <Note icon={IconClock} size="body" tone="text">
                     {p.horasAntes}
                     <b>{horasSemanaText(draft)}</b>
                     {p.horasDespues}
                 </Note>
             )}
+            {/* La plantilla legal avisa apenas el horario no calza (01-super-prompt PUBL-04 paso 2). */}
+            {excedeJornada(draft) && <Banner tone={errors?.horas ? 'danger' : 'warning'}>{LEGAL.jornadaAviso}</Banner>}
+            {descansoCorto(draft) && <Banner tone="warning">{LEGAL.descansoAviso}</Banner>}
         </Stack>
     );
 }

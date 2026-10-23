@@ -41,6 +41,9 @@ export function HogarWizardScreen({ step }: { step: number }) {
         recienRegistrado,
     });
 
+    // Ya publicado: atrás se salta el asistente sin mostrarlo (useWizard).
+    if (wizard.skipping) return null;
+
     const incomplete = firstIncompleteHogarStep(draft);
     if (incomplete !== null && incomplete < step) return <Navigate to={paths.publicar('hogar', incomplete)} replace />;
 
@@ -78,7 +81,7 @@ export function HogarWizardScreen({ step }: { step: number }) {
                 <IdentitySheet
                     // Ya enviada (al volver con atrás desde PUBL-07), la hoja no vuelve a pedirla.
                     open={flow.identitySheet.open && flow.identityPending}
-                    onClose={flow.identitySheet.hide}
+                    onClose={flow.dismissIdentity}
                     onVerify={flow.verifyIdentity}
                     que="aviso"
                     phoneVerified={flow.phoneVerified}

@@ -1,6 +1,14 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { initialTurno } from './model/turno';
-import { awaitIdentity, isAwaitingIdentity, markPublished, resetPublishStore, turnoDrafts } from './store';
+import {
+    awaitIdentity,
+    cancelAwaitIdentity,
+    getPublished,
+    isAwaitingIdentity,
+    markPublished,
+    resetPublishStore,
+    turnoDrafts,
+} from './store';
 
 const initial = initialTurno('banqueteria');
 
@@ -35,5 +43,15 @@ describe('borrador del asistente', () => {
         expect(isAwaitingIdentity('carolina', 'hogar')).toBe(true);
         markPublished('carolina', { kind: 'hogar', titulo: 'Asesor/a del hogar puertas afuera', hasta: null, review: true });
         expect(isAwaitingIdentity('carolina', 'hogar')).toBe(false);
+    });
+
+    it('volver de VER-02 sin enviar cancela la espera; lo publicado queda para saltar el asistente', () => {
+        awaitIdentity('carolina', 'hogar');
+        cancelAwaitIdentity('carolina', 'hogar');
+        expect(isAwaitingIdentity('carolina', 'hogar')).toBe(false);
+        expect(getPublished('carolina', 'hogar')).toBeUndefined();
+        markPublished('carolina', { kind: 'hogar', titulo: 'Asesor/a del hogar puertas afuera', hasta: null, review: true });
+        expect(getPublished('carolina', 'hogar')?.review).toBe(true);
+        expect(getPublished('carolina', 'turno')).toBeUndefined();
     });
 });

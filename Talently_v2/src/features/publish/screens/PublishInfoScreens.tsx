@@ -79,12 +79,12 @@ export function SoonScreen({ tipo }: { tipo: 'clase' | 'servicio' }) {
  * busca trabajo publica desde una organización o un hogar.
  */
 export function NoPublisherScreen({ tipo }: { tipo: 'empleo' | 'turno' | 'hogar' }) {
-    const { actor } = useDemoSession();
+    const { actor, recienRegistrado } = useDemoSession();
     if (actor.kind === 'organizacion' && tipo === 'hogar') {
         const c = copy.soloHogar;
         return <InfoScreen appBar={c.appBar} icon={IconHome} title={c.titulo} text={c.texto} action={{ label: c.accion, to: paths.publicar('turno') }} />;
     }
-    if (canPublish(actor, 'hogar') && tipo === 'empleo') {
+    if (canPublish(actor, 'hogar', recienRegistrado) && tipo === 'empleo') {
         const c = copy.soloOrganizacion;
         return <InfoScreen appBar={c.appBar} icon={IconOffers} title={c.titulo} text={c.texto} action={{ label: c.accion, to: paths.publicar('hogar') }} />;
     }

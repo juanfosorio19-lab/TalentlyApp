@@ -3,8 +3,10 @@
 // con replace al publicar, o desde VER-02 en el flujo 5: entonces termina de
 // publicar el aviso que quedó guardado. «Ver publicación» lleva, con replace,
 // a GES-01 del turno o a GES-02 del aviso (los de los datos de demostración).
+// Sin nada publicado en la sesión (un enlace, una recarga, «Ahora no») no
+// dice que se publicó: vuelve al asistente, que retoma el borrador guardado.
 import { useEffect, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 import { Badge } from '../../../ui/Badge';
 import { ResultScreen } from '../../../ui/ResultScreen';
 import { useOpenPath } from '../../../app/navigation/useOpenPath';
@@ -32,9 +34,9 @@ export const screenId = 'PUBL-07';
 
 export function PublishResultScreen() {
     const { tipo } = useParams();
-    const { actor } = useDemoSession();
+    const { actor, recienRegistrado } = useDemoSession();
     if (tipo !== 'turno' && tipo !== 'hogar') return <NotFoundScreen />;
-    if (!canPublish(actor, tipo)) return <NoPublisherScreen tipo={tipo} />;
+    if (!canPublish(actor, tipo, recienRegistrado)) return <NoPublisherScreen tipo={tipo} />;
     return <PublishResult key={`${actor.id}:${tipo}`} kind={tipo} actor={actor} />;
 }
 
@@ -56,8 +58,11 @@ function PublishResult({ kind, actor }: { kind: WizardKind; actor: DemoActor }) 
     const { open } = useOpenPath();
     const published = usePublished(actor.id, kind);
     const awaiting = useAwaitingIdentity(actor.id, kind);
-    // Lo que se muestra mientras no hay nada publicado en la sesión (un enlace directo): el borrador.
-    const pending = useMemo(() => summaryOf(actor, draftOf(kind, actor, recienRegistrado)), [actor, kind, recienRegistrado]);
+    // Vuelve de VER-02: mientras el efecto lo publica, se muestra el aviso guardado (en revisión).
+    const pending = useMemo(
+        () => ({ ...summaryOf(actor, draftOf(kind, actor, recienRegistrado)), review: true }),
+        [actor, kind, recienRegistrado],
+    );
 
     // Vuelve de VER-02 (flujo 5): el aviso guardado se publica, en revisión, y la identidad queda enviada.
     useEffect(() => {
@@ -67,10 +72,12 @@ function PublishResult({ kind, actor }: { kind: WizardKind; actor: DemoActor }) 
         (kind === 'turno' ? turnoDrafts : hogarDrafts).discard(actor.id);
     }, [awaiting, actor, kind, recienRegistrado]);
 
+    // Nada publicado ni por publicar: no hay resultado que mostrar.
+    if (!published && !awaiting) return <Navigate to={paths.publicar(kind, 1)} replace />;
+
     const s = published ?? pending;
     const id = publishedId(actor.id, kind);
-    // El turno abre GES-01; el aviso del hogar, sus postulantes (GES-02), como en el prototipo.
-    const target = id ? (kind === 'turno' ? paths.gestionarPublicacion(id) : paths.postulantes(id)) : paths.actividad('publicaciones');
+    const home = { label: copy.resultado.inicio, onClick: () => open(paths.inicio(), { replace: true }) };
 
     return (
         <ResultScreen
@@ -87,12 +94,18 @@ function PublishResult({ kind, actor }: { kind: WizardKind; actor: DemoActor }) 
                     </span>
                 </>
             }
-            action={{
-                label: id ? copy.resultado.ver : copy.resultado.verMias,
-                // Al terminar un flujo, replace hacia su destino natural (spec §5.3 regla 6).
-                onClick: () => open(target, { replace: true }),
-            }}
-            secondaryAction={{ label: copy.resultado.inicio, onClick: () => open(paths.inicio(), { replace: true }) }}
+            // Al terminar un flujo, replace hacia su destino natural (spec §5.3 regla 6): el turno abre
+            // GES-01 y el aviso del hogar, sus postulantes (GES-02), como en el prototipo. Si lo publicado
+            // aún no existe en los datos (ACT-03 no lo mostraría), el único destino honesto es Inicio.
+            action={
+                id
+                    ? {
+                          label: copy.resultado.ver,
+                          onClick: () => open(kind === 'turno' ? paths.gestionarPublicacion(id) : paths.postulantes(id), { replace: true }),
+                      }
+                    : home
+            }
+            secondaryAction={id ? home : undefined}
         />
     );
 }

@@ -14,7 +14,6 @@ import { formatAmount } from '../../../ui/Amount';
 import { PublicationCard, cuposLabel } from '../../../ui/PublicationCard';
 import { SectionCard } from '../../../ui/SectionCard';
 import { SegmentedControl } from '../../../ui/SegmentedControl';
-import { Select } from '../../../ui/Select';
 import { ShiftBlock, ShiftBlocks } from '../../../ui/ShiftBlock';
 import { Switch } from '../../../ui/Switch';
 import { TextArea } from '../../../ui/TextArea';
@@ -50,6 +49,7 @@ import {
     type TurnoTemplate,
 } from '../model/turno';
 import { Note, SummaryRow } from './Parts';
+import { UrlSelect } from './UrlSelect';
 
 export interface TurnoStepProps {
     draft: TurnoDraft;
@@ -87,7 +87,8 @@ export function TurnoStep1({
                     ]}
                 />
             )}
-            <Select
+            <UrlSelect
+                sheet="oficio"
                 id={fieldId('oficio')}
                 label={copy.turno.paso1.oficio}
                 placeholder={copy.turno.paso1.oficioPlaceholder}
@@ -145,7 +146,9 @@ function ShiftEditor({
                 {canRemove && <IconButton icon={IconTrash} label={copy.turno.paso2.quitar(n)} onClick={onRemove} />}
             </div>
             <Stack gap={4}>
-                <Select
+                <UrlSelect
+                    sheet="fecha"
+                    param={{ key: 'bloque', value: block.id }}
                     id={fieldId(`${block.id}-fecha`)}
                     label={copy.turno.paso2.fecha}
                     placeholder={copy.turno.paso2.fechaPlaceholder}
@@ -156,7 +159,9 @@ function ShiftEditor({
                     error={errors?.fecha}
                 />
                 <div className="publish-grid publish-grid--shift">
-                    <Select
+                    <UrlSelect
+                        sheet="desde"
+                        param={{ key: 'bloque', value: block.id }}
                         id={fieldId(`${block.id}-desde`)}
                         label={copy.turno.paso2.desde}
                         placeholder="--:--"
@@ -165,7 +170,9 @@ function ShiftEditor({
                         value={block.desde}
                         onChange={(desde) => onChange({ desde })}
                     />
-                    <Select
+                    <UrlSelect
+                        sheet="hasta"
+                        param={{ key: 'bloque', value: block.id }}
                         id={fieldId(`${block.id}-hasta`)}
                         label={copy.turno.paso2.hasta}
                         placeholder="--:--"
@@ -383,7 +390,8 @@ export function TurnoStep3({ draft, errors, onPatch }: TurnoStepProps) {
                     checked={draft.pideIdentidad}
                     onChange={(ev) => onPatch({ pideIdentidad: ev.target.checked })}
                 />
-                <Select
+                <UrlSelect
+                    sheet="nota"
                     label={p.nota}
                     placeholder={p.notaPlaceholder}
                     options={NOTAS_MINIMAS}

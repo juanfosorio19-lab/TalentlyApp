@@ -19,10 +19,15 @@ export const isPublishTipo = (v: string | undefined): v is PublishTipo => PUBLIS
 export const WIZARD_STEPS = 5;
 export const PLAN_STEP = 5;
 
-/** Una organización publica empleos y turnos; un hogar, su aviso y turnos para un evento en su casa. */
-export function canPublish(actor: DemoActor, tipo: WizardKind | 'empleo'): boolean {
+/**
+ * Una organización publica empleos y turnos; un hogar, su aviso y turnos para
+ * un evento en su casa. Recién registrado (INI-01-jorge-nuevo) todavía no
+ * tiene perfil Hogar (Perfil muestra solo «Trabajo» e Inicio no ofrece
+ * «Publicar»): no publica nada.
+ */
+export function canPublish(actor: DemoActor, tipo: WizardKind | 'empleo', recienRegistrado = false): boolean {
     if (actor.kind === 'organizacion') return tipo !== 'hogar';
-    if (!actor.capabilities.includes('hogar')) return false;
+    if (recienRegistrado || !actor.capabilities.includes('hogar')) return false;
     return tipo !== 'empleo';
 }
 

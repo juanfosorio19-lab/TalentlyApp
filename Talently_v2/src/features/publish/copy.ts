@@ -160,8 +160,6 @@ export const copy = {
         revisionOrg: 'Publicaremos tu turno cuando verifiquemos tu organización. Te avisaremos cuando esté publicado.',
         plazoRevision: 'hasta 24 h hábiles',
         ver: 'Ver publicación',
-        // no está en el prototipo: si la publicación aún no está en los datos de demostración.
-        verMias: 'Ver mis publicaciones',
         inicio: 'Ir a Inicio',
     },
     empleo: {

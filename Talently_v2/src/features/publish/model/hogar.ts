@@ -138,9 +138,67 @@ export function initialHogar(actorId: DemoActorId, opciones: { recienRegistrado?
     return { ...base, algoMas: 'Ir a buscar al niño al colegio, a 4 cuadras de la casa.', sueldo: 600000 };
 }
 
+// ─── Plantilla legal del trabajo de casa particular ────────────────────────
+// 05-spec §3.1 «Plantilla empleo doméstico» y 03-base-de-datos `job_legal_check`:
+// sueldo bruto ≥ ingreso mínimo proporcional a las horas (completo puertas
+// adentro), puertas afuera y por días hasta 42 h a la semana, y 12 h de
+// descanso al día puertas adentro (aviso). Los valores vienen de `app_config`
+// (pedidos en «requests»); mientras, son los del spec.
+
+/** Ingreso mínimo mensual, bruto (`app_config.minimum_wage_clp`). */
+export const INGRESO_MINIMO = 553553;
+/** Jornada completa desde el 26-04-2026 (`app_config.max_weekly_hours`). */
+export const JORNADA_MAX = 42;
+/** Cotizaciones del trabajador: un sueldo líquido se lleva a bruto antes de comparar (`worker_contribution_rate`). */
+export const TASA_COTIZACIONES = 0.19;
+/** Descanso diario mínimo puertas adentro, en horas. */
+export const DESCANSO_ADENTRO_H = 12;
+
+/** Semanas de un mes (52 ÷ 12): un sueldo por día llevado a un mes. */
+const SEMANAS_POR_MES = 52 / 12;
+
+/** El sueldo del aviso en bruto y al mes (null sin sueldo). */
+export function sueldoBrutoMensual(d: HogarDraft): number | null {
+    if (d.sueldo === null) return null;
+    const bruto = d.neto ? d.sueldo / (1 - TASA_COTIZACIONES) : d.sueldo;
+    if (d.unidad === 'dia') return bruto * d.dias.length * SEMANAS_POR_MES;
+    if (d.unidad === 'hora') return bruto * horasSemana(d) * SEMANAS_POR_MES;
+    return bruto;
+}
+
+/** Mínimo legal del aviso: completo puertas adentro o en jornada completa; proporcional en jornada parcial. */
+export function sueldoMinimo(d: HogarDraft): number {
+    if (d.modalidad === 'adentro') return INGRESO_MINIMO;
+    return INGRESO_MINIMO * Math.min(1, horasSemana(d) / JORNADA_MAX);
+}
+
+export function bajoMinimo(d: HogarDraft): boolean {
+    const bruto = sueldoBrutoMensual(d);
+    return bruto !== null && bruto > 0 && Math.round(bruto) < Math.round(sueldoMinimo(d));
+}
+
+/** Puertas afuera o por días, sobre las 42 horas a la semana. */
+export const excedeJornada = (d: HogarDraft): boolean => d.modalidad !== 'adentro' && horasSemana(d) > JORNADA_MAX;
+
+/** Puertas adentro, de la entrada a la salida no quedan 12 horas de descanso en el día. */
+export const descansoCorto = (d: HogarDraft): boolean =>
+    d.modalidad === 'adentro' && sameDayMinutes(d.desde, d.hasta) > (24 - DESCANSO_ADENTRO_H) * 60;
+
+export const LEGAL = {
+    sueldoMinimo: 'El sueldo no puede ser menor al ingreso mínimo de $553.553 en jornada completa (proporcional si es parcial)',
+    // no está en el prototipo: el error y el aviso de las 42 h (01-super-prompt: «aviso si supera 42 h semanales»).
+    jornada: 'La jornada puede ser de hasta 42 horas a la semana',
+    jornadaAviso:
+        'Desde el 26 de abril de 2026, la jornada de quien trabaja puertas afuera o por días es de hasta 42 horas a la semana. Quita un día o acorta el horario.',
+    // no está en el prototipo: 12 h de descanso puertas adentro (aviso, no bloquea).
+    descansoAviso: 'Puertas adentro, la persona tiene que descansar al menos 12 horas al día. Revisa el horario.',
+    // no está en el prototipo: aviso informativo sobre la Ley 20.786 (05-spec §3.1).
+    ley: 'Es un empleo con contrato (Ley 20.786): se firma por escrito, se registra en la Inspección del Trabajo y se pagan sus cotizaciones.',
+} as const;
+
 // ─── Validación ─────────────────────────────────────────────────────────────
 
-export type HogarField = 'modalidad' | 'dias' | 'hasta' | 'tareas' | 'sueldo';
+export type HogarField = 'modalidad' | 'dias' | 'horas' | 'hasta' | 'tareas' | 'sueldo';
 export type HogarErrors = Partial<Record<HogarField, string>>;
 
 export function hogarErrors(d: HogarDraft, step: number): HogarErrors {
@@ -149,9 +207,13 @@ export function hogarErrors(d: HogarDraft, step: number): HogarErrors {
     if (step === 2) {
         if (d.dias.length === 0) e.dias = 'Elige al menos un día';
         if (sameDayMinutes(d.desde, d.hasta) <= d.colacion) e.hasta = 'La salida tiene que ser después de la entrada y la colación';
+        else if (excedeJornada(d)) e.horas = LEGAL.jornada;
     }
     if (step === 3 && d.tareas.length === 0) e.tareas = 'Elige al menos una tarea';
-    if (step === 4 && (d.sueldo === null || d.sueldo <= 0)) e.sueldo = 'Ingresa el sueldo';
+    if (step === 4) {
+        if (d.sueldo === null || d.sueldo <= 0) e.sueldo = 'Ingresa el sueldo';
+        else if (bajoMinimo(d)) e.sueldo = LEGAL.sueldoMinimo;
+    }
     return e;
 }
 

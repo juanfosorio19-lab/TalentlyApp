@@ -27,6 +27,13 @@ describe('quién publica qué (spec §5.4)', () => {
         expect(canPublish(DEMO_ACTORS.carolina, 'empleo')).toBe(false);
     });
 
+    it('Jorge recién registrado aún no tiene perfil Hogar: no publica (INI-01-jorge-nuevo)', () => {
+        expect(canPublish(DEMO_ACTORS.jorge, 'hogar')).toBe(true);
+        expect(canPublish(DEMO_ACTORS.jorge, 'hogar', true)).toBe(false);
+        expect(canPublish(DEMO_ACTORS.jorge, 'turno', true)).toBe(false);
+        expect(canPublish(DEMO_ACTORS.banqueteria, 'turno', true)).toBe(true);
+    });
+
     it('quien solo busca trabajo no publica', () => {
         expect(canPublish(DEMO_ACTORS.matias, 'turno')).toBe(false);
         expect(canPublish(DEMO_ACTORS.rosa, 'hogar')).toBe(false);

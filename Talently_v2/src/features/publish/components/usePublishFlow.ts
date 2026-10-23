@@ -4,13 +4,14 @@
 // PUBL-04-identidad y VER-02 (flujo 5).
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSnackbar } from '../../../ui/Snackbar';
 import { useOpenPath } from '../../../app/navigation/useOpenPath';
 import { useSheet } from '../../../app/sheets';
 import type { DemoActor } from '../../demo/session';
-import { isPhoneVerified } from '../../demo/sessionStore';
+import { isPhoneVerified, useSessionState } from '../../demo/sessionStore';
 import { PLAN_STEP, needsIdentity, phoneVerifiedInData, type WizardKind } from '../model/publisher';
 import { identityPath, publishedPath } from '../publishPaths';
-import { awaitIdentity, markPublished, useIdentitySent, type DraftStore, type PublishedSummary } from '../store';
+import { awaitIdentity, cancelAwaitIdentity, markPublished, useIdentitySent, type DraftStore, type PublishedSummary } from '../store';
 
 export const IDENTITY_SHEET = 'identidad';
 
@@ -31,13 +32,18 @@ interface FlowOptions<T> {
 
 export function usePublishFlow<T>({ kind, step, actor, store, initial, hasErrors, goTo, summary, recienRegistrado }: FlowOptions<T>) {
     const navigate = useNavigate();
+    const snackbar = useSnackbar();
     const { open } = useOpenPath();
+    // El teléfono verificado en esta sesión (VER-01, AUTH-08) cuenta al momento: la hoja lo lee de aquí.
+    useSessionState();
     const identitySheet = useSheet(IDENTITY_SHEET);
     const identitySent = useIdentitySent(actor.id);
     const [errorStep, setErrorStep] = useState<number | null>(null);
     const [errorTick, setErrorTick] = useState(0);
 
     const publish = () => {
+        // «Te avisaremos cuando puedas destacar…» (Premium en el paso 5) no sigue sobre PUBL-07 ni GES-01.
+        snackbar.hide();
         markPublished(actor.id, summary());
         // Al terminar un flujo, replace hacia su resultado (spec §5.3 regla 6): atrás no vuelve al asistente.
         navigate(publishedPath(kind), { replace: true });
@@ -61,9 +67,16 @@ export function usePublishFlow<T>({ kind, step, actor, store, initial, hasErrors
 
     /** «Verificar ahora»: el borrador queda guardado y VER-02 vuelve a PUBL-07, que termina de publicar. */
     const verifyIdentity = () => {
+        snackbar.hide();
         store.save(actor.id, initial, step);
         awaitIdentity(actor.id, kind);
         open(identityPath(publishedPath(kind)));
+    };
+
+    /** «Ahora no» (o atrás con la hoja abierta, también al volver de VER-02): PUBL-07 ya no publica por su cuenta. */
+    const dismissIdentity = () => {
+        cancelAwaitIdentity(actor.id, kind);
+        identitySheet.hide();
     };
 
     return {
@@ -72,8 +85,10 @@ export function usePublishFlow<T>({ kind, step, actor, store, initial, hasErrors
         errorTick,
         onContinue,
         identitySheet,
+        dismissIdentity,
         verifyIdentity,
-        phoneVerified: !recienRegistrado && isPhoneVerified(actor.id, phoneVerifiedInData(actor.id)),
+        // Recién registrado, los datos no cuentan (INI-01-jorge-nuevo), pero sí lo verificado en esta sesión.
+        phoneVerified: isPhoneVerified(actor.id, !recienRegistrado && phoneVerifiedInData(actor.id)),
         identityPending: needsIdentity(actor, identitySent),
     };
 }

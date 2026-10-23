@@ -14,10 +14,10 @@ import { TurnoWizardScreen } from './screens/TurnoWizardScreen';
 
 function PublishRoute() {
     const { tipo, paso } = useParams();
-    const { actor } = useDemoSession();
+    const { actor, recienRegistrado } = useDemoSession();
     if (!isPublishTipo(tipo)) return <NotFoundScreen />;
     if (tipo === 'clase' || tipo === 'servicio') return <SoonScreen tipo={tipo} />;
-    if (!canPublish(actor, tipo)) return <NoPublisherScreen tipo={tipo} />;
+    if (!canPublish(actor, tipo, recienRegistrado)) return <NoPublisherScreen tipo={tipo} />;
     if (tipo === 'empleo') return <EmpleoScreen />;
     const step = Number(paso);
     if (!Number.isInteger(step) || step < 1 || step > WIZARD_STEPS) return <Navigate to={paths.publicar(tipo, 1)} replace />;

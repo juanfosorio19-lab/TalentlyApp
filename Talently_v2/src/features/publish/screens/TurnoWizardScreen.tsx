@@ -54,6 +54,9 @@ export function TurnoWizardScreen({ step }: { step: number }) {
         recienRegistrado,
     });
 
+    // Ya publicado: atrás se salta el asistente sin mostrarlo (useWizard).
+    if (wizard.skipping) return null;
+
     // Un enlace a un paso posterior con algo pendiente antes lleva a ese paso.
     const incomplete = firstIncompleteTurnoStep(draft);
     if (incomplete !== null && incomplete < step) return <Navigate to={paths.publicar('turno', incomplete)} replace />;
@@ -103,7 +106,7 @@ export function TurnoWizardScreen({ step }: { step: number }) {
                 <IdentitySheet
                     // Ya enviada (al volver con atrás desde PUBL-07), la hoja no vuelve a pedirla.
                     open={flow.identitySheet.open && flow.identityPending}
-                    onClose={flow.identitySheet.hide}
+                    onClose={flow.dismissIdentity}
                     onVerify={flow.verifyIdentity}
                     que="turno"
                     phoneVerified={flow.phoneVerified}
