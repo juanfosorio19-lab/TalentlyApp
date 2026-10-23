@@ -40,13 +40,12 @@ export function PersonPublicScreen() {
     return (
         <div className="tl-app-screen" data-screen-id={screenId}>
             {/* El H1 es el nombre, en el encabezado: el AppBar lo repite al bajar. */}
-            <AppBar
-                variant="standard"
-                title={scrolled && person ? person.nombre : undefined}
-                titleAs="p"
-                onBack={goBack}
-                scrolled={scrolled}
-            />
+            {/* Sin perfil que mostrar, el H1 es el título del AppBar. */}
+            {person ? (
+                <AppBar variant="standard" title={scrolled ? person.nombre : undefined} titleAs="p" onBack={goBack} scrolled={scrolled} />
+            ) : (
+                <AppBar variant="standard" title={copy.perfil} onBack={goBack} />
+            )}
             <main className="tl-app-screen__body">
                 <div className="tl-app-screen__content pp-content">
                     {person ? (
@@ -108,7 +107,7 @@ function PersonProfile({ person, own, ver }: { person: PublicPerson; own: boolea
             ) : (
                 <EmptyState
                     icon={IconPerson}
-                    title={own ? copy.sinTrabajo.tituloPropio : copy.sinTrabajo.titulo(person.nombre)}
+                    title={own && person.hogar ? copy.sinTrabajo.hogarPropio : own ? copy.sinTrabajo.tituloPropio : copy.sinTrabajo.titulo(person.nombre)}
                     text={own && person.hogar ? copy.privadoHogar : own ? copy.sinTrabajo.textoPropio : copy.sinTrabajo.texto}
                 />
             )}

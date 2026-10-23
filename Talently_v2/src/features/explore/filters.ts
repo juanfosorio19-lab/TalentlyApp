@@ -82,9 +82,9 @@ function writeMoney(params: URLSearchParams, name: string, value: number | null)
 // ─── Vista (deck o lista) ───────────────────────────────────────────────────
 
 /**
- * `vista=lista` sin prefijo: así llega desde otras pantallas (ONB-99,
- * «Ver empleos en lista»). Vale para el segmento de `tipo` mientras
- * paths.explorar no arme `empleo.vista` (pedido en «requests»).
+ * `vista=lista` sin prefijo: así llegaban los enlaces viejos (ONB-99, «Ver
+ * empleos en lista»). Hoy paths.explorar(tipo, { vista }) arma `empleo.vista`;
+ * el alias se sigue aceptando para el segmento de `tipo`.
  */
 const VISTA_ALIAS = 'vista';
 

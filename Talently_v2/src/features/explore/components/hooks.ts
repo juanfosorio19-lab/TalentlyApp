@@ -41,7 +41,7 @@ export function useGo() {
         (path: string): Pick<CardHandlers, 'href' | 'onOpen'> => {
             const link = linkProps(path, { replace: replacesFrom(pathname, path) });
             return {
-                // Sin pantalla todavía (perfil público): sin destino real; el toque muestra «Disponible pronto».
+                // Sin pantalla todavía: sin destino real; el toque muestra «Disponible pronto».
                 href: link.href ?? '#',
                 onOpen: (e: MouseEvent<HTMLAnchorElement>) => link.onClick(e),
             };

@@ -41,13 +41,12 @@ export function OrgPublicScreen() {
 
     return (
         <div className="tl-app-screen" data-screen-id={screenId}>
-            <AppBar
-                variant="standard"
-                title={scrolled && found ? found.org.nombre : undefined}
-                titleAs="p"
-                onBack={goBack}
-                scrolled={scrolled}
-            />
+            {/* El H1 es el nombre, en el encabezado; sin organización que mostrar, el título del AppBar. */}
+            {found ? (
+                <AppBar variant="standard" title={scrolled ? found.org.nombre : undefined} titleAs="p" onBack={goBack} scrolled={scrolled} />
+            ) : (
+                <AppBar variant="standard" title={copy.organizacion} onBack={goBack} />
+            )}
             <main className="tl-app-screen__body">
                 <div className="tl-app-screen__content pp-content">
                     {found ? (

@@ -29,6 +29,8 @@ export const copy = {
         tituloPropio: 'Aún no tienes perfil de trabajo',
         texto: 'Cuando lo agregue, aquí se verán sus oficios, su experiencia y su nota.',
         textoPropio: 'Cuando lo agregues desde Perfil, aquí se verán tus oficios, tu experiencia y tu nota.',
+        /** Quien solo contrata para su hogar («Ver cómo me ven» desde la pestaña Hogar de PRF-01). */
+        hogarPropio: 'Tu hogar no tiene perfil público',
     },
     capacidadPronto: {
         servicios: { titulo: 'Los perfiles de servicios llegan pronto', texto: 'Todavía no se pueden ofrecer servicios en Talently.' },
