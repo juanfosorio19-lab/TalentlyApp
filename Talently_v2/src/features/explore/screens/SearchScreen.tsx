@@ -32,7 +32,7 @@ import { useDemoSession } from '../../demo/session';
 import { useDecided, useSessionState } from '../../demo/sessionStore';
 import type { DemoPublication } from '../../demo/types';
 import { ExploreEmpty, fromDemo } from '../components/ExploreEmpty';
-import { useGo, useSheetKeepsScroll } from '../components/hooks';
+import { useGo } from '../components/hooks';
 import { useShowVerification, VerificationSheet } from '../components/VerificationSheet';
 import { copy } from '../copy';
 import {
@@ -66,7 +66,6 @@ export function SearchScreen() {
     const decided = useDecided(actor.id);
     // Publicaciones pausadas o cerradas en GES-01 y quienes ya están en las propias.
     const manage = useManageState();
-    useSheetKeepsScroll();
 
     // El texto vive en el campo (si esperara a la URL, que cambia en una transición, se perderían letras);
     // la URL lo guarda con replace para volver a la misma búsqueda.

@@ -32,7 +32,7 @@ import { useSnackbar } from '../../../ui/Snackbar';
 import { useDemoSession } from '../../demo/session';
 import { useInbox } from '../../demo/sessionStore';
 import type { DemoNotification, DemoNotificationIcon } from '../../demo/types';
-import type { NotificationsEntryState } from '../components/HomeAppBar';
+import { notificationsFrom } from '../../../app/navigation/notifications';
 import { copy } from '../copy';
 import { useFocusTitleIfLost, useHomeNavigation } from '../navigation';
 import { groupNotifications, resolveNotification } from '../selectors';
@@ -63,7 +63,7 @@ export function NotificationsScreen() {
     const { items, unread, markRead, markAllRead } = useInbox(actor.id, recienRegistrado);
     const snackbar = useSnackbar();
     const { go, link, soon, canOpen } = useHomeNavigation();
-    const from = (location.state as NotificationsEntryState | null)?.from;
+    const from = notificationsFrom(location.state);
     const headingId = useId();
     // «Marcar todas como leídas» desaparece al tocarlo: el foco pasa al primer grupo, no al body.
     const firstHeading = useRef<HTMLHeadingElement>(null);

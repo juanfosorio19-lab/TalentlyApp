@@ -5,15 +5,14 @@
 // bandeja y badge de Mensajes son los suyos.
 import { IconButton } from '../../../ui/IconButton';
 import { IconBell } from '../../../ui/icons';
-import { useOpenPath } from '../../../app/navigation/useOpenPath';
-import { paths } from '../../../app/paths';
+import { useOpenNotifications } from '../../../app/navigation/notifications';
 import { useDemoSession } from '../../demo/session';
 import { useInbox } from '../../demo/sessionStore';
 import { copy } from '../copy';
 
 export function NotificationsButton() {
-    const { open } = useOpenPath();
+    const openNotifications = useOpenNotifications();
     const { actor, recienRegistrado } = useDemoSession();
     const { unread } = useInbox(actor.id, recienRegistrado);
-    return <IconButton icon={IconBell} label={copy.bell(unread)} count={unread} onClick={() => open(paths.notificaciones())} />;
+    return <IconButton icon={IconBell} label={copy.bell(unread)} count={unread} onClick={openNotifications} />;
 }

@@ -1,37 +1,27 @@
 // AppBar large de Inicio: saludo, selector de actor (solo si la persona
 // pertenece a una organización) y la campana con su contador real → NOT-01.
+import { useOpenNotifications } from '../../../app/navigation/notifications';
 import { useSheet } from '../../../app/sheets';
-import { paths } from '../../../app/paths';
 import { ActorSelector, AppBar, useScrolled } from '../../../ui/AppBar';
 import { IconButton } from '../../../ui/IconButton';
 import { IconBell } from '../../../ui/icons';
 import { useDemoSession } from '../../demo/session';
 import { useInbox } from '../../demo/sessionStore';
 import { copy } from '../copy';
-import { useHomeNavigation, useKeepScroll } from '../navigation';
 import { ActorSheet } from './ActorSheet';
-
-/** NOT-01 sabe de dónde se abrió: si una notificación lleva ahí mismo, vuelve en vez de apilar. */
-export interface NotificationsEntryState {
-    from: string;
-}
 
 export function HomeAppBar({ title }: { title: string }) {
     const { actor, switchable, recienRegistrado } = useDemoSession();
     const { unread } = useInbox(actor.id, recienRegistrado);
     const scrolled = useScrolled();
-    const { go } = useHomeNavigation();
     // SHT-ACTOR es `?sheet=actor` (spec §5.4): atrás la cierra.
     const actorSheet = useSheet('actor');
-    // Abrir la hoja no mueve la página de abajo.
-    const showActorSheet = useKeepScroll()(() => actorSheet.show());
+    const showActorSheet = () => actorSheet.show();
     // switchable = la persona y sus organizaciones: con una sola, no hay entre quiénes cambiar.
     const canSwitch = switchable.length > 1;
 
-    const openNotifications = () => {
-        const state: NotificationsEntryState = { from: paths.inicio() };
-        go(paths.notificaciones(), { state });
-    };
+    // NOT-01 sabe de dónde se abrió: si una notificación lleva aquí mismo, vuelve en vez de apilar.
+    const openNotifications = useOpenNotifications();
 
     return (
         <>

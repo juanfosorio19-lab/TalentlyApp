@@ -85,15 +85,8 @@ export function detailCta(
     return { kind: 'open', waitlist };
 }
 
-/**
- * Enlace para compartir: la publicación sola, sin el actor de la demo
- * (`?demo=`), la hoja abierta ni nada de la sesión. `href` es el de
- * useHref(paths.publicacion(id)) («#/p/…» con HashRouter).
- */
-export function shareUrl(location: { origin: string; pathname: string }, href: string): string {
-    // HashRouter: la página (v3.html) más «#/p/…». BrowserRouter: la ruta sola.
-    return href.startsWith('#') ? `${location.origin}${location.pathname}${href}` : `${location.origin}${href}`;
-}
+/** Enlace para compartir (la misma regla que GES-01): vive en src/app/navigation/share.ts. */
+export { shareUrl } from '../../app/navigation/share';
 
 /** Ícono de una fila del detalle, según su rótulo (prototipo DET-01). */
 export function rowIcon(label: string): IconComponent {

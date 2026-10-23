@@ -13,6 +13,7 @@ import * as onboarding from '../features/onboarding/routes';
 import * as processes from '../features/processes/routes';
 import * as profile from '../features/profile/routes';
 import * as publications from '../features/publications/routes';
+import * as publicProfile from '../features/public-profile/routes';
 import * as publish from '../features/publish/routes';
 import * as verification from '../features/verification/routes';
 import { AppShell } from './AppShell';
@@ -23,7 +24,7 @@ import { isTabRoot } from './paths';
 import { UiCatalog } from './dev/UiCatalog';
 import { NotFoundScreen } from './system/NotFoundScreen';
 
-const features = [home, explore, activity, messaging, profile, publications, manage, processes, verification, publish, onboarding, legal];
+const features = [home, explore, activity, messaging, profile, publications, manage, processes, verification, publish, onboarding, legal, publicProfile];
 
 export const routes: RouteObject[] = [
     {

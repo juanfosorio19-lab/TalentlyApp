@@ -1,6 +1,7 @@
 // «Así te ven» (PRF-01 y PRF-02): avatar, nombre, comuna, insignias reales y
 // nota por rol. Las insignias se tocan y abren «Verificación de …»
 // (`?sheet=verificacion`).
+import { useSheet } from '../../../app/sheets';
 import type { ReactNode } from 'react';
 import { Avatar } from '../../../ui/Avatar';
 import { Stack } from '../../../ui/Layout';
@@ -8,7 +9,6 @@ import { RatingStars } from '../../../ui/RatingStars';
 import { VerificationBadge } from '../../../ui/VerificationBadge';
 import type { DemoProfile } from '../../demo/types';
 import { COPY } from '../copy';
-import { useStillSheet } from '../useStillSheet';
 import { VerificationSheet } from './VerificationSheet';
 
 export interface AsiTeVenProps {
@@ -21,7 +21,7 @@ export interface AsiTeVenProps {
 }
 
 export function AsiTeVen({ asiTeVen, details, kind, children }: AsiTeVenProps) {
-    const sheet = useStillSheet('verificacion');
+    const sheet = useSheet('verificacion');
     const { nombre, iniciales, foto, comuna, verificaciones, notas } = asiTeVen;
     const verified = verificaciones.some((v) => v.status === 'verified');
 

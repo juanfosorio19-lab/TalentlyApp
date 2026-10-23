@@ -3,6 +3,15 @@
 
 export type ExploreType = 'empleo' | 'turno' | 'clase' | 'servicio' | 'personas';
 export type ActivitySegment = 'agenda' | 'postulaciones' | 'publicaciones';
+/** Pestañas de GES-04 (`?ver=`). */
+export type RosterTab = 'confirmados' | 'postulados' | 'espera';
+
+export interface ExploreOptions {
+    /** EXP-05: la publicación de la que se sugieren personas (`?p=`). */
+    p?: string;
+    /** Deck o lista; Explorar la lee en `<tipo>.vista` (`empleo.vista=lista`). */
+    vista?: 'deck' | 'lista';
+}
 
 const q = (params: Record<string, string | undefined>) => {
     const s = new URLSearchParams();
@@ -14,22 +23,25 @@ const q = (params: Record<string, string | undefined>) => {
 export const paths = {
     // Pestañas
     inicio: () => '/inicio',
-    explorar: (tipo?: ExploreType) => `/explorar${q({ tipo })}`,
+    explorar: (tipo?: ExploreType, opts: ExploreOptions = {}) =>
+        `/explorar${q({ tipo, p: opts.p, ...(tipo && opts.vista ? { [`${tipo}.vista`]: opts.vista } : {}) })}`,
     actividad: (seg?: ActivitySegment) => `/actividad${q({ seg })}`,
     mensajes: () => '/mensajes',
-    perfil: () => '/perfil',
+    /** PRF-01; con `sheet`, abre la hoja de Perfil (`cv`: «Subir CV», desde «Te falta 1 cosa» de Inicio). */
+    perfil: (sheet?: 'cv') => `/perfil${q({ sheet })}`,
 
     // Apiladas
     conversacion: (conversationId: string) => `/mensajes/${conversationId}`,
     notificaciones: () => '/notificaciones',
     buscar: (texto?: string) => `/buscar${q({ q: texto })}`,
-    publicacion: (id: string) => `/p/${id}`,
+    /** DET-01; `postular` abre DET-02 (el «Me interesa» del deck) y `telefono`, AUTH-08 (`?sheet=`). */
+    publicacion: (id: string, sheet?: 'postular' | 'telefono') => `/p/${id}${q({ sheet })}`,
     gestionarPublicacion: (id: string) => `/publicaciones/${id}`,
     /** GES-01 · Editar: reutiliza los pasos del asistente con los datos cargados (aún sin pantalla). */
     editarPublicacion: (id: string) => `/publicaciones/${id}/editar`,
     postulantes: (id: string) => `/publicaciones/${id}/postulantes`,
     sugeridos: (id: string) => `/publicaciones/${id}/sugeridos`,
-    cuposTurno: (id: string, shiftId: string) => `/publicaciones/${id}/turnos/${shiftId}`,
+    cuposTurno: (id: string, shiftId: string, ver?: RosterTab) => `/publicaciones/${id}/turnos/${shiftId}${q({ ver })}`,
     proceso: (engagementId: string) => `/procesos/${engagementId}`,
     miTurno: (assignmentId: string) => `/turnos/${assignmentId}`,
     /** REV-01 · Dejar reseña después de un turno, clase o servicio. */
@@ -47,17 +59,37 @@ export const paths = {
     /** AUTH-01 · Bienvenida (fuera de la sesión). */
     bienvenida: () => '/bienvenida',
     registro: () => '/registro',
+    /** AUTH-03 · Revisa tu correo. */
+    verificarCorreo: () => '/registro/verificar',
     ingresar: () => '/ingresar',
+    /** AUTH-05 y AUTH-06 (aún sin pantalla). */
+    recuperarClave: () => '/recuperar',
+    nuevaClave: () => '/nueva-clave',
     onboarding: (bloque: string, paso?: number) => `/onboarding/${bloque}${paso ? `/${paso}` : ''}`,
     perfilPublico: (id: string, ver?: 'trabajo' | 'servicios' | 'clases') => `/u/${id}${q({ ver })}`,
     organizacion: (id: string) => `/o/${id}`,
     /** GES-05 · Trabajadores favoritos (aún sin pantalla). */
     favoritos: (orgId: string) => `/o/${orgId}/favoritos`,
+    /** PRF-06 · Equipo (F3, aún sin pantalla). */
+    equipo: (orgId: string) => `/o/${orgId}/equipo`,
+    /** PRF-04 · Agregar un perfil y PRF-05 · Mis perfiles (aún sin pantalla). */
+    agregarPerfil: () => '/perfil/agregar',
+    misPerfiles: () => '/perfil/mis-perfiles',
     verificacion: () => '/verificacion',
+    /** VER-04 · Verificar organización (aún sin pantalla). */
+    verificarOrganizacion: (orgId: string) => `/verificacion/organizacion/${orgId}`,
     configuracion: () => '/configuracion',
+    /** CFG-02 a CFG-05 (aún sin pantalla; Apariencia es hoy la hoja `?sheet=apariencia` de CFG-01). */
+    configuracionCuenta: () => '/configuracion/cuenta',
+    configuracionNotificaciones: () => '/configuracion/notificaciones',
+    configuracionPrivacidad: () => '/configuracion/privacidad',
+    configuracionApariencia: () => '/configuracion/apariencia',
+    /** CFG-06 · Eliminar cuenta (también durante el onboarding; aún sin pantalla). */
+    eliminarCuenta: () => '/eliminar-cuenta',
     terminos: () => '/terminos',
     privacidad: () => '/privacidad',
     ayuda: () => '/ayuda',
+    soporte: () => '/soporte',
 
     // Solo desarrollo
     catalogo: () => '/dev/ui',

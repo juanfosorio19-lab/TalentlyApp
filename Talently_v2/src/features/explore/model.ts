@@ -2,7 +2,7 @@
 // sugeridas, búsqueda y el paso de los datos de la demo a las props de src/ui.
 // Solo usa las funciones get… de la demo (nunca sus constantes DEMO_*).
 import type { MouseEventHandler } from 'react';
-import { isTabRoot, paths, tabOf } from '../../app/paths';
+import { isTabRoot, paths, tabOf, type RosterTab } from '../../app/paths';
 import type { AmountFormatOptions } from '../../ui/Amount';
 import { IconAdd, IconBell, IconChat, IconClock, IconOffers, type IconComponent } from '../../ui/icons';
 import type { PublicationCardData, PublicationRequirement, PublicationTag, PublicationVerification } from '../../ui/PublicationCard';
@@ -31,7 +31,6 @@ import type {
 } from '../demo/types';
 import { copy } from './copy';
 import {
-    PARAM_PUBLICACION,
     type EmpleoFiltros,
     type Franja,
     type PersonaFiltros,
@@ -487,11 +486,9 @@ export function personasFor(
 }
 
 /** Pestaña de GES-04 (`?ver=`). */
-type RosterTab = 'confirmados' | 'postulados' | 'espera';
 
 /** GES-04 en una pestaña (pedido en «requests» que paths.cuposTurno acepte `ver`). */
-const rosterPath = (publicationId: string, rosterId: string, ver: RosterTab) =>
-    `${paths.cuposTurno(publicationId, rosterId)}?ver=${ver}`;
+const rosterPath = (publicationId: string, rosterId: string, ver: RosterTab) => paths.cuposTurno(publicationId, rosterId, ver);
 
 export interface ReviewLink {
     path: string;
@@ -526,14 +523,13 @@ export function reviewPathOf(
 /**
  * Adónde lleva una persona encontrada en EXP-07: si ya está en la
  * publicación, a GES-02 o a su pestaña de GES-04; si no, a EXP-05 de esa
- * publicación para invitarla (`?p=`, pedido en «requests» que
- * paths.explorar lo acepte).
+ * publicación para invitarla (`?p=`).
  */
 export function suggestionPath(s: Suggestion): string {
     const m = s.membership;
     // Ya invitada: EXP-05 ya no la muestra; su tarjeta abre su perfil, como en EXP-05.
     if (!m && s.invitada) return paths.perfilPublico(s.person.id, 'trabajo');
-    if (!m) return `${paths.explorar('personas')}&${PARAM_PUBLICACION}=${encodeURIComponent(s.publicationId)}`;
+    if (!m) return paths.explorar('personas', { p: s.publicationId });
     if (!m.rosterId) return paths.postulantes(s.publicationId);
     const tab: RosterTab = m.kind === 'confirmado' ? 'confirmados' : m.kind === 'espera' ? 'espera' : 'postulados';
     return rosterPath(s.publicationId, m.rosterId, tab);

@@ -1,6 +1,7 @@
 // Enlaces de Gestionar publicaciones que no son una ruta de paths.ts: el
-// historial entre GES-01 y GES-04 (spec §5.3 regla 2) y la URL que se
-// comparte desde GES-01. Funciones puras (links.test.ts).
+// historial entre GES-01 y GES-04 (spec §5.3 regla 2). La URL que se
+// comparte y si una entrada es una hoja vienen de src/app. Funciones puras
+// (links.test.ts).
 
 /**
  * Estado del historial de una GES-04 abierta encima de GES-01: cuántas
@@ -22,17 +23,8 @@ export function overManageOf(state: unknown): number | null {
     return typeof n === 'number' && Number.isInteger(n) && n > 0 ? n : null;
 }
 
-/** ¿La entrada actual es la de una hoja que abrió la app (useSheet hace push con `{ sheet }`)? */
-export function isSheetEntry(state: unknown, sheet: string): boolean {
-    return typeof state === 'object' && state !== null && 'sheet' in state && state.sheet === sheet;
-}
+/** ¿La entrada actual es la de una hoja que abrió la app (useSheet hace push)? De src/app/sheets. */
+export { isSheetEntry } from '../../app/sheets';
 
-/**
- * La URL que se comparte (la misma regla que DET-01): la página más la ruta,
- * sin la query de la demo (`?demo=banqueteria`), para que quien la abra vea
- * la publicación como quien busca y no entre como la organización dueña.
- */
-export function shareUrl(location: { origin: string; pathname: string }, href: string): string {
-    // HashRouter: la página (v3.html) más «#/p/…». BrowserRouter: la ruta sola.
-    return href.startsWith('#') ? `${location.origin}${location.pathname}${href}` : `${location.origin}${href}`;
-}
+/** La URL que se comparte (la misma regla que DET-01): vive en src/app/navigation/share.ts. */
+export { shareUrl } from '../../app/navigation/share';

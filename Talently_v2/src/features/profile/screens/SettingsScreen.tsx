@@ -65,16 +65,28 @@ export function SettingsScreen() {
                 <div className="tl-app-screen__content">
                     <Stack gap={4}>
                         <List>
-                            {/* CFG-02 a CFG-04 aún no tienen ruta en paths.ts: «Disponible pronto». */}
-                            <ListItem icon={IconPerson} title={C.cuenta} sub={configuracion.cuenta} chevron onClick={soon} />
+                            {/* CFG-02 a CFG-04 aún no tienen pantalla: «Disponible pronto» hasta que el router las tenga. */}
+                            <ListItem
+                                icon={IconPerson}
+                                title={C.cuenta}
+                                sub={configuracion.cuenta}
+                                chevron
+                                {...linkProps(paths.configuracionCuenta())}
+                            />
                             <ListItem
                                 icon={IconBell}
                                 title={C.notificaciones}
                                 sub={configuracion.notificaciones}
                                 chevron
-                                onClick={soon}
+                                {...linkProps(paths.configuracionNotificaciones())}
                             />
-                            <ListItem icon={IconLock} title={C.privacidad} sub={C.privacidadSub} chevron onClick={soon} />
+                            <ListItem
+                                icon={IconLock}
+                                title={C.privacidad}
+                                sub={C.privacidadSub}
+                                chevron
+                                {...linkProps(paths.configuracionPrivacidad())}
+                            />
                             <ListItem
                                 icon={IconEye}
                                 title={C.apariencia}

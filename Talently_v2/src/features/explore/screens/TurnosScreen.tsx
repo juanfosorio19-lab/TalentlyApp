@@ -167,7 +167,7 @@ export function TurnosScreen({ filtersSheet, focusPanel }: SegmentPanelProps) {
      */
     const take = (p: DemoTurno, waitlist: boolean) => {
         if (!phoneOk) {
-            go(`${paths.publicacion(p.id)}?sheet=telefono`);
+            go(paths.publicacion(p.id, 'telefono'));
             return;
         }
         setTaking(p.id);

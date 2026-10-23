@@ -55,7 +55,7 @@ function withState(card: PublicationCardData, decided: Decided): PublicationCard
 }
 
 /** DET-01 con la hoja Postular (DET-02) abierta: `?sheet=postular` (spec §5.4). */
-const postularPath = (id: string) => `${paths.publicacion(id)}?sheet=postular`;
+const postularPath = (id: string) => paths.publicacion(id, 'postular');
 
 export function EmpleosScreen({ filtersSheet, focusPanel }: SegmentPanelProps) {
     const { actor, recienRegistrado } = useDemoSession();

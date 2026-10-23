@@ -1,6 +1,7 @@
 // AppBar large de la pestaña Explorar (spec §5.1): Buscar, Filtros con su
 // contador (solo aquí) y la campana con las notificaciones sin leer reales
 // (useInbox: la misma cifra que Inicio y NOT-01).
+import { useOpenNotifications } from '../../../app/navigation/notifications';
 import { paths } from '../../../app/paths';
 import { AppBar, useScrolled } from '../../../ui/AppBar';
 import { IconButton } from '../../../ui/IconButton';
@@ -21,6 +22,8 @@ export function ExploreAppBar({ filterCount, onFilters }: ExploreAppBarProps) {
     const { actor, recienRegistrado } = useDemoSession();
     const { unread } = useInbox(actor.id, recienRegistrado);
     const { go } = useGo();
+    // NOT-01 sabe de dónde se abrió (la misma entrada que las otras campanas).
+    const openNotifications = useOpenNotifications();
     const scrolled = useScrolled();
     return (
         <AppBar
@@ -44,7 +47,7 @@ export function ExploreAppBar({ filterCount, onFilters }: ExploreAppBarProps) {
                         icon={IconBell}
                         label={copy.appBar.notificaciones(unread)}
                         count={unread}
-                        onClick={() => go(paths.notificaciones())}
+                        onClick={openNotifications}
                     />
                 </>
             }

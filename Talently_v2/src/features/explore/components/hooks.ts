@@ -24,32 +24,6 @@ export function useExploreParams(): [URLSearchParams, (edit: (next: URLSearchPar
 }
 
 /**
- * Abrir una hoja de la URL (`?sheet=…`) no mueve la página de abajo.
- * RootLayout guarda el scroll de una raíz de pestaña por ruta y búsqueda, así
- * que `/explorar?tipo=turno&sheet=filtros` tiene el suyo y, al reabrir la
- * hoja, ScrollRestoration llevaría la página a donde estaba la vez anterior.
- * Esto la deja donde se abrió. Pedido en «requests» que la clave de scroll
- * ignore `?sheet=`; entonces esto sobra.
- */
-export function useSheetKeepsScroll(): void {
-    const location = useLocation();
-    const sheetOpen = new URLSearchParams(location.search).has('sheet');
-    const lastY = useRef(0);
-    useEffect(() => {
-        if (sheetOpen) return;
-        const remember = () => {
-            lastY.current = window.scrollY;
-        };
-        remember();
-        window.addEventListener('scroll', remember, { passive: true });
-        return () => window.removeEventListener('scroll', remember);
-    }, [sheetOpen]);
-    useEffect(() => {
-        if (sheetOpen && window.scrollY !== lastY.current) window.scrollTo(0, lastY.current);
-    }, [sheetOpen, location.key]);
-}
-
-/**
  * Navegar desde Explorar: una pantalla apilada con push (spec §5.3 regla 2);
  * la raíz de otra pestaña con replace (regla 1). Si la pantalla todavía no
  * existe, useOpenPath muestra «Disponible pronto». `replace` explícito para

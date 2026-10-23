@@ -14,7 +14,6 @@ import { useManageState } from '../../demo/manageState';
 import { useDemoSession } from '../../demo/session';
 import { useSessionState } from '../../demo/sessionStore';
 import { ExploreLayout } from '../components/ExploreLayout';
-import { useSheetKeepsScroll } from '../components/hooks';
 import { VerificationSheet } from '../components/VerificationSheet';
 import {
     countEmpleoFiltros,
@@ -54,7 +53,6 @@ function ExploreTab() {
     const filtersSheet = useSheet('filtros');
     const panelRef = useRef<HTMLDivElement>(null);
     const focusPanel = useCallback(() => panelRef.current?.focus(), []);
-    useSheetKeepsScroll();
 
     const explore = getExplore(actor.id);
     const segments = useMemo(() => segmentsOf(actor, recienRegistrado, manage), [actor, recienRegistrado, manage]);

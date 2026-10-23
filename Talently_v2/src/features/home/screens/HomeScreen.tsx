@@ -22,7 +22,7 @@ import { HomeAppBar } from '../components/HomeAppBar';
 import { PublishSheet } from '../components/PublishSheet';
 import { VerificationSheet } from '../components/VerificationSheet';
 import { publisherName } from '../mock';
-import { useFocusTitleIfLost, useHomeNavigation, useKeepScroll } from '../navigation';
+import { useFocusTitleIfLost, useHomeNavigation } from '../navigation';
 import { homeBlocks, selectedKind, wizardOf, type PublishKind, type Publisher } from '../selectors';
 import { OrgHomeScreen } from './OrgHomeScreen';
 import { PersonHomeScreen } from './PersonHomeScreen';
@@ -60,8 +60,6 @@ export function HomeScreen() {
     const { go, link } = useHomeNavigation();
     const location = useLocation();
     const [, setParams] = useSearchParams();
-    // Abrir una hoja o cambiar su opción no mueve la página de abajo.
-    const keepScroll = useKeepScroll();
     // Volver de NOT-01 con otro actor (flujo 7) desmonta la fila tocada: el foco va a «Hola, …», no al body.
     useFocusTitleIfLost(location.key);
 
@@ -69,8 +67,8 @@ export function HomeScreen() {
     const publish = useSheet('publicar', ['tipo']);
     const as: Publisher = isOrg ? 'organizacion' : 'hogar';
     const kind = selectedKind(as, publish.param('tipo'));
-    const showPublish = keepScroll((next?: PublishKind) => publish.show({ tipo: next ?? selectedKind(as, null) }));
-    const choose = keepScroll((next: PublishKind) =>
+    const showPublish = (next?: PublishKind) => publish.show({ tipo: next ?? selectedKind(as, null) });
+    const choose = (next: PublishKind) =>
         setParams(
             (prev) => {
                 const params = new URLSearchParams(prev);
@@ -79,8 +77,7 @@ export function HomeScreen() {
             },
             // Mismo estado de la entrada: cerrar la hoja sigue siendo volver atrás.
             { replace: true, preventScrollReset: true, state: location.state },
-        ),
-    );
+        );
     // «Continuar» apila el asistente: su atrás en el paso 1 vuelve a esta hoja (como el prototipo).
     // Al publicar, PUBL-07 vuelve a la entrada de debajo de la hoja (flowOriginState), no a la hoja.
     const onContinue = () => go(paths.publicar(wizardOf(kind)), { state: flowOriginState() });
@@ -93,7 +90,7 @@ export function HomeScreen() {
     const verify = useSheet('verificacion', ['pub']);
     const verifyId = verify.param('pub');
     const author = (verifyId && getPublication(verifyId)?.autor) || null;
-    const showVerify = keepScroll((pub: string) => verify.show({ pub }));
+    const showVerify = (pub: string) => verify.show({ pub });
 
     // Otro actor es otro Inicio: parte arriba (la pestaña conserva su scroll solo entre pestañas).
     // Si se eligió en SHT-ACTOR, se espera a que cerrarla vuelva a /inicio: esa vuelta

@@ -1,6 +1,7 @@
 // Contenido de un perfil (Trabajo, Hogar u Organización): la tarjeta «Te falta
 // 1 cosa», sus secciones editables y las hojas que abren, en la URL (spec
 // §5.4): PRF-03 es `?sheet=editar&s=<sección>` y Subir CV, `?sheet=cv`.
+import { useSheet } from '../../../app/sheets';
 import { useEffect, useRef, useState } from 'react';
 import { useSnackbar } from '../../../ui/Snackbar';
 import { paths } from '../../../app/paths';
@@ -10,7 +11,6 @@ import { useDemoSession } from '../../demo/session';
 import type { DemoProfileSection, DemoProfileTab } from '../../demo/types';
 import { COPY, SAVED_BY_SECTION } from '../copy';
 import { editAction, findEditable, sectionSlug, tipAction, type EditableSection } from '../model';
-import { useStillSheet } from '../useStillSheet';
 import { CvSheet, type CvFile } from './CvSheet';
 import { EditSectionSheet } from './EditSectionSheet';
 import { ProfileSection } from './ProfileSection';
@@ -27,8 +27,8 @@ export function ProfileTabContent({ tab, comuna, onChange }: ProfileTabContentPr
     const { show } = useSnackbar();
     const { actor, recienRegistrado } = useDemoSession();
     const { open: openPath, soon } = useOpenPath();
-    const editar = useStillSheet('editar', ['s']);
-    const cv = useStillSheet('cv');
+    const editar = useSheet('editar', ['s']);
+    const cv = useSheet('cv');
 
     // ─── PRF-03 · Editar sección ────────────────────────────────────────────
     const slug = editar.param('s');

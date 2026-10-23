@@ -14,6 +14,15 @@ describe('paths', () => {
         expect(paths.verificarIdentidad('/publicar/hogar/listo')).toBe('/verificacion/identidad?volver=%2Fpublicar%2Fhogar%2Flisto');
         expect(paths.publicado('hogar')).toBe('/publicar/hogar/listo');
         expect(paths.favoritos('banqueteria')).toBe('/o/banqueteria/favoritos');
+        expect(paths.perfil()).toBe('/perfil');
+        expect(paths.perfil('cv')).toBe('/perfil?sheet=cv');
+        expect(paths.publicacion('abc', 'postular')).toBe('/p/abc?sheet=postular');
+        expect(paths.cuposTurno('p1', 's9', 'postulados')).toBe('/publicaciones/p1/turnos/s9?ver=postulados');
+        expect(paths.explorar('personas', { p: 'aviso-1' })).toBe('/explorar?tipo=personas&p=aviso-1');
+        expect(paths.explorar('empleo', { vista: 'lista' })).toBe('/explorar?tipo=empleo&empleo.vista=lista');
+        expect(paths.verificarCorreo()).toBe('/registro/verificar');
+        expect(paths.eliminarCuenta()).toBe('/eliminar-cuenta');
+        expect(paths.equipo('banqueteria')).toBe('/o/banqueteria/equipo');
     });
 
     it('reconoce la pestaña de una ruta', () => {

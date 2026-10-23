@@ -1,0 +1,7 @@
+/* Perfil público (PRF-10, PRF-11) · maquetación mínima con tokens, la misma
+   del «Así te ven» de PRF-01: sin colores, medidas ni sombras propias. */
+.pp-content { padding-top: var(--space-2); }
+.pp-muted { color: var(--color-text-2); }
+.pp-name { margin: var(--space-1) 0 0; text-align: center; }
+.pp-center { text-align: center; }
+.pp-wrap { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); }
