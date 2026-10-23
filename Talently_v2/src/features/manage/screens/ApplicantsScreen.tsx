@@ -32,18 +32,9 @@ import { ManageGate } from '../components/ManageGate';
 import { VerificationSheet } from '../components/VerificationSheet';
 import { copy } from '../copy';
 import { useOwnedPublication, usePendingFocus, useReplaceParam, useSessionApplications, useTitleFocusOnMount } from '../hooks';
-import {
-    REJECT_MESSAGES,
-    applicantsOf,
-    defaultRoster,
-    filterSlug,
-    firstName,
-    isInProcess,
-    isUndecided,
-    matchesFilter,
-    publicationView,
-} from '../selectors';
-import { setApplicantStatus, useManageState } from '../store';
+import { applicantsOf, defaultRoster, firstName, isInProcess, isUndecided, publicationView } from '../../demo/manageSelectors';
+import { setApplicantStatus, useManageState } from '../../demo/manageState';
+import { REJECT_MESSAGES, filterSlug, matchesFilter } from '../selectors';
 import '../manage.css';
 
 export const screenId = 'GES-02';

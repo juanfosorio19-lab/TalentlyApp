@@ -7,7 +7,7 @@ import {
     rosterKey,
     scheduleArrival,
     setPublicationStatus,
-} from './store';
+} from './manageState';
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => {
@@ -15,7 +15,7 @@ afterEach(() => {
     vi.useRealTimers();
 });
 
-describe('store de Gestionar publicaciones', () => {
+describe('estado de gestión de publicaciones (demo/manageState)', () => {
     it('los postulados llegan una sola vez, después del retraso', () => {
         const key = rosterKey('turno-garzones-finde', 'finde-sab-19');
         scheduleArrival('turno-garzones-finde', 'finde-sab-19');

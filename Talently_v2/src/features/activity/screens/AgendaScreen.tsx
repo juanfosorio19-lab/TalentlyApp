@@ -26,6 +26,7 @@ import { ListItem } from '../../../ui/ListItem';
 import { SegmentedControl } from '../../../ui/SegmentedControl';
 import { useOpenPath } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
+import { useManagedSessionOf } from '../../demo/manageHooks';
 import { useDemoSession } from '../../demo/session';
 import { useApplications } from '../../demo/sessionStore';
 import { targetPath } from '../../demo/targets';
@@ -58,11 +59,13 @@ export function AgendaScreen() {
     const { open, linkProps } = useOpenPath();
     const { actor, recienRegistrado } = useDemoSession();
     const applications = useApplications(actor.id, recienRegistrado);
+    // Organización: «5/8 confirmados» y el estado de cada turno, tal como quedaron en GES-01 y GES-04.
+    const sessionOf = useManagedSessionOf();
     const [params, setParams] = useSearchParams();
 
     const items = useMemo(
-        () => agendaFor(actor, applications, { recienRegistrado }),
-        [actor, applications, recienRegistrado],
+        () => agendaFor(actor, applications, { recienRegistrado }, sessionOf),
+        [actor, applications, recienRegistrado, sessionOf],
     );
     const thisWeek = items.filter((i) => i.date >= WEEK_START && i.date <= WEEK_END);
     const later = items.filter((i) => i.date > WEEK_END);

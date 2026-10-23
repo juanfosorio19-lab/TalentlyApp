@@ -38,7 +38,6 @@ import { useOwnedPublication, usePendingFocus, useSessionApplications, useTitleF
 import { isSheetEntry, overManageState, shareUrl } from '../links';
 import { managePaths } from '../paths';
 import {
-    CLOSE_REASONS,
     RENEW_DAYS,
     defaultRoster,
     isShiftPublication,
@@ -47,8 +46,9 @@ import {
     rosterFecha,
     rosterView,
     todayPlus,
-} from '../selectors';
-import { renewPublication, setPublicationStatus, useManageState } from '../store';
+} from '../../demo/manageSelectors';
+import { renewPublication, setPublicationStatus, useManageState } from '../../demo/manageState';
+import { CLOSE_REASONS } from '../selectors';
 import '../manage.css';
 
 export const screenId = 'GES-01';

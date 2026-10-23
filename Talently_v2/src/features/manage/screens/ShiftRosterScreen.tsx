@@ -33,7 +33,7 @@ import { copy } from '../copy';
 import { useOwnedPublication, usePendingFocus, useReplaceParam, useSessionApplications, useTitleFocusOnMount } from '../hooks';
 import { isSheetEntry, overManageOf, overManageState } from '../links';
 import { managePaths } from '../paths';
-import { firstName, isEvaluated, joinWithA, rosterFecha, rosterView, type RosterView } from '../selectors';
+import { firstName, isEvaluated, joinWithA, rosterFecha, rosterView, type RosterView } from '../../demo/manageSelectors';
 import {
     confirmPeople,
     evaluate,
@@ -42,7 +42,7 @@ import {
     slotKey,
     useManageState,
     type Attendance,
-} from '../store';
+} from '../../demo/manageState';
 import '../manage.css';
 
 export const screenId = 'GES-04';

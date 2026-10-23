@@ -9,7 +9,7 @@ import { paths, type ActivitySegment } from '../../app/paths';
 import type { CalendarEvent } from '../../domain/calendario';
 import type { DemoActor, DemoActorId } from '../demo/session';
 import { startsWithoutApplication } from '../demo/sessionStore';
-import { DEMO_TODAY, getAgenda, getHomeFeed, getManagedPublication, getOrgDashboard, getProcess, getPublication } from '../demo/data';
+import { DEMO_NOW_TIME, DEMO_TODAY, getAgenda, getManagedPublication, getManagedPublications, getProcess, getPublication } from '../demo/data';
 import type {
     BadgeStatus,
     DemoAgendaEvent,
@@ -21,7 +21,6 @@ import type {
     DemoTarget,
 } from '../demo/types';
 import { copy } from './copy';
-import { DEMO_NOW_TIME } from './mock';
 
 // ─── Fechas de la demo («sáb 12 dic» → «2026-12-12») ───────────────────────
 
@@ -185,11 +184,10 @@ export interface AgendaItem {
 
 /**
  * Una publicación tal como quedó en la sesión después de GES-01 (pausar,
- * cerrar) y GES-04 (confirmar). Hoy ese estado vive en features/manage, que
- * Actividad no puede leer: pedido en requests subirlo a demo/sessionStore
- * (useManagedView). Mientras no esté, las pantallas no lo pasan y todo sale
- * de los datos; cuando esté, ActivityScreen y AgendaScreen lo pasan aquí y
- * ACT-01 y ACT-03 dicen lo mismo que GES-01, GES-04 e INI-02.
+ * cerrar) y GES-04 (confirmar). ActivityScreen y AgendaScreen lo pasan con
+ * useManagedSessionOf (demo/manageHooks → demo/manageSelectors.managedSession),
+ * así ACT-01 y ACT-03 dicen lo mismo que GES-01, GES-04 e INI-02. Los campos
+ * son opcionales para que las pruebas cambien solo lo que miran.
  */
 export interface ManagedSession {
     /** «Pausada», «Cerrada»… Sin valor, el de los datos. */
@@ -392,10 +390,10 @@ export type MyPublication =
     | { kind: 'summary'; id: string; publication: DemoPublication };
 
 /**
- * Lo que publicó el actor. Organización: las de su panel (INI-02). Persona:
- * su aviso de Inicio («Tu aviso»; recién registrado, ninguno). features/demo
- * aún no trae una función por dueño (pedida en requests). Con `sessionOf`, el
- * estado y las métricas son los de GES-01 (una pausada pasa a «Pausadas»).
+ * Lo que publicó el actor (getManagedPublications: la organización, en el
+ * orden de su panel; la persona, sus avisos). Recién registrado, ninguno.
+ * Con `sessionOf`, el estado y las métricas son los de GES-01 (una pausada
+ * pasa a «Pausadas»).
  */
 export function publicationsFor(
     actor: DemoActor,
@@ -403,10 +401,7 @@ export function publicationsFor(
     sessionOf?: ManagedSessionOf,
 ): MyPublication[] {
     if (recienRegistrado) return [];
-    const ids =
-        actor.kind === 'organizacion'
-            ? (getOrgDashboard(actor.id)?.publicaciones ?? [])
-            : getHomeFeed(actor.id).bloques.flatMap((b) => (b.tipo === 'tu-aviso' ? [b.publicationId] : []));
+    const ids = getManagedPublications(actor.id).map((m) => m.publicationId);
     const list: MyPublication[] = [];
     for (const id of ids) {
         const data = getManagedPublication(id);

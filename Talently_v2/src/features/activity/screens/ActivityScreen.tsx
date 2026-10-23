@@ -9,6 +9,7 @@ import { AppBar, useScrolled } from '../../../ui/AppBar';
 import { Stack } from '../../../ui/Layout';
 import { SegmentedControl } from '../../../ui/SegmentedControl';
 import type { ActivitySegment } from '../../../app/paths';
+import { useManagedSessionOf } from '../../demo/manageHooks';
 import { useDemoSession } from '../../demo/session';
 import { NotificationsButton } from '../components/NotificationsButton';
 import { copy } from '../copy';
@@ -36,7 +37,12 @@ export function ActivityScreen() {
     const { actor, recienRegistrado } = useDemoSession();
     const scrolled = useScrolled();
 
-    const publications = useMemo(() => publicationsFor(actor, { recienRegistrado }), [actor, recienRegistrado]);
+    // ACT-03: el estado y las métricas de GES-01 (una pausada pasa a «Pausadas»).
+    const sessionOf = useManagedSessionOf();
+    const publications = useMemo(
+        () => publicationsFor(actor, { recienRegistrado }, sessionOf),
+        [actor, recienRegistrado, sessionOf],
+    );
     const requested = params.get('seg');
     // Sin ?seg, o con uno que no aplica al actor (enlace viejo, cambio de actor), abre el de por defecto.
     const { seg, segments } = resolveSegment(actor, publications.length > 0, requested);

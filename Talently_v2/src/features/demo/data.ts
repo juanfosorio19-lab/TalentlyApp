@@ -37,6 +37,12 @@ import type {
 /** Fecha de la demo, como la dice el índice del prototipo F1. */
 export const DEMO_TODAY = 'jue 10 dic 2026';
 
+/** La misma fecha como día civil (ISO), para calcular plazos sin volver a leer el texto. */
+export const DEMO_TODAY_ISO = '2026-12-10';
+
+/** Hora de la demo (índice del prototipo F1: «jue 10 dic 2026, 13:00»; la barra de estado dice 13:00). */
+export const DEMO_NOW_TIME = '13:00';
+
 // ─── Piezas repetidas ───────────────────────────────────────────────────────
 
 const V = {
@@ -1576,7 +1582,10 @@ export const DEMO_MANAGED_PUBLICATIONS: DemoManagedPublication[] = [
                 id: 'almuerzo-vie-11', titulo: 'Garzones · vie 11 dic', subtitulo: 'Garzones para almuerzo de empresa · 12:00–17:00 · Vitacura',
                 total: 6,
                 confirmados: [aplicante(PERSONS.constanza), aplicante(PERSONS.nicolas), aplicante(PERSONS.antonia), aplicante(PERSONS.martin)],
-                postulados: [], listaEspera: [], vacio: SIN_POSTULADOS,
+                // no está en el prototipo: 3 postulados por confirmar. Con los 4 de «Garzones para matrimonio» y los
+                // 5 de Bartender suman los «Postulantes nuevos 12» de INI-02 (demo/manageSelectors.orgDashboardView).
+                postulados: [aplicante(PERSONS.daniela), aplicante(PERSONS.sebastian), aplicante(PERSONS.fernanda)],
+                listaEspera: [], vacio: SIN_POSTULADOS,
             },
         ],
     },
@@ -2288,6 +2297,16 @@ export function getOrgDashboard(orgId: string): DemoOrgDashboard | undefined {
 /** GES-01, GES-02 y GES-04 de una publicación propia. */
 export function getManagedPublication(publicationId: string): DemoManagedPublication | undefined {
     return DEMO_MANAGED_PUBLICATIONS.find((m) => m.publicationId === publicationId);
+}
+
+/**
+ * Lo que publicó un actor (ACT-03, EXP-05, INI-02): una organización, en el
+ * orden de su panel (INI-02); una persona, sus avisos («Tu aviso» de Carolina).
+ */
+export function getManagedPublications(ownerId: DemoActorId): DemoManagedPublication[] {
+    const panel = getOrgDashboard(ownerId)?.publicaciones;
+    if (panel) return panel.flatMap((id) => getManagedPublication(id) ?? []);
+    return DEMO_MANAGED_PUBLICATIONS.filter((m) => m.ownerId === ownerId);
 }
 
 export function getOrg(id: string): DemoOrg | undefined {

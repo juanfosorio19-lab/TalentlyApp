@@ -1,14 +1,14 @@
-// Lo que la organización (o el hogar) hace con sus publicaciones durante la
-// sesión de demostración: pausar, cerrar con motivo, renovar, confirmar
-// cupos, avanzar o no seleccionar postulantes, marcar asistencia y evaluar.
-// GES-01, GES-02 y GES-04 leen SOLO de aquí (más los datos de features/demo):
-// si se cierra la publicación, GES-04 ya no deja confirmar, y las métricas de
-// GES-01 se recalculan con lo confirmado.
+// Lo que quien publica (organización u hogar) hace con sus publicaciones
+// durante la sesión de demostración: pausar, cerrar con motivo, renovar,
+// confirmar cupos, la llegada de postulados después del «salto de tiempo»,
+// avanzar o no seleccionar postulantes, marcar asistencia y evaluar.
+// UN solo lugar para GES-01, GES-02, GES-04, Actividad (ACT-01 y ACT-03),
+// Inicio (INI-02 y «Tu aviso») y Explorar (EXP-05): todas derivan sus cifras
+// con los selectores puros de ./manageSelectors.
 //
-// Vive en memoria mientras la app está abierta. Pedido en requests: subirlo a
-// demo/sessionStore para que INI-02 (KPIs y «Requiere tu atención»), ACT-03,
-// la Agenda y NOT-01 muestren las mismas cifras. Cuando vuelva Supabase, cada
-// acción es una RPC (confirm_assignment(), close_publication()…).
+// Vive en memoria mientras la app está abierta (al recargar vuelve a los
+// datos). Cuando vuelva Supabase, cada acción es una RPC
+// (confirm_assignment(), close_publication()…).
 import { useSyncExternalStore } from 'react';
 import type { BadgeStatus } from '../../ui/Badge';
 
