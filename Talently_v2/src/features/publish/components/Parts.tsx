@@ -6,10 +6,25 @@ import { cx } from '../../../ui/cx';
 import { IconCheck, IconInfo, type IconComponent } from '../../../ui/icons';
 import { SectionRow } from '../../../ui/SectionCard';
 
-/** «Lo pagado nunca salta requisitos…» (caption) o «Son 40 horas a la semana.» (body, en color-text). */
-export function Note({ icon: Icon, children, size = 'caption' }: { icon: IconComponent; children: ReactNode; size?: 'caption' | 'body' }) {
+/**
+ * Nota con ícono delante: «Lo pagado nunca salta requisitos…» (caption) o
+ * «Garzón o garzona no tiene credenciales obligatorias.» (body), en
+ * color-text-2. `tone="text"` solo para «Son 40 horas a la semana.»
+ * (PUBL-04 paso 2), que va en color-text y centrada con su ícono.
+ */
+export function Note({
+    icon: Icon,
+    children,
+    size = 'caption',
+    tone = 'muted',
+}: {
+    icon: IconComponent;
+    children: ReactNode;
+    size?: 'caption' | 'body';
+    tone?: 'muted' | 'text';
+}) {
     return (
-        <p className={cx('publish-note', size, size === 'body' && 'publish-note--text')}>
+        <p className={cx('publish-note', size, tone === 'text' && 'publish-note--text')}>
             <span className="publish-note__icon">
                 <Icon size={size === 'body' ? 20 : 16} />
             </span>
