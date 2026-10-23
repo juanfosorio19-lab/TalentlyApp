@@ -20,6 +20,8 @@ import { verificationDetail } from '../../demo/verifications';
 import { personVerifications } from '../model';
 
 const SHEET = 'verificacion';
+/** Los datos de la hoja en la URL: se van con ella al cerrarla. */
+const SHEET_PARAMS = ['publicacion', 'persona'] as const;
 
 /** De quién: el autor de una publicación o una persona sugerida. */
 export type VerificationOf = { publicacion: string } | { persona: string };
@@ -52,13 +54,13 @@ const signatureOf = (w: Who) => [w.nombre, ...w.verificaciones.map((v) => `${v.l
 
 /** Abre la hoja (push de `?sheet=verificacion…`). */
 export function useShowVerification(): (of: VerificationOf) => void {
-    const { show } = useSheet(SHEET);
+    const { show } = useSheet(SHEET, SHEET_PARAMS);
     return useCallback((of: VerificationOf) => show({ ...of }), [show]);
 }
 
 /** La hoja: una por pantalla. */
 export function VerificationSheet() {
-    const sheet = useSheet(SHEET);
+    const sheet = useSheet(SHEET, SHEET_PARAMS);
     // Vuelve a pintarse cuando alguien verifica su celular (AUTH-08).
     useSessionState();
     const current = resolve(sheet.param('publicacion'), sheet.param('persona'));

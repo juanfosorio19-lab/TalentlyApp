@@ -16,12 +16,12 @@ import { RadioGroup } from '../../../ui/Radio';
 import { Select } from '../../../ui/Select';
 import { TextArea } from '../../../ui/TextArea';
 import { TextField } from '../../../ui/TextField';
+import { COMUNAS_RM } from '../../demo/catalog';
 import type { DemoRow } from '../../demo/types';
 import { formatShiftDays, parseShiftDays } from '../availability';
 import { COPY } from '../copy';
 import type { EditableSection } from '../model';
 import {
-    COMUNAS_RM,
     CONTEXTO_HOGAR,
     DISPONIBLE_DESDE,
     DISTANCIAS,

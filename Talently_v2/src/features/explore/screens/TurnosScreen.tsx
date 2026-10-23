@@ -23,6 +23,7 @@ import { SheetPicker } from '../../../ui/SheetPicker';
 import { useSnackbar } from '../../../ui/Snackbar';
 import { Switch } from '../../../ui/Switch';
 import { getExplore } from '../../demo/data';
+import { useLivePublication } from '../../demo/manageHooks';
 import { useDemoSession } from '../../demo/session';
 import { applyTo } from '../../demo/sessionStore';
 import type { DemoTurno } from '../../demo/types';
@@ -48,7 +49,8 @@ import {
     writeTurnoFiltros,
     type TurnoFiltros,
 } from '../filters';
-import { COMUNAS_RM, TOMAR_TURNO_MS } from '../mock';
+import { COMUNAS_RM } from '../../demo/catalog';
+import { TOMAR_TURNO_MS } from '../mock';
 import {
     actorPhoneVerified,
     countTurnos,
@@ -176,7 +178,10 @@ export function TurnosScreen({ filtersSheet, focusPanel }: SegmentPanelProps) {
         }, TOMAR_TURNO_MS);
     };
 
-    const card = (p: DemoTurno) => {
+    // Los cupos que quedan con lo confirmado en GES-04 (los mismos de DET-01).
+    const live = useLivePublication();
+    const card = (data: DemoTurno) => {
+        const p = live(data);
         const detalle = paths.publicacion(p.id);
         const kind = turnoCta(p, decided(p.id));
         const cta: PublicationCta =

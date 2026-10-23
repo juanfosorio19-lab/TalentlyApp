@@ -4,18 +4,7 @@
 // opciones de cada paso tal como las muestra el prototipo F1. Cuando vuelva
 // la base de datos, salen de `comunas`, `categories` y sus diccionarios.
 import type { JobCategoryKey } from '../../domain/categorias';
-
-/** Las 52 comunas de la Región Metropolitana. */
-const COMUNA_NAMES = [
-    'Alhué', 'Buin', 'Calera de Tango', 'Cerrillos', 'Cerro Navia', 'Colina', 'Conchalí', 'Curacaví',
-    'El Bosque', 'El Monte', 'Estación Central', 'Huechuraba', 'Independencia', 'Isla de Maipo',
-    'La Cisterna', 'La Florida', 'La Granja', 'La Pintana', 'La Reina', 'Lampa', 'Las Condes',
-    'Lo Barnechea', 'Lo Espejo', 'Lo Prado', 'Macul', 'Maipú', 'María Pinto', 'Melipilla', 'Ñuñoa',
-    'Padre Hurtado', 'Paine', 'Pedro Aguirre Cerda', 'Peñaflor', 'Peñalolén', 'Pirque', 'Providencia',
-    'Pudahuel', 'Puente Alto', 'Quilicura', 'Quinta Normal', 'Recoleta', 'Renca', 'San Bernardo',
-    'San Joaquín', 'San José de Maipo', 'San Miguel', 'San Pedro', 'San Ramón', 'Santiago', 'Talagante',
-    'Tiltil', 'Vitacura',
-] as const;
+import { COMUNAS_RM } from '../demo/catalog';
 
 /** Clave estable a partir del nombre («Ñuñoa» → «nunoa», «Puente Alto» → «puente-alto»). Nunca se muestra. */
 export function comunaKey(name: string): string {
@@ -26,7 +15,8 @@ export function comunaKey(name: string): string {
         .replace(/\s+/g, '-');
 }
 
-export const COMUNAS: readonly { value: string; label: string }[] = COMUNA_NAMES.map((name) => ({
+/** Las 52 comunas de la Región Metropolitana (demo/catalog), con su clave. */
+export const COMUNAS: readonly { value: string; label: string }[] = COMUNAS_RM.map((name) => ({
     value: comunaKey(name),
     label: name,
 }));

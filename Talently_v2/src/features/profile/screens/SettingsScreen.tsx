@@ -3,7 +3,6 @@
 // al pie una sola vez. Nada de acciones de producto ni gestión de perfiles.
 // Apariencia y «¿Cerrar sesión?» viven en la URL (`?sheet=apariencia`,
 // `?sheet=cerrar-sesion`): el atrás las cierra.
-import { useNavigate } from 'react-router-dom';
 import { AppBar, useScrolled } from '../../../ui/AppBar';
 import { Dialog } from '../../../ui/Dialog';
 import {
@@ -20,6 +19,7 @@ import { Stack } from '../../../ui/Layout';
 import { List, ListItem } from '../../../ui/ListItem';
 import { useSnackbar } from '../../../ui/Snackbar';
 import { useGoBack } from '../../../app/BackButtonManager';
+import { useLeaveSession } from '../../../app/navigation/history';
 import { useOpenPath } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
 import { useTheme } from '../../../app/providers/ThemeProvider';
@@ -32,17 +32,10 @@ import '../profile.css';
 
 export const screenId = 'CFG-01';
 
-/** Cuántas entradas de la app hay antes de esta en el historial (el índice que guarda React Router). */
-function historyDepth(): number {
-    const idx = (window.history.state as { idx?: unknown } | null)?.idx;
-    return typeof idx === 'number' && idx > 0 ? idx : 0;
-}
-
 const C = COPY.config;
 
 export function SettingsScreen() {
     const goBack = useGoBack();
-    const navigate = useNavigate();
     const scrolled = useScrolled();
     const { show } = useSnackbar();
     const { canOpen, linkProps, soon } = useOpenPath();
@@ -53,27 +46,16 @@ export function SettingsScreen() {
     const appearance = useSheet('apariencia');
     const logout = useSheet('cerrar-sesion');
 
-    // Flujo 8: AUTH-01 Bienvenida, sin dejar las pantallas de la sesión en el historial: ni atrás (se
-    // vuelve a la primera entrada y se reemplaza) ni adelante (un push las descarta y se vuelve a ella;
-    // adelante solo queda otra AUTH-01). Pedido en «requests» como `leaveSession` en src/app/navigation.
+    // Flujo 8: AUTH-01 Bienvenida, sin dejar las pantallas de la sesión en el historial (ni atrás ni
+    // adelante): useLeaveSession vuelve a la primera entrada y la reemplaza.
+    const leaveSession = useLeaveSession();
     const confirmLogout = () => {
         const welcome = paths.bienvenida();
         if (!canOpen(welcome)) {
             soon();
             return;
         }
-        const toWelcome = async () => {
-            await navigate(welcome, { replace: true });
-            await navigate(welcome);
-            await navigate(-1);
-        };
-        const depth = historyDepth();
-        if (depth === 0) {
-            void toWelcome();
-            return;
-        }
-        window.addEventListener('popstate', () => void toWelcome(), { once: true });
-        void navigate(-depth);
+        leaveSession(welcome);
     };
 
     return (

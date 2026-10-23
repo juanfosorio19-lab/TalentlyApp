@@ -8,3 +8,5 @@ Se accede con funciones por actor: `getHomeFeed`, `getExplore`, `getPublication`
 Las pantallas usan solo estas funciones y estos tipos; nunca importan las constantes `DEMO_*` para filtrarlas por su cuenta.
 `data.test.ts` revisa que cada actor tenga Inicio, que todo id referenciado exista, que no haya palabras prohibidas ni códigos con guion bajo y que los montos sean enteros positivos.
 Cuando vuelva Supabase, cada `get…` se reemplaza por su consulta real con el mismo tipo de retorno, y `session.tsx` por Auth + Actor reales (02-arquitectura §4.2); ese día este módulo se borra completo sin tocar las pantallas.
+Lo que cambia durante la sesión vive al lado de los datos, cada cosa en un solo archivo: `sessionStore.ts` (bandeja, postulaciones, retiros, reseñas, teléfono, identidad, match, deck), `manageState.ts` + `manageSelectors.ts` + `manageHooks.ts` (lo que hace quien publica y todas las cifras que se derivan), `conversationState.ts` (Mensajes y su badge), `profileState.ts` (perfil editado, CV y PRF-12), `verifications.ts` (qué se verificó y la regla de la identidad) y `catalog.ts` (comunas). Cada uno tiene su `*.test.ts`.
+

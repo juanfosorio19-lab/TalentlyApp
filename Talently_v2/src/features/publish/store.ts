@@ -159,9 +159,33 @@ export function useAwaitingIdentity(actorId: DemoActorId, kind: WizardKind): boo
     return session.useStore().awaitingIdentity.has(keyOf(actorId, kind));
 }
 
+// ─── De dónde se abrió el asistente ─────────────────────────────────────────
+
+/**
+ * `${actorId}:${kind}` → la entrada del historial que se conserva al terminar
+ * (spec §5.3 regla 6): la pantalla de debajo de la hoja PUBL-01 que abrió el
+ * asistente. PUBL-07 vuelve a ella de un salto, sin pasar por la hoja ni por
+ * los pasos, y abre el destino encima. No es estado de pantalla: no avisa.
+ */
+const origins = new Map<string, number>();
+
+export function setWizardOrigin(actorId: DemoActorId, kind: WizardKind, index: number): void {
+    origins.set(keyOf(actorId, kind), index);
+}
+
+/** La entrada que se conserva, o `null` si el asistente se abrió por un enlace. */
+export function getWizardOrigin(actorId: DemoActorId, kind: WizardKind): number | null {
+    return origins.get(keyOf(actorId, kind)) ?? null;
+}
+
+export function clearWizardOrigin(actorId: DemoActorId, kind: WizardKind): void {
+    origins.delete(keyOf(actorId, kind));
+}
+
 /** Solo para pruebas. */
 export function resetPublishStore(): void {
     turnoDrafts.reset();
     hogarDrafts.reset();
     session.reset();
+    origins.clear();
 }

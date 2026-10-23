@@ -7,6 +7,7 @@
 // de actor, así «Usar Talently como» se cierra con su animación.
 import { useEffect, useMemo, useRef } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
+import { flowOriginState } from '../../../app/navigation/history';
 import { paths } from '../../../app/paths';
 import { useSheet } from '../../../app/sheets';
 import { getHomeFeed, getPublication } from '../../demo/data';
@@ -65,7 +66,7 @@ export function HomeScreen() {
     useFocusTitleIfLost(location.key);
 
     // PUBL-01: la opción marcada vive en la URL (`tipo`), así sigue marcada al volver del asistente.
-    const publish = useSheet('publicar');
+    const publish = useSheet('publicar', ['tipo']);
     const as: Publisher = isOrg ? 'organizacion' : 'hogar';
     const kind = selectedKind(as, publish.param('tipo'));
     const showPublish = keepScroll((next?: PublishKind) => publish.show({ tipo: next ?? selectedKind(as, null) }));
@@ -81,14 +82,15 @@ export function HomeScreen() {
         ),
     );
     // «Continuar» apila el asistente: su atrás en el paso 1 vuelve a esta hoja (como el prototipo).
-    const onContinue = () => go(paths.publicar(wizardOf(kind)));
+    // Al publicar, PUBL-07 vuelve a la entrada de debajo de la hoja (flowOriginState), no a la hoja.
+    const onContinue = () => go(paths.publicar(wizardOf(kind)), { state: flowOriginState() });
 
     // «Publicas como …»: la organización, o el hogar de la persona («Familia en Ñuñoa», autor de su aviso).
     const aviso = blocks.find((b) => b.tipo === 'tu-aviso');
     const publisher = publisherName(actor, aviso?.tipo === 'tu-aviso' ? aviso.publicationId : undefined);
 
     // «Verificación de …»: quien publica la tarjeta, según la URL (`pub`).
-    const verify = useSheet('verificacion');
+    const verify = useSheet('verificacion', ['pub']);
     const verifyId = verify.param('pub');
     const author = (verifyId && getPublication(verifyId)?.autor) || null;
     const showVerify = keepScroll((pub: string) => verify.show({ pub }));

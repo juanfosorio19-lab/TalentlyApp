@@ -72,10 +72,10 @@ function Applicants({ managed }: { managed: DemoManagedPublication }) {
     const { linkProps, open } = useOpenPath();
     const s = useManageState();
     const applications = useSessionApplications();
-    const rejectSheet = useSheet('no-seleccionar');
+    const rejectSheet = useSheet('no-seleccionar', ['p']);
     const titleRef = useRef<HTMLHeadingElement>(null);
     const listRef = useRef<HTMLUListElement>(null);
-    const verifySheet = useSheet('verificacion');
+    const verifySheet = useSheet('verificacion', ['p']);
     const focusAfter = usePendingFocus(rejectSheet.open || verifySheet.open);
     useTitleFocusOnMount(titleRef);
 

@@ -7,16 +7,19 @@ import { Dialog } from '../ui/Dialog';
 import { SnackbarProvider, useSnackbar } from '../ui/Snackbar';
 import { MatchHost } from '../features/publications/MatchHost';
 import { BackButtonManager, type BackPrompts } from './BackButtonManager';
-import { rememberTab } from './navigation/tabMemory';
+import { historyIndex } from './navigation/history';
+import { noteFirstEntry, rememberTab } from './navigation/tabMemory';
 import { isTabRoot, tabOf } from './paths';
+import { withoutSheet } from './sheets';
 
 /**
  * Raíces de pestaña: el scroll se guarda por ruta (vuelve donde quedó al cambiar
- * de pestaña). Pantallas apiladas: por entrada del historial (atrás vuelve al
- * mismo scroll; una pantalla nueva parte arriba).
+ * de pestaña), sin la hoja abierta ni sus parámetros: abrir o reabrir una hoja
+ * no mueve la página de abajo. Pantallas apiladas: por entrada del historial
+ * (atrás vuelve al mismo scroll; una pantalla nueva parte arriba).
  */
 const scrollKey = (location: Location) =>
-    isTabRoot(location.pathname) ? location.pathname + location.search : location.key;
+    isTabRoot(location.pathname) ? location.pathname + withoutSheet(location.search, location.state) : location.key;
 
 function Prompts({ children }: { children: (prompts: BackPrompts) => ReactNode }) {
     const snackbar = useSnackbar();
@@ -57,12 +60,16 @@ function Prompts({ children }: { children: (prompts: BackPrompts) => ReactNode }
     );
 }
 
-/** Guarda la última subruta de cada pestaña (spec §5.3 regla 1). */
+/**
+ * Guarda la última subruta de cada pestaña (spec §5.3 regla 1), sin la hoja
+ * abierta: volver a la pestaña no la reabre (/inicio?sheet=publicar → /inicio).
+ */
 function TabMemory() {
     const location = useLocation();
     useEffect(() => {
+        noteFirstEntry(historyIndex(), location.pathname);
         const tab = tabOf(location.pathname);
-        if (tab && isTabRoot(location.pathname)) rememberTab(tab, location.pathname + location.search);
+        if (tab && isTabRoot(location.pathname)) rememberTab(tab, location.pathname + withoutSheet(location.search, location.state));
     }, [location]);
     return null;
 }

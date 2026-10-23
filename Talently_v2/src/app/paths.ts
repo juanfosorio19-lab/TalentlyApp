@@ -25,6 +25,8 @@ export const paths = {
     buscar: (texto?: string) => `/buscar${q({ q: texto })}`,
     publicacion: (id: string) => `/p/${id}`,
     gestionarPublicacion: (id: string) => `/publicaciones/${id}`,
+    /** GES-01 · Editar: reutiliza los pasos del asistente con los datos cargados (aún sin pantalla). */
+    editarPublicacion: (id: string) => `/publicaciones/${id}/editar`,
     postulantes: (id: string) => `/publicaciones/${id}/postulantes`,
     sugeridos: (id: string) => `/publicaciones/${id}/sugeridos`,
     cuposTurno: (id: string, shiftId: string) => `/publicaciones/${id}/turnos/${shiftId}`,
@@ -34,10 +36,14 @@ export const paths = {
     resena: (engagementId: string) => `/resena/${engagementId}`,
     /** PRF-12 · Impulsa tu perfil (solo perfil de trabajo). */
     impulsar: () => '/perfil/impulsar',
-    /** VER-02 · Verificar identidad. */
-    verificarIdentidad: () => '/verificacion/identidad',
+    /** VER-02 · Verificar identidad; con `volver`, la pantalla a la que vuelve al terminar (PUBL-04 → VER-02 → PUBL-07). */
+    verificarIdentidad: (volver?: string) => `/verificacion/identidad${q({ volver })}`,
+    /** VER-03 · Subir credencial (aún sin pantalla). */
+    subirCredencial: (tipo: string) => `/verificacion/credencial/${tipo}`,
     /** PUBL-02 a PUBL-06 · asistentes de publicación, paso a paso en la URL. */
     publicar: (tipo: 'empleo' | 'turno' | 'hogar' | 'clase' | 'servicio', paso = 1) => `/publicar/${tipo}/${paso}`,
+    /** PUBL-07 · Publicación enviada. */
+    publicado: (tipo: 'empleo' | 'turno' | 'hogar' | 'clase' | 'servicio') => `/publicar/${tipo}/listo`,
     /** AUTH-01 · Bienvenida (fuera de la sesión). */
     bienvenida: () => '/bienvenida',
     registro: () => '/registro',
@@ -45,6 +51,8 @@ export const paths = {
     onboarding: (bloque: string, paso?: number) => `/onboarding/${bloque}${paso ? `/${paso}` : ''}`,
     perfilPublico: (id: string, ver?: 'trabajo' | 'servicios' | 'clases') => `/u/${id}${q({ ver })}`,
     organizacion: (id: string) => `/o/${id}`,
+    /** GES-05 · Trabajadores favoritos (aún sin pantalla). */
+    favoritos: (orgId: string) => `/o/${orgId}/favoritos`,
     verificacion: () => '/verificacion',
     configuracion: () => '/configuracion',
     terminos: () => '/terminos',

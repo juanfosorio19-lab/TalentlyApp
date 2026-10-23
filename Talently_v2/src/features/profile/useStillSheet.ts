@@ -10,8 +10,8 @@ import { useCallback, useLayoutEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useSheet, type UrlSheet } from '../../app/sheets';
 
-export function useStillSheet(name: string): UrlSheet {
-    const sheet = useSheet(name);
+export function useStillSheet(name: string, params?: readonly string[]): UrlSheet {
+    const sheet = useSheet(name, params);
     const { key } = useLocation();
     const openedAt = useRef<number | null>(null);
 

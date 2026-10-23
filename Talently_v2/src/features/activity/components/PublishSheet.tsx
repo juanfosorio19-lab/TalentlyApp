@@ -13,6 +13,7 @@ import { Button } from '../../../ui/Button';
 import { IconClock, IconOffers, type IconComponent } from '../../../ui/icons';
 import { Stack } from '../../../ui/Layout';
 import { OptionGroup, type OptionGroupOption } from '../../../ui/OptionCard';
+import { flowOriginState } from '../../../app/navigation/history';
 import { useOpenPath } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
 import { useSheet } from '../../../app/sheets';
@@ -67,7 +68,8 @@ export function PublishSheet({ as, publisher }: PublishSheetProps) {
     const value = OPTIONS[as].some((o) => o.value === choice.value) ? choice.value : DEFAULT[as];
 
     // El asistente reemplaza la entrada de la hoja: atrás desde él vuelve a ACT-03, no a la hoja.
-    const next = () => open(paths.publicar(WIZARD[value]), { replace: true });
+    // Al publicar, PUBL-07 vuelve a ACT-03 (flowOriginState: la entrada de debajo de la hoja).
+    const next = () => open(paths.publicar(WIZARD[value]), { replace: true, state: flowOriginState() });
 
     return (
         <BottomSheet

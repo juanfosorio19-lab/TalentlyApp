@@ -4,6 +4,7 @@ import type { LinkTargetProps } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
 import { PublicationCard, type PublicationCardData } from '../../../ui/PublicationCard';
 import { PublicationCardDeckShortcut } from '../../../ui/PublicationCardDeck';
+import { useLivePublication } from '../../demo/manageHooks';
 import { getPublication } from '../../demo/data';
 import type { DemoPublication } from '../../demo/types';
 import { useHomeNavigation } from '../navigation';
@@ -43,7 +44,9 @@ export interface HomePublicationsProps {
 /** «Turnos para ti»: tarjetas compactas; cada una abre su detalle (flujo 2: → DET-01). */
 export function ShiftCards({ ids, onVerify }: HomePublicationsProps) {
     const { link } = useHomeNavigation();
-    return existing(ids).map((pub) => (
+    // Los cupos que quedan con lo confirmado en la sesión (los mismos de DET-01 y GES-04).
+    const live = useLivePublication();
+    return existing(ids).map(live).map((pub) => (
         <PublicationCard key={pub.id} variant="compact" {...cardData(pub, link(paths.publicacion(pub.id)), onVerify)} />
     ));
 }

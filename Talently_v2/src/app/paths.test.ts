@@ -10,6 +10,10 @@ describe('paths', () => {
         expect(paths.publicacion('abc')).toBe('/p/abc');
         expect(paths.cuposTurno('p1', 's9')).toBe('/publicaciones/p1/turnos/s9');
         expect(paths.buscar('garzón')).toBe('/buscar?q=garz%C3%B3n');
+        expect(paths.verificarIdentidad()).toBe('/verificacion/identidad');
+        expect(paths.verificarIdentidad('/publicar/hogar/listo')).toBe('/verificacion/identidad?volver=%2Fpublicar%2Fhogar%2Flisto');
+        expect(paths.publicado('hogar')).toBe('/publicar/hogar/listo');
+        expect(paths.favoritos('banqueteria')).toBe('/o/banqueteria/favoritos');
     });
 
     it('reconoce la pestaña de una ruta', () => {

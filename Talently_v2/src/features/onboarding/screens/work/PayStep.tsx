@@ -56,7 +56,7 @@ export function PayStep() {
     const { draft, busca, layout, next } = useWorkStep(3);
     const { trabajo } = draft;
     const noDecir = trabajo.noDecir;
-    const unidad = useSheet(UNIDAD_SHEET);
+    const unidad = useSheet(UNIDAD_SHEET, ['campo']);
     const raw = unidad.param('campo');
     const campo: Campo | null = raw === 'sueldo' && busca.empleo ? 'sueldo' : raw === 'tarifa' && busca.turnos ? 'tarifa' : null;
     const unitOpen = unidad.open && campo !== null && !noDecir;

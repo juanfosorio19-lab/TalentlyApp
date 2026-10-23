@@ -279,10 +279,12 @@ export function useApplications(actorId: DemoActorId, recienRegistrado = false):
         const merged = [...fromSession, ...fromData];
         return merged.map((a) => {
             if (cancelledShifts.has(a.id)) return { ...a, estado: 'Cancelaste' as BadgeStatus };
-            if (a.processId && withdrawnNow(withdrawn, applications, actorId, a.processId, a.publicationId)) {
-                return { ...a, estado: 'Postulación retirada' as BadgeStatus };
-            }
-            return a;
+            const withdrawnAt = a.processId ? withdrawn.get(keyOf(actorId, a.processId)) : undefined;
+            if (withdrawnAt === undefined) return a;
+            const again = applications.get(keyOf(actorId, a.publicationId));
+            if (stillWithdrawn(withdrawnAt, again?.at)) return { ...a, estado: 'Postulación retirada' as BadgeStatus };
+            // Volvió a postular después de retirar: vale la postulación nueva.
+            return again ? { ...a, estado: again.estado } : a;
         });
     }, [actorId, recienRegistrado, applications, cancelledShifts, withdrawn]);
 }

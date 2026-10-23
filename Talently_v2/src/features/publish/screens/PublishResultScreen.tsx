@@ -1,14 +1,18 @@
 // PUBL-07 · Publicación enviada (/publicar/:tipo/listo), con ResultScreen:
 // «Publicada» (PUBL-07-turno) o «En revisión» (PUBL-07-aviso-hogar). Se llega
 // con replace al publicar, o desde VER-02 en el flujo 5: entonces termina de
-// publicar el aviso que quedó guardado. «Ver publicación» lleva, con replace,
-// a GES-01 del turno o a GES-02 del aviso (los de los datos de demostración).
+// publicar el aviso que quedó guardado. «Ver publicación» lleva a GES-01 del
+// turno o a GES-02 del aviso (los de los datos de demostración) e «Ir a
+// Inicio», a Inicio: los dos terminan el flujo (spec §5.3 regla 6) volviendo
+// de un salto a la pantalla desde la que se abrió PUBL-01, sin dejar en el
+// historial la hoja, los pasos ni VER-02 (así atrás no reabre la hoja).
 // Sin nada publicado en la sesión (un enlace, una recarga, «Ahora no») no
 // dice que se publicó: vuelve al asistente, que retoma el borrador guardado.
 import { useEffect, useMemo } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { Badge } from '../../../ui/Badge';
 import { ResultScreen } from '../../../ui/ResultScreen';
+import { useFinishFlow } from '../../../app/navigation/history';
 import { useOpenPath } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
 import { NotFoundScreen } from '../../../app/system/NotFoundScreen';
@@ -20,6 +24,8 @@ import { canPublish, publishedId, type WizardKind } from '../model/publisher';
 import { summaryOf } from '../model/summary';
 import { initialTurno } from '../model/turno';
 import {
+    clearWizardOrigin,
+    getWizardOrigin,
     hogarDrafts,
     markPublished,
     turnoDrafts,
@@ -55,7 +61,8 @@ function resultText(kind: WizardKind, actor: DemoActor, s: PublishedSummary): st
 
 function PublishResult({ kind, actor }: { kind: WizardKind; actor: DemoActor }) {
     const { recienRegistrado } = useDemoSession();
-    const { open } = useOpenPath();
+    const { canOpen, soon } = useOpenPath();
+    const finishFlow = useFinishFlow();
     const published = usePublished(actor.id, kind);
     const awaiting = useAwaitingIdentity(actor.id, kind);
     // Vuelve de VER-02: mientras el efecto lo publica, se muestra el aviso guardado (en revisión).
@@ -77,7 +84,16 @@ function PublishResult({ kind, actor }: { kind: WizardKind; actor: DemoActor }) 
 
     const s = published ?? pending;
     const id = publishedId(actor.id, kind);
-    const home = { label: copy.resultado.inicio, onClick: () => open(paths.inicio(), { replace: true }) };
+    const finish = (dest: string) => {
+        if (!canOpen(dest)) {
+            soon();
+            return;
+        }
+        const origin = getWizardOrigin(actor.id, kind);
+        clearWizardOrigin(actor.id, kind);
+        finishFlow(origin, dest);
+    };
+    const home = { label: copy.resultado.inicio, onClick: () => finish(paths.inicio()) };
 
     return (
         <ResultScreen
@@ -94,14 +110,14 @@ function PublishResult({ kind, actor }: { kind: WizardKind; actor: DemoActor }) 
                     </span>
                 </>
             }
-            // Al terminar un flujo, replace hacia su destino natural (spec §5.3 regla 6): el turno abre
-            // GES-01 y el aviso del hogar, sus postulantes (GES-02), como en el prototipo. Si lo publicado
-            // aún no existe en los datos (ACT-03 no lo mostraría), el único destino honesto es Inicio.
+            // Al terminar un flujo, su destino natural (spec §5.3 regla 6): el turno abre GES-01 y el aviso
+            // del hogar, sus postulantes (GES-02), como en el prototipo. Si lo publicado aún no existe en
+            // los datos (ACT-03 no lo mostraría), el único destino honesto es Inicio.
             action={
                 id
                     ? {
                           label: copy.resultado.ver,
-                          onClick: () => open(kind === 'turno' ? paths.gestionarPublicacion(id) : paths.postulantes(id), { replace: true }),
+                          onClick: () => finish(kind === 'turno' ? paths.gestionarPublicacion(id) : paths.postulantes(id)),
                       }
                     : home
             }

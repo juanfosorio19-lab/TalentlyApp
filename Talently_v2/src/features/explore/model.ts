@@ -39,7 +39,7 @@ import {
     type TarifaUnidad,
     type TurnoFiltros,
 } from './filters';
-import { CANDIDATOS_POR_PUBLICACION, OFICIO_DEL_TURNO, SINONIMOS } from './mock';
+import { CANDIDATOS_POR_PUBLICACION, SINONIMOS } from './mock';
 
 // ─── Segmentos (spec §5.2) ──────────────────────────────────────────────────
 
@@ -342,7 +342,7 @@ export function turnoDays(explore: DemoExplore, oficios: readonly string[], f: T
             titulo: d.titulo,
             turnos: turnosOfDay(d.publicaciones)
                 .filter((p) => comuna === null || comunaOf(p.lugar) === comuna)
-                .filter((p) => oficios.length === 0 || oficios.includes(OFICIO_DEL_TURNO[p.id] ?? ''))
+                .filter((p) => oficios.length === 0 || oficios.includes(p.oficio ?? ''))
                 .filter((p) => passesTurno(p, f)),
         }))
         .filter((d) => d.turnos.length > 0);
@@ -725,7 +725,7 @@ export function searchIn(scope: SearchResults, query: string): SearchResults {
         return terms.some((term) => hay.includes(term));
     };
     const hit = (p: DemoPublication) =>
-        matches([p.titulo, p.autor.nombre, p.lugar, OFICIO_DEL_TURNO[p.id] ?? '', ...p.tags.map((t) => t.text)].join(' · '));
+        matches([p.titulo, p.autor.nombre, p.lugar, (p.tipo === 'turno' && p.oficio) || '', ...p.tags.map((t) => t.text)].join(' · '));
     const hitPerson = (s: Suggestion) => matches([s.person.nombre, s.person.oficio ?? '', s.person.comuna].join(' · '));
     return {
         empleos: scope.empleos.filter(hit),
@@ -740,7 +740,7 @@ export function searchIn(scope: SearchResults, query: string): SearchResults {
  */
 export function searchHints(scope: SearchResults): string[] {
     const oficios = [
-        ...scope.turnos.map((p) => OFICIO_DEL_TURNO[p.id]),
+        ...scope.turnos.map((p) => p.oficio),
         ...scope.empleos.map((p) => p.titulo),
         ...scope.personas.map((s) => s.person.oficio),
     ];

@@ -17,7 +17,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useGoBack } from '../../../app/BackButtonManager';
-import { hasInternalHistory } from '../../../app/navigation/backHandlers';
 import { lastUrlOf } from '../../../app/navigation/tabMemory';
 import { paths } from '../../../app/paths';
 import { AppBar, useScrolled } from '../../../ui/AppBar';
@@ -27,6 +26,7 @@ import { ScreenSection, Stack } from '../../../ui/Layout';
 import { PublicationCard } from '../../../ui/PublicationCard';
 import { SearchField } from '../../../ui/SearchField';
 import { getExplore } from '../../demo/data';
+import { useLivePublication } from '../../demo/manageHooks';
 import { useManageState } from '../../demo/manageState';
 import { useDemoSession } from '../../demo/session';
 import { useDecided, useSessionState } from '../../demo/sessionStore';
@@ -53,7 +53,8 @@ export const screenId = 'EXP-07';
 type Alcance = 'trabajo' | 'todo';
 
 export function SearchScreen() {
-    const goBack = useGoBack();
+    // Sin historial interno, el atrás del AppBar vuelve a Explorar (no a Inicio).
+    const goBack = useGoBack(lastUrlOf('explorar'));
     const scrolled = useScrolled();
     const { actor, recienRegistrado } = useDemoSession();
     const [params, setParams] = useSearchParams();
@@ -93,10 +94,10 @@ export function SearchScreen() {
         inputRef.current?.focus();
     };
 
-    // Sin historial interno, el atrás del AppBar vuelve a Explorar (no a Inicio).
-    const onBack = () => (hasInternalHistory() ? goBack() : go(lastUrlOf('explorar'), { replace: true }));
-
-    const card = (p: DemoPublication) => {
+    // Los cupos que quedan con lo confirmado en GES-04 (los mismos de DET-01).
+    const live = useLivePublication();
+    const card = (data: DemoPublication) => {
+        const p = live(data);
         const detalle = paths.publicacion(p.id);
         return (
             <PublicationCard
@@ -154,7 +155,7 @@ export function SearchScreen() {
 
     return (
         <div className="tl-app-screen" data-screen-id={screenId}>
-            <AppBar variant="standard" title={copy.buscar.titulo} onBack={onBack} scrolled={scrolled} />
+            <AppBar variant="standard" title={copy.buscar.titulo} onBack={goBack} scrolled={scrolled} />
             <main className="tl-app-screen__body explore-main">
                 <div className="tl-app-screen__content explore-panel">
                     <Stack gap={3}>

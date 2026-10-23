@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { getHomeFeed, getManagedPublication, getOrgDashboard } from './data';
+import { getHomeFeed, getManagedPublication, getOrgDashboard, getPublication } from './data';
 import { applyTo, resetSession, getSessionState } from './sessionStore';
 import type { DemoManagedPublication } from './types';
 import {
@@ -15,6 +15,7 @@ import {
     membersOf,
     missingText,
     orgDashboardView,
+    publicationWithSession,
     startsInText,
     joinWithA,
     metricsOf,
@@ -384,5 +385,21 @@ describe('Actividad y Explorar leen lo mismo que GES-01 y GES-04', () => {
         setPublicationStatus('turno-garzones-finde', { estado: 'Pausada' });
         expect(isPublicationActive('turno-garzones-finde', getManageState())).toBe(false);
         expect(isPublicationActive('turno-garzones-finde-5dic', getManageState())).toBe(false);
+    });
+});
+
+describe('la publicación vista por quien postula (publicationWithSession)', () => {
+    it('«Quedan 3 de 8 cupos» baja al confirmar en GES-04; pausada deja de estar activa', () => {
+        const pub = getPublication('turno-garzones-matrimonio');
+        if (pub?.tipo !== 'turno') throw new Error('Sin turno');
+        expect(publicationWithSession(pub, getManageState(), apps())).toBe(pub);
+        confirmPeople('turno-garzones-matrimonio', 'matrimonio-sab-12', ['martin-silva']);
+        const live = publicationWithSession(pub, getManageState(), apps());
+        expect(live.cupos).toEqual({ ...pub.cupos, left: pub.cupos.left - 1 });
+        expect(live.bloques[0]?.cupos?.left).toBe((pub.bloques[0]?.cupos?.left ?? 0) - 1);
+        setPublicationStatus('turno-garzones-matrimonio', { estado: 'Pausada' });
+        expect(publicationWithSession(pub, getManageState(), apps()).estado).toBe('Pausada');
+        const otra = getPublication('turno-bodega-noche');
+        if (otra) expect(publicationWithSession(otra, getManageState(), apps())).toBe(otra);
     });
 });

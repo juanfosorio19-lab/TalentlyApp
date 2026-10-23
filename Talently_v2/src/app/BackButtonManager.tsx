@@ -7,7 +7,9 @@
 //   5. pestaña distinta de Inicio → Inicio (replace); Bienvenida cuenta como Inicio
 //   6. Inicio → toast «Presiona atrás otra vez para salir»; 2.º toque en < 2 s → salir
 // El BackButton del AppBar usa los pasos 1 a 4 con useGoBack(); si no hay
-// historial (se llegó por un enlace), vuelve a la raíz de su pestaña o a Inicio.
+// historial (se llegó por un enlace), vuelve con replace a la ruta que diga la
+// pantalla (useGoBack(fallback): /buscar → la última de Explorar) o, si no
+// dice, a la raíz de su pestaña o a Inicio.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
@@ -25,7 +27,8 @@ export interface BackPrompts {
 }
 
 type GoBack = () => void;
-const GoBackContext = createContext<GoBack | null>(null);
+type GoBackTo = (fallback?: string) => void;
+const GoBackContext = createContext<GoBackTo | null>(null);
 
 export function BackButtonManager({ prompts, children }: { prompts: BackPrompts; children: ReactNode }) {
     const navigate = useNavigate();
@@ -101,21 +104,27 @@ export function BackButtonManager({ prompts, children }: { prompts: BackPrompts;
         };
     }, [onHardwareBack]);
 
-    const goBack = useCallback<GoBack>(() => {
-        void stepBack().then((done) => {
-            if (done) return;
-            const tab = tabOf(locationRef.current.pathname);
-            navigate(tab ? paths[tab]() : paths.inicio(), { replace: true });
-        });
-    }, [navigate, stepBack]);
+    const goBack = useCallback<GoBackTo>(
+        (fallback) => {
+            void stepBack().then((done) => {
+                if (done) return;
+                const tab = tabOf(locationRef.current.pathname);
+                void navigate(fallback ?? (tab ? paths[tab]() : paths.inicio()), { replace: true });
+            });
+        },
+        [navigate, stepBack],
+    );
 
     const value = useMemo(() => goBack, [goBack]);
     return <GoBackContext.Provider value={value}>{children}</GoBackContext.Provider>;
 }
 
-/** Para el BackButton del AppBar standard: mismo comportamiento que el atrás de Android. */
-export function useGoBack(): GoBack {
+/**
+ * Para el BackButton del AppBar standard: mismo comportamiento que el atrás de
+ * Android. `fallback`: a dónde ir (con replace) si no hay historial interno.
+ */
+export function useGoBack(fallback?: string): GoBack {
     const ctx = useContext(GoBackContext);
     if (!ctx) throw new Error('useGoBack debe usarse dentro de <BackButtonManager>');
-    return ctx;
+    return useCallback(() => ctx(fallback), [ctx, fallback]);
 }

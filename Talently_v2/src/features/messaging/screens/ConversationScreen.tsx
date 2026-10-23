@@ -8,7 +8,7 @@
 // del navegador o de Android cierra la capa y no la conversación:
 // ?sheet=adjuntar, ?sheet=certificado (MSG-02b), ?sheet=opciones (menú ⋯),
 // ?sheet=reportar (SHT-REPORTE) y ?sheet=bloquear (Dialog).
-// Enviar agrega el mensaje localmente (store.ts) mientras Supabase está pausado.
+// Enviar agrega el mensaje a la sesión (demo/conversationState) mientras Supabase está pausado.
 import { useEffect, useMemo, useRef } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
@@ -133,10 +133,9 @@ function Conversation({ conv, viewer }: { conv: DemoConversation; viewer: Viewer
 
     // En el chat el aviso va sobre el Composer, a la altura de la TabBar (M5 punto 13).
     const toast = (message: string, tone?: SnackbarTone) => snackbar.show({ message, tone, placement: 'tabbar' });
-    // Flujo 10: DET-01, PRC-01 y GES-01 se dibujan para el actor de la sesión (Matías), no para Marta.
-    // Mientras ella no sea actor de la demo (pedido en requests), Mensajes no la lleva a pantallas ajenas.
+    // El chip y «Ver publicación» llevan a su pantalla si existe; si no, el aviso sobre el Composer.
     const go = (path: string) => (canOpen(path) ? open(path) : toast(SOON_MESSAGE));
-    // Perfil público (PRF-10 / PRF-11): enlace real si ya existe (y quien mira es el actor); si no, el aviso sobre el Composer.
+    // Perfil público (PRF-10 / PRF-11): enlace real si ya existe; si no, el aviso sobre el Composer.
     const peerPath = peerProfilePath(conv.con);
     const peerLink = canOpen(peerPath) ? linkProps(peerPath) : { href: undefined, onClick: () => toast(SOON_MESSAGE) };
 

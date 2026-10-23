@@ -36,7 +36,6 @@ import { ManageGate } from '../components/ManageGate';
 import { copy } from '../copy';
 import { useOwnedPublication, usePendingFocus, useSessionApplications, useTitleFocusOnMount } from '../hooks';
 import { isSheetEntry, overManageState, shareUrl } from '../links';
-import { managePaths } from '../paths';
 import {
     RENEW_DAYS,
     defaultRoster,
@@ -215,7 +214,7 @@ function ManagePublication({ managed }: { managed: DemoManagedPublication }) {
                                 icon={IconHeart}
                                 title={managed.favoritos.texto}
                                 sub={managed.favoritos.detalle}
-                                {...linkProps(managePaths.favoritos(managed.ownerId))}
+                                {...linkProps(paths.favoritos(managed.ownerId))}
                             />
                         </List>
                     )}
@@ -224,7 +223,7 @@ function ManagePublication({ managed }: { managed: DemoManagedPublication }) {
                         <section className="tl-stack tl-stack--2">
                             <h2 className="h3 manage-text">{copy.manage.actions}</h2>
                             <div className="manage-grid manage-grid--tight">
-                                <Button variant="outline" icon={IconEdit} onClick={() => open(managePaths.editar(pub))}>
+                                <Button variant="outline" icon={IconEdit} onClick={() => open(paths.editarPublicacion(pub))}>
                                     {copy.manage.edit}
                                 </Button>
                                 <Button variant="outline" onClick={togglePause}>

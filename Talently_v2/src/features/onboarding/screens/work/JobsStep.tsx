@@ -38,7 +38,7 @@ export function JobsStep() {
     const { draft, layout, next } = useWorkStep(1);
     const { trabajo } = draft;
     const oficioSheet = useSheet(OFICIO_SHEET);
-    const expSheet = useSheet(EXPERIENCIA_SHEET);
+    const expSheet = useSheet(EXPERIENCIA_SHEET, ['oficio']);
     const expOficio = trabajo.oficios.find((o) => o.id === expSheet.param('oficio')) ?? null;
     const labelId = useId();
     const addRef = useRef<HTMLButtonElement>(null);

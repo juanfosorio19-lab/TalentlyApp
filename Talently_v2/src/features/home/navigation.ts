@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useLocation, type NavigateOptions } from 'react-router-dom';
 import { useOpenPath, type LinkTargetProps } from '../../app/navigation/useOpenPath';
-import { isTabRoot, paths } from '../../app/paths';
+import { paths } from '../../app/paths';
 import { useDemoSession } from '../demo/session';
 import { targetPath } from '../demo/targets';
 import type { DemoTarget } from '../demo/types';
@@ -16,17 +16,14 @@ import type { DemoTarget } from '../demo/types';
  */
 export const profileCvPath = () => `${paths.perfil()}?${new URLSearchParams({ sheet: 'cv' })}`;
 
-/** Ir a la raíz de otra pestaña hace replace (spec §5.3 regla 1); una pantalla apilada, push (regla 2). */
-export function tabAware(path: string, options?: NavigateOptions): NavigateOptions {
-    return { replace: isTabRoot(path.split(/[?#]/)[0] ?? path), ...options };
-}
-
 export function useHomeNavigation() {
     const { actor } = useDemoSession();
     const { open, linkProps, soon, canOpen } = useOpenPath();
 
-    const go = useCallback((path: string, options?: NavigateOptions) => open(path, tabAware(path, options)), [open]);
-    const link = useCallback((path: string): LinkTargetProps => linkProps(path, tabAware(path)), [linkProps]);
+    // Ir a la raíz de otra pestaña hace replace (spec §5.3 regla 1) y a una pantalla apilada, push
+    // (regla 2): lo decide useOpenPath, que además deja Inicio debajo al salir de él (paso 5 en la web).
+    const go = useCallback((path: string, options?: NavigateOptions) => open(path, options), [open]);
+    const link = useCallback((path: string): LinkTargetProps => linkProps(path), [linkProps]);
 
     /** Un destino de los datos (DemoTarget) como enlace: `href` real o, si no tiene pantalla, «Disponible pronto». */
     const targetLink = useCallback(

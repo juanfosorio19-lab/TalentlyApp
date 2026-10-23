@@ -9,8 +9,8 @@
 // verificar el celular, «No me interesa») va a demo/sessionStore para que
 // ACT-02, la Agenda, Inicio y el deck lo vean; el match (DET-03) lo muestra
 // MatchHost sobre cualquier pantalla.
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
-import { useHref, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useHref, useParams } from 'react-router-dom';
 import { ActionPair } from '../../../ui/ActionPair';
 import { AppBar, useScrolled } from '../../../ui/AppBar';
 import { Amount, type AmountFormatOptions } from '../../../ui/Amount';
@@ -29,7 +29,7 @@ import { SnackbarOutlet, useSnackbar } from '../../../ui/Snackbar';
 import { useGoBack } from '../../../app/BackButtonManager';
 import { useOpenPath, type LinkTargetProps } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
-import { useSheet } from '../../../app/sheets';
+import { useSheet, useSwapSheet } from '../../../app/sheets';
 import { NotFoundScreen } from '../../../app/system/NotFoundScreen';
 import { getPublication } from '../../demo/data';
 import { DEMO_ACTORS, useDemoSession, type DemoActorId } from '../../demo/session';
@@ -52,6 +52,7 @@ import { useLater } from '../components/useLater';
 import { copy } from '../copy';
 import { matchConversation } from '../match';
 import { DEMO_LATENCY_MS, isWrittenFor } from '../mock';
+import { useLivePublication } from '../../demo/manageHooks';
 import { useCv } from '../../demo/profileState';
 import { detailCta, isAccepting, rowIcon, rowText, shareUrl, type DetailCta } from '../model';
 import '../publications.css';
@@ -61,7 +62,10 @@ export const screenId = 'DET-01';
 export function PublicationDetailScreen() {
     const { id } = useParams();
     const { actor } = useDemoSession();
-    const publication = id ? getPublication(id) : undefined;
+    // Con el estado y los cupos de la sesión (GES-01 y GES-04): «Quedan N de 8 cupos» dice lo mismo que los cupos.
+    const live = useLivePublication();
+    const data = id ? getPublication(id) : undefined;
+    const publication = data && live(data);
     if (!publication) return <NotFoundScreen />;
     // Otro actor u otra publicación parten de cero.
     return <PublicationDetail key={`${actor.id}:${publication.id}`} pub={publication} />;
@@ -80,40 +84,6 @@ function stateBadge(pub: DemoPublication, cta: DetailCta): BadgeStatus | null {
     if (cta.kind === 'own') return pub.estado;
     if (isAccepting(pub)) return null;
     return pub.tipo === 'empleo' ? 'Oferta cerrada' : 'Cerrada';
-}
-
-/** Lo que useSheet deja en `location.state` cuando la app abrió la hoja (atrás la cierra). */
-type SheetState = { sheet?: string } | null;
-
-/**
- * Cambia la hoja abierta por otra (AUTH-08 → DET-02) o la quita, sin dejar
- * historial: el atrás sigue cerrándola como a la de antes. Si la abrió la
- * app, quitarla es volver; si se llegó por un enlace, se quita con replace.
- */
-function useSwapSheet(): (to: string | null) => void {
-    const navigate = useNavigate();
-    const location = useLocation();
-    // Una sola vez por entrada del historial (los efectos de StrictMode corren dos veces).
-    const swappedFrom = useRef<string | null>(null);
-    return useCallback(
-        (to: string | null) => {
-            if (swappedFrom.current === location.key) return;
-            swappedFrom.current = location.key;
-            const openedByApp = Boolean((location.state as SheetState)?.sheet);
-            if (!to && openedByApp) {
-                navigate(-1);
-                return;
-            }
-            const next = new URLSearchParams(location.search);
-            if (to) next.set('sheet', to);
-            else next.delete('sheet');
-            navigate(
-                { pathname: location.pathname, search: next.size ? `?${next}` : '' },
-                { replace: true, preventScrollReset: true, state: to && openedByApp ? ({ sheet: to } satisfies SheetState) : null },
-            );
-        },
-        [location.key, location.pathname, location.search, location.state, navigate],
-    );
 }
 
 function PublicationDetail({ pub }: { pub: DemoPublication }) {

@@ -77,7 +77,8 @@ export function detailCta(
     if (ownerId) return { kind: 'own', ownerId };
     if (actor.kind === 'organizacion') return { kind: 'org' };
     const app = applications.find((a) => a.publicationId === pub.id);
-    const estado = sessionEstado ?? app?.estado;
+    // Retirada en PRC-01 (demo/sessionStore): se puede volver a postular.
+    const estado = app?.estado === 'Postulación retirada' ? undefined : (sessionEstado ?? app?.estado);
     if (estado) return { kind: 'applied', estado, ...applicationTarget(pub, app) };
     if (!isAccepting(pub)) return { kind: 'closed' };
     const waitlist = pub.tipo === 'turno' && pub.cupos.left <= 0;

@@ -5,10 +5,16 @@
 // GES-01, GES-02 y GES-04.
 import { useMemo } from 'react';
 import { getOrgDashboard } from './data';
-import { managedSessionOf, orgDashboardView, type ManagedSession, type SessionApplications } from './manageSelectors';
+import {
+    managedSessionOf,
+    orgDashboardView,
+    publicationWithSession,
+    type ManagedSession,
+    type SessionApplications,
+} from './manageSelectors';
 import { useManageState, type ManageState } from './manageState';
 import { useSessionState } from './sessionStore';
-import type { DemoOrgDashboard } from './types';
+import type { DemoOrgDashboard, DemoPublication } from './types';
 
 /** Lo que una pantalla necesita para derivar cifras de gestión: el estado de gestión y las postulaciones de la sesión. */
 export function useManageSession(): { manage: ManageState; applications: SessionApplications } {
@@ -34,4 +40,13 @@ export function useOrgDashboard(orgId: string, overrides?: Partial<Record<string
         const panel = getOrgDashboard(orgId);
         return panel ? orgDashboardView(panel, manage, applications, overrides) : undefined;
     }, [orgId, manage, applications, overrides]);
+}
+
+/**
+ * DET-01, EXP-02, EXP-07 e Inicio: la publicación con el estado de GES-01 y
+ * los cupos que quedan después de confirmar en GES-04 (publicationWithSession).
+ */
+export function useLivePublication(): <T extends DemoPublication>(p: T) => T {
+    const { manage, applications } = useManageSession();
+    return useMemo(() => <T extends DemoPublication>(p: T) => publicationWithSession(p, manage, applications), [manage, applications]);
 }

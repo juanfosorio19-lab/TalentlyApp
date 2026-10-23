@@ -222,6 +222,12 @@ export interface DemoEmpleo extends DemoPublicationBase {
 
 export interface DemoTurno extends DemoPublicationBase {
     tipo: 'turno';
+    /**
+     * Oficio del turno tal como lo nombran los chips de EXP-02 y REV-01
+     * («Garzón», «Bartender», «Guardia de eventos», «Bodega»). Sin oficio, el
+     * turno solo aparece con «Todos».
+     */
+    oficio?: string;
     /** Cupos de la tarjeta: la suma de los bloques. */
     cupos: DemoCupos;
     /** Un bloque por día: quien postula, postula a todos. */

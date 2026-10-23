@@ -4,21 +4,6 @@
 // Cuando la demo (o Supabase) los traiga, este archivo se borra.
 
 /**
- * Oficio de cada turno, para los chips de EXP-02 («Garzón», «Bodega»…).
- * DemoTurno no trae su oficio. «Banqueteros para bautizo» queda sin oficio
- * a propósito: ningún chip de la demo es «Banquetero/a», así que solo aparece
- * con «Todos».
- */
-export const OFICIO_DEL_TURNO: Readonly<Record<string, string>> = {
-    'turno-bodega-noche': 'Bodega',
-    'turno-guardia-concierto': 'Guardia de eventos',
-    'turno-garzones-matrimonio': 'Garzón',
-    'turno-coctel-lanzamiento': 'Garzón',
-    'turno-bartender-ano-nuevo': 'Bartender',
-    'turno-guardia-feria-navidena': 'Guardia de eventos',
-};
-
-/**
  * EXP-05 · Personas sugeridas: quiénes calzan con el oficio de cada
  * publicación propia. Son personas que ya existen en la demo (getPerson);
  * la pantalla descarta a quienes ya están en los cupos o ya postularon.
@@ -62,17 +47,6 @@ export const CANDIDATOS_POR_PUBLICACION: Readonly<Record<string, readonly string
 /** Lo que tarda «Tomar turno» en responder en la demo (igual que DET-01). */
 export const TOMAR_TURNO_MS = 600;
 
-/** SHT-COMUNA: las 52 comunas de la Región Metropolitana (no hay catálogo en src/domain todavía). */
-export const COMUNAS_RM: readonly string[] = [
-    'Alhué', 'Buin', 'Calera de Tango', 'Cerrillos', 'Cerro Navia', 'Colina', 'Conchalí', 'Curacaví',
-    'El Bosque', 'El Monte', 'Estación Central', 'Huechuraba', 'Independencia', 'Isla de Maipo',
-    'La Cisterna', 'La Florida', 'La Granja', 'La Pintana', 'La Reina', 'Lampa', 'Las Condes',
-    'Lo Barnechea', 'Lo Espejo', 'Lo Prado', 'Macul', 'Maipú', 'María Pinto', 'Melipilla', 'Ñuñoa',
-    'Padre Hurtado', 'Paine', 'Pedro Aguirre Cerda', 'Peñaflor', 'Peñalolén', 'Pirque', 'Providencia',
-    'Pudahuel', 'Puente Alto', 'Quilicura', 'Quinta Normal', 'Recoleta', 'Renca', 'San Bernardo',
-    'San Joaquín', 'San José de Maipo', 'San Miguel', 'San Pedro', 'San Ramón', 'Santiago', 'Talagante',
-    'Tiltil', 'Vitacura',
-];
 
 /**
  * EXP-07 · Sinónimos de búsqueda (spec §4.5 «synonyms»): palabras que la

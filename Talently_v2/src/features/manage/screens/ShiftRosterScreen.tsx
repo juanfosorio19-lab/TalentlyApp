@@ -32,7 +32,6 @@ import { ManageGate } from '../components/ManageGate';
 import { copy } from '../copy';
 import { useOwnedPublication, usePendingFocus, useReplaceParam, useSessionApplications, useTitleFocusOnMount } from '../hooks';
 import { isSheetEntry, overManageOf, overManageState } from '../links';
-import { managePaths } from '../paths';
 import { firstName, isEvaluated, joinWithA, rosterFecha, rosterView, type RosterView } from '../../demo/manageSelectors';
 import {
     confirmPeople,
@@ -97,7 +96,7 @@ function ShiftRoster({ managed, roster }: { managed: DemoManagedPublication; ros
     const s = useManageState();
     const applications = useSessionApplications();
     const moreSheet = useSheet('opciones');
-    const evaluateSheet = useSheet('evaluar');
+    const evaluateSheet = useSheet('evaluar', ['p']);
     const titleRef = useRef<HTMLHeadingElement>(null);
     const panelRef = useRef<HTMLDivElement>(null);
     const focusAfter = usePendingFocus(moreSheet.open || evaluateSheet.open);
@@ -284,7 +283,7 @@ function ShiftRoster({ managed, roster }: { managed: DemoManagedPublication; ros
                                 view={view}
                                 onConfirm={(p) => confirmOne(p, view.postulados)}
                                 onConfirmFavorites={confirmFavorites}
-                                onInvite={() => open(managePaths.favoritos(managed.ownerId))}
+                                onInvite={() => open(paths.favoritos(managed.ownerId))}
                             />
                         )}
                         {tab === 'espera' && <WaitlistPanel view={view} onConfirm={(p) => confirmOne(p, view.listaEspera)} />}

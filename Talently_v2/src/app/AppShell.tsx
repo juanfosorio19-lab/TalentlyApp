@@ -7,7 +7,8 @@ import { BottomTabBar, type BottomTabBarItem } from '../ui/BottomTabBar';
 import { IconCalendar, IconChat, IconHome, IconPerson, IconSearch } from '../ui/icons';
 import { useUnreadMessages } from '../features/demo/conversationState';
 import { useDemoSession } from '../features/demo/session';
-import { lastUrlOf } from './navigation/tabMemory';
+import { historyIndex } from './navigation/history';
+import { inicioJustBelow, lastUrlOf } from './navigation/tabMemory';
 import { tabOf, type TabKey } from './paths';
 
 function useTabItems(): BottomTabBarItem<TabKey>[] {
@@ -37,14 +38,19 @@ export function AppShell() {
     const items = useTabItems();
     const active = tabOf(pathname);
 
-    // Cambiar de pestaña hace replace y vuelve a su última subruta (spec §5.3 regla 1).
+    // Cambiar de pestaña hace replace y vuelve a su última subruta (spec §5.3 regla 1). Excepción:
+    // Inicio queda siempre debajo (paso 5 del atrás, que la web no puede detener): salir de Inicio
+    // cuando es la primera entrada apila la otra pestaña, y volver a él es un atrás.
     const onSelect = (key: TabKey, event: MouseEvent<HTMLAnchorElement>) => {
         event.preventDefault();
         if (key === active) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
         }
-        navigate(lastUrlOf(key), { replace: true });
+        const index = historyIndex();
+        if (active === 'inicio' && index === 0) void navigate(lastUrlOf(key));
+        else if (key === 'inicio' && inicioJustBelow(index)) void navigate(-1);
+        else void navigate(lastUrlOf(key), { replace: true });
     };
 
     return (

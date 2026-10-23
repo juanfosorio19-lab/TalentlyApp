@@ -27,7 +27,7 @@ export function ProfileTabContent({ tab, comuna, onChange }: ProfileTabContentPr
     const { show } = useSnackbar();
     const { actor, recienRegistrado } = useDemoSession();
     const { open: openPath, soon } = useOpenPath();
-    const editar = useStillSheet('editar');
+    const editar = useStillSheet('editar', ['s']);
     const cv = useStillSheet('cv');
 
     // ─── PRF-03 · Editar sección ────────────────────────────────────────────

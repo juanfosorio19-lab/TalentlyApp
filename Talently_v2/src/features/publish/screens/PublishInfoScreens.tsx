@@ -2,6 +2,7 @@
 // PUBL-02 · Publicar empleo (sin prototipo en F1), PUBL-05 · clase (F2),
 // PUBL-06 · servicio (F3), y quien abre un asistente por enlace sin
 // organización ni hogar desde donde publicar.
+import { useLocation } from 'react-router-dom';
 import { AppBar } from '../../../ui/AppBar';
 import { EmptyState } from '../../../ui/EmptyState';
 import { IconBook, IconHome, IconOffers, IconTool, type IconComponent } from '../../../ui/icons';
@@ -29,6 +30,8 @@ function InfoScreen({
 }) {
     const goBack = useGoBack();
     const { open } = useOpenPath();
+    // El asistente reemplaza esta entrada y hereda de dónde se abrió (la pantalla a la que vuelve al publicar).
+    const { state } = useLocation();
     return (
         <div className="tl-app-screen">
             <AppBar variant="standard" title={appBar} onBack={goBack} />
@@ -38,7 +41,7 @@ function InfoScreen({
                         icon={icon}
                         title={title}
                         text={text}
-                        action={{ label: action.label, onClick: () => open(action.to, { replace: true }) }}
+                        action={{ label: action.label, onClick: () => open(action.to, { replace: true, state }) }}
                     />
                 </div>
             </main>

@@ -22,7 +22,6 @@ import { verifyPhone } from '../../demo/sessionStore';
 import { PhoneSheet } from '../components/PhoneSheet';
 import { COPY } from '../copy';
 import type { Credential, Level, LevelActionKind } from '../model';
-import { verificationPaths } from '../paths';
 import { useVerification } from '../useVerification';
 import '../verification.css';
 
@@ -109,7 +108,7 @@ export function VerificationScreen() {
                                         key={cred.tipo}
                                         credential={cred}
                                         primary={!hasPrimary && i === firstUpload}
-                                        onUpload={() => open(verificationPaths.subirCredencial(cred.tipo))}
+                                        onUpload={() => open(paths.subirCredencial(cred.tipo))}
                                     />
                                 ))}
                             </List>

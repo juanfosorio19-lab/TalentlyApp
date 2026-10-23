@@ -341,7 +341,7 @@ export const DEMO_PUBLICATIONS: DemoPublication[] = [
     // ── Turnos ──
     {
         // INI-01 de Matías, EXP-02 y DET-01-turno (flujo 2).
-        id: 'turno-garzones-matrimonio', tipo: 'turno', titulo: 'Garzones para matrimonio',
+        id: 'turno-garzones-matrimonio', tipo: 'turno', titulo: 'Garzones para matrimonio', oficio: 'Garzón',
         autor: autorOrg(ORGS.banqueteria),
         tags: [{ kind: 'fecha', text: 'sáb 12 dic · 18:00–00:00 (6 h)' }],
         monto: liquidos(35000, 'turno'), cupos: { left: 3, total: 8 }, lugar: 'a 18 km · Las Condes', estado: 'Activa',
@@ -364,7 +364,7 @@ export const DEMO_PUBLICATIONS: DemoPublication[] = [
     },
     {
         // Tarjeta: INI-01 de Matías y EXP-02. Detalle: no está en el prototipo.
-        id: 'turno-coctel-lanzamiento', tipo: 'turno', titulo: 'Garzones para cóctel de lanzamiento',
+        id: 'turno-coctel-lanzamiento', tipo: 'turno', titulo: 'Garzones para cóctel de lanzamiento', oficio: 'Garzón',
         autor: autorOrg(ORGS.hotelAndino),
         tags: [{ kind: 'fecha', text: 'sáb 12 dic · 19:00–23:00 (4 h)' }],
         monto: liquidos(30000, 'turno'), cupos: { left: 5, total: 10 }, lugar: 'a 18 km · Las Condes', estado: 'Activa',
@@ -404,7 +404,7 @@ export const DEMO_PUBLICATIONS: DemoPublication[] = [
     },
     {
         // Tarjeta: EXP-02 · Hoy. Detalle: no está en el prototipo.
-        id: 'turno-bodega-noche', tipo: 'turno', titulo: 'Operario/a de bodega · Turno noche',
+        id: 'turno-bodega-noche', tipo: 'turno', titulo: 'Operario/a de bodega · Turno noche', oficio: 'Bodega',
         autor: autorOrg(ORGS.santaElena),
         tags: [{ kind: 'fecha', text: 'hoy · 22:00–06:00 (8 h)' }],
         monto: liquidos(6500, 'hora'), cupos: { left: 2, total: 6 }, lugar: 'a 9 km · Pudahuel', estado: 'Activa',
@@ -425,7 +425,7 @@ export const DEMO_PUBLICATIONS: DemoPublication[] = [
     },
     {
         // Tarjeta: EXP-02 · Mañana. Detalle: no está en el prototipo.
-        id: 'turno-guardia-concierto', tipo: 'turno', titulo: "Guardia de eventos · Concierto en Parque O'Higgins",
+        id: 'turno-guardia-concierto', tipo: 'turno', titulo: "Guardia de eventos · Concierto en Parque O'Higgins", oficio: 'Guardia de eventos',
         autor: autorOrg(ORGS.puntoActivo),
         tags: [{ kind: 'fecha', text: 'vie 11 dic · 17:00–01:00 (8 h)' }],
         monto: liquidos(40000, 'turno'), cupos: { left: 6, total: 12 }, lugar: 'a 12 km · Santiago', estado: 'Activa',
@@ -444,7 +444,7 @@ export const DEMO_PUBLICATIONS: DemoPublication[] = [
     },
     {
         // Tarjeta: EXP-02 · Más adelante. Detalle: no está en el prototipo.
-        id: 'turno-bartender-ano-nuevo', tipo: 'turno', titulo: 'Bartender · Fiesta de Año Nuevo',
+        id: 'turno-bartender-ano-nuevo', tipo: 'turno', titulo: 'Bartender · Fiesta de Año Nuevo', oficio: 'Bartender',
         autor: autorOrg(ORGS.hotelAndino),
         tags: [{ kind: 'fecha', text: 'jue 31 dic · 21:00–04:00 (7 h)' }],
         monto: liquidos(60000, 'turno'), cupos: { left: 3, total: 4 }, lugar: 'a 18 km · Las Condes', estado: 'Activa',
@@ -464,7 +464,7 @@ export const DEMO_PUBLICATIONS: DemoPublication[] = [
     },
     {
         // ACT-02 de Matías, «Hoy en tu agenda» y TUR-01 (pago de TUR-01: $30.000).
-        id: 'turno-garzones-coctel-corporativo', tipo: 'turno', titulo: 'Garzones para cóctel corporativo',
+        id: 'turno-garzones-coctel-corporativo', tipo: 'turno', titulo: 'Garzones para cóctel corporativo', oficio: 'Garzón',
         autor: autorOrg(ORGS.banqueteria),
         tags: [{ kind: 'fecha', text: 'hoy · 19:00–00:00 (5 h)' }],
         monto: liquidos(30000, 'turno'),
@@ -487,7 +487,7 @@ export const DEMO_PUBLICATIONS: DemoPublication[] = [
     },
     {
         // INI-02 y NOT-01: «Turno vie 11 dic · 12:00: faltan 2 garzones». Título y detalle: no están en el prototipo.
-        id: 'turno-garzones-almuerzo', tipo: 'turno', titulo: 'Garzones para almuerzo de empresa',
+        id: 'turno-garzones-almuerzo', tipo: 'turno', titulo: 'Garzones para almuerzo de empresa', oficio: 'Garzón',
         autor: autorOrg(ORGS.banqueteria),
         tags: [{ kind: 'fecha', text: 'vie 11 dic · 12:00–17:00 (5 h)' }],
         monto: liquidos(30000, 'turno'), cupos: { left: 2, total: 6 }, lugar: 'Vitacura', estado: 'Activa',
@@ -506,7 +506,7 @@ export const DEMO_PUBLICATIONS: DemoPublication[] = [
     },
     {
         // Flujo 4: PUBL-03 (pasos 1 a 4), PUBL-07, GES-01 y GES-04.
-        id: 'turno-garzones-finde', tipo: 'turno', titulo: 'Garzones fin de semana',
+        id: 'turno-garzones-finde', tipo: 'turno', titulo: 'Garzones fin de semana', oficio: 'Garzón',
         autor: autorOrg(ORGS.banqueteria),
         tags: [
             { kind: 'fecha', text: 'sáb 19 dic · 18:00–00:00 (6 h)' },
@@ -528,7 +528,7 @@ export const DEMO_PUBLICATIONS: DemoPublication[] = [
     {
         // El turno del sáb 5 dic (PUBL-03: plantilla «Garzones fin de semana», REV-01, MSG-01 de Matías, INI-02).
         // Horario, cupos y detalle: no están en el prototipo.
-        id: 'turno-garzones-finde-5dic', tipo: 'turno', titulo: 'Garzones fin de semana',
+        id: 'turno-garzones-finde-5dic', tipo: 'turno', titulo: 'Garzones fin de semana', oficio: 'Garzón',
         autor: autorOrg(ORGS.banqueteria),
         tags: [{ kind: 'fecha', text: 'sáb 5 dic · 18:00–00:00 (6 h)' }],
         monto: liquidos(35000, 'turno'), cupos: { left: 0, total: 7 }, lugar: 'San Miguel', estado: 'Cerrada',
@@ -544,7 +544,7 @@ export const DEMO_PUBLICATIONS: DemoPublication[] = [
     {
         // ACT-02 de Jorge: «Guardia de eventos · Banquetería Rosa SpA · sáb 19 dic · 19:00–03:00 · En lista de espera».
         // Monto, cupos y detalle: no están en el prototipo.
-        id: 'turno-guardia-eventos-19dic', tipo: 'turno', titulo: 'Guardia de eventos',
+        id: 'turno-guardia-eventos-19dic', tipo: 'turno', titulo: 'Guardia de eventos', oficio: 'Guardia de eventos',
         autor: autorOrg(ORGS.banqueteria),
         tags: [{ kind: 'fecha', text: 'sáb 19 dic · 19:00–03:00 (8 h)' }],
         monto: liquidos(40000, 'turno'), cupos: { left: 0, total: 4 }, lugar: 'a 14 km · San Miguel', estado: 'Activa',
@@ -563,7 +563,7 @@ export const DEMO_PUBLICATIONS: DemoPublication[] = [
     },
     {
         // ACT-02 de Jorge (Confirmado) y «Nuevos matches» de MSG-01. Monto, cupos y detalle: no están en el prototipo.
-        id: 'turno-guardia-eventos-12dic', tipo: 'turno', titulo: 'Guardia de eventos',
+        id: 'turno-guardia-eventos-12dic', tipo: 'turno', titulo: 'Guardia de eventos', oficio: 'Guardia de eventos',
         autor: autorOrg(ORGS.puntoActivo),
         tags: [{ kind: 'fecha', text: 'sáb 12 dic · 18:00–02:00 (8 h)' }],
         monto: liquidos(40000, 'turno'), cupos: { left: 1, total: 10 }, lugar: 'a 17 km · Santiago', estado: 'Activa',
@@ -582,7 +582,7 @@ export const DEMO_PUBLICATIONS: DemoPublication[] = [
     },
     {
         // ACT-02 de Jorge (Postulado). Monto, cupos y detalle: no están en el prototipo.
-        id: 'turno-guardia-eventos-20dic', tipo: 'turno', titulo: 'Guardia de eventos',
+        id: 'turno-guardia-eventos-20dic', tipo: 'turno', titulo: 'Guardia de eventos', oficio: 'Guardia de eventos',
         autor: autorOrg(ORGS.puntoActivo),
         tags: [{ kind: 'fecha', text: 'dom 20 dic · 11:00–19:00 (8 h)' }],
         monto: liquidos(40000, 'turno'), cupos: { left: 4, total: 10 }, lugar: 'a 17 km · Santiago', estado: 'Activa',
@@ -602,7 +602,7 @@ export const DEMO_PUBLICATIONS: DemoPublication[] = [
     {
         // ACT-02 de Matías e INI-01 («Hotel Andino vio tu postulación · Garzón · vie 18 dic»).
         // Monto, cupos y detalle: no están en el prototipo.
-        id: 'turno-garzones-cena-fin-de-ano', tipo: 'turno', titulo: 'Garzones para cena de fin de año',
+        id: 'turno-garzones-cena-fin-de-ano', tipo: 'turno', titulo: 'Garzones para cena de fin de año', oficio: 'Garzón',
         autor: autorOrg(ORGS.hotelAndino),
         tags: [{ kind: 'fecha', text: 'vie 18 dic · 20:00–01:00 (5 h)' }],
         monto: liquidos(35000, 'turno'), cupos: { left: 4, total: 10 }, lugar: 'a 18 km · Las Condes', estado: 'Activa',
@@ -622,7 +622,7 @@ export const DEMO_PUBLICATIONS: DemoPublication[] = [
     },
     {
         // no está en el prototipo: un turno de guardia más para Explorar e Inicio de Jorge.
-        id: 'turno-guardia-feria-navidena', tipo: 'turno', titulo: 'Guardia de eventos · Feria navideña',
+        id: 'turno-guardia-feria-navidena', tipo: 'turno', titulo: 'Guardia de eventos · Feria navideña', oficio: 'Guardia de eventos',
         autor: autorOrg(ORGS.puntoActivo),
         tags: [{ kind: 'fecha', text: 'mié 23 dic · 10:00–20:00 (10 h)' }],
         monto: liquidos(45000, 'turno'), cupos: { left: 4, total: 6 }, lugar: 'a 6 km · La Florida', estado: 'Activa',

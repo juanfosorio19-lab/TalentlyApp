@@ -24,6 +24,7 @@ import type {
     DemoManagedPublication,
     DemoOrgDashboard,
     DemoPerson,
+    DemoPublication,
     DemoShiftBlock,
     DemoShiftRoster,
 } from './types';
@@ -656,4 +657,31 @@ export function avisoBlockView(block: DemoHomeBlock, s: ManageState, application
     const m = getManagedPublication(block.publicationId);
     if (!m) return block;
     return { ...block, estado: publicationView(m, s).estado, detalle: avisoDetail(m, s, applications) };
+}
+
+// ─── La publicación vista por quien postula (DET-01, EXP-02, EXP-07, Inicio) ─
+
+/**
+ * La publicación con lo que cambió en la sesión: el estado de GES-01 (una
+ * pausada o cerrada no recibe postulaciones) y los cupos que quedan después
+ * de confirmar en GES-04 («Quedan N de 8 cupos» baja con cada confirmado).
+ * Parte de los cupos de los datos y descuenta solo lo confirmado ahora.
+ */
+export function publicationWithSession<T extends DemoPublication>(p: T, s: ManageState, applications: SessionApplications): T {
+    const m = getManagedPublication(p.id);
+    if (!m) return p;
+    const estado = publicationView(m, s).estado;
+    let next: T = estado === p.estado ? p : { ...p, estado };
+    if (next.tipo !== 'turno' || !m.cupos?.length) return next;
+    let confirmedNow = 0;
+    const bloques = next.bloques.map((b) => {
+        const r = m.cupos?.find((x) => x.id === b.id);
+        if (!r || !b.cupos) return b;
+        const extra = rosterView(m, r, s, applications).confirmados.length - r.confirmados.length;
+        if (extra <= 0) return b;
+        confirmedNow += extra;
+        return { ...b, cupos: { ...b.cupos, left: Math.max(0, b.cupos.left - extra) } };
+    });
+    if (confirmedNow > 0) next = { ...next, bloques, cupos: { ...next.cupos, left: Math.max(0, next.cupos.left - confirmedNow) } };
+    return next;
 }

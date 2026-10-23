@@ -328,10 +328,13 @@ function subjectOf(actorId: DemoActorId, publicationId: string, counterpart: Dem
 }
 
 /**
- * El oficio con que trabajó el turno («Garzón»): el de su conversación con
- * quien publicó («Turno · Garzón · 5 dic») o, si no hay, su oficio principal.
+ * El oficio con que trabajó el turno («Garzón»): el del turno (demo/data), el
+ * de su conversación con quien publicó («Turno · Garzón · 5 dic») o, si no
+ * hay, su oficio principal.
  */
 export function shiftRole(actorId: DemoActorId, publicationId: string): string | undefined {
+    const pub = getPublication(publicationId);
+    if (pub?.tipo === 'turno' && pub.oficio) return pub.oficio;
     const conv = getConversations(actorId).find((c) => c.contexto.tipo === 'turno' && c.contexto.publicationId === publicationId);
     const parts = conv?.contexto.texto.split(' · ') ?? [];
     if (parts[0] === 'Turno' && parts[1]) return parts[1];

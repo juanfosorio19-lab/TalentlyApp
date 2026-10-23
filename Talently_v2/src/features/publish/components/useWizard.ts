@@ -16,13 +16,14 @@ import { useLocation, useNavigate, useNavigationType, type BlockerFunction } fro
 import { useSnackbar } from '../../../ui/Snackbar';
 import { useGoBack } from '../../../app/BackButtonManager';
 import { useDirtyGuard, useWizardBack } from '../../../app/navigation/backHandlers';
+import { flowOriginOf } from '../../../app/navigation/history';
 import { useOpenPath } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
 import { useSheet } from '../../../app/sheets';
 import type { DemoActorId } from '../../demo/session';
 import { copy } from '../copy';
 import type { WizardKind } from '../model/publisher';
-import { cancelAwaitIdentity, getPublished, type DraftStore } from '../store';
+import { cancelAwaitIdentity, clearWizardOrigin, getPublished, setWizardOrigin, type DraftStore } from '../store';
 import type { BackGuard } from './BrowserBackGuard';
 
 export const MENU_SHEET = 'opciones';
@@ -107,6 +108,18 @@ export function useWizard<T>({ kind, step, actorId, store, initial, changed }: W
             !store.get(actorId) &&
             getPublished(actorId, kind) !== undefined,
     );
+
+    // La entrada que se conserva al terminar (PUBL-07): la que dejó quien lo abrió (PUBL-01 de Inicio o
+    // de Actividad, debajo de su hoja) o, si se abrió con push desde una pantalla, esa pantalla.
+    // Cambiar de paso (replace) no la toca.
+    const [origin] = useState(() => {
+        const fromOpener = flowOriginOf(location.state);
+        if (fromOpener !== null) return fromOpener;
+        return navigationType === 'PUSH' ? historyIndex() - 1 : null;
+    });
+    useEffect(() => {
+        if (origin !== null && !skipping) setWizardOrigin(actorId, kind, origin);
+    }, [actorId, kind, origin, skipping]);
 
     /** Salir lo pidió la app («Guardar y salir», «Descartar» o saltar lo ya publicado): el atrás no se detiene. */
     const leavingRef = useRef(skipping);
@@ -217,8 +230,9 @@ export function useWizard<T>({ kind, step, actorId, store, initial, changed }: W
      */
     const leave = useCallback(() => {
         leavingRef.current = true;
+        clearWizardOrigin(actorId, kind);
         backPast(menuPushed ? 2 : 1, onPublishSheetEntry, () => navigate(paths.inicio(), { replace: true }));
-    }, [menuPushed, navigate]);
+    }, [actorId, kind, menuPushed, navigate]);
 
     const saveAndExit = useCallback(() => {
         store.save(actorId, initial, step);
