@@ -16,6 +16,8 @@ import { EditSectionSheet } from './EditSectionSheet';
 import { ProfileSection } from './ProfileSection';
 import { ProfileTip } from './ProfileTip';
 
+const IDIOMAS = 'Idiomas';
+
 export interface ProfileTabContentProps {
     tab: DemoProfileTab;
     /** Comuna del actor («Desde Puente Alto.» al editar la distancia). */
@@ -40,6 +42,18 @@ export function ProfileTabContent({ tab, comuna, onChange }: ProfileTabContentPr
 
     // Un enlace con una sección que no existe o no se edita aquí no abre la hoja; useSheetGuard
     // (PRF-01 y PRF-02) la saca de la URL.
+
+    // Guardar el primer idioma se lleva «Agregar idioma» (y quitar el último, el lápiz): cuando la hoja
+    // termina de cerrarse, el foco pasa a la tarjeta Idiomas en vez de caer en <body>, como con el CV.
+    const editOpener = useRef<Element | null>(null);
+    const editSaved = useRef<string | null>(null);
+    const idiomasCard = useRef<HTMLElement>(null);
+    useEffect(() => {
+        if (editar.open || editSaved.current === null) return;
+        const saved = editSaved.current;
+        editSaved.current = null;
+        if (saved === IDIOMAS && !editOpener.current?.isConnected) idiomasCard.current?.focus();
+    }, [editar.open]);
 
     // ─── Subir CV (solo en el perfil que tiene la sección CV) ────────────────
     const cvIndex = tab.secciones.findIndex((s) => s.titulo === 'CV');
@@ -80,6 +94,7 @@ export function ProfileTabContent({ tab, comuna, onChange }: ProfileTabContentPr
                 openPath(paths.verificacion());
                 break;
             case 'editar':
+                editOpener.current = document.activeElement;
                 editar.show({ s: sectionSlug(section.titulo) });
                 break;
         }
@@ -87,6 +102,7 @@ export function ProfileTabContent({ tab, comuna, onChange }: ProfileTabContentPr
 
     const saveSection = (index: number, next: EditableSection) => {
         onChange({ ...tab, secciones: tab.secciones.map((s, i) => (i === index ? next : s)) });
+        editSaved.current = next.titulo;
         editar.hide();
         show({ message: SAVED_BY_SECTION[next.titulo] ?? COPY.editar.guardado, tone: 'success' });
     };
@@ -112,7 +128,7 @@ export function ProfileTabContent({ tab, comuna, onChange }: ProfileTabContentPr
                     onEdit={() => onEdit(section)}
                     onEmptyAction={section.titulo === 'CV' ? openCv : soon}
                     foot={i === last ? tab.pie : undefined}
-                    focusRef={section.titulo === 'CV' ? cvCard : undefined}
+                    focusRef={section.titulo === 'CV' ? cvCard : section.titulo === IDIOMAS ? idiomasCard : undefined}
                 />
             ))}
             {shown && (

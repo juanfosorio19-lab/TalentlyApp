@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { getManagedPublications, getPublications } from '../demo/data';
-import { resetManage } from '../demo/manageState';
+import { getManagedPublications } from '../demo/data';
+import { isPublicationActive } from '../demo/manageSelectors';
+import { getManageState, resetManage } from '../demo/manageState';
 import { DEMO_ACTORS } from '../demo/session';
 import { summaryOf } from './model/summary';
 import { emptyTurno, initialTurno } from './model/turno';
@@ -72,15 +73,16 @@ describe('lo publicado existe para las otras pestañas (demo/manageState)', () =
         expect(own()).not.toContain('turno-garzones-finde');
         markPublished('banqueteria', summaryOf(DEMO_ACTORS.banqueteria, initial));
         expect(own()).toContain('turno-garzones-finde');
+        expect(isPublicationActive('turno-garzones-finde', getManageState())).toBe(true);
     });
 
     it('otro turno (desde cero) no hace aparecer «Garzones fin de semana» en ACT-03 ni en Explorar', () => {
-        const otro = { ...emptyTurno('cero'), ...initial, inicio: 'cero' as const, oficio: 'bartender', titulo: 'Bartender para matrimonio' };
+        const otro = { ...initial, inicio: emptyTurno('cero').inicio, oficio: 'bartender', titulo: 'Bartender para matrimonio' };
         const summary = summaryOf(DEMO_ACTORS.banqueteria, otro);
         expect(summary.publicationId).toBeNull();
         markPublished('banqueteria', summary);
         expect(getPublished('banqueteria', 'turno')?.titulo).toBe('Bartender para matrimonio');
         expect(own()).not.toContain('turno-garzones-finde');
-        expect(getPublications().map((p) => p.id)).not.toContain('turno-garzones-finde');
+        expect(isPublicationActive('turno-garzones-finde', getManageState())).toBe(false);
     });
 });

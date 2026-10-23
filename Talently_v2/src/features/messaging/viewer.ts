@@ -22,9 +22,15 @@ export interface Viewer {
     seeksWork: boolean;
     /** A qué segmento de Explorar lleva el EmptyState: turnos, salvo quien solo busca empleo. */
     explore: 'turno' | 'empleo';
+    /**
+     * Persona sin perfiles (INI-01-rosa): Explorar no le muestra turnos ni
+     * empleos, así que su EmptyState lleva a «Agregar un perfil», como Inicio,
+     * Explorar y la Agenda.
+     */
+    withoutProfiles: boolean;
 }
 
-function viewerOf(actor: DemoActor, recienRegistrado: boolean): Viewer {
+export function viewerOf(actor: DemoActor, recienRegistrado: boolean): Viewer {
     const caps = actor.capabilities;
     const seeks = caps.includes('turnos') || caps.includes('empleo');
     return {
@@ -33,6 +39,7 @@ function viewerOf(actor: DemoActor, recienRegistrado: boolean): Viewer {
         audience: actor.kind === 'organizacion' ? 'organizacion' : 'persona',
         seeksWork: actor.kind !== 'organizacion' && (seeks || caps.length === 0),
         explore: caps.includes('empleo') && !caps.includes('turnos') ? 'empleo' : 'turno',
+        withoutProfiles: actor.kind === 'persona' && caps.length === 0,
     };
 }
 

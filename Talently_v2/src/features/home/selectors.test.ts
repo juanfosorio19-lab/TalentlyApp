@@ -6,12 +6,16 @@ import { isoOf, publisherName } from './mock';
 import { DEMO_ACTORS } from '../demo/session';
 import {
     currentAgenda,
+    deckTopId,
     groupNotifications,
     homeBlocks,
+    needOf,
     publishKinds,
     resolveNotification,
     selectedKind,
     wizardOf,
+    wizardOficio,
+    wizardPath,
 } from './selectors';
 
 const notification = (id: string): DemoNotification => {
@@ -138,6 +142,50 @@ describe('PUBL-01', () => {
         expect(publisherName(DEMO_ACTORS.banqueteria, undefined)).toBe('Banquetería Rosa SpA');
         expect(publisherName(DEMO_ACTORS.carolina, 'aviso-asesor-hogar')).toBe('Familia en Ñuñoa');
         expect(publisherName(DEMO_ACTORS.carolina, undefined)).toBe('Carolina');
+    });
+});
+
+describe('«¿Qué necesitas?» abre PUBL-01 con la necesidad ya puesta', () => {
+    it('cada opción marca su tipo y el oficio con que parte el asistente', () => {
+        expect(needOf('asesor-hogar')).toEqual({ tipo: 'hogar', oficio: 'asesor-hogar' });
+        expect(needOf('cuidador-infantil')).toEqual({ tipo: 'hogar', oficio: 'cuidador-infantil' });
+        expect(needOf('cuidador-adulto-mayor')).toEqual({ tipo: 'hogar', oficio: 'cuidador-adulto-mayor' });
+        expect(needOf('banquetero-evento')).toEqual({ tipo: 'evento', oficio: 'banquetero' });
+        expect(needOf('otra')).toEqual({ tipo: 'hogar' });
+    });
+
+    it('el oficio vale solo mientras siga marcada su opción', () => {
+        expect(wizardOficio('hogar', 'cuidador-infantil')).toBe('cuidador-infantil');
+        expect(wizardOficio('evento', 'banquetero')).toBe('banquetero');
+        expect(wizardOficio('evento', 'cuidador-infantil')).toBeNull();
+        expect(wizardOficio('hogar', 'banquetero')).toBeNull();
+        expect(wizardOficio('hogar', 'gasfiter')).toBeNull();
+        expect(wizardOficio('turno', null)).toBeNull();
+    });
+
+    it('«Continuar» lleva el oficio al paso 1 del asistente', () => {
+        expect(wizardPath('hogar', 'cuidador-infantil')).toBe('/publicar/hogar/1?oficio=cuidador-infantil');
+        expect(wizardPath('evento', 'banquetero')).toBe('/publicar/turno/1?oficio=banquetero');
+        expect(wizardPath('evento', 'cuidador-infantil')).toBe('/publicar/turno/1');
+        expect(wizardPath('turno', null)).toBe('/publicar/turno/1');
+    });
+});
+
+describe('«Empleos para ti»: la tarjeta de arriba del deck', () => {
+    const decided = (ids: Record<string, string>) => (id: string) => ids[id];
+
+    it('la primera oferta del deck que aún no decide ni postuló', () => {
+        const deck = ['empleo-guardia-4x4', 'empleo-conserje', 'empleo-supervisor-seguridad'];
+        expect(deckTopId(deck, ['empleo-conserje'], decided({ 'empleo-guardia-4x4': 'postulado' }))).toBe('empleo-conserje');
+        expect(deckTopId(deck, [], decided({}))).toBe('empleo-guardia-4x4');
+        expect(deckTopId(deck, [], decided({ 'empleo-guardia-4x4': 'postulado', 'empleo-conserje': 'si' }))).toBe(
+            'empleo-supervisor-seguridad',
+        );
+    });
+
+    it('sin deck, la primera del bloque sin decidir; si decidió todas, no hay atajo', () => {
+        expect(deckTopId([], ['a', 'b'], decided({ a: 'no' }))).toBe('b');
+        expect(deckTopId(['a'], ['b'], decided({ a: 'si' }))).toBeUndefined();
     });
 });
 

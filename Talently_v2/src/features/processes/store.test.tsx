@@ -1,12 +1,18 @@
 import { act, useEffect } from 'react';
-import { createRoot } from 'react-dom/client';
+import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 import { resetProcesses, useChecklist } from './store';
 
 // React 19: act() necesita esta bandera fuera de un runner de React.
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-afterEach(() => resetProcesses());
+/** Las raíces montadas en la prueba: se desmontan antes de volver al estado inicial. */
+const roots: Root[] = [];
+
+afterEach(() => {
+    act(() => roots.splice(0).forEach((root) => root.unmount()));
+    resetProcesses();
+});
 
 type Checklist = ReturnType<typeof useChecklist>;
 
@@ -19,6 +25,7 @@ function mountChecklist(actorId: 'carolina' | 'jorge', processId: string, initia
         return null;
     }
     const root = createRoot(document.createElement('div'));
+    roots.push(root);
     const onValue = (value: Checklist) => {
         latestRef.current = value;
     };

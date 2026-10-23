@@ -1,6 +1,7 @@
 // PRF-03 · Editar sección: la BottomSheet genérica del lápiz, con los mismos
 // controles del onboarding (ONB-T2 y PUBL-04): chips de jornada, «Disponible
-// desde», distancia, la grilla de franjas, montos, experiencia y comuna.
+// desde», distancia, la grilla de franjas, montos, experiencia y comuna; los
+// idiomas, con su nivel, para agregar y quitar (LanguageFields).
 // Guardar cambia el perfil de esta sesión y avisa con un Snackbar; cerrar con
 // cambios pregunta «¿Descartar cambios?». Vive en la URL
 // (`?sheet=editar&s=<sección>`): cada vez que se abre parte de lo guardado,
@@ -27,12 +28,12 @@ import {
     DISTANCIAS,
     HOGAR_NECESIDADES,
     JORNADAS,
-    NIVELES_IDIOMA,
     TAMANOS_ORGANIZACION,
     TODA_LA_REGION,
 } from '../mock';
 import { ChipChoice } from './ChipChoice';
 import { DiscardDialog } from './DiscardDialog';
+import { LanguageFields } from './LanguageFields';
 
 const EXPERIENCIA = ['Menos de 1 año', '1 a 3 años', '3 a 5 años', '5 a 10 años', 'Más de 10 años'] as const;
 const DE_EXPERIENCIA = ' de experiencia';
@@ -40,6 +41,7 @@ const SEP = ' · ';
 const ASI_LO_VEN = 'Así lo ven en tus avisos';
 const FAMILIA_EN = 'Familia en ';
 const DATOS_ORGANIZACION = 'Datos de la organización';
+const IDIOMAS = 'Idiomas';
 
 /** Errores humanos (sin código). no está en el prototipo. */
 const ERRORS = {
@@ -64,7 +66,7 @@ const CHOICES: Record<string, readonly string[]> = {
 function kindOf(row: DemoRow, sectionTitle: string): FieldKind {
     if (row.monto) return 'monto';
     if (row.value === undefined) return 'fijo';
-    if (sectionTitle === 'Idiomas') return 'select';
+    if (sectionTitle === IDIOMAS) return 'select';
     switch (row.label) {
         case 'Jornada':
         case 'Contexto del hogar':
@@ -205,20 +207,18 @@ function RowField({ row, kind, error, comuna, help, onChange }: RowFieldProps) {
                     onChange={set}
                 />
             );
-        case 'select': {
-            // Idiomas: el nivel de cada idioma; organización: su tamaño.
-            const tamano = row.label === 'Tamaño';
+        case 'select':
+            // El tamaño de la organización (el nivel de cada idioma lo eligen LanguageFields).
             return (
                 <Select
                     label={row.label}
-                    placeholder={tamano ? COPY.editar.tamano : COPY.editar.nivel}
-                    options={withCurrent(tamano ? TAMANOS_ORGANIZACION : NIVELES_IDIOMA, [value])}
+                    placeholder={COPY.editar.tamano}
+                    options={withCurrent(TAMANOS_ORGANIZACION, [value])}
                     value={value || null}
                     error={error}
                     onChange={set}
                 />
             );
-        }
         case 'experiencia': {
             const current = value.slice(0, -DE_EXPERIENCIA.length);
             return (
@@ -262,6 +262,7 @@ export function EditSectionSheet({ open, section, comuna, onClose, onSave }: Edi
         }
     }
     const dirty = JSON.stringify(draft) !== JSON.stringify(section);
+    const addingLanguages = section.tipo === 'filas' && section.titulo === IDIOMAS && section.filas.length === 0;
 
     const save = () => {
         if (!isValid(draft)) {
@@ -308,6 +309,9 @@ export function EditSectionSheet({ open, section, comuna, onClose, onSave }: Edi
                 onChange={(next) => setDraft({ ...draft, tags: next.map((text) => ({ text })) })}
             />
         );
+    } else if (draft.titulo === IDIOMAS) {
+        // Agregar, quitar y el nivel de cada idioma (sin idiomas, la sección vuelve a verse vacía).
+        body = <LanguageFields filas={draft.filas} tried={tried} onChange={(filas) => setDraft({ ...draft, filas })} />;
     } else {
         const asiLoVen = draft.filas.find((r) => r.label === ASI_LO_VEN)?.value;
         body = (
@@ -336,7 +340,8 @@ export function EditSectionSheet({ open, section, comuna, onClose, onSave }: Edi
             <BottomSheet
                 open={open}
                 onClose={requestClose}
-                title={COPY.editar.titulo(section.titulo)}
+                // «Agregar idioma» abre la hoja de Idiomas vacía: se titula como la acción que la abrió.
+                title={addingLanguages ? COPY.idiomas.agregar : COPY.editar.titulo(section.titulo)}
                 footer={
                     <>
                         <Button variant="ghost" onClick={onClose}>

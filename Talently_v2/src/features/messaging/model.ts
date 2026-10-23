@@ -1,15 +1,18 @@
 // Lo que Mensajes lee de los datos de demostración, ya listo para las
-// pantallas. Solo usa las funciones de acceso de features/demo (nunca sus
-// constantes DEMO_*): cuando vuelva Supabase no cambia nada aquí.
+// pantallas. Solo usa las funciones de acceso de features/demo (nunca las
+// constantes DEMO_* de data.ts; de session, solo el registro de actores):
+// cuando vuelva Supabase no cambia nada aquí.
 import type { AvatarKind } from '../../ui/Avatar';
 import { PUBLICATION_TYPES, type ContextChipContent } from '../../ui/ContextChip';
 import type { MessageStatus } from '../../ui/MessageBubble';
 import { paths } from '../../app/paths';
 import type { CalendarEvent } from '../../domain/calendario';
-import { DEMO_TODAY, getApplications, getManagedPublication, getProcess } from '../demo/data';
+import { DEMO_TODAY, getApplications, getConversations, getManagedPublication, getProcess } from '../demo/data';
+import { DEMO_ACTORS } from '../demo/session';
 import type { DemoConversation, DemoMessage, DemoSystemCard, DemoViewerId } from '../demo/types';
 import { copy, type InboxFilter } from './copy';
 import type { ConversationState } from '../demo/conversationState';
+import type { Viewer } from './viewer';
 
 // ─── Contexto («Turno · Garzón · hoy») ──────────────────────────────────────
 
@@ -48,6 +51,32 @@ export function peerVerified(con: DemoConversation['con']): boolean {
 /** Quien trabaja es quien conversa con una organización o un hogar: solo él comparte su certificado (M5). */
 export function viewerWorks(conv: DemoConversation): boolean {
     return conv.con.tipo !== 'persona';
+}
+
+const isViewerId = (id: string): id is DemoViewerId => Object.hasOwn(DEMO_ACTORS, id);
+
+/**
+ * La misma conversación vista por quien comparte su certificado, cuando esa
+ * persona también es actor de la demo (flujo 10): para la de Carolina con
+ * Marta (conv-carolina-marta), la de Marta con Familia en Ñuñoa
+ * (conv-marta-familia). Es la del mismo aviso en la que quien mira es la
+ * otra parte de esta. Lo que Marta hace con su certificado en la sesión
+ * (demo/conversationState) se lee desde ahí; quien comparte no tiene otra.
+ */
+export function sharerConversationOf(conv: DemoConversation): DemoConversation | undefined {
+    const publicationId = conv.contexto.publicationId;
+    if (viewerWorks(conv) || !publicationId || !isViewerId(conv.con.id)) return undefined;
+    return getConversations(conv.con.id).find((c) => c.contexto.publicationId === publicationId && viewerWorks(c));
+}
+
+/**
+ * ¿Quien lo compartió lo dejó de compartir en esta sesión? Su último
+ * certificado está apagado: «Dejar de compartir» o el bloqueo, que lo revoca
+ * (spec §10.1.1). Si lo vuelve a compartir, se ve otra vez.
+ */
+export function sharingStopped(sharer: ConversationState | undefined): boolean {
+    const last = sharer?.entries.filter((e) => e.kind === 'certificado').at(-1);
+    return last?.kind === 'certificado' && last.off;
 }
 
 /** Perfil público de la otra parte (PRF-10 o PRF-11). */
@@ -120,8 +149,12 @@ export type ChatItem = ChatText | ChatCard;
 
 const STATUS: Record<'Enviado' | 'Leído', MessageStatus> = { Enviado: 'sent', Leído: 'read' };
 
-function fromDemo(m: DemoMessage): ChatItem {
-    if (m.tipo === 'sistema') return { kind: 'sistema', id: m.id, dia: m.dia, tarjeta: m.tarjeta };
+function fromDemo(m: DemoMessage, revoked: boolean): ChatItem {
+    if (m.tipo === 'sistema') {
+        // El certificado que la otra parte dejó de compartir: «Ya no está disponible» (MSG-02b-no-disponible).
+        const off = revoked && m.tarjeta.tipo === 'certificado';
+        return { kind: 'sistema', id: m.id, dia: m.dia, tarjeta: off ? { ...m.tarjeta, disponible: false } : m.tarjeta };
+    }
     return {
         kind: 'texto',
         id: m.id,
@@ -138,9 +171,13 @@ function fromDemo(m: DemoMessage): ChatItem {
  * certificado agrega solo su tarjeta, ahora, y sin «Visto por…»: esa línea sale
  * del registro real de aperturas (spec §10.1.1) y nadie la ha abierto todavía.
  * Lo que la otra parte responde después (MSG-02b-marta) no se inventa.
+ * `sharer` es el estado de la conversación de quien compartió el certificado
+ * que trae esta (sharerConversationOf): si lo dejó de compartir, la tarjeta se
+ * apaga también aquí.
  */
-export function chatItems(conv: DemoConversation, state: ConversationState): ChatItem[] {
-    const items = conv.mensajes.map((m) => fromDemo(m));
+export function chatItems(conv: DemoConversation, state: ConversationState, sharer?: ConversationState): ChatItem[] {
+    const revoked = sharingStopped(sharer);
+    const items = conv.mensajes.map((m) => fromDemo(m, revoked));
     const shared = conv.certificado?.alCompartir[0];
     for (const e of state.entries) {
         if (e.kind === 'texto') {
@@ -288,6 +325,29 @@ export function selectedFilter(filters: InboxFilters | null, raw: string | null)
 export function matchesFilter(row: InboxRow, filters: InboxFilters | null, value: string): boolean {
     if (!filters || value === ALL) return true;
     return filters.param === 'tipo' ? row.conv.contexto.tipo === value : row.conv.contexto.publicationId === value;
+}
+
+/**
+ * MSG-01 sin conversaciones: quien busca trabajo va a Explorar (turnos o
+ * empleos); quien publica, a sus publicaciones; la persona sin perfiles
+ * (Rosa), a agregar uno, como en Inicio, Explorar y la Agenda: Explorar
+ * tampoco le mostraría turnos ni empleos.
+ */
+export function inboxEmpty(viewer: Viewer): { text: string; action: { label: string; path: string } } {
+    if (viewer.withoutProfiles) {
+        return { text: copy.inbox.noProfilesText, action: { label: copy.inbox.addProfile, path: paths.perfil() } };
+    }
+    if (!viewer.seeksWork) {
+        return {
+            text: copy.inbox.publisherEmptyText,
+            action: { label: copy.inbox.publisherEmptyAction, path: paths.actividad('publicaciones') },
+        };
+    }
+    const action =
+        viewer.explore === 'turno'
+            ? { label: copy.inbox.emptyAction, path: paths.explorar('turno') }
+            : { label: copy.inbox.emptyActionJobs, path: paths.explorar('empleo') };
+    return { text: copy.inbox.emptyText, action };
 }
 
 /**

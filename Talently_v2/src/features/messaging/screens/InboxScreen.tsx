@@ -10,7 +10,7 @@ import { useSearchParams } from 'react-router-dom';
 import { AppBar, useScrolled } from '../../../ui/AppBar';
 import { Avatar } from '../../../ui/Avatar';
 import { ContextChipInRow, contextChipText } from '../../../ui/ContextChip';
-import { EmptyState, type EmptyStateAction } from '../../../ui/EmptyState';
+import { EmptyState } from '../../../ui/EmptyState';
 import { IconChat } from '../../../ui/icons';
 import { Stack } from '../../../ui/Layout';
 import { List, ListItem } from '../../../ui/ListItem';
@@ -20,9 +20,9 @@ import { paths } from '../../../app/paths';
 import { InboxFilterChips } from '../components/InboxFilterChips';
 import { NotificationsButton } from '../components/NotificationsButton';
 import { copy } from '../copy';
-import { ALL, filteredEmpty, inboxFilters, inboxRow, matchesFilter, peerKind, selectedFilter, sortRows, type InboxRow } from '../model';
+import { ALL, filteredEmpty, inboxEmpty, inboxFilters, inboxRow, matchesFilter, peerKind, selectedFilter, sortRows, type InboxRow } from '../model';
 import { EMPTY_STATE, useConversationStates, useConversations } from '../../demo/conversationState';
-import { useViewer, type Viewer } from '../viewer';
+import { useViewer } from '../viewer';
 import '../messaging.css';
 
 export const screenId = 'MSG-01';
@@ -57,6 +57,7 @@ export function InboxScreen() {
     const filter = selectedFilter(filters, filters ? params.get(filters.param) : null);
     const visible = list.filter((r) => matchesFilter(r, filters, filter));
     const emptyFilter = filteredEmpty(filters, filter, viewer.seeksWork);
+    const empty = inboxEmpty(viewer);
 
     const setFilter = (next: string) => {
         if (!filters) return;
@@ -83,8 +84,9 @@ export function InboxScreen() {
                         <EmptyState
                             icon={IconChat}
                             title={copy.inbox.emptyTitle}
-                            text={viewer.seeksWork ? copy.inbox.emptyText : copy.inbox.publisherEmptyText}
-                            action={emptyAction(viewer, (path) => open(path, { replace: true }))}
+                            text={empty.text}
+                            // Otra pestaña: se cambia con replace (spec §5.3 regla 1).
+                            action={{ label: empty.action.label, onClick: () => open(empty.action.path, { replace: true }) }}
                         />
                     ) : (
                         <>
@@ -116,20 +118,6 @@ export function InboxScreen() {
             </main>
         </>
     );
-}
-
-/**
- * Sin conversaciones: quien busca trabajo va a Explorar (turnos o empleos);
- * quien publica, a sus publicaciones. Cambiar de pestaña hace replace (spec
- * §5.3 regla 1).
- */
-function emptyAction(viewer: Viewer, go: (path: string) => void): EmptyStateAction {
-    if (!viewer.seeksWork) {
-        return { label: copy.inbox.publisherEmptyAction, onClick: () => go(paths.actividad('publicaciones')) };
-    }
-    return viewer.explore === 'turno'
-        ? { label: copy.inbox.emptyAction, onClick: () => go(paths.explorar('turno')) }
-        : { label: copy.inbox.emptyActionJobs, onClick: () => go(paths.explorar('empleo')) };
 }
 
 type ConversationRowProps = { row: InboxRow } & LinkTargetProps;

@@ -1,7 +1,8 @@
 // MSG-02 · Conversación (/mensajes/:conversationId, prototipo MSG-02 y
 // MSG-02-pedro) y MSG-02b · compartir certificado de antecedentes (flujo 10:
 // MSG-02b-pedido, -adjuntar, -compartir, -marta y -marta-no-disponible; la vista
-// de la familia es MSG-02b-familia). AppBar de conversación, ContextChip fijo
+// de la familia es MSG-02b-familia y, si Marta lo dejó de compartir en la
+// sesión, MSG-02b-no-disponible). AppBar de conversación, ContextChip fijo
 // bajo el AppBar, mensajes con estados reales (Enviando…, Enviado, Leído, en
 // cola sin conexión), tarjetas de sistema y el Composer con su aviso de
 // seguridad. Todas las capas van en la URL (spec §5.3 regla 3), así el atrás
@@ -50,9 +51,11 @@ import {
     peerKind,
     peerProfilePath,
     peerVerified,
+    sharerConversationOf,
     viewerWorks,
 } from '../model';
 import {
+    EMPTY_STATE,
     conversationInSession,
     markRead,
     sendMessage,
@@ -60,7 +63,7 @@ import {
     setDraft,
     shareCertificate,
     stopSharing,
-    useConversationState,
+    useConversationStates,
 } from '../../demo/conversationState';
 import { useSessionState } from '../../demo/sessionStore';
 import { useOnline } from '../online';
@@ -90,7 +93,11 @@ function Conversation({ conv, viewer }: { conv: DemoConversation; viewer: Viewer
     const { open, canOpen, linkProps } = useOpenPath();
     const location = useLocation();
     const online = useOnline();
-    const state = useConversationState(conv.id);
+    const states = useConversationStates();
+    const state = states.get(conv.id) ?? EMPTY_STATE;
+    // Flujo 10: la de Marta, si ella dejó de compartir el certificado que trae esta (MSG-02b-no-disponible).
+    const sharer = useMemo(() => sharerConversationOf(conv), [conv]);
+    const sharerState = sharer ? states.get(sharer.id) : undefined;
     const attach = useSheet('adjuntar');
     const cert = useSheet('certificado');
     const menu = useSheet('opciones');
@@ -105,7 +112,7 @@ function Conversation({ conv, viewer }: { conv: DemoConversation; viewer: Viewer
     // Abrirla la deja leída: sus no leídos salen de la bandeja y del badge de la pestaña.
     useEffect(() => markRead(conv.id), [conv.id]);
 
-    const items = useMemo(() => chatItems(conv, state), [conv, state]);
+    const items = useMemo(() => chatItems(conv, state, sharerState), [conv, state, sharerState]);
     useChatScroll(logRef, items.length, `${conv.id}:${location.key}`);
 
     const name = conv.con.nombre;

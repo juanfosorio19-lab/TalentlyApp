@@ -31,6 +31,7 @@ import {
     clearWizardOrigin,
     getWizardOrigin,
     hogarDrafts,
+    isAwaitingIdentity,
     markPublished,
     turnoDrafts,
     useAwaitingIdentity,
@@ -76,8 +77,10 @@ function PublishResult({ kind, actor }: { kind: WizardKind; actor: DemoActor }) 
     );
 
     // Vuelve de VER-02 (flujo 5): el aviso guardado se publica, en revisión, y la identidad queda enviada.
+    // Se mira el store en este momento y no solo `awaiting` de la pintada: si el efecto corre otra vez
+    // (StrictMode), el borrador ya se descartó y publicaría el aviso con el que parte el asistente.
     useEffect(() => {
-        if (!awaiting) return;
+        if (!awaiting || !isAwaitingIdentity(actor.id, kind)) return;
         markPublished(actor.id, { ...summaryOf(actor, draftOf(kind, actor, recienRegistrado)), review: true });
         submitIdentity(actor.id);
         (kind === 'turno' ? turnoDrafts : hogarDrafts).discard(actor.id);

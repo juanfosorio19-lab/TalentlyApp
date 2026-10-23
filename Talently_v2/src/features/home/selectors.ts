@@ -142,6 +142,22 @@ export function homeBlocks(bloques: readonly DemoHomeBlock[], session: HomeSessi
     });
 }
 
+/**
+ * La oferta de «Empleos para ti», el atajo al deck (spec §5.2; PublicationCardDeck:
+ * «Tocarla abre EXP-01 con esa tarjeta arriba»): la que el deck de EXP-01 tiene
+ * arriba, la primera de sus ofertas que aún no decide ni postuló (`deck`, en el
+ * orden de Explorar). Sin ofertas en Explorar, la primera del bloque sin decidir.
+ * Si ya decidió todas, no hay atajo.
+ */
+export function deckTopId(
+    deck: readonly string[],
+    blockIds: readonly string[],
+    decided: (publicationId: string) => unknown,
+): string | undefined {
+    const pending = (ids: readonly string[]) => ids.find((id) => decided(id) === undefined);
+    return deck.length > 0 ? pending(deck) : pending(blockIds);
+}
+
 // ─── NOT-01 ─────────────────────────────────────────────────────────────────
 
 export const NOTIFICATION_GROUPS: readonly DemoNotificationGroup[] = ['Hoy', 'Ayer', 'Esta semana', 'Antes'];

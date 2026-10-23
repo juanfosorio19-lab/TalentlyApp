@@ -18,6 +18,7 @@ import {
     verificationDetail,
     verificationDetails,
     visibleLinks,
+    withLanguagesSection,
     withoutSessionTips,
     type SessionProfileState,
 } from './model';
@@ -167,6 +168,50 @@ describe('recienRegistradoProfile (INI-01-jorge-nuevo)', () => {
         );
         const credenciales = trabajo?.secciones[3];
         expect(credenciales?.tipo === 'filas' && credenciales.filas[0]?.badge).toBe('Obligatoria');
+    });
+});
+
+describe('Idiomas (PRF-01: siempre en el perfil de Trabajo, vacía si no hay)', () => {
+    const titulos = (p: DemoProfile, id = 'trabajo') => p.perfiles.find((t) => t.id === id)?.secciones.map((s) => s.titulo);
+    const idiomas = (p: DemoProfile) => p.perfiles.find((t) => t.id === 'trabajo')?.secciones.find((s) => s.titulo === 'Idiomas');
+
+    it('Matías, Marta y Pedro la ven vacía (antes del CV si lo tiene, si no al final)', () => {
+        expect(titulos(composeProfile(getProfile('matias'), NADA))?.at(-1)).toBe('Idiomas');
+        expect(titulos(composeProfile(getProfile('marta'), NADA))?.at(-1)).toBe('Idiomas');
+        expect(titulos(composeProfile(getProfile('pedro'), NADA))?.slice(-2)).toEqual(['Idiomas', 'CV']);
+        expect(idiomas(composeProfile(getProfile('pedro'), NADA))).toEqual({ tipo: 'filas', titulo: 'Idiomas', editable: true, filas: [] });
+    });
+
+    it('Jorge recién registrado también, antes del CV', () => {
+        const nuevo = composeProfile(recienRegistradoProfile(getProfile('jorge')), NADA);
+        expect(titulos(nuevo)).toEqual(['Oficios y experiencia', 'Disponibilidad', 'Pretensión', 'Credenciales', 'Idiomas', 'CV']);
+        const sec = idiomas(nuevo);
+        expect(sec?.tipo === 'filas' && sec.filas).toEqual([]);
+    });
+
+    it('Jorge conserva sus idiomas y la sección no se repite', () => {
+        const jorge = composeProfile(getProfile('jorge'), NADA);
+        expect(titulos(jorge)?.filter((t) => t === 'Idiomas')).toHaveLength(1);
+        const sec = idiomas(jorge);
+        expect(sec?.tipo === 'filas' && sec.filas.map((r) => `${r.label} ${r.value ?? ''}`)).toEqual(['Español Nativo', 'Inglés Básico']);
+    });
+
+    it('lo guardado en la sesión manda (también sin idiomas) y Hogar u Organización no la tienen', () => {
+        const base = getProfile('jorge');
+        const tabs = base.perfiles.map((t) =>
+            t.id === 'trabajo'
+                ? { ...t, secciones: t.secciones.map((s) => (s.titulo === 'Idiomas' && s.tipo === 'filas' ? { ...s, filas: [] } : s)) }
+                : t,
+        );
+        const sec = idiomas(composeProfile(base, { ...NADA, tabs }));
+        expect(sec?.tipo === 'filas' && sec.filas).toEqual([]);
+        expect(titulos(composeProfile(base, NADA), 'hogar')).not.toContain('Idiomas');
+        expect(titulos(composeProfile(getProfile('banqueteria'), NADA), 'organizacion')).not.toContain('Idiomas');
+    });
+
+    it('vacía se edita en su hoja (?sheet=editar&s=idiomas)', () => {
+        const trabajo = withLanguagesSection(getProfile('matias').perfiles[0] as DemoProfileTab);
+        expect(findEditable(trabajo, 'idiomas')?.section.titulo).toBe('Idiomas');
     });
 });
 

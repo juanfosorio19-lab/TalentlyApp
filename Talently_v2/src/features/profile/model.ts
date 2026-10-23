@@ -123,7 +123,29 @@ export function composeProfile(base: DemoProfile, session: SessionProfileState):
             perfiles: profile.perfiles.map((t) => (t.id === 'hogar' && !t.completitud ? { ...t, completitud: IDENTITY_TIP } : t)),
         };
     }
+
+    // «Idiomas» está siempre en el perfil de Trabajo: vacía, pide agregarlos.
+    if (profile.perfiles.some((t) => withLanguagesSection(t) !== t)) {
+        profile = { ...profile, perfiles: profile.perfiles.map(withLanguagesSection) };
+    }
     return profile;
+}
+
+const IDIOMAS = 'Idiomas';
+
+/**
+ * El perfil de Trabajo siempre tiene «Idiomas» (PRF-01, también en su variante
+ * vacía `idiomas: 'vacia'`): sin idiomas, la sección dice «Aún no agregas
+ * idiomas…» con «Agregar idioma», justo antes del CV, como en el prototipo.
+ * Matías, Pedro, Marta y Jorge recién registrado parten así; Jorge trae
+ * «Español · Nativo» e «Inglés · Básico». Al guardarla sin filas, vuelve a verse vacía.
+ */
+export function withLanguagesSection(tab: DemoProfileTab): DemoProfileTab {
+    if (tab.id !== 'trabajo' || tab.secciones.some((s) => s.titulo === IDIOMAS)) return tab;
+    const idiomas: DemoProfileSection = { tipo: 'filas', titulo: IDIOMAS, editable: true, filas: [] };
+    const cv = tab.secciones.findIndex((s) => s.titulo === 'CV');
+    const at = cv < 0 ? tab.secciones.length : cv;
+    return { ...tab, secciones: [...tab.secciones.slice(0, at), idiomas, ...tab.secciones.slice(at)] };
 }
 
 /** El perfil con su CV: la sección «CV» con el archivo y sin la tarjeta que lo pide. */
@@ -183,7 +205,8 @@ const initialsOf = (nombre: string, apellido: string) =>
  * registro (`result`, demo/session `onboarding`: nombre, comuna, foto,
  * oficios de ONB-T1, la credencial de ONB-T4 y el último trabajo de ONB-T5).
  * Sin insignias (el teléfono fue opcional), sin reseñas, sin perfil Hogar,
- * sin «Sobre mí» ni idiomas. La credencial SPD: «En revisión» si la subió;
+ * sin «Sobre mí» y sin idiomas (composeProfile agrega «Idiomas» vacía, que
+ * pide agregarlos). La credencial SPD: «En revisión» si la subió;
  * si no, es lo que le falta (la misma tarjeta de su Inicio).
  */
 export function recienRegistradoProfile(base: DemoProfile, result: DemoOnboardingResult = defaultOnboardingResult()): DemoProfile {

@@ -93,6 +93,16 @@ export const COPY = {
         desde: (comuna: string) => `Desde ${comuna}.`,
         asiLoVen: (texto: string) => `En tus avisos se ve como «${texto}».`,
     },
+    // PRF-01 · Idiomas vacía (el prototipo, `idiomas: 'vacia'`): texto y «Agregar idioma». La hoja para
+    // agregar y quitar idiomas no está en el prototipo.
+    idiomas: {
+        vacio: 'Aún no agregas idiomas. Algunos condominios y eventos piden inglés básico.',
+        agregar: 'Agregar idioma',
+        // no está en el prototipo.
+        agregarOtro: 'Agregar otro idioma',
+        elegir: 'Elige un idioma',
+        quitar: (idioma: string) => `Quitar ${idioma.toLocaleLowerCase('es-CL')}`,
+    },
     // Cerrar una hoja con cambios: el mismo diálogo del atrás de Android (RootLayout).
     descartar: {
         titulo: '¿Descartar cambios?',
@@ -114,6 +124,14 @@ export const COPY = {
         editar: 'Cambiar CV',
     },
 } as const;
+
+/**
+ * Secciones de filas que, sin filas, muestran su estado vacío con una acción
+ * que abre su hoja de edición (PRF-01 · Idiomas, como el CV vacío).
+ */
+export const EMPTY_ROWS: Record<string, { texto: string; accion: string }> = {
+    Idiomas: { texto: COPY.idiomas.vacio, accion: COPY.idiomas.agregar },
+};
 
 /**
  * Snackbar al guardar cada sección («Guardamos tu disponibilidad», PRF-01 del

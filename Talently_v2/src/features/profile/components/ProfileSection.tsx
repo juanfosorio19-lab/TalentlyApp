@@ -31,6 +31,7 @@ import { InfoTag, InfoTags } from '../../../ui/InfoTag';
 import { Stack } from '../../../ui/Layout';
 import { SectionCard, SectionRow } from '../../../ui/SectionCard';
 import type { DemoProfileSection, DemoRow } from '../../demo/types';
+import { EMPTY_ROWS } from '../copy';
 
 /** Ícono de cada dato, el mismo que en el prototipo (PRF-01). */
 const ROW_ICON: Record<string, IconComponent> = {
@@ -156,23 +157,58 @@ export interface ProfileSectionProps {
     focusRef?: Ref<HTMLElement>;
 }
 
+interface EmptySectionProps {
+    title: string;
+    text: string;
+    action: string;
+    onAction?: () => void;
+    focusRef?: Ref<HTMLElement>;
+}
+
+/**
+ * Sección vacía como en el prototipo (PRF-01 · CV e Idiomas): ayuda y Button
+ * tonal sm con su ícono («Subir CV en PDF» lleva la flecha de subida), sin
+ * lápiz. SectionCard `empty` trae un Button md con +; pedido en «requests».
+ */
+function EmptySection({ title, text, action, onAction, focusRef }: EmptySectionProps) {
+    const focusable = focusRef ? { ref: focusRef, tabIndex: -1, className: 'tl-focus' } : undefined;
+    return (
+        <SectionCard title={title} {...focusable}>
+            <p className="tl-section__empty">{text}</p>
+            {/* Sin nada que hacer (una sección que no se edita), no hay botón: nunca uno que no responde. */}
+            {onAction && (
+                <Button variant="tonal" size="sm" icon={action.startsWith('Subir') ? IconUpload : IconAdd} onClick={() => onAction()}>
+                    {action}
+                </Button>
+            )}
+        </SectionCard>
+    );
+}
+
 export function ProfileSection({ section, onEdit, onEmptyAction, foot, focusRef }: ProfileSectionProps) {
     const focusable = focusRef ? { ref: focusRef, tabIndex: -1, className: 'tl-focus' } : undefined;
     if (section.tipo === 'vacio') {
-        // Como en el prototipo (PRF-01 · CV): Button tonal sm con su ícono («Subir CV en PDF» lleva la flecha
-        // de subida). SectionCard `empty` trae un Button md con +; pedido en «requests».
         return (
-            <SectionCard title={section.titulo} {...focusable}>
-                <p className="tl-section__empty">{section.texto}</p>
-                <Button
-                    variant="tonal"
-                    size="sm"
-                    icon={section.accion.startsWith('Subir') ? IconUpload : IconAdd}
-                    onClick={() => onEmptyAction?.()}
-                >
-                    {section.accion}
-                </Button>
-            </SectionCard>
+            <EmptySection
+                title={section.titulo}
+                text={section.texto}
+                action={section.accion}
+                onAction={onEmptyAction}
+                focusRef={focusRef}
+            />
+        );
+    }
+    // Idiomas sin filas: «Aún no agregas idiomas…» y «Agregar idioma», que abre su hoja de edición (el lápiz).
+    const emptyRows = section.tipo === 'filas' && section.filas.length === 0 ? EMPTY_ROWS[section.titulo] : undefined;
+    if (emptyRows) {
+        return (
+            <EmptySection
+                title={section.titulo}
+                text={emptyRows.texto}
+                action={emptyRows.accion}
+                onAction={section.editable ? onEdit : undefined}
+                focusRef={focusRef}
+            />
         );
     }
 

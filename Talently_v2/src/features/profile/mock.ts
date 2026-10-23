@@ -56,6 +56,20 @@ export const TODA_LA_REGION = 'Toda la región';
 /** PUBL-04 paso 3 · Contexto del hogar. */
 export const CONTEXTO_HOGAR: readonly string[] = ['Hay niños', 'Hay adulto mayor', 'Hay mascotas'];
 
+/** Idiomas que se pueden agregar al perfil (PRF-01 · Idiomas). no está en el prototipo como lista. */
+export const IDIOMAS: readonly string[] = [
+    'Español',
+    'Inglés',
+    'Portugués',
+    'Francés',
+    'Creole haitiano',
+    'Alemán',
+    'Italiano',
+    'Chino mandarín',
+    'Mapudungun',
+    'Lengua de señas chilena',
+];
+
 /** Nivel de un idioma. no está en el prototipo (PRF-01 muestra «Nativo» y «Básico»). */
 export const NIVELES_IDIOMA: readonly string[] = ['Básico', 'Intermedio', 'Avanzado', 'Nativo'];
 

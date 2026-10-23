@@ -13,16 +13,21 @@ import {
     contextPath,
     filteredEmpty,
     googleCalendarUrl,
+    inboxEmpty,
     inboxFilters,
     inboxRow,
     interviewEvent,
     matchesFilter,
     peerVerified,
     selectedFilter,
+    sharerConversationOf,
+    sharingStopped,
     sortRows,
     viewerWorks,
 } from './model';
 import { EMPTY_STATE, type ConversationState } from '../demo/conversationState';
+import { DEMO_ACTORS } from '../demo/session';
+import { viewerOf } from './viewer';
 
 const conv = (id: string) => {
     const c = getConversation(id);
@@ -161,6 +166,56 @@ describe('certificado (flujo 10)', () => {
     it('la fecha de emisión del que ya subió va en la hoja', () => {
         expect(certificateIssued(marta)).toBe('Emitido el 30-11-2026');
         expect(certificateIssued(conv('conv-jorge-seguridad-andes'))).toBeUndefined();
+    });
+});
+
+describe('el certificado que Marta deja de compartir, visto por Familia en Ñuñoa (MSG-02b-no-disponible)', () => {
+    const carolina = conv('conv-carolina-marta');
+    const cardOf = (items: ReturnType<typeof chatItems>) => items.find((i) => i.kind === 'sistema' && i.tarjeta.tipo === 'certificado');
+    it('la conversación de Carolina con Marta lee la de Marta con Familia en Ñuñoa; nadie más tiene una así', () => {
+        expect(sharerConversationOf(carolina)?.id).toBe('conv-marta-familia');
+        // Quien comparte no lee otra: su tarjeta es la suya.
+        expect(sharerConversationOf(conv('conv-marta-familia'))).toBeUndefined();
+        expect(sharerConversationOf(conv('conv-jorge-seguridad-andes'))).toBeUndefined();
+        expect(sharerConversationOf(conv('conv-br-javiera'))).toBeUndefined();
+    });
+    it('sin nada de Marta en la sesión, la tarjeta sigue como en MSG-02b-familia, con «Ver»', () => {
+        expect(cardOf(chatItems(carolina, EMPTY_STATE))).toMatchObject({ tarjeta: { disponible: true, accion: 'Ver' } });
+        expect(cardOf(chatItems(carolina, EMPTY_STATE, EMPTY_STATE))).toMatchObject({ tarjeta: { disponible: true } });
+    });
+    it('Marta deja de compartirlo (o bloquea, que lo revoca): «Ya no está disponible» también para la familia', () => {
+        const stopped: ConversationState = { ...EMPTY_STATE, entries: [{ kind: 'certificado', id: 'c1', off: true, hora: '13:00' }] };
+        expect(sharingStopped(stopped)).toBe(true);
+        expect(cardOf(chatItems(carolina, EMPTY_STATE, stopped))).toMatchObject({ tarjeta: { disponible: false } });
+        // Solo la tarjeta del certificado: los mensajes siguen iguales.
+        expect(chatItems(carolina, EMPTY_STATE, stopped).filter((i) => i.kind === 'texto')).toHaveLength(carolina.mensajes.length - 1);
+    });
+    it('si lo vuelve a compartir, la familia lo ve otra vez', () => {
+        const again: ConversationState = {
+            ...EMPTY_STATE,
+            entries: [
+                { kind: 'certificado', id: 'c1', off: true },
+                { kind: 'certificado', id: 'c2', off: false },
+            ],
+        };
+        expect(sharingStopped(again)).toBe(false);
+        expect(cardOf(chatItems(carolina, EMPTY_STATE, again))).toMatchObject({ tarjeta: { disponible: true } });
+    });
+});
+
+describe('MSG-01 sin conversaciones', () => {
+    const empty = (id: keyof typeof DEMO_ACTORS) => inboxEmpty(viewerOf(DEMO_ACTORS[id], false));
+    it('Rosa como persona, sin perfiles, va a agregar uno (Explorar tampoco le mostraría turnos)', () => {
+        expect(empty('rosa')).toEqual({
+            text: 'Agrega un perfil para buscar trabajo o contratar para tu hogar. Aquí podrás hablar con quien publica o con quien postula.',
+            action: { label: 'Agregar un perfil', path: '/perfil' },
+        });
+    });
+    it('quien busca trabajo va a Explorar y quien publica, a sus publicaciones', () => {
+        expect(empty('matias').action).toEqual({ label: 'Explorar turnos', path: '/explorar?tipo=turno' });
+        expect(empty('pedro').action).toEqual({ label: 'Explorar empleos', path: '/explorar?tipo=empleo' });
+        expect(empty('carolina')).toMatchObject({ text: 'Cuando alguien postule a tus publicaciones, aquí podrás hablar con esa persona.' });
+        expect(empty('banqueteria').action.label).toBe('Ver mis publicaciones');
     });
 });
 

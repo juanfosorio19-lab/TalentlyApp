@@ -23,6 +23,9 @@ export const copy = {
         /** Quien publica (organización u hogar): le habla a quien recibe postulaciones. */
         publisherEmptyText: 'Cuando alguien postule a tus publicaciones, aquí podrás hablar con esa persona.',
         publisherEmptyAction: 'Ver mis publicaciones',
+        /** Persona sin perfiles (INI-01-rosa): «Agregar un perfil», como en Inicio, Explorar y la Agenda. */
+        noProfilesText: 'Agrega un perfil para buscar trabajo o contratar para tu hogar. Aquí podrás hablar con quien publica o con quien postula.',
+        addProfile: 'Agregar un perfil',
         filteredTitle: {
             empleo: 'No tienes conversaciones de empleos',
             turno: 'No tienes conversaciones de turnos',

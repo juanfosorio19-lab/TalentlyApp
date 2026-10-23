@@ -28,7 +28,7 @@ import type { DemoEmptyState, DemoHomeBlock } from '../../demo/types';
 import { isoOf } from '../mock';
 import { profileCvPath, useHomeNavigation } from '../navigation';
 import { isCvTip, needOf, type PublishNeed } from '../selectors';
-import { JobsShortcut, ShiftCards } from './HomePublications';
+import { JobsShortcut, ShiftCards, useDeckTop } from './HomePublications';
 import { ProfileTipCard } from './ProfileTipCard';
 
 const YEAR = Number(DEMO_TODAY.split(' ').pop());
@@ -51,6 +51,30 @@ const NEED_ICON: Record<string, IconComponent> = {
 
 /** Abrir en otra pestaña (Ctrl, Cmd, Mayús, rueda) sigue siendo del navegador. */
 const plainClick = (e: MouseEvent<HTMLElement>) => e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
+
+interface JobsBlockProps {
+    block: Extract<DemoHomeBlock, { tipo: 'empleos' }>;
+    onVerify: (publicationId: string) => void;
+    onSeeAll: () => void;
+}
+
+/** «Empleos para ti»: el atajo al deck con su oferta de arriba; si ya decidió todas, el bloque no aparece. */
+function JobsBlock({ block, onVerify, onSeeAll }: JobsBlockProps) {
+    const top = useDeckTop(block.publicaciones);
+    if (!top) return null;
+    return (
+        <ScreenSection
+            title={block.titulo}
+            action={
+                <Button variant="ghost" size="sm" onClick={onSeeAll}>
+                    {block.accion}
+                </Button>
+            }
+        >
+            <JobsShortcut publication={top} onVerify={onVerify} />
+        </ScreenSection>
+    );
+}
 
 export interface PersonBlockProps {
     block: DemoHomeBlock;
@@ -116,18 +140,7 @@ export function PersonBlock({ block, onVerify, onPublish, publishHref }: PersonB
             );
 
         case 'empleos':
-            return (
-                <ScreenSection
-                    title={block.titulo}
-                    action={
-                        <Button variant="ghost" size="sm" onClick={() => go(paths.explorar('empleo'))}>
-                            {block.accion}
-                        </Button>
-                    }
-                >
-                    <JobsShortcut ids={block.publicaciones} onVerify={onVerify} />
-                </ScreenSection>
-            );
+            return <JobsBlock block={block} onVerify={onVerify} onSeeAll={() => go(paths.explorar('empleo'))} />;
 
         case 'novedades':
             return (
