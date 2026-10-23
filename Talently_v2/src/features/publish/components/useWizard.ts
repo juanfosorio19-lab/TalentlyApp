@@ -12,7 +12,7 @@
 // suya (flujo 5: debajo de VER-02 quedan el paso 5 y su hoja de identidad),
 // se salta hasta la pantalla de antes.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useBlocker, useLocation, useNavigate, useNavigationType, type BlockerFunction } from 'react-router-dom';
+import { useLocation, useNavigate, useNavigationType, type BlockerFunction } from 'react-router-dom';
 import { useSnackbar } from '../../../ui/Snackbar';
 import { useGoBack } from '../../../app/BackButtonManager';
 import { useDirtyGuard, useWizardBack } from '../../../app/navigation/backHandlers';
@@ -23,6 +23,7 @@ import type { DemoActorId } from '../../demo/session';
 import { copy } from '../copy';
 import type { WizardKind } from '../model/publisher';
 import { cancelAwaitIdentity, getPublished, type DraftStore } from '../store';
+import type { BackGuard } from './BrowserBackGuard';
 
 export const MENU_SHEET = 'opciones';
 /** PUBL-01 «¿Qué quieres publicar?», la hoja de Inicio que abre los asistentes. */
@@ -152,13 +153,11 @@ export function useWizard<T>({ kind, step, actorId, store, initial, changed }: W
         },
         [actorId, kind, store],
     );
-    const blocker = useBlocker(shouldBlock);
     const stopWaiting = useRef<(() => void) | null>(null);
-    useEffect(() => {
-        if (blocker.state !== 'blocked') return;
-        blocker.reset();
+    const onBlocked = useCallback(() => {
         // El router devuelve la URL a este paso (history.go); se actúa cuando ya volvió, así el
         // replace del paso anterior cae sobre la entrada del asistente y no sobre la de antes.
+        stopWaiting.current?.();
         const here = `#${location.pathname}${location.search}`;
         const run = () => {
             stopWaiting.current = null;
@@ -174,7 +173,8 @@ export function useWizard<T>({ kind, step, actorId, store, initial, changed }: W
         };
         window.addEventListener('popstate', onPop);
         stopWaiting.current = () => window.removeEventListener('popstate', onPop);
-    }, [blocker, goBack, location.pathname, location.search]);
+    }, [goBack, location.pathname, location.search]);
+    const backGuard: BackGuard = { active: !skipping && (step > 1 || (changed && !saved)), shouldBlock, onBlocked };
 
     // Saltar lo ya publicado: hasta la pantalla de antes del asistente (sin la hoja PUBL-01).
     const skipped = useRef(false);
@@ -240,5 +240,5 @@ export function useWizard<T>({ kind, step, actorId, store, initial, changed }: W
         navigate(paths.ayuda(), { replace: menuPushed });
     }, [actorId, canOpen, initial, menu, menuPushed, navigate, soon, step, store]);
 
-    return { goTo, menu, saveAndExit, help, skipping };
+    return { goTo, menu, saveAndExit, help, skipping, backGuard };
 }

@@ -77,6 +77,7 @@ export function HogarWizardScreen({ step }: { step: number }) {
             menu={wizard.menu}
             onSaveExit={wizard.saveAndExit}
             onHelp={wizard.help}
+            backGuard={wizard.backGuard}
             sheets={
                 <IdentitySheet
                     // Ya enviada (al volver con atrás desde PUBL-07), la hoja no vuelve a pedirla.

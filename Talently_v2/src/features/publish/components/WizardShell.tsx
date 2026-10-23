@@ -7,6 +7,7 @@ import { StepLayout } from '../../../ui/StepLayout';
 import { useGoBack } from '../../../app/BackButtonManager';
 import { copy } from '../copy';
 import { WIZARD_STEPS } from '../model/publisher';
+import { BrowserBackGuard, type BackGuard } from './BrowserBackGuard';
 import { WizardMenuSheet } from './WizardSheets';
 
 /**
@@ -36,6 +37,8 @@ export interface WizardShellProps {
     menu: { open: boolean; show: () => void; hide: () => void };
     onSaveExit: () => void;
     onHelp: () => void;
+    /** El atrás del navegador, detenido mientras hay algo que cuidar (useWizard). */
+    backGuard: BackGuard;
     children: ReactNode;
     /** Hojas propias del paso (PUBL-04-identidad). */
     sheets?: ReactNode;
@@ -51,6 +54,7 @@ export function WizardShell({
     menu,
     onSaveExit,
     onHelp,
+    backGuard,
     children,
     sheets,
 }: WizardShellProps) {
@@ -74,6 +78,7 @@ export function WizardShell({
                 {children}
             </StepLayout>
             <WizardMenuSheet open={menu.open} onClose={menu.hide} onSaveExit={onSaveExit} onHelp={onHelp} />
+            {backGuard.active && <BrowserBackGuard shouldBlock={backGuard.shouldBlock} onBlocked={backGuard.onBlocked} />}
             {sheets}
         </>
     );
