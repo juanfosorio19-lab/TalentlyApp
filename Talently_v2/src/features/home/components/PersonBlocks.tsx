@@ -26,8 +26,8 @@ import { OptionLink, OptionLinkGroup } from '../../../ui/OptionCard';
 import { DEMO_TODAY, getPublication } from '../../demo/data';
 import type { DemoEmptyState, DemoHomeBlock } from '../../demo/types';
 import { isoOf } from '../mock';
-import { useHomeNavigation } from '../navigation';
-import type { PublishKind } from '../selectors';
+import { profileCvPath, useHomeNavigation } from '../navigation';
+import { isCvTip, type PublishKind } from '../selectors';
 import { JobsShortcut, ShiftCards } from './HomePublications';
 import { ProfileTipCard } from './ProfileTipCard';
 
@@ -149,8 +149,12 @@ export function PersonBlock({ block, onVerify, onPublish, publishHref }: PersonB
                 </ScreenSection>
             );
 
-        case 'completar':
-            return <ProfileTipCard tip={block.aviso} onAction={() => openTarget(block.aviso.destino)} />;
+        case 'completar': {
+            const tip = block.aviso;
+            // «Subir CV en PDF» abre la hoja del CV de Perfil, no solo Perfil (donde habría que tocarlo otra vez).
+            const onAction = isCvTip(tip) ? () => go(profileCvPath()) : () => openTarget(tip.destino);
+            return <ProfileTipCard tip={tip} onAction={onAction} />;
+        }
 
         case 'que-necesitas':
             return (

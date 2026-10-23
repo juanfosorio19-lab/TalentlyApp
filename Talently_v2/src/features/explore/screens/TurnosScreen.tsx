@@ -272,24 +272,27 @@ export function TurnosScreen({ filtersSheet, focusPanel }: SegmentPanelProps) {
                                 value={draft.distancia === null ? [] : [draft.distancia]}
                                 onChange={([km]) => setDraft({ ...draft, distancia: km ?? null })}
                             />
-                            <MoneyField
-                                label={copy.filtros.tarifaMin}
-                                help={copy.filtros.tarifaMinAyuda}
-                                value={draft.tarifaMin}
-                                onChange={(tarifaMin) => setDraft({ ...draft, tarifaMin })}
-                                unit={draft.tarifaUnidad}
-                                onUnitChange={(unit) => {
-                                    if (unit === 'turno' || unit === 'hora') setDraft({ ...draft, tarifaUnidad: unit });
-                                }}
-                                units={TARIFA_UNIDADES}
-                                unitSheetTitle={copy.filtros.unidad}
-                            />
-                            <Switch
-                                label={copy.filtros.soloVerificadas}
-                                description={copy.filtros.soloVerificadasDesc}
-                                checked={draft.verificadas}
-                                onChange={(e) => setDraft({ ...draft, verificadas: e.target.checked })}
-                            />
+                            {/* El mismo ritmo que las secciones de Chips (24 px entre una y otra). */}
+                            <Stack gap={6}>
+                                <MoneyField
+                                    label={copy.filtros.tarifaMin}
+                                    help={copy.filtros.tarifaMinAyuda}
+                                    value={draft.tarifaMin}
+                                    onChange={(tarifaMin) => setDraft({ ...draft, tarifaMin })}
+                                    unit={draft.tarifaUnidad}
+                                    onUnitChange={(unit) => {
+                                        if (unit === 'turno' || unit === 'hora') setDraft({ ...draft, tarifaUnidad: unit });
+                                    }}
+                                    units={TARIFA_UNIDADES}
+                                    unitSheetTitle={copy.filtros.unidad}
+                                />
+                                <Switch
+                                    label={copy.filtros.soloVerificadas}
+                                    description={copy.filtros.soloVerificadasDesc}
+                                    checked={draft.verificadas}
+                                    onChange={(e) => setDraft({ ...draft, verificadas: e.target.checked })}
+                                />
+                            </Stack>
                         </>
                     )}
                 </FiltersSheet>

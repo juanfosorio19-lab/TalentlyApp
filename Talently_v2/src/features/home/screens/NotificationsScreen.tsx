@@ -34,7 +34,7 @@ import { useInbox } from '../../demo/sessionStore';
 import type { DemoNotification, DemoNotificationIcon } from '../../demo/types';
 import type { NotificationsEntryState } from '../components/HomeAppBar';
 import { copy } from '../copy';
-import { useHomeNavigation } from '../navigation';
+import { useFocusTitleIfLost, useHomeNavigation } from '../navigation';
 import { groupNotifications, resolveNotification } from '../selectors';
 import '../home.css';
 
@@ -68,6 +68,8 @@ export function NotificationsScreen() {
     // «Marcar todas como leídas» desaparece al tocarlo: el foco pasa al primer grupo, no al body.
     const firstHeading = useRef<HTMLHeadingElement>(null);
     const switchableIds = switchable.map((a) => a.id);
+    // Se llega desde la campana (o de vuelta de CFG-01), que ya no está: el foco va al título, no al body.
+    useFocusTitleIfLost(location.key);
 
     const route = (n: DemoNotification) => resolveNotification(n, actor.id, switchableIds, canOpen);
 
@@ -121,7 +123,7 @@ export function NotificationsScreen() {
                         {groups.map(({ grupo, items: list }, gi) => (
                             <section key={grupo} aria-labelledby={`${headingId}-${gi}`}>
                                 <h2
-                                    className="overline home-muted home-group"
+                                    className="overline home-muted home-group tl-focus"
                                     id={`${headingId}-${gi}`}
                                     ref={gi === 0 ? firstHeading : undefined}
                                     tabIndex={gi === 0 ? -1 : undefined}

@@ -6,20 +6,29 @@ import { EMPLEO_SIN_FILTROS, TURNO_SIN_FILTROS } from './filters';
 import {
     deckAndList,
     empleosOf,
-    isEmptyScope,
+    membersOf,
     ownPublications,
     passesEmpleo,
     personasFor,
+    personCard,
     porQueOf,
+    replacesFrom,
     searchHints,
     searchIn,
     searchScope,
     segmentFor,
     segmentsOf,
+    sinPerfiles,
+    suggestionId,
+    suggestionPath,
     turnoCta,
     turnoDays,
+    type CardHandlers,
     type Decided,
 } from './model';
+
+const noApplications = new Map();
+const handlers: CardHandlers = { href: '#', onOpen: () => undefined, onVerify: () => undefined };
 
 const turno = (id: string) => getPublication(id) as DemoTurno;
 
@@ -88,39 +97,97 @@ describe('EXP-05 · personas sugeridas', () => {
         expect(porQueOf('sáb 5 dic', 'San Miguel', 'San Miguel')).toBe('calza con el oficio que buscas y ya trabajó contigo el sáb 5 dic');
         const pub = ownPublications(DEMO_ACTORS.banqueteria)[0];
         expect(pub).toBeDefined();
-        const estado = pub ? personasFor(DEMO_ACTORS.banqueteria, pub) : null;
+        const estado = pub ? personasFor(DEMO_ACTORS.banqueteria, pub, noApplications) : null;
         if (estado?.tipo === 'sugeridas') {
             for (const s of estado.sugeridas) expect(s.porQue).not.toContain(pub?.titulo ?? '');
         }
     });
 });
 
+describe('EXP-05 · quienes ya están en la publicación', () => {
+    it('los postulados que llegan después del «salto de tiempo» todavía no están (como en GES-04)', () => {
+        const members = membersOf('turno-garzones-finde', noApplications);
+        for (const id of ['martin-silva', 'fernanda-castro', 'nicolas-vargas', 'antonia-reyes']) expect(members.has(id)).toBe(false);
+        const pub = getPublication('turno-garzones-finde');
+        const estado = pub ? personasFor(DEMO_ACTORS.banqueteria, pub, noApplications) : null;
+        expect(estado?.tipo).toBe('sugeridas');
+        if (estado?.tipo === 'sugeridas') expect(estado.sugeridas.map((s) => s.person.id)).toContain('martin-silva');
+    });
+});
+
 describe('EXP-07 · buscar', () => {
+    const scopeOf = (id: keyof typeof DEMO_ACTORS) => searchScope(DEMO_ACTORS[id], false, noApplications);
+
     it('sin tildes y con sinónimos', () => {
-        const pedro = searchScope(DEMO_ACTORS.pedro);
-        expect(searchIn(pedro, 'mecanico').empleos.length).toBeGreaterThan(0);
-        const matias = searchScope(DEMO_ACTORS.matias);
+        expect(searchIn(scopeOf('pedro'), 'mecanico').empleos.length).toBeGreaterThan(0);
+        const matias = scopeOf('matias');
         expect(searchIn(matias, 'mesero').turnos.length).toBeGreaterThan(0);
         expect(searchIn(matias, '   ').turnos).toEqual([]);
     });
 
-    it('quien contrata busca personas (también las que ya postularon)', () => {
-        const carolina = searchScope(DEMO_ACTORS.carolina);
-        expect(carolina.empleos).toEqual([]);
-        expect(searchIn(carolina, 'nana').personas.length).toBeGreaterThan(0);
-        expect(searchIn(searchScope(DEMO_ACTORS.banqueteria), 'garzon').personas.length).toBeGreaterThan(0);
+    it('la forma femenina, el plural y las palabras del catálogo de oficios también encuentran', () => {
+        const matias = scopeOf('matias');
+        for (const q of ['garzona', 'Garzonas', 'camarero']) expect(searchIn(matias, q).turnos.length).toBeGreaterThan(0);
+        const jorge = scopeOf('jorge');
+        for (const q of ['nochero', 'OS-10']) {
+            const r = searchIn(jorge, q);
+            expect(r.turnos.length + r.empleos.length).toBeGreaterThan(0);
+        }
+        expect(searchIn(scopeOf('banqueteria'), 'garzonas').personas.length).toBeGreaterThan(0);
     });
 
-    it('sin nada que buscar (Rosa sin perfiles) el alcance queda vacío', () => {
-        expect(isEmptyScope(searchScope(DEMO_ACTORS.rosa))).toBe(true);
+    it('la búsqueda es global, sin las publicaciones propias; quien contrata también busca personas', () => {
+        const carolina = scopeOf('carolina');
+        const own = new Set(ownPublications(DEMO_ACTORS.carolina).map((p) => p.id));
+        expect(own.size).toBeGreaterThan(0);
+        expect([...carolina.empleos, ...carolina.turnos].some((p) => own.has(p.id))).toBe(false);
+        expect(searchIn(carolina, 'nana').personas.length).toBeGreaterThan(0);
+        expect(searchIn(scopeOf('banqueteria'), 'garzon').personas.length).toBeGreaterThan(0);
+    });
+
+    it('lo decidido en EXP-05 manda: «No me interesa» la saca y a quien invitaste lo dice', () => {
+        const pub = 'turno-garzones-finde';
+        const decisions: Record<string, Decided> = {
+            [suggestionId(pub, 'javiera-contreras')]: 'si',
+            [suggestionId(pub, 'felipe-araya')]: 'no',
+        };
+        const scope = searchScope(DEMO_ACTORS.banqueteria, false, noApplications, (id) => decisions[id]);
+        const javiera = searchIn(scope, 'javiera').personas.find((s) => s.person.id === 'javiera-contreras');
+        expect(javiera?.invitada).toBe(true);
+        expect(javiera?.publicationId).toBe(pub);
+        if (javiera) {
+            expect(personCard(javiera, handlers, { publicacion: true }).tags?.[0]?.label).toBe(
+                'Invitaste a postular a Garzones fin de semana',
+            );
+            expect(suggestionPath(javiera)).toBe('/u/javiera-contreras?ver=trabajo');
+        }
+        const felipe = searchIn(scope, 'felipe').personas.find((s) => s.person.id === 'felipe-araya');
+        expect(felipe?.publicationId).not.toBe(pub);
+    });
+
+    it('sin perfiles (Rosa) ve cómo empezar antes de escribir', () => {
+        expect(sinPerfiles(DEMO_ACTORS.rosa)).toBe(true);
+        expect(sinPerfiles(DEMO_ACTORS.matias)).toBe(false);
+        expect(sinPerfiles(DEMO_ACTORS.banqueteria)).toBe(false);
     });
 
     it('las pistas de «No encontramos…» salen de lo que sí se encuentra', () => {
-        const hints = searchHints(searchScope(DEMO_ACTORS.matias));
+        const hints = searchHints(scopeOf('matias'));
         expect(hints.length).toBeGreaterThan(0);
         for (const h of hints) {
-            const r = searchIn(searchScope(DEMO_ACTORS.matias), h);
+            const r = searchIn(scopeOf('matias'), h);
             expect(r.turnos.length + r.empleos.length).toBeGreaterThan(0);
         }
+    });
+});
+
+describe('navegar desde Explorar (spec §5.3)', () => {
+    it('la raíz de otra pestaña con replace; desde Buscar, Explorar con push', () => {
+        expect(replacesFrom('/explorar', '/inicio')).toBe(true);
+        expect(replacesFrom('/buscar', '/actividad?seg=postulaciones')).toBe(true);
+        expect(replacesFrom('/buscar', '/explorar?tipo=personas&p=turno-garzones-finde')).toBe(false);
+        expect(replacesFrom('/explorar', '/explorar?tipo=turno')).toBe(true);
+        expect(replacesFrom('/explorar', '/p/turno-bodega-noche')).toBe(false);
+        expect(replacesFrom('/buscar', '/publicaciones/turno-garzones-finde/turnos/finde-sab-19?ver=postulados')).toBe(false);
     });
 });

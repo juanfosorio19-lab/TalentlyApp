@@ -3,11 +3,10 @@
 import { useCallback, useEffect, useRef, type MouseEvent } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useOpenPath } from '../../../app/navigation/useOpenPath';
-import { isTabRoot, tabOf } from '../../../app/paths';
 import type { DemoActorId } from '../../demo/session';
 import { keyOf, useDecided, useSessionState } from '../../demo/sessionStore';
 import { withParams } from '../filters';
-import type { CardHandlers, Decided } from '../model';
+import { replacesFrom, type CardHandlers, type Decided } from '../model';
 
 /**
  * Los parámetros de /explorar y cómo cambiarlos: con replace (no apila
@@ -48,21 +47,6 @@ export function useSheetKeepsScroll(): void {
     useEffect(() => {
         if (sheetOpen && window.scrollY !== lastY.current) window.scrollTo(0, lastY.current);
     }, [sheetOpen, location.key]);
-}
-
-const pathnameOf = (path: string) => path.split('?')[0] ?? path;
-
-/**
- * ¿Se abre con replace? Solo al cambiar de pestaña (spec §5.3 regla 1: la
- * raíz de OTRA pestaña) o al cambiar los parámetros de la misma raíz. Desde
- * Buscar (apilada sobre Explorar), Explorar con otra publicación es un paso
- * más: push, para que atrás vuelva a la búsqueda y a su scroll (regla 2).
- * Las pantallas de este feature son de Explorar (/buscar no tiene pestaña).
- */
-export function replacesFrom(fromPathname: string, path: string): boolean {
-    const to = pathnameOf(path);
-    if (!isTabRoot(to)) return false;
-    return tabOf(to) !== (tabOf(fromPathname) ?? 'explorar') || to === fromPathname;
 }
 
 /**

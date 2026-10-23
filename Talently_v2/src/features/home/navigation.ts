@@ -4,10 +4,17 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useLocation, type NavigateOptions } from 'react-router-dom';
 import { useOpenPath, type LinkTargetProps } from '../../app/navigation/useOpenPath';
-import { isTabRoot } from '../../app/paths';
+import { isTabRoot, paths } from '../../app/paths';
 import { useDemoSession } from '../demo/session';
 import { targetPath } from '../demo/targets';
 import type { DemoTarget } from '../demo/types';
+
+/**
+ * `/perfil?sheet=cv`: Perfil con la hoja «Subir CV» abierta (la tarjeta «Te
+ * falta 1 cosa · Subir CV en PDF» de Inicio). Pedido en «requests»
+ * `paths.perfil(sheet)`; mientras tanto se arma sobre paths.perfil().
+ */
+export const profileCvPath = () => `${paths.perfil()}?${new URLSearchParams({ sheet: 'cv' })}`;
 
 /** Ir a la raíz de otra pestaña hace replace (spec §5.3 regla 1); una pantalla apilada, push (regla 2). */
 export function tabAware(path: string, options?: NavigateOptions): NavigateOptions {
@@ -55,4 +62,45 @@ export function useKeepScroll() {
         at.current = window.scrollY;
         open(...args);
     }, []);
+}
+
+/**
+ * Lleva el foco al título de la pantalla (el h1 del AppBar) cuando el elemento
+ * tocado ya no está y el foco cayó al body: la campana al abrir NOT-01, o la
+ * fila de una notificación que cambió de actor y volvió a Inicio. AppBar no
+ * deja pasar tabIndex al título: se lo pone como useModalFocus.screenFallback,
+ * con el anillo del sistema (tl-focus). Pedido en «requests» que AppBar lo traiga.
+ */
+export function focusScreenTitle(): void {
+    const title = document.querySelector<HTMLElement>('.tl-app-screen h1.tl-appbar__title') ?? document.querySelector<HTMLElement>('h1.tl-appbar__title');
+    if (!title) return;
+    if (!title.hasAttribute('tabindex')) title.setAttribute('tabindex', '-1');
+    title.classList.add('tl-focus');
+    title.focus({ preventScroll: true });
+}
+
+/**
+ * ¿Ya tocó o tecleó algo? Antes de eso (la app recién abierta, en cualquier
+ * ruta) el foco es del navegador y no se mueve.
+ */
+let interacted = false;
+if (typeof window !== 'undefined') {
+    const mark = () => {
+        interacted = true;
+    };
+    window.addEventListener('pointerdown', mark, { capture: true, once: true });
+    window.addEventListener('keydown', mark, { capture: true, once: true });
+}
+
+/**
+ * Cada vez que cambia `trigger` (la entrada del historial), si el foco quedó
+ * en el body, pasa al título de la pantalla.
+ */
+export function useFocusTitleIfLost(trigger: unknown): void {
+    useEffect(() => {
+        if (!interacted) return;
+        const active = document.activeElement;
+        if (active && active !== document.body) return;
+        focusScreenTitle();
+    }, [trigger]);
 }

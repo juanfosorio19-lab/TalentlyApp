@@ -2,7 +2,7 @@
 // sugeridas, búsqueda y el paso de los datos de la demo a las props de src/ui.
 // Solo usa las funciones get… de la demo (nunca sus constantes DEMO_*).
 import type { MouseEventHandler } from 'react';
-import { paths } from '../../app/paths';
+import { isTabRoot, paths, tabOf } from '../../app/paths';
 import type { AmountFormatOptions } from '../../ui/Amount';
 import { IconAdd, IconBell, IconChat, IconClock, IconOffers, type IconComponent } from '../../ui/icons';
 import type { PublicationCardData, PublicationRequirement, PublicationTag, PublicationVerification } from '../../ui/PublicationCard';
@@ -101,6 +101,23 @@ export function defaultSegment(actor: DemoActor, segs: readonly Segment[]): Segm
 /** El segmento que pide la URL si aplica al actor; si no (enlace viejo, cambio de actor), el suyo. */
 export function segmentFor(actor: DemoActor, segs: readonly Segment[], requested: string | null): Segment {
     return segs.find((s) => s === requested) ?? defaultSegment(actor, segs);
+}
+
+// ─── Navegación (spec §5.3) ─────────────────────────────────────────────────
+
+const pathnameOf = (path: string) => path.split('?')[0] ?? path;
+
+/**
+ * ¿Se abre con replace? Solo al cambiar de pestaña (regla 1: la raíz de OTRA
+ * pestaña) o al cambiar los parámetros de la misma raíz. Desde Buscar
+ * (apilada sobre Explorar), Explorar con otra publicación es un paso más:
+ * push, para que atrás vuelva a la búsqueda y a su scroll (regla 2). Las
+ * pantallas de este feature son de Explorar (/buscar no tiene pestaña).
+ */
+export function replacesFrom(fromPathname: string, path: string): boolean {
+    const to = pathnameOf(path);
+    if (!isTabRoot(to)) return false;
+    return tabOf(to) !== (tabOf(fromPathname) ?? 'explorar') || to === fromPathname;
 }
 
 // ─── Datos comunes ──────────────────────────────────────────────────────────
@@ -665,14 +682,15 @@ export function searchablePublications(): (DemoEmpleo | DemoTurno)[] {
 
 /**
  * Orden de una persona encontrada: primero quien espera revisión, luego a
- * quién invitar, después a quien ya invitaste y al final quien ya tiene cupo.
+ * quien ya invitaste (lo último que hiciste con ella), después a quién
+ * invitar y al final quien ya tiene cupo.
  */
 const MEMBERSHIP_RANK: Record<MemberKind | 'invitar' | 'invitada', number> = {
     postulado: 0,
     espera: 0,
     postulante: 0,
-    invitar: 1,
-    invitada: 2,
+    invitada: 1,
+    invitar: 2,
     confirmado: 3,
 };
 const rankOf = (s: Suggestion) => MEMBERSHIP_RANK[s.membership?.kind ?? (s.invitada ? 'invitada' : 'invitar')];
@@ -684,11 +702,10 @@ const nothingDecided: SuggestionDecided = () => undefined;
 
 /**
  * Las personas que calzan con las publicaciones propias del actor, una vez
- * cada una, con la publicación por la que calzan: la que espera revisión
- * (ya postuló), si no una a la que invitarla, y si no donde ya tiene cupo.
- * Lo decidido en EXP-05 manda: con «No me interesa» ya no calza con esa
- * publicación («No te sugeriremos más a …»); con «Invitar a postular» dice
- * que ya la invitaste.
+ * cada una, con la publicación por la que calzan (en el orden de
+ * MEMBERSHIP_RANK). Lo decidido en EXP-05 manda: con «No me interesa» ya no
+ * calza con esa publicación («No te sugeriremos más a …»); con «Invitar a
+ * postular» dice que ya la invitaste.
  */
 function allCandidates(
     actor: DemoActor,

@@ -17,7 +17,7 @@ import { HomeAppBar } from '../components/HomeAppBar';
 import { PublishSheet } from '../components/PublishSheet';
 import { VerificationSheet } from '../components/VerificationSheet';
 import { publisherName } from '../mock';
-import { useHomeNavigation, useKeepScroll } from '../navigation';
+import { useFocusTitleIfLost, useHomeNavigation, useKeepScroll } from '../navigation';
 import { homeBlocks, selectedKind, wizardOf, type PublishKind, type Publisher } from '../selectors';
 import { OrgHomeScreen } from './OrgHomeScreen';
 import { PersonHomeScreen } from './PersonHomeScreen';
@@ -28,8 +28,11 @@ export const screenId = 'INI-01';
 
 /**
  * ¿Subió su CV en Perfil durante la sesión? Perfil todavía lo guarda en su
- * propio estado: pedido `useCv(actorId)` en demo/sessionStore («requests»).
- * Con él, «Te falta 1 cosa · Subir CV» deja de mostrarse (selectors.homeBlocks).
+ * propio store (profile/store.ts, que Inicio no puede importar). Pendiente,
+ * bloqueado por el pedido `saveCv(actorId, recienRegistrado, file)` y
+ * `useCvSubido(actorId, recienRegistrado)` en demo/sessionStore («requests»):
+ * ese día esta constante se borra y se pasa `cvSubido: useCvSubido(actor.id,
+ * recienRegistrado)`; selectors.homeBlocks ya quita «Te falta 1 cosa · Subir CV».
  */
 const CV_SUBIDO_EN_SESION = false;
 
@@ -52,6 +55,8 @@ export function HomeScreen() {
     const [, setParams] = useSearchParams();
     // Abrir una hoja o cambiar su opción no mueve la página de abajo.
     const keepScroll = useKeepScroll();
+    // Volver de NOT-01 con otro actor (flujo 7) desmonta la fila tocada: el foco va a «Hola, …», no al body.
+    useFocusTitleIfLost(location.key);
 
     // PUBL-01: la opción marcada vive en la URL (`tipo`), así sigue marcada al volver del asistente.
     const publish = useSheet('publicar');

@@ -263,22 +263,25 @@ export function EmpleosScreen({ filtersSheet, focusPanel }: SegmentPanelProps) {
                                 value={draft.distancia === null ? [] : [draft.distancia]}
                                 onChange={([km]) => setDraft({ ...draft, distancia: km ?? null })}
                             />
-                            <MoneyField
-                                label={copy.filtros.sueldoMin}
-                                help={copy.filtros.sueldoMinAyuda}
-                                value={draft.sueldoMin}
-                                onChange={(sueldoMin) => setDraft({ ...draft, sueldoMin })}
-                                unit="mes"
-                                onUnitChange={() => undefined}
-                                units={SUELDO_UNIDADES}
-                                unitSheetTitle={copy.filtros.unidad}
-                            />
-                            <Switch
-                                label={copy.filtros.soloVerificadas}
-                                description={copy.filtros.soloVerificadasDesc}
-                                checked={draft.verificadas}
-                                onChange={(e) => setDraft({ ...draft, verificadas: e.target.checked })}
-                            />
+                            {/* El mismo ritmo que las secciones de Chips (24 px entre una y otra). */}
+                            <Stack gap={6}>
+                                <MoneyField
+                                    label={copy.filtros.sueldoMin}
+                                    help={copy.filtros.sueldoMinAyuda}
+                                    value={draft.sueldoMin}
+                                    onChange={(sueldoMin) => setDraft({ ...draft, sueldoMin })}
+                                    unit="mes"
+                                    onUnitChange={() => undefined}
+                                    units={SUELDO_UNIDADES}
+                                    unitSheetTitle={copy.filtros.unidad}
+                                />
+                                <Switch
+                                    label={copy.filtros.soloVerificadas}
+                                    description={copy.filtros.soloVerificadasDesc}
+                                    checked={draft.verificadas}
+                                    onChange={(e) => setDraft({ ...draft, verificadas: e.target.checked })}
+                                />
+                            </Stack>
                         </>
                     )}
                 </FiltersSheet>

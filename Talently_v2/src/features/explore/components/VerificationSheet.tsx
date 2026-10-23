@@ -87,16 +87,21 @@ export function VerificationSheet() {
 
     return (
         <BottomSheet open={sheet.open && who !== null} onClose={sheet.hide} title={copy.verificacion.titulo(who?.nombre ?? '')}>
-            <List flat>
-                {(who?.verificaciones ?? []).map((v) => (
-                    <ListItem
-                        key={v.label}
-                        icon={iconOf(v.label)}
-                        title={v.label}
-                        sub={[QUE_SE_VERIFICO[v.label], v.vence && copy.verificacion.vence(v.vence)].filter(Boolean)}
-                    />
-                ))}
-            </List>
+            {who && who.verificaciones.length === 0 ? (
+                // Matías antes de AUTH-08 (enlace directo): nada que mostrar todavía, dicho en palabras.
+                <p className="body">{copy.verificacion.ninguna(who.nombre)}</p>
+            ) : (
+                <List flat>
+                    {(who?.verificaciones ?? []).map((v) => (
+                        <ListItem
+                            key={v.label}
+                            icon={iconOf(v.label)}
+                            title={v.label}
+                            sub={[QUE_SE_VERIFICO[v.label], v.vence && copy.verificacion.vence(v.vence)].filter(Boolean)}
+                        />
+                    ))}
+                </List>
+            )}
             <p className="caption">{copy.verificacion.nota}</p>
         </BottomSheet>
     );

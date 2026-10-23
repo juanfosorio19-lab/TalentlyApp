@@ -35,3 +35,10 @@
 .home-group { margin: var(--space-6) 0 var(--space-2); }
 .home-notifs > section:first-of-type > .home-group { margin-top: var(--space-2); }
 .home-notifs .home-notif { padding-top: var(--space-3); padding-bottom: var(--space-3); }
+
+/* INI-01 e INI-02: una sección sin acción («Requiere tu atención», «¿Qué
+   necesitas?», «Tu aviso») mide lo que su título, como el prototipo. El
+   min-height de .tl-screen-section__head es para el Button ghost sm de las
+   que sí la traen. Pedido en «requests» a src/ui (app.css); cuando llegue,
+   esta regla se borra. */
+.home-content .tl-screen-section__head:not(:has(> .tl-btn)) { min-height: 0; }
