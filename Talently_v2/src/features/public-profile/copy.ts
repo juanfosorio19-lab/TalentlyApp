@@ -19,7 +19,6 @@ export const copy = {
     publicaciones: 'Publicaciones activas',
     avisos: 'Avisos activos',
     sinPublicaciones: (nombre: string) => `${nombre} no tiene publicaciones activas por ahora.`,
-    quedan: (left: number, total: number) => `Quedan ${left} de ${total} cupos`,
     tipo: { empleo: 'Empleo', turno: 'Turno', servicio: 'Servicio', clase: 'Clase' } satisfies Record<DemoPublicationType, string>,
     /** Nota bajo el encabezado propio: qué no ve nadie (spec §10.1, Ley 21.719). */
     privadoPersona: 'Tu RUT, tu fecha de nacimiento, tu teléfono y tu dirección no se muestran en tu perfil.',

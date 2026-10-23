@@ -17,6 +17,15 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: { main: 'index.html', v3: 'v3.html' },
+      output: {
+        // v3 separa sus pantallas por feature (src/app/routeManifest.tsx, carga diferida); cada
+        // feature queda en su chunk con su nombre (`home-…js`) en vez de `routes-…js`. Los chunks de la
+        // app actual (index.html) no se tocan: su bundle es el que viaja por OTA (ADR-17).
+        chunkFileNames(chunk) {
+          const feature = /[\\/]src[\\/]features[\\/]([^\\/]+)[\\/]routes\.tsx$/.exec(chunk.facadeModuleId ?? '')?.[1]
+          return feature ? `assets/${feature}-[hash].js` : 'assets/[name]-[hash].js'
+        },
+      },
     },
   },
   define: {

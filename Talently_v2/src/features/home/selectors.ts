@@ -2,6 +2,7 @@
 // a dónde lleva una notificación y qué se publica en PUBL-01. Los datos
 // salen de src/features/demo y lo que cambia en la sesión, de
 // demo/sessionStore (las pantallas se lo pasan a estas funciones).
+import { paths } from '../../app/paths';
 import type { ConversationState } from '../demo/conversationState';
 import { getConversation } from '../demo/data';
 import type { DemoActorId } from '../demo/session';
@@ -208,4 +209,43 @@ export function selectedKind(as: Publisher, tipo: string | null): PublishKind {
 /** El asistente que abre «Continuar»: un turno para un evento del hogar es un turno (PUBL-03). */
 export function wizardOf(kind: PublishKind): 'empleo' | 'turno' | 'hogar' {
     return kind === 'evento' ? 'turno' : kind;
+}
+
+/** Una necesidad de «¿Qué necesitas?»: la opción que marca en PUBL-01 y el oficio con que parte el asistente. */
+export interface PublishNeed {
+    tipo: PublishKind;
+    /** El `value` del oficio en el asistente (PUBL-04 paso 1: `cuidador-infantil`; PUBL-03 paso 1: `banquetero`). */
+    oficio?: string;
+}
+
+/**
+ * La grilla «¿Qué necesitas?» de INI-01-carolina «abre Publicar con esa
+ * necesidad ya puesta» (sistema de diseño, OptionCard como atajo): Asesor/a
+ * del hogar, Cuidador/a infantil o de adulto mayor → aviso del hogar con ese
+ * oficio; Banquetero/a para un evento → turno para un evento de banquetero/a.
+ */
+const NEEDS: Record<string, PublishNeed> = {
+    'asesor-hogar': { tipo: 'hogar', oficio: 'asesor-hogar' },
+    'cuidador-infantil': { tipo: 'hogar', oficio: 'cuidador-infantil' },
+    'cuidador-adulto-mayor': { tipo: 'hogar', oficio: 'cuidador-adulto-mayor' },
+    'banquetero-evento': { tipo: 'evento', oficio: 'banquetero' },
+};
+
+/** La necesidad de una opción de la grilla (una que no se conoce marca el aviso del hogar, sin oficio). */
+export const needOf = (id: string): PublishNeed => NEEDS[id] ?? { tipo: 'hogar' };
+
+/**
+ * El oficio con que parte el asistente (`?sheet=publicar&tipo=&oficio=`): el
+ * de la necesidad tocada, solo mientras siga marcada su opción. Si en PUBL-01
+ * se marca la otra, el asistente parte como siempre.
+ */
+export function wizardOficio(kind: PublishKind, oficio: string | null): string | null {
+    return oficio !== null && Object.values(NEEDS).some((n) => n.tipo === kind && n.oficio === oficio) ? oficio : null;
+}
+
+/** El asistente que abre «Continuar» con su oficio de partida: `/publicar/hogar/1?oficio=cuidador-infantil`. */
+export function wizardPath(kind: PublishKind, oficio: string | null): string {
+    const path = paths.publicar(wizardOf(kind));
+    const inicial = wizardOficio(kind, oficio);
+    return inicial ? `${path}?${new URLSearchParams({ oficio: inicial })}` : path;
 }

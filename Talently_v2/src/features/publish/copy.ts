@@ -153,6 +153,10 @@ export const copy = {
     resultado: {
         publicada: 'Publicada',
         publicadaTurno: (titulo: string) => `«${titulo}» ya aparece en Explorar · Turnos. Te avisaremos cuando alguien postule.`,
+        // no está en el prototipo: un turno que no es el de los datos (desde cero, otro título). La demostración
+        // no lo agrega a Explorar ni a Actividad, así que no dice que ya aparece ahí.
+        publicadaFueraDelEjemplo: (titulo: string) =>
+            `Publicamos «${titulo}». En esta sesión de demostración, Explorar y Actividad muestran solo las publicaciones del ejemplo.`,
         revision: 'En revisión',
         revisionHogar: (que: 'aviso' | 'turno') =>
             `Revisamos tu identidad y la primera publicación de cada hogar. Te avisaremos cuando tu ${que} esté publicado.`,

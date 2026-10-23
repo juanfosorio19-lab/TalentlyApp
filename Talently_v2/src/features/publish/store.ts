@@ -9,7 +9,7 @@ import { useSyncExternalStore } from 'react';
 import { publishInSession } from '../demo/manageState';
 import type { DemoActorId } from '../demo/session';
 import type { HogarDraft } from './model/hogar';
-import { publishedId, type WizardKind } from './model/publisher';
+import type { WizardKind } from './model/publisher';
 import type { TurnoDraft } from './model/turno';
 
 function createExternal<S>(initial: S) {
@@ -102,6 +102,13 @@ export interface PublishedSummary {
     hasta: string | null;
     /** «En revisión» en vez de «Publicada». */
     review: boolean;
+    /**
+     * La publicación de los datos que es lo publicado (model/publisher
+     * `publishedId`: el borrador sin cambios de los flujos 4 y 5). `null`:
+     * lo publicado no está en los datos de demostración, y PUBL-07 no abre
+     * otra publicación ni dice que ya aparece en Explorar.
+     */
+    publicationId: string | null;
 }
 
 interface PublishState {
@@ -117,9 +124,9 @@ const session = createExternal<PublishState>(INITIAL);
 const keyOf = (actorId: DemoActorId, kind: WizardKind) => `${actorId}:${kind}`;
 
 export function markPublished(actorId: DemoActorId, summary: PublishedSummary): void {
-    // La publicación de los datos que representa lo publicado pasa a existir para todas las pestañas (flujo 4).
-    const id = publishedId(actorId, summary.kind);
-    if (id) publishInSession(id);
+    // La publicación de los datos que es lo publicado pasa a existir para todas las pestañas (flujo 4).
+    // Un turno distinto (desde cero, otro título) no hace aparecer «Garzones fin de semana».
+    if (summary.publicationId) publishInSession(summary.publicationId);
     const s = session.get();
     const key = keyOf(actorId, summary.kind);
     const published = new Map(s.published);

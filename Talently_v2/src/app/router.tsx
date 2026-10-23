@@ -2,38 +2,37 @@
 // del AppShell (con TabBar); las pantallas apiladas, fuera. Mientras v3 se
 // previsualiza en v3.html se usa HashRouter (v3.html#/inicio): no necesita
 // reescrituras del servidor y no choca con las rutas de la app actual.
+// Cada pantalla de feature se baja la primera vez que se abre (routeManifest:
+// react-router `lazy`); todas las rutas existen desde el inicio, así canOpen()
+// y la memoria de pestañas no cambian.
 import { Navigate, createHashRouter, type RouteObject } from 'react-router-dom';
-import * as activity from '../features/activity/routes';
-import * as explore from '../features/explore/routes';
-import * as home from '../features/home/routes';
-import * as legal from '../features/legal/routes';
-import * as manage from '../features/manage/routes';
-import * as messaging from '../features/messaging/routes';
-import * as onboarding from '../features/onboarding/routes';
-import * as processes from '../features/processes/routes';
-import * as profile from '../features/profile/routes';
-import * as publications from '../features/publications/routes';
-import * as publicProfile from '../features/public-profile/routes';
-import * as publish from '../features/publish/routes';
-import * as verification from '../features/verification/routes';
 import { AppShell } from './AppShell';
 import { RootLayout } from './RootLayout';
 import { registerRoutes } from './navigation/routeRegistry';
 import { putInicioBelow } from './navigation/tabMemory';
 import { isTabRoot } from './paths';
-import { UiCatalog } from './dev/UiCatalog';
+import { lazyStackRoutes, lazyTabRoutes } from './routeManifest';
 import { NotFoundScreen } from './system/NotFoundScreen';
 
-const features = [home, explore, activity, messaging, profile, publications, manage, processes, verification, publish, onboarding, legal, publicProfile];
+/**
+ * Solo en desarrollo: el catálogo de src/ui (/dev/ui). En el build de
+ * producción `import.meta.env.DEV` es `false` y el catálogo con sus demos no
+ * entra al bundle (paths.catalogo() da «Disponible pronto»).
+ */
+const devRoutes: RouteObject[] = import.meta.env.DEV
+    ? [{ path: 'dev/ui', lazy: () => import('./dev/UiCatalog').then((m) => ({ Component: m.UiCatalog })) }]
+    : [];
 
 export const routes: RouteObject[] = [
     {
         element: <RootLayout />,
+        // Mientras baja la pantalla con que se abre la app: el fondo de la app, sin nada encima.
+        hydrateFallbackElement: <div className="tl-app-screen" />,
         children: [
             { index: true, element: <Navigate to="/inicio" replace /> },
-            { element: <AppShell />, children: features.flatMap((f) => f.tabRoutes) },
-            ...features.flatMap((f) => f.stackRoutes),
-            { path: 'dev/ui', element: <UiCatalog /> },
+            { element: <AppShell />, children: lazyTabRoutes() },
+            ...lazyStackRoutes(),
+            ...devRoutes,
             { path: '*', element: <NotFoundScreen /> },
         ],
     },

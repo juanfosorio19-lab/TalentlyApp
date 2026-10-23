@@ -15,6 +15,7 @@ import { EmptyState } from '../../../ui/EmptyState';
 import { IconClock, IconOffers, IconSearch, type IconComponent } from '../../../ui/icons';
 import { ScreenSection, Stack } from '../../../ui/Layout';
 import { List, ListItem } from '../../../ui/ListItem';
+import { cuposLabel } from '../../../ui/PublicationCard';
 import { useLivePublication, useManageSession } from '../../demo/manageHooks';
 import { useDemoSession } from '../../demo/session';
 import type { DemoPublication, DemoPublicationType } from '../../demo/types';
@@ -77,7 +78,8 @@ function OrgProfile({ found }: { found: PublicOrg }) {
     const sub = (p: DemoPublication) =>
         [
             `${copy.tipo[p.tipo]} · ${p.lugar}`,
-            p.tipo === 'turno' ? copy.quedan(p.cupos.left, p.cupos.total) : null,
+            // «Quedan 3 de 8 cupos», «Queda 1 de 8 cupos» o «Cupos completos»: el mismo texto de DET-01, EXP-02 e Inicio.
+            p.tipo === 'turno' ? cuposLabel(p.cupos) : null,
         ].filter((x): x is string => x !== null);
 
     return (

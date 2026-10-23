@@ -27,7 +27,7 @@ import { DEMO_TODAY, getPublication } from '../../demo/data';
 import type { DemoEmptyState, DemoHomeBlock } from '../../demo/types';
 import { isoOf } from '../mock';
 import { profileCvPath, useHomeNavigation } from '../navigation';
-import { isCvTip, type PublishKind } from '../selectors';
+import { isCvTip, needOf, type PublishNeed } from '../selectors';
 import { JobsShortcut, ShiftCards } from './HomePublications';
 import { ProfileTipCard } from './ProfileTipCard';
 
@@ -41,12 +41,12 @@ const EMPTY_ICON: Record<NonNullable<DemoEmptyState['icono']>, IconComponent> = 
     notificaciones: IconBell,
 };
 
-/** «¿Qué necesitas?» del hogar: el ícono de la categoría y qué opción marca en PUBL-01. */
-const NEED: Record<string, { icon: IconComponent; publish: PublishKind }> = {
-    'asesor-hogar': { icon: IconJobHomeCare, publish: 'hogar' },
-    'cuidador-infantil': { icon: IconPeople, publish: 'hogar' },
-    'cuidador-adulto-mayor': { icon: IconJobHealth, publish: 'hogar' },
-    'banquetero-evento': { icon: IconJobFoodEvents, publish: 'evento' },
+/** «¿Qué necesitas?» del hogar: el ícono de la categoría (la opción y el oficio que marca, selectors.needOf). */
+const NEED_ICON: Record<string, IconComponent> = {
+    'asesor-hogar': IconJobHomeCare,
+    'cuidador-infantil': IconPeople,
+    'cuidador-adulto-mayor': IconJobHealth,
+    'banquetero-evento': IconJobFoodEvents,
 };
 
 /** Abrir en otra pestaña (Ctrl, Cmd, Mayús, rueda) sigue siendo del navegador. */
@@ -56,10 +56,10 @@ export interface PersonBlockProps {
     block: DemoHomeBlock;
     /** Abre «Verificación de …» de quien publica la tarjeta. */
     onVerify: (publicationId: string) => void;
-    /** Abre PUBL-01, con una opción marcada si viene de «¿Qué necesitas?». */
-    onPublish: (kind?: PublishKind) => void;
-    /** `href` de PUBL-01 con esa opción (el enlace también sirve abierto en otra pestaña). */
-    publishHref: (kind: PublishKind) => string;
+    /** Abre PUBL-01; desde «¿Qué necesitas?», con su opción marcada y el oficio con que parte el asistente. */
+    onPublish: (need?: PublishNeed) => void;
+    /** `href` de PUBL-01 con esa necesidad (el enlace también sirve abierto en otra pestaña). */
+    publishHref: (need: PublishNeed) => string;
 }
 
 export function PersonBlock({ block, onVerify, onPublish, publishHref }: PersonBlockProps) {
@@ -161,19 +161,19 @@ export function PersonBlock({ block, onVerify, onPublish, publishHref }: PersonB
                 <ScreenSection title={block.titulo}>
                     <OptionLinkGroup>
                         {block.opciones.map((o) => {
-                            const need = NEED[o.id] ?? { icon: IconPeople, publish: 'hogar' };
+                            const need = needOf(o.id);
                             return (
                                 <OptionLink
                                     key={o.id}
-                                    icon={need.icon}
+                                    icon={NEED_ICON[o.id] ?? IconPeople}
                                     title={o.texto}
-                                    // PUBL-01 vive en la URL como hoja (spec §5.4).
-                                    href={publishHref(need.publish)}
+                                    // PUBL-01 vive en la URL como hoja (spec §5.4), con la necesidad ya puesta.
+                                    href={publishHref(need)}
                                     aria-haspopup="dialog"
                                     onClick={(e) => {
                                         if (!plainClick(e)) return;
                                         e.preventDefault();
-                                        onPublish(need.publish);
+                                        onPublish(need);
                                     }}
                                 />
                             );

@@ -2,7 +2,7 @@
 // feed «Para ti» (INI-01: Matías, Carolina, Jorge recién registrado, Rosa sin
 // perfiles); una organización, su panel (INI-02). El AppBar (saludo,
 // selector de actor y campana) y las hojas de la pestaña viven en la URL
-// (spec §5.4): SHT-ACTOR `?sheet=actor`, PUBL-01 `?sheet=publicar&tipo=` y
+// (spec §5.4): SHT-ACTOR `?sheet=actor`, PUBL-01 `?sheet=publicar&tipo=&oficio=` y
 // «Verificación de …» `?sheet=verificacion&pub=`. Siguen montadas al cambiar
 // de actor, así «Usar Talently como» se cierra con su animación.
 import { useEffect, useMemo, useRef } from 'react';
@@ -23,7 +23,7 @@ import { PublishSheet } from '../components/PublishSheet';
 import { VerificationSheet } from '../components/VerificationSheet';
 import { publisherName } from '../mock';
 import { useHomeNavigation } from '../navigation';
-import { homeBlocks, selectedKind, wizardOf, type PublishKind, type Publisher } from '../selectors';
+import { homeBlocks, selectedKind, wizardPath, type PublishKind, type PublishNeed, type Publisher } from '../selectors';
 import { OrgHomeScreen } from './OrgHomeScreen';
 import { PersonHomeScreen } from './PersonHomeScreen';
 import '../home.css';
@@ -36,8 +36,11 @@ function canPublish(blocks: readonly DemoHomeBlock[], isOrg: boolean): boolean {
     return isOrg || blocks.some((b) => b.tipo === 'publicar' || b.tipo === 'que-necesitas');
 }
 
-/** `/inicio?sheet=publicar&tipo=hogar`: el `href` de lo que abre PUBL-01 con una opción marcada. */
-const publishPath = (kind: PublishKind) => `${paths.inicio()}?${new URLSearchParams({ sheet: 'publicar', tipo: kind })}`;
+/** PUBL-01 con la necesidad de «¿Qué necesitas?»: la opción marcada (`tipo`) y el oficio con que parte el asistente. */
+const needParams = ({ tipo, oficio }: PublishNeed): Record<string, string> => (oficio ? { tipo, oficio } : { tipo });
+
+/** `/inicio?sheet=publicar&tipo=hogar&oficio=cuidador-infantil`: el `href` de lo que abre PUBL-01 con esa necesidad. */
+const publishPath = (need: PublishNeed) => `${paths.inicio()}?${new URLSearchParams({ sheet: 'publicar', ...needParams(need) })}`;
 
 export function HomeScreen() {
     const { actor, recienRegistrado, onboarding } = useDemoSession();
@@ -63,11 +66,12 @@ export function HomeScreen() {
     const location = useLocation();
     const [, setParams] = useSearchParams();
 
-    // PUBL-01: la opción marcada vive en la URL (`tipo`), así sigue marcada al volver del asistente.
-    const publish = useSheet('publicar', ['tipo']);
+    // PUBL-01: la opción marcada vive en la URL (`tipo`), así sigue marcada al volver del asistente. Desde
+    // «¿Qué necesitas?», también el oficio con que parte el asistente (`oficio`).
+    const publish = useSheet('publicar', ['tipo', 'oficio']);
     const as: Publisher = isOrg ? 'organizacion' : 'hogar';
     const kind = selectedKind(as, publish.param('tipo'));
-    const showPublish = (next?: PublishKind) => publish.show({ tipo: next ?? selectedKind(as, null) });
+    const showPublish = (need?: PublishNeed) => publish.show(needParams(need ?? { tipo: selectedKind(as, null) }));
     const choose = (next: PublishKind) =>
         setParams(
             (prev) => {
@@ -80,7 +84,8 @@ export function HomeScreen() {
         );
     // «Continuar» apila el asistente: su atrás en el paso 1 vuelve a esta hoja (como el prototipo).
     // Al publicar, PUBL-07 vuelve a la entrada de debajo de la hoja (flowOriginState), no a la hoja.
-    const onContinue = () => go(paths.publicar(wizardOf(kind)), { state: flowOriginState() });
+    // Con el oficio de «¿Qué necesitas?» si su opción sigue marcada (`?oficio=`, selectors.wizardPath).
+    const onContinue = () => go(wizardPath(kind, publish.param('oficio')), { state: flowOriginState() });
 
     // «Publicas como …»: la organización, o el hogar de la persona («Familia en Ñuñoa», autor de su aviso).
     const aviso = blocks.find((b) => b.tipo === 'tu-aviso');

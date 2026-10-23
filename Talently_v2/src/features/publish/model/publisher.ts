@@ -6,6 +6,8 @@ import type { PublicationAuthor, PublicationVerification } from '../../../ui/Pub
 import { getManagedPublication, getOrg } from '../../demo/data';
 import type { DemoActor, DemoActorId } from '../../demo/session';
 import { identityInData, identityPendingAtStart, phoneInData, type IdentityStatus } from '../../demo/verifications';
+import { initialHogar, type HogarDraft } from './hogar';
+import { turnoTemplate, type TurnoDraft } from './turno';
 
 /** Los asistentes que existen en la URL (`paths.publicar`). */
 export type PublishTipo = 'empleo' | 'turno' | 'hogar' | 'clase' | 'servicio';
@@ -79,18 +81,79 @@ export function needsIdentity(actor: DemoActor, identity: IdentityStatus): boole
     return actor.kind === 'persona' && identity === 'pending';
 }
 
+// ─── Lo publicado que ya está en los datos (PUBL-07) ────────────────────────
+
+/** Una publicación de los datos y el borrador del que sale, tal como lo muestran los pasos del prototipo. */
+interface InData {
+    id: string;
+    draft: () => TurnoDraft | HogarDraft | undefined;
+}
+
 /**
- * La publicación de los datos que representa lo que se acaba de publicar en
- * los flujos 4 y 5 (GES-01-turno y GES-02-hogar del prototipo).
+ * Lo que se publica en los flujos 4 y 5 ya está en los datos (GES-01-turno y
+ * GES-02-hogar del prototipo): «Garzones fin de semana» sale de la plantilla
+ * de Banquetería Rosa SpA sin cambios (PUBL-03 pasos 1 a 4) y el aviso de
+ * Carolina, de los pasos de PUBL-04. Otro borrador (desde cero, otro título,
+ * otros bloques, otro sueldo) no es esa publicación.
  */
-const PUBLISHED_IN_DATA: Partial<Record<DemoActorId, Partial<Record<WizardKind, string>>>> = {
-    banqueteria: { turno: 'turno-garzones-finde' },
-    carolina: { hogar: 'aviso-asesor-hogar' },
+const PUBLISHED_IN_DATA: Partial<Record<DemoActorId, Partial<Record<WizardKind, InData>>>> = {
+    banqueteria: { turno: { id: 'turno-garzones-finde', draft: () => turnoTemplate('banqueteria')?.draft } },
+    carolina: { hogar: { id: 'aviso-asesor-hogar', draft: () => initialHogar('carolina') } },
 };
 
-/** La publicación propia que abre «Ver publicación», si existe en los datos. */
-export function publishedId(actorId: DemoActorId, kind: WizardKind): string | null {
-    const id = PUBLISHED_IN_DATA[actorId]?.[kind];
-    const managed = id ? getManagedPublication(id) : undefined;
+/** Lo que se publica de un turno: todo menos cómo empezó y el id interno de cada bloque. */
+function turnoContent(d: TurnoDraft): Record<Exclude<keyof TurnoDraft, 'kind' | 'inicio'>, unknown> {
+    return {
+        oficio: d.oficio,
+        titulo: d.titulo.trim(),
+        bloques: d.bloques
+            .map(({ fecha, desde, hasta, cupos }) => ({ fecha, desde, hasta, cupos }))
+            .sort((a, b) => (a.fecha ?? '').localeCompare(b.fecha ?? '')),
+        neto: d.neto,
+        tarifa: d.tarifa,
+        unidad: d.unidad,
+        esporadico: d.esporadico,
+        contratacion: d.contratacion,
+        vestimenta: [...d.vestimenta].sort(),
+        puntoEncuentro: d.puntoEncuentro.trim(),
+        direccion: d.direccion.trim(),
+        pideIdentidad: d.pideIdentidad,
+        notaMinima: d.notaMinima,
+        notaPostulantes: d.notaPostulantes.trim(),
+    };
+}
+
+/** Lo que se publica de un aviso del hogar (los días, el contexto y las tareas, sin importar el orden en que se marcaron). */
+function hogarContent(d: HogarDraft): Record<Exclude<keyof HogarDraft, 'kind'>, unknown> {
+    return {
+        oficio: d.oficio,
+        modalidad: d.modalidad,
+        dias: [...d.dias].sort(),
+        desde: d.desde,
+        hasta: d.hasta,
+        colacion: d.colacion,
+        contexto: [...d.contexto].sort(),
+        tareas: [...d.tareas].sort(),
+        algoMas: d.algoMas.trim(),
+        neto: d.neto,
+        sueldo: d.sueldo,
+        unidad: d.unidad,
+    };
+}
+
+const contentOf = (d: TurnoDraft | HogarDraft): string => JSON.stringify(d.kind === 'turno' ? turnoContent(d) : hogarContent(d));
+
+/**
+ * La publicación propia de los datos que representa lo que se publica con
+ * este borrador, o `null` si lo publicado no está en los datos de
+ * demostración. Con ella, «Ver publicación» abre GES-01 o GES-02 y lo
+ * publicado aparece en ACT-03, INI-02 y Explorar; sin ella, PUBL-07 solo
+ * ofrece «Ir a Inicio» (no abre otra publicación con otro título).
+ */
+export function publishedId(actorId: DemoActorId, draft: TurnoDraft | HogarDraft): string | null {
+    const inData = PUBLISHED_IN_DATA[actorId]?.[draft.kind];
+    const reference = inData?.draft();
+    if (!inData || !reference || contentOf(reference) !== contentOf(draft)) return null;
+    const managed = getManagedPublication(inData.id);
     return managed && managed.ownerId === actorId ? managed.publicationId : null;
 }

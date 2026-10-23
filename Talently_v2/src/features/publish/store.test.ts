@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { getManagedPublications } from '../demo/data';
+import { getManagedPublications, getPublications } from '../demo/data';
 import { resetManage } from '../demo/manageState';
-import { initialTurno } from './model/turno';
+import { DEMO_ACTORS } from '../demo/session';
+import { summaryOf } from './model/summary';
+import { emptyTurno, initialTurno } from './model/turno';
 import {
     awaitIdentity,
     cancelAwaitIdentity,
@@ -43,7 +45,7 @@ describe('borrador del asistente', () => {
     it('publicar termina la espera de la identidad', () => {
         awaitIdentity('carolina', 'hogar');
         expect(isAwaitingIdentity('carolina', 'hogar')).toBe(true);
-        markPublished('carolina', { kind: 'hogar', titulo: 'Asesor/a del hogar puertas afuera', hasta: null, review: true });
+        markPublished('carolina', { kind: 'hogar', titulo: 'Asesor/a del hogar puertas afuera', hasta: null, review: true, publicationId: 'aviso-asesor-hogar' });
         expect(isAwaitingIdentity('carolina', 'hogar')).toBe(false);
     });
 
@@ -52,7 +54,7 @@ describe('borrador del asistente', () => {
         cancelAwaitIdentity('carolina', 'hogar');
         expect(isAwaitingIdentity('carolina', 'hogar')).toBe(false);
         expect(getPublished('carolina', 'hogar')).toBeUndefined();
-        markPublished('carolina', { kind: 'hogar', titulo: 'Asesor/a del hogar puertas afuera', hasta: null, review: true });
+        markPublished('carolina', { kind: 'hogar', titulo: 'Asesor/a del hogar puertas afuera', hasta: null, review: true, publicationId: 'aviso-asesor-hogar' });
         expect(getPublished('carolina', 'hogar')?.review).toBe(true);
         expect(getPublished('carolina', 'turno')).toBeUndefined();
     });
@@ -64,10 +66,21 @@ describe('lo publicado existe para las otras pestañas (demo/manageState)', () =
         resetManage();
     });
 
+    const own = () => getManagedPublications('banqueteria').map((m) => m.publicationId);
+
     it('flujo 4: «Garzones fin de semana» aparece en ACT-03 recién al publicar', () => {
-        const own = () => getManagedPublications('banqueteria').map((m) => m.publicationId);
         expect(own()).not.toContain('turno-garzones-finde');
-        markPublished('banqueteria', { kind: 'turno', titulo: 'Garzones fin de semana', hasta: 'hasta el dom 20 dic', review: false });
+        markPublished('banqueteria', summaryOf(DEMO_ACTORS.banqueteria, initial));
         expect(own()).toContain('turno-garzones-finde');
+    });
+
+    it('otro turno (desde cero) no hace aparecer «Garzones fin de semana» en ACT-03 ni en Explorar', () => {
+        const otro = { ...emptyTurno('cero'), ...initial, inicio: 'cero' as const, oficio: 'bartender', titulo: 'Bartender para matrimonio' };
+        const summary = summaryOf(DEMO_ACTORS.banqueteria, otro);
+        expect(summary.publicationId).toBeNull();
+        markPublished('banqueteria', summary);
+        expect(getPublished('banqueteria', 'turno')?.titulo).toBe('Bartender para matrimonio');
+        expect(own()).not.toContain('turno-garzones-finde');
+        expect(getPublications().map((p) => p.id)).not.toContain('turno-garzones-finde');
     });
 });

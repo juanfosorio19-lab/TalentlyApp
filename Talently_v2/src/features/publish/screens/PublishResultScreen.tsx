@@ -3,11 +3,13 @@
 // al publicar (push sobre el paso 5) o desde VER-02 en el flujo 5 (replace
 // sobre VER-02): entonces termina de publicar el aviso que quedó guardado. En
 // los dos casos queda encima de una entrada del asistente ya publicado, que
-// atrás se salta (useWizard) hasta la pantalla de antes de la hoja PUBL-01. «Ver publicación» lleva a GES-01 del
-// turno o a GES-02 del aviso (los de los datos de demostración) e «Ir a
-// Inicio», a Inicio: los dos terminan el flujo (spec §5.3 regla 6) volviendo
-// de un salto a la pantalla desde la que se abrió PUBL-01, sin dejar en el
-// historial la hoja, los pasos ni VER-02 (así atrás no reabre la hoja).
+// atrás se salta (useWizard) hasta la pantalla de antes de la hoja PUBL-01.
+// «Ver publicación» lleva a GES-01 del turno o a GES-02 del aviso solo si lo
+// publicado es la publicación de los datos (la plantilla o el aviso del
+// prototipo sin cambios); si no, solo queda «Ir a Inicio». Los dos terminan
+// el flujo (spec §5.3 regla 6) volviendo de un salto a la pantalla desde la
+// que se abrió PUBL-01, sin dejar en el historial la hoja, los pasos ni
+// VER-02 (así atrás no reabre la hoja).
 // Sin nada publicado en la sesión (un enlace, una recarga, «Ahora no») no
 // dice que se publicó: vuelve al asistente, que retoma el borrador guardado.
 import { useEffect, useMemo } from 'react';
@@ -22,7 +24,7 @@ import { useDemoSession, type DemoActor } from '../../demo/session';
 import { submitIdentity } from '../../demo/sessionStore';
 import { copy } from '../copy';
 import { initialHogar } from '../model/hogar';
-import { canPublish, publishedId, type WizardKind } from '../model/publisher';
+import { canPublish, type WizardKind } from '../model/publisher';
 import { summaryOf } from '../model/summary';
 import { initialTurno } from '../model/turno';
 import {
@@ -56,7 +58,7 @@ function draftOf(kind: WizardKind, actor: DemoActor, recienRegistrado: boolean) 
 }
 
 function resultText(kind: WizardKind, actor: DemoActor, s: PublishedSummary): string {
-    if (!s.review) return copy.resultado.publicadaTurno(s.titulo);
+    if (!s.review) return s.publicationId ? copy.resultado.publicadaTurno(s.titulo) : copy.resultado.publicadaFueraDelEjemplo(s.titulo);
     if (kind === 'hogar') return copy.resultado.revisionHogar('aviso');
     return actor.kind === 'organizacion' ? copy.resultado.revisionOrg : copy.resultado.revisionHogar('turno');
 }
@@ -85,7 +87,7 @@ function PublishResult({ kind, actor }: { kind: WizardKind; actor: DemoActor }) 
     if (!published && !awaiting) return <Navigate to={paths.publicar(kind, 1)} replace />;
 
     const s = published ?? pending;
-    const id = publishedId(actor.id, kind);
+    const id = s.publicationId;
     const finish = (dest: string) => {
         if (!canOpen(dest)) {
             soon();
@@ -113,8 +115,8 @@ function PublishResult({ kind, actor }: { kind: WizardKind; actor: DemoActor }) 
                 </>
             }
             // Al terminar un flujo, su destino natural (spec §5.3 regla 6): el turno abre GES-01 y el aviso
-            // del hogar, sus postulantes (GES-02), como en el prototipo. Si lo publicado aún no existe en
-            // los datos (ACT-03 no lo mostraría), el único destino honesto es Inicio.
+            // del hogar, sus postulantes (GES-02), como en el prototipo. Si lo publicado no es la publicación
+            // de los datos (otro turno, otro aviso: ACT-03 no lo mostraría), el único destino honesto es Inicio.
             action={
                 id
                     ? {

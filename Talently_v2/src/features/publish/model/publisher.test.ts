@@ -12,7 +12,7 @@ import {
     publishedId,
 } from './publisher';
 import { summaryOf } from './summary';
-import { initialTurno } from './turno';
+import { emptyTurno, initialTurno } from './turno';
 
 describe('quién publica qué (spec §5.4)', () => {
     it('una organización publica empleos y turnos', () => {
@@ -71,25 +71,59 @@ describe('identidad al publicar (PUBL-04-identidad)', () => {
 });
 
 describe('al terminar (PUBL-07)', () => {
-    it('«Ver publicación» abre la publicación de los datos solo si es del actor', () => {
-        expect(publishedId('banqueteria', 'turno')).toBe('turno-garzones-finde');
-        expect(publishedId('carolina', 'hogar')).toBe('aviso-asesor-hogar');
-        expect(publishedId('carolina', 'turno')).toBeNull();
-        expect(publishedId('jorge', 'hogar')).toBeNull();
+    const plantilla = initialTurno('banqueteria');
+    const aviso = initialHogar('carolina');
+
+    it('«Ver publicación» abre la publicación de los datos si lo publicado es su borrador sin cambios', () => {
+        expect(publishedId('banqueteria', plantilla)).toBe('turno-garzones-finde');
+        expect(publishedId('carolina', aviso)).toBe('aviso-asesor-hogar');
+    });
+
+    it('el orden en que se marcaron las cosas o los espacios de más no la cambian', () => {
+        const [b1, b2] = plantilla.bloques;
+        if (!b1 || !b2) throw new Error('La plantilla trae dos bloques');
+        const reordenado = {
+            ...plantilla,
+            titulo: ` ${plantilla.titulo} `,
+            bloques: [{ ...b2, id: 'b9' }, { ...b1, id: 'b7' }],
+            vestimenta: [...plantilla.vestimenta].reverse(),
+        };
+        expect(publishedId('banqueteria', reordenado)).toBe('turno-garzones-finde');
+        expect(publishedId('carolina', { ...aviso, dias: [...aviso.dias].reverse(), tareas: [...aviso.tareas].reverse() })).toBe(
+            'aviso-asesor-hogar',
+        );
+    });
+
+    it('otro turno u otro aviso no abren la publicación de los datos (hallazgo: desde cero, otro título)', () => {
+        expect(publishedId('banqueteria', { ...emptyTurno('cero'), oficio: 'bartender', titulo: 'Bartender para matrimonio' })).toBeNull();
+        expect(publishedId('banqueteria', { ...plantilla, titulo: 'Garzones para cóctel' })).toBeNull();
+        expect(publishedId('banqueteria', { ...plantilla, bloques: plantilla.bloques.slice(0, 1) })).toBeNull();
+        expect(publishedId('banqueteria', { ...plantilla, tarifa: 40000 })).toBeNull();
+        expect(publishedId('banqueteria', { ...plantilla, notaPostulantes: 'Llega 30 minutos antes' })).toBeNull();
+        expect(publishedId('carolina', { ...aviso, modalidad: 'adentro' })).toBeNull();
+        expect(publishedId('carolina', { ...aviso, sueldo: 650000 })).toBeNull();
+    });
+
+    it('solo si es del actor: el turno de un hogar o el aviso de otro hogar no están en los datos', () => {
+        expect(publishedId('carolina', initialTurno('carolina'))).toBeNull();
+        expect(publishedId('jorge', initialHogar('jorge'))).toBeNull();
+        expect(publishedId('jorge', aviso)).toBeNull();
     });
 
     it('el turno de una organización verificada se publica; el aviso del hogar queda en revisión', () => {
-        expect(summaryOf(DEMO_ACTORS.banqueteria, initialTurno('banqueteria'))).toEqual({
+        expect(summaryOf(DEMO_ACTORS.banqueteria, plantilla)).toEqual({
             kind: 'turno',
             titulo: 'Garzones fin de semana',
             hasta: 'hasta el dom 20 dic',
             review: false,
+            publicationId: 'turno-garzones-finde',
         });
-        expect(summaryOf(DEMO_ACTORS.carolina, initialHogar('carolina'))).toEqual({
+        expect(summaryOf(DEMO_ACTORS.carolina, aviso)).toEqual({
             kind: 'hogar',
             titulo: 'Asesor/a del hogar puertas afuera',
             hasta: null,
             review: true,
+            publicationId: 'aviso-asesor-hogar',
         });
     });
 });
