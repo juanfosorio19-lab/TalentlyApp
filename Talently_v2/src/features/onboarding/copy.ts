@@ -241,8 +241,10 @@ export const COPY = {
         agregar: 'Agregar',
         yaEsta: 'Ya está en tu perfil',
         verEmpleos: 'Ver empleos cerca',
-        // spec §6.3, ONB-99: la acción sugerida de quien solo busca turnos.
-        verTurnos: 'Ver turnos de este fin de semana',
+        // spec §6.3, ONB-99: la acción sugerida de quien solo busca turnos es «Ver turnos de este fin de
+        // semana», pero la demostración no tiene turnos ese fin de semana (Explorar con ese filtro queda
+        // vacío; pedido en «requests»). Mientras, el texto promete solo lo que abre: los turnos cerca.
+        verTurnos: 'Ver turnos cerca',
         irInicio: 'Ir a Inicio',
         fotoTitulo: 'Tu foto',
     },

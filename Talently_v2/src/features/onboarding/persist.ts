@@ -34,8 +34,27 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
+ * Campos del borrador que pueden quedar sin elegir (null): la comuna, el
+ * oficio principal, el bloque, los montos de ONB-T3 (vacíos o «Prefiero no
+ * decir»), el archivo de la credencial… Un null guardado en ellos se respeta.
+ */
+const NULLABLES: ReadonlySet<string> = new Set([
+    'bloque',
+    'retomar',
+    'comuna',
+    'foto',
+    'principal',
+    'desde',
+    'radio',
+    'sueldo',
+    'tarifa',
+    'sistema',
+    'archivo',
+]);
+
+/**
  * Copia de `raw` solo los campos que existen en `base` y tienen su mismo tipo
- * (un texto puede quedar en null y al revés; los objetos se revisan por
+ * (o null, si el campo puede quedar sin elegir; los objetos se revisan por
  * dentro). Lo que falta o no calza queda como en `base`.
  */
 function mezclar<T>(base: T, raw: unknown): T {
@@ -44,13 +63,15 @@ function mezclar<T>(base: T, raw: unknown): T {
     for (const [key, actual] of Object.entries(base)) {
         if (!(key in raw)) continue;
         const valor = raw[key];
-        if (Array.isArray(actual)) {
+        if (valor === null) {
+            if (actual === null || NULLABLES.has(key)) out[key] = null;
+        } else if (Array.isArray(actual)) {
             if (Array.isArray(valor)) out[key] = valor;
         } else if (isRecord(actual)) {
             out[key] = mezclar(actual, valor);
-        } else if (actual === null || typeof actual === 'string') {
-            // Campos que pueden no estar elegidos (comuna, oficio principal, bloque…).
-            if (valor === null || typeof valor === 'string' || (actual === null && isRecord(valor))) out[key] = valor;
+        } else if (actual === null) {
+            // Sin valor de partida (bloque, retomar, archivo): un texto o un objeto.
+            if (typeof valor === 'string' || isRecord(valor)) out[key] = valor;
         } else if (typeof valor === typeof actual) {
             out[key] = valor;
         }

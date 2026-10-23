@@ -4,6 +4,16 @@ import { useCallback, useEffect, useLayoutEffect, useRef, type RefObject } from 
 import type { UrlSheet } from '../../app/sheets';
 
 /**
+ * El foco no está en la pantalla: en <body>, en algo que ya salió del DOM o
+ * dentro de la capa que está saliendo (queda `inert` y el navegador lo suelta
+ * al body en el cuadro siguiente).
+ */
+function focusLost(): boolean {
+    const active = document.activeElement;
+    return !active || active === document.body || !active.isConnected || active.closest('[inert]') !== null;
+}
+
+/**
  * Las hojas y el Dialog de la conversación viven en la URL (?sheet=…), de a
  * una. `after(sheet, action)` cierra la que está abierta y corre `action`
  * recién cuando ya cerró: así la siguiente (Adjuntar → certificado, ⋯ →
@@ -12,8 +22,9 @@ import type { UrlSheet } from '../../app/sheets';
  * conversación → siguiente hoja).
  *
  * `current` es el nombre de la capa abierta (o `null`). Al cerrarse todas, si
- * el foco quedó en <body> (la hoja se abrió desde un enlace y nadie la abrió
- * en pantalla), pasa a `fallback(laQueCerró)`, un control que sigue ahí.
+ * el foco no volvió a la pantalla (la hoja se abrió desde un enlace y nadie la
+ * abrió en pantalla; el AppBar del chat no tiene un h1 al que volver), pasa a
+ * `fallback(laQueCerró)`, un control que sigue ahí.
  */
 export function useLayerSequence(current: string | null, fallback: (closed: string) => HTMLElement | null) {
     const pending = useRef<(() => void) | null>(null);
@@ -28,8 +39,7 @@ export function useLayerSequence(current: string | null, fallback: (closed: stri
         const closed = current === null ? previous.current : null;
         previous.current = current;
         if (closed === null) return;
-        const active = document.activeElement;
-        if (!active || active === document.body) fallbackRef.current(closed)?.focus({ preventScroll: true });
+        if (focusLost()) fallbackRef.current(closed)?.focus({ preventScroll: true });
         const run = pending.current;
         pending.current = null;
         run?.();
