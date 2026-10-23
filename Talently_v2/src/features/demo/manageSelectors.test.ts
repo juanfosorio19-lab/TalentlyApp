@@ -293,9 +293,9 @@ describe('INI-02 al día con la sesión (orgDashboardView)', () => {
     const kpi = (id: string) => orgDashboardView(panel(), getManageState(), apps()).kpis.find((k) => k.id === id)?.valor;
     const atencion = () => orgDashboardView(panel(), getManageState(), apps()).atencion.map((a) => a.texto);
 
-    it('al empezar dice lo mismo que el prototipo, salvo «Turnos de la semana» (sale de los cupos de la demo)', () => {
+    it('al empezar dice lo mismo que el prototipo («Turnos de la semana» sale de los cupos de la demo)', () => {
         expect(kpi('postulantes')).toBe('12');
-        expect(kpi('turnos')).toBe('1/3 cubiertos');
+        expect(kpi('turnos')).toBe('4/6 cubiertos');
         expect(kpi('conversaciones')).toBe('3');
         expect(atencion()).toEqual(panel().atencion.map((a) => a.texto));
         expect(orgDashboardView(panel(), getManageState(), apps()).atencion[0]?.detalle).toBe('Empieza en 23 h');
@@ -307,7 +307,7 @@ describe('INI-02 al día con la sesión (orgDashboardView)', () => {
         expect(kpi('postulantes')).toBe('11');
         confirmPeople('turno-garzones-almuerzo', 'almuerzo-vie-11', ['sebastian-perez']);
         expect(atencion()).not.toContain('Turno vie 11 dic · 12:00: falta 1 garzón');
-        expect(kpi('turnos')).toBe('2/3 cubiertos');
+        expect(kpi('turnos')).toBe('5/6 cubiertos');
     });
 
     it('revisar en GES-02 y evaluar en GES-04 descuentan sus pendientes', () => {

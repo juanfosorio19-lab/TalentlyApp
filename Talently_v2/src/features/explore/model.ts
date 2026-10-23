@@ -215,11 +215,14 @@ function verificationsOf(verificaciones: readonly DemoVerification[], onVerify: 
     return verificaciones.map((v) => ({ status: v.status, label: v.label, onClick: () => onVerify() }));
 }
 
+/** «3 a 5 años de experiencia»: va con el reloj (EXP-01); credenciales y certificados, con el documento. */
+const isExperience = (texto: string) => /experiencia/i.test(texto);
+
 /** Requisitos del deck: el requisito y, debajo, su estado para quien mira. */
 function requirementsOf(p: DemoPublication): PublicationRequirement[] {
     const out: PublicationRequirement[] = [];
     for (const r of p.detalle.requisitos) {
-        out.push({ label: r.texto, required: r.obligatoria });
+        out.push({ label: r.texto, required: r.obligatoria, ...(isExperience(r.texto) && { icon: IconClock }) });
         if (r.paraTi) out.push({ label: r.paraTi.texto, met: r.paraTi.cumple });
     }
     return out;

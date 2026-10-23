@@ -5,6 +5,7 @@ import {
     IconCalendar,
     IconClock,
     IconDocument,
+    IconHome,
     IconLocation,
     IconOffers,
     IconPeople,
@@ -31,7 +32,9 @@ export type InfoTagKind =
     /** Distancia, comuna o cobertura: IconLocation. */
     | 'lugar'
     /** Experiencia pedida (tarjeta del deck: «5 a 10 años de experiencia»): IconOffers. */
-    | 'experiencia';
+    | 'experiencia'
+    /** Tipo de trabajo en un hogar («Puertas adentro», «Puertas afuera», «Por días»): IconHome (PUBL-04 paso 4). */
+    | 'tipo-hogar';
 
 const KIND_ICON: Record<InfoTagKind, IconComponent> = {
     jornada: IconClock,
@@ -42,6 +45,7 @@ const KIND_ICON: Record<InfoTagKind, IconComponent> = {
     cupos: IconPeople,
     lugar: IconLocation,
     experiencia: IconOffers,
+    'tipo-hogar': IconHome,
 };
 
 export interface InfoTagProps extends Omit<ComponentPropsWithRef<'li'>, 'children'> {

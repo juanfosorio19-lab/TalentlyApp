@@ -1,6 +1,6 @@
 import type { DemoModule } from '../catalog/types';
 import { DemoFrame, DemoLabel, DemoSection } from '../catalog/demo';
-import { IconCalendar, IconChat, IconLocation } from '../icons';
+import { IconCalendar, IconChat, IconLocation, IconPeople } from '../icons';
 import { EmptyState } from './EmptyState';
 
 /** Estado que el componente no tiene, con su motivo (como en el sistema de diseño). */
@@ -15,7 +15,7 @@ function NotApplicable({ children }: { children: string }) {
 const demo: DemoModule = {
     name: 'EmptyState',
     group: 'Avisos y estados',
-    summary: 'Lista o pantalla sin nada que mostrar: ícono del set en un círculo de 72, título, por qué y una acción real (Button tonal) o una sugerencia útil.',
+    summary: 'Lista o pantalla sin nada que mostrar: ícono del set en un círculo de 72, título, por qué y una acción real (Button tonal; primary si es la única acción de la pantalla) o una sugerencia útil.',
     Demo: () => (
         <>
             <DemoSection title="Explorar · Turnos, sin resultados en la comuna elegida">
@@ -35,6 +35,17 @@ const demo: DemoModule = {
                         title="Aún no tienes conversaciones"
                         text="Cuando postules o tomes un turno, aquí podrás hablar con quien publica."
                         action={{ label: 'Explorar turnos' }}
+                    />
+                </DemoFrame>
+            </DemoSection>
+            <DemoSection title="Inicio sin perfiles · única acción de la pantalla (h2 y primary, INI-01-rosa)">
+                <DemoFrame>
+                    <EmptyState
+                        icon={IconPeople}
+                        headingLevel={2}
+                        title="Aún no tienes perfiles"
+                        text="Agrega uno para buscar trabajo o contratar para tu hogar. Tus publicaciones siguen en Banquetería Rosa SpA."
+                        action={{ label: 'Agregar un perfil', variant: 'primary' }}
                     />
                 </DemoFrame>
             </DemoSection>

@@ -210,12 +210,19 @@ export function PersonBlock({ block, onVerify, onPublish, publishHref }: PersonB
 
         case 'vacio': {
             const { estado } = block;
+            // INI-01-jorge-nuevo e INI-01-rosa: justo bajo el H1 («Hola, Jorge»), `h2.tl-empty__title.h3`, y la
+            // única acción de la pantalla en primary («Ver empleos cerca», «Agregar un perfil»).
             return (
                 <EmptyState
                     icon={EMPTY_ICON[estado.icono ?? 'agregar']}
+                    headingLevel={2}
                     title={estado.titulo}
                     text={estado.texto}
-                    action={estado.accion ? { label: estado.accion, onClick: () => openTarget(estado.destino) } : undefined}
+                    action={
+                        estado.accion
+                            ? { label: estado.accion, onClick: () => openTarget(estado.destino), variant: 'primary' }
+                            : undefined
+                    }
                 />
             );
         }

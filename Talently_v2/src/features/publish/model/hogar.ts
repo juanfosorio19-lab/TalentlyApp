@@ -273,7 +273,8 @@ export function hogarTags(d: HogarDraft): PublicationTag[] {
     const tags: PublicationTag[] = [];
     if (d.dias.length) tags.push({ kind: 'fecha', label: `${diasText(d.dias)} · ${d.desde}–${d.hasta}` });
     const m = MODALIDADES.find((x) => x.value === d.modalidad);
-    if (m) tags.push({ kind: 'modalidad', label: m.tag });
+    // «Puertas afuera» lleva la casa (PUBL-04-paso4), no el pin de la modalidad de una clase.
+    if (m) tags.push({ kind: 'tipo-hogar', label: m.tag });
     return tags;
 }
 

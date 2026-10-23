@@ -464,12 +464,14 @@ function AppliedPanel({ view, onConfirm, onConfirmFavorites, onInvite }: Applied
         }
         const vacio = view.roster.vacio;
         return (
+            // GES-04-sin-postulados: `h2.tl-empty__title.h3` y la única acción de la pantalla en primary.
             <EmptyState
                 className="manage-empty"
                 icon={IconPeople}
+                headingLevel={2}
                 title={vacio?.titulo ?? copy.shift.noAppliedTitle}
                 text={vacio?.texto ?? copy.shift.noAppliedText}
-                action={{ label: vacio?.accion ?? copy.shift.inviteFavorites, onClick: onInvite }}
+                action={{ label: vacio?.accion ?? copy.shift.inviteFavorites, onClick: onInvite, variant: 'primary' }}
             />
         );
     }

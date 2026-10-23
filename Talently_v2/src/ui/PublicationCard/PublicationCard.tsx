@@ -1,6 +1,6 @@
 import type { ComponentPropsWithRef, MouseEventHandler } from 'react';
 import { cx } from '../cx';
-import { IconCheck, IconClose, IconDocument, IconInfo, IconLike, IconLocation, IconPeople } from '../icons';
+import { IconCheck, IconClose, IconDocument, IconInfo, IconLike, IconLocation, IconPeople, type IconComponent } from '../icons';
 import { Amount, type AmountFormatOptions } from '../Amount';
 import { Avatar, type AvatarKind } from '../Avatar';
 import { Badge } from '../Badge';
@@ -56,6 +56,11 @@ export interface PublicationRequirement {
     met?: boolean;
     /** Badge warning «Obligatoria» al lado. */
     required?: boolean;
+    /**
+     * Ícono del requisito sin cumplir: IconDocument por defecto (credenciales y
+     * certificados); IconClock para la experiencia («3 a 5 años de experiencia», EXP-01).
+     */
+    icon?: IconComponent;
 }
 
 /** La acción de la tarjeta: Button tonal. Empleo no lleva (se postula desde DET-01). */
@@ -249,11 +254,11 @@ export function PublicationCard({
                 <div className="tl-pub__reqs">
                     <p className="overline">Requisitos</p>
                     <ul className="tl-pub__facts">
-                        {requirements.map((r) => (
-                            <li key={r.label} className={cx('tl-pub__fact', r.met && 'tl-pub__fact--ok')}>
-                                {r.met ? <IconCheck /> : <IconDocument />}
-                                <span>{r.label}</span>
-                                {r.required && <Badge status="Obligatoria" />}
+                        {requirements.map(({ label, met, required, icon: Icon = IconDocument }) => (
+                            <li key={label} className={cx('tl-pub__fact', met && 'tl-pub__fact--ok')}>
+                                {met ? <IconCheck /> : <Icon />}
+                                <span>{label}</span>
+                                {required && <Badge status="Obligatoria" />}
                             </li>
                         ))}
                     </ul>

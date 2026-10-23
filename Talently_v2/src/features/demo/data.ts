@@ -504,6 +504,56 @@ export const DEMO_PUBLICATIONS: DemoPublication[] = [
             aviso: AVISO_TURNO,
         },
     },
+    // no está en el prototipo: tres turnos de esta semana con los cupos completos. Con el cóctel de hoy, el
+    // almuerzo y el matrimonio suman los 6 bloques de «Turnos de la semana · 4/6 cubiertos» de INI-02.
+    {
+        id: 'turno-guardia-eventos-11dic', tipo: 'turno', titulo: 'Guardia de eventos', oficio: 'Guardia de eventos',
+        autor: autorOrg(ORGS.banqueteria),
+        tags: [{ kind: 'fecha', text: 'vie 11 dic · 19:00–01:00 (6 h)' }],
+        monto: liquidos(40000, 'turno'), cupos: { left: 0, total: 2 }, lugar: 'San Miguel', estado: 'Activa',
+        bloques: [{ id: 'guardia-vie-11', weekday: 'vie', day: 11, month: 'dic', time: '19:00–01:00', duration: '6 h', cupos: { left: 0, total: 2 } }],
+        detalle: {
+            subtitulo: 'Cena de empresa en San Miguel',
+            contratacion: BOLETA,
+            filasTitulo: 'Detalle del turno',
+            filas: [
+                { label: 'Punto de encuentro', value: 'Metro San Miguel · la dirección exacta se muestra al confirmar' },
+                { label: 'Vestimenta', value: 'Traje oscuro y zapatos negros' },
+            ],
+            requisitos: [{ texto: 'Credencial SPD (ex OS-10)', obligatoria: true }],
+            aviso: AVISO_TURNO,
+        },
+    },
+    {
+        id: 'turno-garzones-coctel-aniversario', tipo: 'turno', titulo: 'Garzones para cóctel de aniversario', oficio: 'Garzón',
+        autor: autorOrg(ORGS.banqueteria),
+        tags: [{ kind: 'fecha', text: 'sáb 12 dic · 12:00–16:00 (4 h)' }],
+        monto: liquidos(30000, 'turno'), cupos: { left: 0, total: 4 }, lugar: 'Ñuñoa', estado: 'Activa',
+        bloques: [{ id: 'aniversario-sab-12', weekday: 'sáb', day: 12, month: 'dic', time: '12:00–16:00', duration: '4 h', cupos: { left: 0, total: 4 } }],
+        detalle: {
+            subtitulo: 'Oficinas en Ñuñoa',
+            contratacion: BOLETA,
+            filasTitulo: 'Detalle del turno',
+            filas: [{ label: 'Punto de encuentro', value: 'Metro Irarrázaval · la dirección exacta se muestra al confirmar' }, VESTIMENTA_GARZON],
+            requisitos: [{ texto: 'Nota mínima 4,5' }],
+            aviso: AVISO_TURNO,
+        },
+    },
+    {
+        id: 'turno-garzones-coctel-inauguracion', tipo: 'turno', titulo: 'Garzones para cóctel de inauguración', oficio: 'Garzón',
+        autor: autorOrg(ORGS.banqueteria),
+        tags: [{ kind: 'fecha', text: 'dom 13 dic · 19:00–23:00 (4 h)' }],
+        monto: liquidos(30000, 'turno'), cupos: { left: 0, total: 4 }, lugar: 'Santiago', estado: 'Activa',
+        bloques: [{ id: 'inauguracion-dom-13', weekday: 'dom', day: 13, month: 'dic', time: '19:00–23:00', duration: '4 h', cupos: { left: 0, total: 4 } }],
+        detalle: {
+            subtitulo: 'Galería de arte en Santiago',
+            contratacion: BOLETA,
+            filasTitulo: 'Detalle del turno',
+            filas: [{ label: 'Punto de encuentro', value: 'Metro Bellas Artes · la dirección exacta se muestra al confirmar' }, VESTIMENTA_GARZON],
+            requisitos: [{ texto: 'Nota mínima 4,5' }],
+            aviso: AVISO_TURNO,
+        },
+    },
     {
         // Flujo 4: PUBL-03 (pasos 1 a 4), PUBL-07, GES-01 y GES-04.
         id: 'turno-garzones-finde', tipo: 'turno', titulo: 'Garzones fin de semana', oficio: 'Garzón',
@@ -857,8 +907,8 @@ export const DEMO_PUBLICATIONS: DemoPublication[] = [
         autor: autorOrg(ORGS.familiaNunoa),
         tags: [
             { kind: 'fecha', text: 'Lun a vie · 09:00–18:00' },
-            // En el prototipo lleva un ícono de casa; InfoTag no tiene ese tipo de dato.
-            { kind: 'modalidad', text: 'Puertas afuera' },
+            // Con la casa, como en el prototipo (InfoTag `tipo-hogar`).
+            { kind: 'tipo-hogar', text: 'Puertas afuera' },
         ],
         monto: liquidos(600000, 'mes'), lugar: 'Ñuñoa', estado: 'Activa',
         detalle: {
@@ -1476,6 +1526,22 @@ export const DEMO_AGENDA: DemoAgendaEvent[] = [
         titulo: 'Turno · Garzones', detalle: 'Garzones para almuerzo de empresa · Vitacura', estado: 'Activa', tipo: 'turno',
         destino: { pantalla: 'cupos', publicationId: 'turno-garzones-almuerzo', bloqueId: 'almuerzo-vie-11' },
     },
+    // no está en el prototipo: los tres turnos de la semana con los cupos completos (INI-02 · 4/6 cubiertos).
+    {
+        id: 'ag-br-guardia-vie', viewerId: 'banqueteria', fecha: 'vie 11 dic', esHoy: false, inicio: '19:00', fin: '01:00',
+        titulo: 'Turno · Guardia de eventos', detalle: 'Guardia de eventos · San Miguel', estado: 'Cupos completos', tipo: 'turno',
+        destino: { pantalla: 'cupos', publicationId: 'turno-guardia-eventos-11dic', bloqueId: 'guardia-vie-11' },
+    },
+    {
+        id: 'ag-br-aniversario', viewerId: 'banqueteria', fecha: 'sáb 12 dic', esHoy: false, inicio: '12:00', fin: '16:00',
+        titulo: 'Turno · Garzones', detalle: 'Garzones para cóctel de aniversario · Ñuñoa', estado: 'Cupos completos', tipo: 'turno',
+        destino: { pantalla: 'cupos', publicationId: 'turno-garzones-coctel-aniversario', bloqueId: 'aniversario-sab-12' },
+    },
+    {
+        id: 'ag-br-inauguracion', viewerId: 'banqueteria', fecha: 'dom 13 dic', esHoy: false, inicio: '19:00', fin: '23:00',
+        titulo: 'Turno · Garzones', detalle: 'Garzones para cóctel de inauguración · Santiago', estado: 'Cupos completos', tipo: 'turno',
+        destino: { pantalla: 'cupos', publicationId: 'turno-garzones-coctel-inauguracion', bloqueId: 'inauguracion-dom-13' },
+    },
     {
         id: 'ag-br-matrimonio', viewerId: 'banqueteria', fecha: 'sáb 12 dic', esHoy: false, inicio: '18:00', fin: '00:00',
         titulo: 'Turno · Garzones', detalle: 'Garzones para matrimonio · Las Condes', estado: 'Activa', tipo: 'turno',
@@ -1613,6 +1679,57 @@ export const DEMO_MANAGED_PUBLICATIONS: DemoManagedPublication[] = [
             },
         ],
     },
+    // no está en el prototipo: los tres turnos de la semana con los cupos completos. Con el cóctel de hoy (6/6),
+    // el almuerzo (4/6) y el matrimonio (5/8) dan «Turnos de la semana · 4/6 cubiertos», como INI-02.
+    {
+        publicationId: 'turno-guardia-eventos-11dic', ownerId: 'banqueteria', titulo: 'Guardia de eventos',
+        resumen: 'Turno · vie 11 dic · San Miguel', estado: 'Activa', vigencia: 'Publicada el 4 dic · hasta el vie 11 dic',
+        metricas: [
+            { label: 'Vistas', valor: '48' },
+            { label: 'Confirmados', valor: '2/2' },
+        ],
+        nota: 'Un turno vence con su fecha: no se renueva.',
+        cupos: [
+            {
+                id: 'guardia-vie-11', titulo: 'Guardia de eventos · vie 11 dic', subtitulo: 'Guardia de eventos · 19:00–01:00 · San Miguel',
+                total: 2, confirmados: [aplicante(PERSONS.hector), aplicante(PERSONS.paola)], postulados: [], listaEspera: [],
+            },
+        ],
+    },
+    {
+        publicationId: 'turno-garzones-coctel-aniversario', ownerId: 'banqueteria', titulo: 'Garzones para cóctel de aniversario',
+        resumen: 'Turno · sáb 12 dic · Ñuñoa', estado: 'Activa', vigencia: 'Publicada el 3 dic · hasta el sáb 12 dic',
+        metricas: [
+            { label: 'Vistas', valor: '72' },
+            { label: 'Confirmados', valor: '4/4' },
+        ],
+        nota: 'Un turno vence con su fecha: no se renueva.',
+        cupos: [
+            {
+                id: 'aniversario-sab-12', titulo: 'Garzones · sáb 12 dic', subtitulo: 'Garzones para cóctel de aniversario · 12:00–16:00 · Ñuñoa',
+                total: 4,
+                confirmados: [aplicante(PERSONS.martin), aplicante(PERSONS.fernanda), aplicante(PERSONS.nicolas), aplicante(PERSONS.antonia)],
+                postulados: [], listaEspera: [],
+            },
+        ],
+    },
+    {
+        publicationId: 'turno-garzones-coctel-inauguracion', ownerId: 'banqueteria', titulo: 'Garzones para cóctel de inauguración',
+        resumen: 'Turno · dom 13 dic · Santiago', estado: 'Activa', vigencia: 'Publicada el 5 dic · hasta el dom 13 dic',
+        metricas: [
+            { label: 'Vistas', valor: '85' },
+            { label: 'Confirmados', valor: '4/4' },
+        ],
+        nota: 'Un turno vence con su fecha: no se renueva.',
+        cupos: [
+            {
+                id: 'inauguracion-dom-13', titulo: 'Garzones · dom 13 dic', subtitulo: 'Garzones para cóctel de inauguración · 19:00–23:00 · Santiago',
+                total: 4,
+                confirmados: [aplicante(PERSONS.javiera), aplicante(PERSONS.felipe), aplicante(PERSONS.daniela), aplicante(PERSONS.sebastian)],
+                postulados: [], listaEspera: [],
+            },
+        ],
+    },
     {
         // no está en el prototipo: el turno donde Jorge quedó en lista de espera.
         publicationId: 'turno-guardia-eventos-19dic', ownerId: 'banqueteria', titulo: 'Guardia de eventos',
@@ -1728,7 +1845,10 @@ export const DEMO_ORG_DASHBOARDS: DemoOrgDashboard[] = [
             'turno-garzones-finde',
             'turno-garzones-coctel-corporativo',
             'turno-garzones-almuerzo',
+            'turno-guardia-eventos-11dic', // no está en el prototipo
+            'turno-garzones-coctel-aniversario', // no está en el prototipo
             'turno-garzones-matrimonio',
+            'turno-garzones-coctel-inauguracion', // no está en el prototipo
             'turno-guardia-eventos-19dic',
             'empleo-bartender',
             'turno-garzones-finde-5dic',
@@ -2175,7 +2295,7 @@ function bloquesInicio(actorId: DemoActorId): DemoHomeBlock[] {
                     tipo: 'completar',
                     aviso: {
                         titulo: 'Agrega tu curso de manipulación de alimentos para destacar', badge: 'Recomendado',
-                        texto: 'Algunas organizaciones lo piden para turnos con comida.', accion: 'Subir curso', destino: { pantalla: 'perfil' },
+                        texto: 'Algunas organizaciones lo piden para turnos con comida.', accion: 'Subir curso', destino: { pantalla: 'verificacion' },
                     },
                 },
             ];

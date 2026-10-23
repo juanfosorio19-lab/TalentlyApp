@@ -64,6 +64,11 @@ export interface UploadActionsProps extends Omit<ComponentPropsWithRef<'div'>, '
     multiple?: boolean;
     /** «Tomar foto» (o «Tomar selfie»). */
     takeLabel?: string;
+    /**
+     * Con «Tomar foto» (por defecto, sí). Sin él cuando el campo no acepta
+     * imágenes (un CV solo en PDF): la cámara nunca podría servir.
+     */
+    take?: boolean;
     /** «Elegir de la galería», o «Elegir archivo» para documentos (pueden ser PDF). */
     chooseLabel?: string;
     /** Con ícono de cámara y de subir (documento). */
@@ -82,6 +87,7 @@ export function UploadActions({
     capture = 'environment',
     multiple,
     takeLabel = 'Tomar foto',
+    take = true,
     chooseLabel = 'Elegir de la galería',
     icons,
     disabled,
@@ -92,13 +98,15 @@ export function UploadActions({
     const chooseRef = useRef<HTMLInputElement>(null);
     return (
         <div className={cx('tl-upload-actions', className)} {...rest}>
-            <Button variant="outline" icon={icons ? IconCamera : undefined} disabled={disabled} onClick={() => takeRef.current?.click()}>
-                {takeLabel}
-            </Button>
+            {take && (
+                <Button variant="outline" icon={icons ? IconCamera : undefined} disabled={disabled} onClick={() => takeRef.current?.click()}>
+                    {takeLabel}
+                </Button>
+            )}
             <Button variant="outline" icon={icons ? IconUpload : undefined} disabled={disabled} onClick={() => chooseRef.current?.click()}>
                 {chooseLabel}
             </Button>
-            <HiddenFileInput ref={takeRef} accept="image/*" capture={capture} onSelect={onSelect} />
+            {take && <HiddenFileInput ref={takeRef} accept="image/*" capture={capture} onSelect={onSelect} />}
             <HiddenFileInput ref={chooseRef} accept={accept} multiple={multiple} onSelect={onSelect} />
         </div>
     );
@@ -295,7 +303,8 @@ function DocumentUploader({
                         </span>
                     )}
                 </div>
-                <UploadActions onSelect={onSelect} accept={accept} chooseLabel="Elegir archivo" icons />
+                {/* «Tomar foto» solo si el campo admite imágenes: con `application/pdf` (el CV de DET-02), solo «Elegir archivo». */}
+                <UploadActions onSelect={onSelect} accept={accept} take={/image/.test(accept)} chooseLabel="Elegir archivo" icons />
             </div>
         );
     }

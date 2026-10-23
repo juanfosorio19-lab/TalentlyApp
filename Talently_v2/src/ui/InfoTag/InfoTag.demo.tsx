@@ -53,6 +53,13 @@ const demo: DemoModule = {
                             <InfoTag kind="modalidad">Presencial</InfoTag>
                         </InfoTags>
                     </DemoItem>
+                    <DemoItem label="Tipo de trabajo en un hogar · IconHome">
+                        <InfoTags>
+                            <InfoTag kind="tipo-hogar">Puertas adentro</InfoTag>
+                            <InfoTag kind="tipo-hogar">Puertas afuera</InfoTag>
+                            <InfoTag kind="tipo-hogar">Por días</InfoTag>
+                        </InfoTags>
+                    </DemoItem>
                     <DemoItem label="Clase de prueba · IconBook">
                         <InfoTags>
                             <InfoTag kind="prueba">Clase de prueba gratis</InfoTag>
