@@ -66,6 +66,17 @@ oscuro, y actualiza bundle.css, el README del componente y decisiones.md».
 - **Nombre en la tarjeta de Personas sugeridas**: no hay clase para el nombre 16/24 600.
 - **Etiquetas de estado de los prototipos**: «Verificado» (success) y «Principal» (primary) aparecen en los prototipos pero no en el diccionario de Badge del README (ya están en el diccionario del código).
 
+## Contradicciones del prototipo (para decidir con Claude Design o el dueño)
+
+Al recorrer los flujos de punta a punta en la app aparecieron pantallas aprobadas que se contradicen entre sí. En código se eligió una lectura y se dejó anotada; conviene corregir el prototipo o decidir.
+
+- **PUBL-07 «En revisión» frente a «Activa» (flujo 5).** PUBL-07-aviso-hogar dice que el aviso queda «En revisión… Te avisaremos cuando esté publicado», pero GES-02-hogar e INI-01-carolina lo muestran activo con 9 postulantes. La app muestra PUBL-07 como el prototipo y después el aviso activo de los datos.
+- **DET-01 «Identidad verificada · Obligatoria» (flujo 2).** DET-01-turno lista la identidad verificada como requisito obligatorio del turno, pero la spec §10.1 pide solo el nivel 0 (teléfono) para postular y el flujo 2 postula sin verificar identidad. La pantalla `DET-01-identidad` que lo resolvería no viene en el paquete.
+- **PRC-01-hogar y el chat con Marta (flujo 5).** PRC-01-hogar muestra «Entrevista · vie 11 dic · 10:00» y «Contratado», pero el chat de las 11:02 dice que la entrevista todavía se va a coordinar. La app deja la entrevista «por coordinar» (coherente con el chat) y «Marcar como contratada» la marca hoy; la fila de la entrevista de la captura no aparece.
+- **Marta en GES-02 («En proceso») frente a PRC-01-hogar («Contratado»).** Dos momentos del mismo flujo; la app parte en «En proceso» y deja marcarla contratada.
+- **INI-02 «Turnos de la semana 4/6».** Los datos del prototipo solo tienen 3 turnos esa semana; la cifra se calcula de los turnos reales (no se inventaron 3 más para igualarla).
+- **Turno que Rosa publica en el flujo 4.** «Garzones fin de semana» aparece en otras pantallas del prototipo como si ya existiera; la app lo hace existir recién al publicarlo en PUBL-07.
+
 ## Fuera del alcance de la app móvil
 
 - FlaggedText y los componentes del backoffice web (WebShell, SideNav, DataTable, ReviewPanel) son de `admin.talently.app` (M11) y no se construyen en esta app.

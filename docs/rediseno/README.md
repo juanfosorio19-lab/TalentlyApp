@@ -24,15 +24,26 @@ El rediseño se construye en `Talently_v2`, aislado de la app actual (ADR-16 y A
 - `src/app`: rutas en español, navegación de 5 pestañas, botón atrás de Android y tema.
 - `src/features`: pantallas por módulo; mientras Supabase está pausado usan los datos de demostración de `src/features/demo` (tomados de los prototipos).
 
-Para verlo: `cd Talently_v2 && npm run dev` y abrir:
+**Estado (23 de octubre de 2026).** Los 10 flujos del prototipo F1 funcionan de punta a punta con datos de demostración, en claro y oscuro: 63 componentes del sistema de diseño, 13 módulos de pantallas (Inicio, Explorar, Actividad, Mensajes, Perfil, detalle de publicación, gestionar publicación, procesos y reseñas, verificación, publicar, bienvenida y onboarding, legales y perfiles públicos) y 558 pruebas. Lo que el sistema de diseño no cubre y las contradicciones del prototipo están en [diseno/BRECHAS.md](diseno/BRECHAS.md). Falta: el flujo 6 de clases (F2), conectar Supabase cuando vuelva (PENDIENTES #9) y el texto legal real (PENDIENTES #2).
 
-| Qué | Dirección |
+Para verlo: `cd Talently_v2 && npm run dev` y abrir `http://localhost:5173/v3.html?demo=<actor>#<ruta>`:
+
+| Flujo del prototipo | Dirección para empezar |
 |---|---|
-| La app como Matías (turnos) | `http://localhost:5173/v3.html?demo=matias#/inicio` |
-| Otros actores | `?demo=jorge`, `pedro`, `carolina`, `rosa` o `banqueteria` |
-| Catálogo de componentes (claro y oscuro) | `http://localhost:5173/v3.html#/dev/ui` |
+| 1 · Onboarding de Jorge | `v3.html#/bienvenida` → «Crear cuenta» |
+| 2 · Matías toma un turno | `v3.html?demo=matias#/inicio` |
+| 3 · Pedro postula y hace match | `v3.html?demo=pedro#/explorar?tipo=empleo` |
+| 4 · Rosa publica un turno | `v3.html?demo=banqueteria#/inicio` → «Publicar» |
+| 5 · Carolina publica su aviso | `v3.html?demo=carolina#/inicio` → «Publicar» |
+| 7 · Cambio de actor | `v3.html?demo=banqueteria#/inicio` → chip de actor |
+| 8 · Perfil y configuración | `v3.html?demo=jorge#/perfil` → rueda → «Cerrar sesión» |
+| 9 · Botón atrás | `v3.html?demo=matias#/explorar?tipo=turno` (en el teléfono, el atrás de Android) |
+| 10 · Marta comparte su certificado | `v3.html?demo=marta#/mensajes` |
+| 11 · Impulsa tu perfil | `v3.html?demo=jorge#/perfil` (al final) |
+| Jorge recién registrado | `v3.html?demo=jorge&nuevo=1#/inicio` |
+| Catálogo de componentes (solo desarrollo) | `v3.html#/dev/ui` |
 
-Comandos: `npm run typecheck`, `npm test`, `npm run lint`, `npm run ds:sync` (incorpora una entrega nueva de Claude Design).
+Comandos: `npm run typecheck`, `npm test`, `npm run lint`, `npm run build`, `npm run ds:sync` (incorpora una entrega nueva de Claude Design).
 
 ### Anexos: estado actual
 
