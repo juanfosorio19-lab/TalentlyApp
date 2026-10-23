@@ -151,6 +151,7 @@ export function JobsStep() {
                                             searchable={false}
                                             error={intentado && elegido.experiencia === null ? C.errExperiencia : undefined}
                                             // La hoja vive en la URL (`?sheet=experiencia`): la propia del Select no se abre.
+                                            aria-expanded={expOficio?.id === elegido.id}
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 expSheet.show({ oficio: elegido.id });

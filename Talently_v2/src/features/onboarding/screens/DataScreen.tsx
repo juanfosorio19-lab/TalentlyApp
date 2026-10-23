@@ -121,6 +121,7 @@ export function DataScreen() {
                         onChange={(comuna) => setDatos({ comuna })}
                         error={ver(errores.comuna)}
                         // SHT-COMUNA vive en la URL (`?sheet=comuna`): la hoja propia del Select no se abre.
+                        aria-expanded={comunaSheet.open}
                         onClick={(e) => {
                             e.preventDefault();
                             comunaSheet.show();
