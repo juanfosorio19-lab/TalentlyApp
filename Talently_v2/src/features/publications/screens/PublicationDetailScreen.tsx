@@ -53,6 +53,7 @@ import { copy } from '../copy';
 import { matchConversation } from '../match';
 import { DEMO_LATENCY_MS, isWrittenFor, type CvFile } from '../mock';
 import { useLivePublication } from '../../demo/manageHooks';
+import { isPublishedIn, useManageState } from '../../demo/manageState';
 import { saveCv, useCv } from '../../demo/profileState';
 import { detailCta, isAccepting, placeFor, rowIcon, rowText, shareUrl, type DetailCta } from '../model';
 import '../publications.css';
@@ -64,7 +65,9 @@ export function PublicationDetailScreen() {
     const { actor } = useDemoSession();
     // Con el estado y los cupos de la sesión (GES-01 y GES-04): «Quedan N de 8 cupos» dice lo mismo que los cupos.
     const live = useLivePublication();
-    const data = id ? getPublication(id) : undefined;
+    const manage = useManageState();
+    // Lo que aún no se publica en la sesión (flujo 4: «Garzones fin de semana» antes de PUBL-07) no existe.
+    const data = id && isPublishedIn(manage, id) ? getPublication(id) : undefined;
     const publication = data && live(data);
     if (!publication) return <NotFoundScreen />;
     // Otro actor u otra publicación parten de cero.

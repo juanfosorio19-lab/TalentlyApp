@@ -13,17 +13,25 @@ import { usePublishFlow } from '../components/usePublishFlow';
 import { useWizard } from '../components/useWizard';
 import { WizardShell } from '../components/WizardShell';
 import { IdentitySheet } from '../components/WizardSheets';
-import { firstIncompleteHogarStep, hogarErrors, initialHogar, type HogarDraft } from '../model/hogar';
+import { firstIncompleteHogarStep, HOGAR_OFICIOS, hogarErrors, initialHogar, type HogarDraft, type HogarOficio } from '../model/hogar';
+import { useStartOficio } from '../startOficio';
 import { summaryOf } from '../model/summary';
 import { hogarDrafts } from '../store';
 import '../publish.css';
 
 export const screenId = 'PUBL-04';
 
+const isHogarOficio = (v: string): v is HogarOficio => HOGAR_OFICIOS.some((o) => o.value === v);
+
 export function HogarWizardScreen({ step }: { step: number }) {
     const { actor, recienRegistrado } = useDemoSession();
-    const initial = useMemo(() => initialHogar(actor.id, { recienRegistrado }), [actor.id, recienRegistrado]);
     const entry = hogarDrafts.useEntry(actor.id);
+    // «¿Qué necesitas?» de Inicio (INI-01-carolina) abre el asistente con el oficio elegido.
+    const startOficio = useStartOficio<HogarOficio>('hogar', actor.id, step, Boolean(entry), isHogarOficio);
+    const initial = useMemo(() => {
+        const base = initialHogar(actor.id, { recienRegistrado });
+        return startOficio ? { ...base, oficio: startOficio } : base;
+    }, [actor.id, recienRegistrado, startOficio]);
     const draft = entry?.draft ?? initial;
     const changed = JSON.stringify(draft) !== JSON.stringify(initial);
 

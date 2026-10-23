@@ -22,10 +22,12 @@ import {
     firstIncompleteTurnoStep,
     hasErrors,
     initialTurno,
+    oficiosFor,
     turnoErrors,
     turnoTemplate,
     type TurnoDraft,
 } from '../model/turno';
+import { useStartOficio } from '../startOficio';
 import { summaryOf } from '../model/summary';
 import { turnoDrafts } from '../store';
 import '../publish.css';
@@ -35,8 +37,14 @@ export const screenId = 'PUBL-03';
 export function TurnoWizardScreen({ step }: { step: number }) {
     const { actor, recienRegistrado } = useDemoSession();
     const template = useMemo(() => turnoTemplate(actor.id), [actor.id]);
-    const initial = useMemo(() => initialTurno(actor.id), [actor.id]);
     const entry = turnoDrafts.useEntry(actor.id);
+    // «¿Qué necesitas?» de Inicio («Banquetero/a para un evento») abre el asistente con ese oficio.
+    const allowed = useMemo(() => new Set(oficiosFor(actor).map((o) => o.value)), [actor]);
+    const startOficio = useStartOficio<string>('turno', actor.id, step, Boolean(entry), (v): v is string => allowed.has(v));
+    const initial = useMemo(() => {
+        const base = initialTurno(actor.id);
+        return startOficio ? { ...base, oficio: startOficio } : base;
+    }, [actor.id, startOficio]);
     const draft = entry?.draft ?? initial;
     const changed = JSON.stringify(draft) !== JSON.stringify(initial);
 

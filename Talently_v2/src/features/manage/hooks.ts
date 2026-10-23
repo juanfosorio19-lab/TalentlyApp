@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { getManagedPublication } from '../demo/data';
+import { isPublishedIn, useManageState } from '../demo/manageState';
 import { useDemoSession } from '../demo/session';
 import { useSessionState, type SessionApplication } from '../demo/sessionStore';
 import type { DemoManagedPublication } from '../demo/types';
@@ -19,7 +20,9 @@ export type OwnedPublication =
  */
 export function useOwnedPublication(publicationId: string | undefined): OwnedPublication {
     const { actor, recienRegistrado } = useDemoSession();
-    const managed = publicationId ? getManagedPublication(publicationId) : undefined;
+    const manage = useManageState();
+    // Lo que aún no se publica en la sesión (flujo 4, antes de PUBL-07) no existe todavía.
+    const managed = publicationId && isPublishedIn(manage, publicationId) ? getManagedPublication(publicationId) : undefined;
     if (!managed) return { kind: 'missing' };
     if (recienRegistrado || managed.ownerId !== actor.id) return { kind: 'not-owner', managed };
     return { kind: 'ok', managed };
