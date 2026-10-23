@@ -14,6 +14,12 @@
    para que con muchos se pueda subir hasta el primero. */
 .msg-chat__log > .tl-chat { box-sizing: border-box; width: 100%; max-width: var(--layout-content-max); margin: auto auto 0; }
 .msg-chat__log > .tl-empty { margin: auto; }
+/* Mientras el Snackbar (alto táctil, --layout-touch) flota sobre el final del registro: la última
+   tarjeta sube por encima de él («Dejar de compartir»). scroll-padding para que scrollIntoView lo respete. */
+.msg-chat__log--snack {
+  padding-bottom: calc(var(--layout-touch) + var(--space-6));
+  scroll-padding-bottom: calc(var(--layout-touch) + var(--space-6));
+}
 
 /* MSG-02b: «Lo verá Familia en Ñuñoa». */
 .msg-flush { margin: 0; }

@@ -13,6 +13,7 @@ import { COPY } from '../copy';
 import { StartSheet, START_SHEET } from '../components/EntrySheets';
 import { intentOption } from '../components/intents';
 import { ExitDialog, MENU_SHEET, OnboardingMenu } from '../components/OnboardingMenu';
+import { useStepScroll } from '../components/useStepScroll';
 import { useFlow, useFlowEntry, useStepBack } from '../flow';
 import { INTENCIONES_CONTRATAR, INTENCIONES_TRABAJAR, bloquesDe, type Bloque, type Intencion } from '../model';
 import { onbPaths } from '../paths';
@@ -31,6 +32,7 @@ export function IntentScreen() {
     const start = useSheet(START_SHEET);
     const { intenciones, bloque } = useDraft();
     const [exit, setExit] = useState(false);
+    const scrollRef = useStepScroll();
     useStepBack(() => setExit(true));
 
     const bloques = bloquesDe(intenciones);
@@ -61,6 +63,7 @@ export function IntentScreen() {
     return (
         <>
             <StepLayout
+                ref={scrollRef}
                 title={C.titulo}
                 subtitle={C.sub}
                 onMenu={() => menu.show()}

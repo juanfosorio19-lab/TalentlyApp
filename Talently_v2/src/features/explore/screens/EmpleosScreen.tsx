@@ -25,7 +25,7 @@ import { ExploreBar } from '../components/ExploreBar';
 import { ExploreEmpty, fromDemo, type ExploreEmptyProps } from '../components/ExploreEmpty';
 import type { SegmentPanelProps } from '../components/ExploreLayout';
 import { ChipSection, FiltersSheet } from '../components/FiltersSheet';
-import { useDecisions, useExploreParams, useGo } from '../components/hooks';
+import { useDecisions, useExploreParams, useGo, useHomeComuna } from '../components/hooks';
 import { useDeckHeight } from '../components/useDeckHeight';
 import { useShowVerification } from '../components/VerificationSheet';
 import { copy } from '../copy';
@@ -60,6 +60,8 @@ const postularPath = (id: string) => paths.publicacion(id, 'postular');
 export function EmpleosScreen({ filtersSheet, focusPanel }: SegmentPanelProps) {
     const { actor, recienRegistrado } = useDemoSession();
     const explore = getExplore(actor.id);
+    // «Ofertas cerca de <comuna>»: la de ONB-03 si se acaba de registrar (flujo 1).
+    const home = useHomeComuna();
     const [params, update] = useExploreParams();
     const { go, cardLink } = useGo();
     const { show, hide } = useSnackbar();
@@ -164,7 +166,7 @@ export function EmpleosScreen({ filtersSheet, focusPanel }: SegmentPanelProps) {
         content = (
             <PublicationCardDeck
                 ref={deckRef}
-                cards={deck.map((p) => ({ id: p.id, ...publicationCard(p, handlers(p), { deck: true }) }))}
+                cards={deck.map((p) => ({ id: p.id, ...publicationCard(p, handlers(p), { deck: true, conDistancia: home.conDistancia }) }))}
                 onDecide={onDecide}
                 cardMinHeight={cardMinHeight}
             />
@@ -173,7 +175,7 @@ export function EmpleosScreen({ filtersSheet, focusPanel }: SegmentPanelProps) {
         content = (
             <Stack gap={3}>
                 {list.map((p) => (
-                    <PublicationCard key={p.id} variant="compact" {...withState(publicationCard(p, handlers(p)), decided(p.id))} />
+                    <PublicationCard key={p.id} variant="compact" {...withState(publicationCard(p, handlers(p), { conDistancia: home.conDistancia }), decided(p.id))} />
                 ))}
             </Stack>
         );
@@ -226,7 +228,7 @@ export function EmpleosScreen({ filtersSheet, focusPanel }: SegmentPanelProps) {
             <Stack gap={3} className="explore-fill">
                 {hasEmpleos && (
                     <ExploreBar
-                        text={explore.empleos.titulo}
+                        text={copy.empleos.cerca(home.comuna)}
                         toggleLabel={vista === 'deck' ? copy.empleos.verLista : copy.empleos.verDeAUna}
                         onToggle={() => setVista(vista === 'deck' ? 'lista' : 'deck')}
                     />

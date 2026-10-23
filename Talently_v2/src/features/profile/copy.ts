@@ -39,7 +39,9 @@ export const COPY = {
         ayuda: 'Ayuda',
         ayudaSub: 'Preguntas frecuentes y soporte',
         legal: 'Términos y Privacidad',
-        legalSub: 'Actualizados el 1 dic 2026',
+        // no está en el prototipo («Actualizados el 1 dic 2026»): el texto legal está pendiente
+        // (docs/PENDIENTES.md #2) y LEG-01, que abre esta fila, no tiene fecha de vigencia todavía.
+        legalSub: 'Texto en preparación',
         cerrarSesion: 'Cerrar sesión',
         eliminarCuenta: 'Eliminar cuenta',
         eliminarCuentaSub: 'Borra tu cuenta y todos tus perfiles',

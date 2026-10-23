@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useRef, type MouseEvent } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useOpenPath } from '../../../app/navigation/useOpenPath';
-import type { DemoActorId } from '../../demo/session';
+import { getExplore } from '../../demo/data';
+import { useDemoSession, type DemoActorId } from '../../demo/session';
 import { useDecided } from '../../demo/sessionStore';
 import { withParams } from '../filters';
-import { replacesFrom, type CardHandlers, type Decided } from '../model';
+import { homeComunaOf, replacesFrom, type CardHandlers, type Decided, type HomeComuna } from '../model';
 
 /**
  * Los parámetros de /explorar y cómo cambiarlos: con replace (no apila
@@ -59,6 +60,16 @@ export function useGo() {
  */
 export function useDecisions(actorId: DemoActorId, recienRegistrado: boolean): (publicationId: string) => Decided {
     return useDecided(actorId, recienRegistrado);
+}
+
+/**
+ * La comuna desde la que mira el actor (model.homeComunaOf): la de ONB-03 si
+ * se acaba de registrar (la misma de Perfil y de ONB-T2), si no la de la demo.
+ * Con otra comuna que la de la demo, las tarjetas no muestran «a N km».
+ */
+export function useHomeComuna(): HomeComuna {
+    const { actor, onboarding } = useDemoSession();
+    return homeComunaOf(getExplore(actor.id), onboarding?.comuna);
 }
 
 /** Ejecuta algo un rato después (la latencia de la demo); se cancela si la pantalla se desmonta. */

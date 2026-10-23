@@ -17,6 +17,7 @@ import { OnboardingMenu, MENU_SHEET } from '../components/OnboardingMenu';
 import { PhoneField } from '../components/PhoneField';
 import { usePickPhoto } from '../components/Photo';
 import { COMUNA_SHEET, ComunaSheet } from '../components/PickerSheets';
+import { useStepScroll } from '../components/useStepScroll';
 import { useFlow, useFlowEntry, useStepBack } from '../flow';
 import { bloquesDe, buscaDe, mascaraFecha, pideNacimiento, totalPasos, validarNacimiento } from '../model';
 import { onbPaths } from '../paths';
@@ -47,6 +48,7 @@ export function DataScreen() {
     const apellidoRef = useRef<HTMLInputElement>(null);
     const comunaRef = useRef<HTMLButtonElement>(null);
     const nacimientoRef = useRef<HTMLInputElement>(null);
+    const scrollRef = useStepScroll();
     const telefonoRef = useRef<HTMLInputElement>(null);
 
     const errores = {
@@ -85,6 +87,7 @@ export function DataScreen() {
     return (
         <>
             <StepLayout
+                ref={scrollRef}
                 title={C.titulo}
                 subtitle={C.sub}
                 progress={{ step: 1, total: totalPasos(bloque, buscaDe(intenciones)) }}

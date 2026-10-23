@@ -242,10 +242,12 @@ describe('resultadoOnboarding (lo que ven Inicio, Perfil y VER-01 al terminar)',
         const d = borradorInicial();
         const r = resultadoOnboarding({
             ...d,
+            cuenta: { ...d.cuenta, correo: ' ana.perez@correo.cl ' },
             datos: { ...d.datos, nombre: ' Camila ', apellido: 'Soto', foto: 'blob:foto' },
             trabajo: { ...d.trabajo, credencial: { estado: 'subiendo', progreso: 40, archivo: null }, experienciaOmitida: true },
         });
-        expect(r).toMatchObject({ nombre: 'Camila', apellido: 'Soto', foto: 'blob:foto', credencial: 'revision' });
+        // El correo de AUTH-02 es el que CFG-01 muestra en «Cuenta».
+        expect(r).toMatchObject({ nombre: 'Camila', apellido: 'Soto', foto: 'blob:foto', credencial: 'revision', correo: 'ana.perez@correo.cl' });
         expect(r.ultimoTrabajo).toBeUndefined();
     });
 });

@@ -65,6 +65,9 @@ export const COPY = {
         ayuda: 'Ayuda',
         cerrarSesion: 'Cerrar sesión',
         eliminar: 'Eliminar cuenta',
+        // no está en el prototipo: CFG-06 no existe en la demostración. El mismo texto que «Eliminar
+        // cuenta» de CFG-01 (profile/copy.ts snackEliminarDemo), hasta que pase a demo/ (pendiente).
+        eliminarDemo: 'Sesión de demostración: no hay cuenta que eliminar',
         cerrarTitulo: '¿Cerrar sesión?',
         cerrarTexto: 'Tu avance queda guardado.',
     },

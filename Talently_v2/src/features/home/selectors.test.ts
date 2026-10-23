@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { EMPTY_STATE, type ConversationState } from '../demo/conversationState';
 import { getApplications, getHomeFeed, getNotifications } from '../demo/data';
 import type { DemoApplication, DemoNotification } from '../demo/types';
 import { isoOf, publisherName } from './mock';
@@ -88,6 +89,22 @@ describe('INI-01 · bloques al día con la sesión', () => {
         expect(tips(true)).toHaveLength(0);
         // La de Matías es un curso, no el CV.
         expect(homeBlocks(matias, { applications: [], cvSubido: true }).some((b) => b.tipo === 'completar')).toBe(true);
+    });
+
+    it('Marta (flujo 10): «te pidió tu certificado» cambia al compartirlo y al dejar de compartirlo', () => {
+        const marta = getHomeFeed('marta').bloques;
+        const detalle = (entries: ConversationState['entries']) => {
+            const conversations = new Map([['conv-marta-familia', { ...EMPTY_STATE, entries }]]);
+            const b = homeBlocks(marta, { applications: [], cvSubido: false, conversations }).find((x) => x.tipo === 'novedades');
+            return b?.tipo === 'novedades' ? b.items[0]?.detalle : undefined;
+        };
+        expect(detalle([])).toBe('Familia en Ñuñoa · te pidió tu certificado de antecedentes');
+        expect(detalle([{ kind: 'certificado', id: 'c1', off: false, hora: '13:00' }])).toBe(
+            'Familia en Ñuñoa · compartiste tu certificado de antecedentes',
+        );
+        expect(detalle([{ kind: 'certificado', id: 'c1', off: true, hora: '13:00' }])).toBe(
+            'Familia en Ñuñoa · dejaste de compartir tu certificado de antecedentes',
+        );
     });
 
     it('Jorge recién registrado: sin actividad y con la credencial SPD', () => {

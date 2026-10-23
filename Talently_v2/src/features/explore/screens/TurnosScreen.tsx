@@ -30,7 +30,7 @@ import type { DemoTurno } from '../../demo/types';
 import { ExploreEmpty, fromDemo } from '../components/ExploreEmpty';
 import { ExploreChips, type SegmentPanelProps } from '../components/ExploreLayout';
 import { ChipSection, FiltersSheet } from '../components/FiltersSheet';
-import { useDecisions, useExploreParams, useGo, useLater } from '../components/hooks';
+import { useDecisions, useExploreParams, useGo, useHomeComuna, useLater } from '../components/hooks';
 import { useCommitOnClose } from '../components/useCommitOnClose';
 import { useShowVerification } from '../components/VerificationSheet';
 import { copy } from '../copy';
@@ -72,13 +72,16 @@ const FRANJA_OPTIONS = FRANJAS.map((f) => {
     return { value: f, label: band ? `${band.label} · ${band.hours}` : f };
 });
 
-/** La comuna elegida en el Chip: null = cerca de la comuna del actor (todos sus turnos). */
-function useComuna(): { comuna: string; home: string; filter: string | null } {
-    const { actor } = useDemoSession();
+/**
+ * La comuna elegida en el Chip: null = cerca de la comuna de casa (todos sus
+ * turnos). La de casa es la de ONB-03 si se acaba de registrar (useHomeComuna);
+ * `conDistancia` dice si las tarjetas pueden mostrar «a N km».
+ */
+function useComuna(): { comuna: string; home: string; filter: string | null; conDistancia: boolean } {
     const [params] = useExploreParams();
-    const home = getExplore(actor.id).turnos.comuna;
+    const { comuna: home, conDistancia } = useHomeComuna();
     const comuna = readComuna(params, COMUNAS_RM, home);
-    return { comuna, home, filter: comuna === home ? null : comuna };
+    return { comuna, home, filter: comuna === home ? null : comuna, conDistancia };
 }
 
 /** Chip de la comuna y chips de oficio, en la cabecera fija bajo el SegmentedControl. */
@@ -140,7 +143,7 @@ export function TurnosScreen({ filtersSheet, focusPanel }: SegmentPanelProps) {
     const decided = useDecisions(actor.id, recienRegistrado);
     const phoneOk = actorPhoneVerified(actor.id, recienRegistrado);
     const [taking, setTaking] = useState<string | null>(null);
-    const { home, filter: comuna } = useComuna();
+    const { home, filter: comuna, conDistancia } = useComuna();
 
     const activos = explore.filtrosActivos;
     const oficios = readOficios(params, oficioChipsOf(explore));
@@ -199,7 +202,11 @@ export function TurnosScreen({ filtersSheet, focusPanel }: SegmentPanelProps) {
         return (
             <PublicationCard
                 key={p.id}
-                {...publicationCard(p, { ...cardLink(detalle), onVerify: () => showVerification({ publicacion: p.id }) })}
+                {...publicationCard(
+                    p,
+                    { ...cardLink(detalle), onVerify: () => showVerification({ publicacion: p.id }) },
+                    { conDistancia },
+                )}
                 cta={cta}
             />
         );

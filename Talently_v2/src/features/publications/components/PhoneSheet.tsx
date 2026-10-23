@@ -5,6 +5,7 @@
 // regresiva real y «Cambiar número». Mientras Supabase está pausado no se
 // envía ningún SMS: el código que se escriba se acepta.
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { flushSync } from 'react-dom';
 import { BottomSheet } from '../../../ui/BottomSheet';
 import { Button } from '../../../ui/Button';
 import { CodeInput, formatCountdown, useCountdown } from '../../../ui/CodeInput';
@@ -121,7 +122,10 @@ export function PhoneSheet({ open, onClose, purpose, onVerified }: PhoneSheetPro
 
     const send = () => {
         if (phone.length !== PHONE_DIGITS) {
-            setPhoneError(copy.phone.invalid);
+            // Como REV-01, el foco va al campo con el error; ya pintado, así el lector de pantalla lo lee
+            // con el campo (aria-invalid + aria-describedby) y no se queda en «Enviar código».
+            flushSync(() => setPhoneError(copy.phone.invalid));
+            phoneRef.current?.focus();
             return;
         }
         setPhoneError(null);

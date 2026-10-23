@@ -9,18 +9,19 @@
 // ?sheet=adjuntar, ?sheet=certificado (MSG-02b), ?sheet=opciones (menú ⋯),
 // ?sheet=reportar (SHT-REPORTE) y ?sheet=bloquear (Dialog).
 // Enviar agrega el mensaje a la sesión (demo/conversationState) mientras Supabase está pausado.
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { AppBar } from '../../../ui/AppBar';
 import { Banner } from '../../../ui/Banner';
 import { Composer } from '../../../ui/Composer';
+import { cx } from '../../../ui/cx';
 import { ContextChip, ContextChipBar, ContextChipInRow, PUBLICATION_TYPES } from '../../../ui/ContextChip';
 import { Dialog } from '../../../ui/Dialog';
 import { EmptyState } from '../../../ui/EmptyState';
 import { IconChat } from '../../../ui/icons';
 import { Chat } from '../../../ui/MessageBubble';
-import { useSnackbar, type SnackbarTone } from '../../../ui/Snackbar';
+import { SNACKBAR_DURATION, useSnackbar, type SnackbarTone } from '../../../ui/Snackbar';
 import { useGoBack } from '../../../app/BackButtonManager';
 import { SOON_MESSAGE, useOpenPath } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
@@ -96,6 +97,8 @@ function Conversation({ conv, viewer }: { conv: DemoConversation; viewer: Viewer
     const logRef = useRef<HTMLElement>(null);
     const appBarRef = useRef<HTMLElement>(null);
     const attachRef = useRef<HTMLButtonElement>(null);
+    // «Dejar de compartir»: la tarjeta que cambió a «Ya no está disponible», mientras el aviso está a la vista.
+    const [stoppedCard, setStoppedCard] = useState<string | null>(null);
 
     // Abrirla la deja leída: sus no leídos salen de la bandeja y del badge de la pestaña.
     useEffect(() => markRead(conv.id), [conv.id]);
@@ -175,7 +178,22 @@ function Conversation({ conv, viewer }: { conv: DemoConversation; viewer: Viewer
         logRef.current?.querySelector<HTMLElement>(`[${SHARE_ATTR}="${shareId}"]`)?.focus({ preventScroll: true });
         stopSharing(conv.id, shareId);
         toast(copy.chat.stoppedSharing, 'success');
+        setStoppedCard(shareId);
     };
+
+    // El aviso flota sobre el final del registro, justo donde queda la tarjeta: mientras se ve, el registro
+    // le hace lugar (msg-chat__log--snack) y la tarjeta ya cambiada sube a la vista, sin quedar tapada.
+    useEffect(() => {
+        if (!stoppedCard) return;
+        const frame = window.requestAnimationFrame(() =>
+            logRef.current?.querySelector<HTMLElement>(`[${SHARE_ATTR}="${stoppedCard}"]`)?.scrollIntoView({ block: 'nearest' }),
+        );
+        const timer = window.setTimeout(() => setStoppedCard(null), SNACKBAR_DURATION.toast);
+        return () => {
+            window.cancelAnimationFrame(frame);
+            window.clearTimeout(timer);
+        };
+    }, [stoppedCard]);
 
     const openSheet = (show: () => void) => {
         // El aviso anterior no queda flotando sobre la hoja.
@@ -201,7 +219,7 @@ function Conversation({ conv, viewer }: { conv: DemoConversation; viewer: Viewer
                     <ContextChipInRow {...context} />
                 )}
             </ContextChipBar>
-            <main ref={logRef} className="tl-app-screen__body msg-chat__log">
+            <main ref={logRef} className={cx('tl-app-screen__body msg-chat__log', stoppedCard && 'msg-chat__log--snack')}>
                 {items.length === 0 ? (
                     <EmptyState icon={IconChat} title={copy.chat.emptyTitle} text={copy.chat.emptyText(name)} />
                 ) : (

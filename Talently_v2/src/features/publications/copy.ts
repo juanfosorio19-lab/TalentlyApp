@@ -75,7 +75,7 @@ export const copy = {
         title: 'Postular',
         yes: 'Sí',
         no: 'No',
-        answerRequired: 'Elige una respuesta',
+        answerRequired: 'Elige una respuesta', // no está en el prototipo
         cv: 'CV',
         cvFromProfile: (size: string) => `Del perfil · ${size}`,
         change: 'Cambiar',

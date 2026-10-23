@@ -6,6 +6,7 @@
 // es `onboarding_progress` (se guarda en el servidor al «Continuar», spec
 // §6.1 regla 5).
 import { useSyncExternalStore } from 'react';
+import { historyIndex } from '../../app/navigation/history';
 import {
     borradorInicial,
     pesoLegible,
@@ -186,12 +187,6 @@ export function credencialDespues(): void {
 
 let entryIdx: number | null = null;
 
-/** Índice de React Router en el historial (`history.state.idx`). */
-export function historyIndex(): number {
-    const state = window.history.state as { idx?: number } | null;
-    return typeof state?.idx === 'number' ? state.idx : 0;
-}
-
 /**
  * Marca la entrada del historial donde empezó el recorrido. Bienvenida la
  * marca siempre (es el inicio); los demás pasos solo si no hay marca o si se
@@ -202,9 +197,15 @@ export function markFlowEntry(force: boolean): void {
     if (force || entryIdx === null || idx < entryIdx) entryIdx = idx;
 }
 
-/** Cuántas entradas hay que volver para quedar donde empezó el recorrido (y olvidar la marca). */
-export function takeFlowDepth(): number {
-    const depth = entryIdx === null ? 0 : Math.max(0, historyIndex() - entryIdx);
+/** La entrada del historial donde empezó el recorrido (`null` si no hay marca), sin olvidarla. */
+export function flowEntry(): number | null {
+    return entryIdx;
+}
+
+/** La entrada donde empezó el recorrido, para salir de él (y olvidar la marca). Sin marca, la actual. */
+export function takeFlowEntry(): number {
+    const here = historyIndex();
+    const entry = entryIdx === null ? here : Math.min(entryIdx, here);
     entryIdx = null;
-    return depth;
+    return entry;
 }

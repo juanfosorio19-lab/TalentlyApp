@@ -466,11 +466,19 @@ export function textoUltimoTrabajo(trabajo: TrabajoDraft): string | undefined {
 }
 
 /**
- * Lo que el onboarding deja en la sesión (demo/session `startAsNewUser`):
- * Inicio («Hola, <nombre>»), Perfil y VER-01 muestran solo esto.
+ * Lo que deja el registro: DemoOnboardingResult y el correo de AUTH-02, el
+ * mismo que AUTH-03 mostró («Te enviamos un código… a <correo>») y que CFG-01
+ * muestra en «Cuenta». El correo va aparte mientras DemoOnboardingResult no
+ * lo tenga (pedido a demo/types.ts).
  */
-export function resultadoOnboarding(draft: OnboardingDraft): DemoOnboardingResult {
-    const { datos, trabajo } = draft;
+export type ResultadoOnboarding = DemoOnboardingResult & { correo: string };
+
+/**
+ * Lo que el onboarding deja en la sesión (demo/session `startAsNewUser`):
+ * Inicio («Hola, <nombre>»), Perfil, VER-01 y CFG-01 muestran solo esto.
+ */
+export function resultadoOnboarding(draft: OnboardingDraft): ResultadoOnboarding {
+    const { cuenta, datos, trabajo } = draft;
     const oficios = oficiosElegidos(trabajo);
     const principal = oficios.find((o) => o.id === trabajo.principal) ?? oficios[0];
     const orden = principal ? [principal, ...oficios.filter((o) => o !== principal)] : oficios;
@@ -487,5 +495,6 @@ export function resultadoOnboarding(draft: OnboardingDraft): DemoOnboardingResul
         oficios: orden.map((o) => ({ nombre: o.name, experiencia: experienciaDe(o.id), principal: o === principal })),
         credencial: oficioConRequisitos(trabajo) ? (estado === 'subiendo' ? 'revision' : estado) : null,
         ultimoTrabajo: textoUltimoTrabajo(trabajo),
+        correo: cuenta.correo.trim(),
     };
 }

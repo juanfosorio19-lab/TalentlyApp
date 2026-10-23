@@ -10,6 +10,7 @@ import { useSheet } from '../../../app/sheets';
 import { BottomSheet } from '../../../ui/BottomSheet';
 import { Dialog } from '../../../ui/Dialog';
 import { List, ListItem } from '../../../ui/ListItem';
+import { useSnackbar } from '../../../ui/Snackbar';
 import { COPY } from '../copy';
 import { useFlow } from '../flow';
 import { onbPaths } from '../paths';
@@ -44,6 +45,7 @@ export function OnboardingMenu() {
     const navigate = useNavigate();
     const { canOpen, soon } = useOpenPath();
     const saveAndExit = useSaveAndExit();
+    const snackbar = useSnackbar();
     const [logout, setLogout] = useState(false);
     // La pregunta «¿Cerrar sesión?» parte cerrada cada vez que se abre la hoja
     // (también si la hoja se cerró con el atrás del navegador).
@@ -53,7 +55,7 @@ export function OnboardingMenu() {
         if (sheet.open) setLogout(false);
     }
 
-    // Ayuda y Eliminar cuenta reemplazan la entrada de la hoja: atrás vuelve al paso, sin la hoja.
+    // Ayuda reemplaza la entrada de la hoja: atrás vuelve al paso, sin la hoja.
     const openInstead = (path: string) => {
         if (canOpen(path)) navigate(path, { replace: true });
         else soon();
@@ -66,7 +68,12 @@ export function OnboardingMenu() {
                     <ListItem title={COPY.menu.guardarSalir} onClick={() => saveAndExit()} />
                     <ListItem title={COPY.menu.ayuda} chevron onClick={() => openInstead(onbPaths.ayuda())} />
                     <ListItem title={COPY.menu.cerrarSesion} onClick={() => setLogout(true)} />
-                    <ListItem title={COPY.menu.eliminar} danger onClick={() => openInstead(onbPaths.eliminarCuenta())} />
+                    <ListItem
+                        title={COPY.menu.eliminar}
+                        danger
+                        // Como en CFG-01: CFG-06 no existe en la demostración y lo dice tal cual.
+                        onClick={() => snackbar.show({ message: COPY.menu.eliminarDemo })}
+                    />
                 </List>
             </BottomSheet>
             <Dialog

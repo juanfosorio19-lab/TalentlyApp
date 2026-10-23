@@ -30,6 +30,8 @@ export const copy = {
 
     // EXP-01 · Empleos
     empleos: {
+        /** «Ofertas cerca de Macul» (EXP-01): la comuna de casa, la de ONB-03 si se acaba de registrar. */
+        cerca: (comuna: string) => `Ofertas cerca de ${comuna}`,
         verLista: 'Ver lista',
         verDeAUna: 'Ver de a una',
         noMeInteresa: (titulo: string) => `No te mostraremos más ${titulo}`,

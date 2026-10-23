@@ -51,9 +51,9 @@ import { PhoneSheet } from '../components/PhoneSheet';
 import { useLater } from '../components/useLater';
 import { copy } from '../copy';
 import { matchConversation } from '../match';
-import { DEMO_LATENCY_MS, isWrittenFor } from '../mock';
+import { DEMO_LATENCY_MS, isWrittenFor, type CvFile } from '../mock';
 import { useLivePublication } from '../../demo/manageHooks';
-import { useCv } from '../../demo/profileState';
+import { saveCv, useCv } from '../../demo/profileState';
 import { detailCta, isAccepting, rowIcon, rowText, shareUrl, type DetailCta } from '../model';
 import '../publications.css';
 
@@ -200,8 +200,10 @@ function PublicationDetail({ pub }: { pub: DemoPublication }) {
         takeShift();
     };
 
-    const onApplied = () => {
+    const onApplied = (pickedCv?: CvFile) => {
         applyTo(actor.id, pub.id, 'Postulado');
+        // El CV que subió para postular queda en su perfil si no tenía uno: Perfil lo muestra y la próxima oferta lo ofrece.
+        if (pickedCv && !cv) saveCv(actor.id, pickedCv, recienRegistrado);
         // La organización responde un rato después: MatchHost lo muestra donde esté la persona.
         // Jorge recién registrado aún no tiene conversaciones: sin una a la que llevar, no hay match.
         if (matchConversation(actor.id, pub, recienRegistrado)) scheduleMatch(actor.id, pub.id);

@@ -1,7 +1,8 @@
 // DET-02 · Postular (`?sheet=postular`): la oferta arriba, la pregunta filtro
 // (Sí / No), el CV del perfil con «Cambiar» si la oferta lo pide y un mensaje
 // opcional de hasta 300 caracteres. «Postular» envía; el resultado (Snackbar
-// y, si la organización responde, el match) lo muestra el detalle. Mientras
+// y, si la organización responde, el match) lo muestra el detalle, que guarda
+// en el perfil el CV elegido aquí si el perfil no tenía uno. Mientras
 // Supabase está pausado, el CV elegido no se sube a ningún servidor.
 import { useEffect, useId, useRef, useState } from 'react';
 import { Avatar } from '../../../ui/Avatar';
@@ -37,8 +38,11 @@ export interface ApplySheetProps {
     publication: DemoPublication;
     /** El CV del perfil de trabajo, si lo tiene. */
     profileCv?: CvFile;
-    /** Se envió: el detalle registra la postulación, cierra la hoja y muestra el resultado. */
-    onApplied: () => void;
+    /**
+     * Se envió: el detalle registra la postulación, cierra la hoja y muestra
+     * el resultado. `pickedCv`: el CV que se eligió en la hoja (no el del perfil).
+     */
+    onApplied: (pickedCv?: CvFile) => void;
 }
 
 /**
@@ -65,6 +69,10 @@ export function ApplySheet({ open, onClose, publication: pub, profileCv, onAppli
     const [cvError, setCvError] = useState<string | null>(null);
     const [message, setMessage] = useState('');
     const [sending, setSending] = useState(false);
+
+    /** Falta el CV obligatorio (no eligió ninguno) o el archivo elegido no sirve. */
+    const cvMissing = cvError === copy.apply.cvRequired;
+    const fileError = cvMissing ? null : cvError;
 
     const pick = (files: File[]) => {
         const f = files[0];
@@ -100,7 +108,7 @@ export function ApplySheet({ open, onClose, publication: pub, profileCv, onAppli
         setSending(true);
         later(() => {
             setSending(false);
-            onApplied();
+            onApplied(cv && !cv.fromProfile ? cv.file : undefined);
         }, DEMO_LATENCY_MS);
     };
 
@@ -185,16 +193,25 @@ export function ApplySheet({ open, onClose, publication: pub, profileCv, onAppli
                                 />
                             </>
                         ) : (
-                            <MediaUploader
-                                variant="document"
-                                title={copy.apply.cvTitle}
-                                state={cvError ? 'error' : 'empty'}
-                                requirement="Obligatoria"
-                                formats={copy.apply.cvFormats}
-                                accept={PDF}
-                                error={cvError ?? undefined}
-                                onSelect={pick}
-                            />
+                            <>
+                                {/* El estado de error del uploader es de un archivo que no sirve («Elegir otro»). Si
+                                    todavía no eligió ninguno, el uploader sigue vacío y el aviso va debajo, como en «Cambiar». */}
+                                <MediaUploader
+                                    variant="document"
+                                    title={copy.apply.cvTitle}
+                                    state={fileError ? 'error' : 'empty'}
+                                    requirement="Obligatoria"
+                                    formats={copy.apply.cvFormats}
+                                    accept={PDF}
+                                    error={fileError ?? undefined}
+                                    onSelect={pick}
+                                />
+                                {cvMissing && (
+                                    <div className="tl-field is-error" role="alert">
+                                        <FieldFoot helpId={`${cvErrorId}-h`} errorId={cvErrorId} error={cvError} />
+                                    </div>
+                                )}
+                            </>
                         )}
                         <p className="caption pub-muted pub-cv-note">{cv?.fromProfile ? copy.apply.cvNote : copy.apply.cvNoteEmpty}</p>
                     </SheetSection>

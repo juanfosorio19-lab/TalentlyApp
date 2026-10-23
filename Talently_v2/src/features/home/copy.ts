@@ -9,6 +9,9 @@ export const copy = {
         publicar: 'Publicar',
         // no está en el prototipo: Jorge recién registrado, después de postular en la sesión.
         tusPostulaciones: 'Tus postulaciones',
+        // no está en el prototipo: Marta (flujo 10) ya respondió el pedido de su certificado en MSG-02.
+        compartiste: 'compartiste tu certificado de antecedentes',
+        dejasteDeCompartir: 'dejaste de compartir tu certificado de antecedentes',
     },
 
     org: {

@@ -32,7 +32,7 @@ import { useDemoSession } from '../../demo/session';
 import { useDecided, useSessionState } from '../../demo/sessionStore';
 import type { DemoPublication } from '../../demo/types';
 import { ExploreEmpty, fromDemo } from '../components/ExploreEmpty';
-import { useGo } from '../components/hooks';
+import { useGo, useHomeComuna } from '../components/hooks';
 import { useShowVerification, VerificationSheet } from '../components/VerificationSheet';
 import { copy } from '../copy';
 import {
@@ -95,6 +95,8 @@ export function SearchScreen() {
 
     // Los cupos que quedan con lo confirmado en GES-04 (los mismos de DET-01).
     const live = useLivePublication();
+    // Con la comuna de ONB-03 distinta de la de la demo, sin «a N km» (como en EXP-01 y EXP-02).
+    const { conDistancia } = useHomeComuna();
     const card = (data: DemoPublication) => {
         const p = live(data);
         const detalle = paths.publicacion(p.id);
@@ -102,7 +104,11 @@ export function SearchScreen() {
             <PublicationCard
                 key={p.id}
                 variant="compact"
-                {...publicationCard(p, { ...cardLink(detalle), onVerify: () => showVerification({ publicacion: p.id }) })}
+                {...publicationCard(
+                    p,
+                    { ...cardLink(detalle), onVerify: () => showVerification({ publicacion: p.id }) },
+                    { conDistancia },
+                )}
             />
         );
     };

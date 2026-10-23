@@ -1,10 +1,13 @@
 // Lo común a los pasos del bloque Trabajo (`/onboarding/trabajo/:paso`):
 // «Paso X de N», el atrás al paso anterior (useWizardBack), el menú ⋯ y el
 // paso que sigue según lo que aplica (T4 solo con requisitos, T5 solo si busca empleo).
+// Volver a un paso con el atrás lo deja con el scroll que tenía (useStepScroll).
+import type { RefObject } from 'react';
 import { useGoBack } from '../../../../app/BackButtonManager';
 import { useSheet } from '../../../../app/sheets';
 import { COPY } from '../../copy';
 import { MENU_SHEET } from '../../components/OnboardingMenu';
+import { useStepScroll } from '../../components/useStepScroll';
 import { useFlow, useFlowEntry, useStepBack } from '../../flow';
 import {
     buscaDe,
@@ -23,12 +26,13 @@ import { useDraft } from '../../store';
 export interface WorkStep {
     draft: OnboardingDraft;
     busca: Busca;
-    /** Props de StepLayout: progreso, atrás y menú. */
+    /** Props de StepLayout: progreso, atrás, menú y el `ref` que recuerda su scroll. */
     layout: {
         progress: { step: number; total: number };
         onBack: () => void;
         onMenu: () => void;
         menuLabel: string;
+        ref: RefObject<HTMLDivElement | null>;
     };
     /** Abre el paso que sigue (o ONB-99). */
     next: () => void;
@@ -42,6 +46,7 @@ export function useWorkStep(paso: PasoTrabajo): WorkStep {
     const draft = useDraft();
     const busca = buscaDe(draft.intenciones);
     const conRequisitos = oficioConRequisitos(draft.trabajo) !== null;
+    const scrollRef = useStepScroll();
 
     const anterior = pasoAnterior(paso, busca, conRequisitos);
     useStepBack(() => backTo(anterior === 'datos' ? onbPaths.datos() : onbPaths.trabajo(anterior)));
@@ -60,6 +65,7 @@ export function useWorkStep(paso: PasoTrabajo): WorkStep {
             onBack: goBack,
             onMenu: () => menu.show(),
             menuLabel: COPY.menu.boton,
+            ref: scrollRef,
         },
     };
 }

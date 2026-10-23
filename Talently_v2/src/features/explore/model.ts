@@ -131,6 +131,28 @@ export function comunaOf(lugar: string): string {
     return lugar.split('·').pop()?.trim() ?? lugar;
 }
 
+/** De dónde mira el actor: su comuna y si las distancias de la demo valen para ella. */
+export interface HomeComuna {
+    /** «Ofertas cerca de <comuna>», el Chip de la comuna de EXP-02. */
+    comuna: string;
+    /**
+     * Las distancias de la demo («a 4 km») están calculadas desde la comuna
+     * del actor en los datos. Si el registro (ONB-03) dejó otra, no valen:
+     * las tarjetas muestran solo la comuna del aviso.
+     */
+    conDistancia: boolean;
+}
+
+/**
+ * La comuna de casa: la que eligió en ONB-03 quien se acaba de registrar
+ * (demo/session `onboarding.comuna`) o, si no eligió o no se registró, la de la demo.
+ */
+export function homeComunaOf(explore: DemoExplore, onboardingComuna: string | null | undefined): HomeComuna {
+    const demo = explore.turnos.comuna;
+    const comuna = onboardingComuna ?? demo;
+    return { comuna, conDistancia: comuna === demo };
+}
+
 const isVerifiedOrg = (p: DemoPublication) => p.autor.verificaciones.some((v) => v.status === 'verified');
 
 /** Postulaciones de esta sesión (useSessionState().applications): `${actorId}:${publicationId}`. */
@@ -203,8 +225,15 @@ function requirementsOf(p: DemoPublication): PublicationRequirement[] {
     return out;
 }
 
-/** Una publicación (empleo o turno) para PublicationCard. */
-export function publicationCard(p: DemoPublication, h: CardHandlers, opts: { deck?: boolean } = {}): PublicationCardData {
+/**
+ * Una publicación (empleo o turno) para PublicationCard. `conDistancia: false`
+ * (HomeComuna): el lugar es solo la comuna del aviso, sin «a N km».
+ */
+export function publicationCard(
+    p: DemoPublication,
+    h: CardHandlers,
+    opts: { deck?: boolean; conDistancia?: boolean } = {},
+): PublicationCardData {
     return {
         author: { name: p.autor.nombre, kind: p.autor.tipo === 'persona' ? 'person' : 'org', initials: p.autor.iniciales },
         verifications: verificationsOf(p.autor.verificaciones, h.onVerify),
@@ -214,7 +243,7 @@ export function publicationCard(p: DemoPublication, h: CardHandlers, opts: { dec
         tags: p.tags.map((t) => ({ kind: t.kind, label: t.text })),
         amount: amountOf(p.monto, p.tipo === 'empleo' ? undefined : 'A convenir'),
         cupos: p.tipo === 'turno' ? p.cupos : undefined,
-        place: p.lugar,
+        place: opts.conDistancia === false ? comunaOf(p.lugar) : p.lugar,
         requirements: opts.deck ? requirementsOf(p) : undefined,
         why: opts.deck ? p.porQue : undefined,
     };

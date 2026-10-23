@@ -2,6 +2,8 @@
 // a dónde lleva una notificación y qué se publica en PUBL-01. Los datos
 // salen de src/features/demo y lo que cambia en la sesión, de
 // demo/sessionStore (las pantallas se lo pasan a estas funciones).
+import type { ConversationState } from '../demo/conversationState';
+import { getConversation } from '../demo/data';
 import type { DemoActorId } from '../demo/session';
 import { processPublicationId, targetPath } from '../demo/targets';
 import type {
@@ -35,6 +37,8 @@ export interface HomeSessionState {
     applications: readonly DemoApplication[];
     /** ¿Ya subió su CV en Perfil? Entonces «Te falta 1 cosa · Subir CV» no se muestra. */
     cvSubido: boolean;
+    /** Lo hecho en Mensajes (useConversationStates): un pedido ya respondido deja de ser novedad. */
+    conversations?: ReadonlyMap<string, ConversationState>;
 }
 
 /**
@@ -74,6 +78,20 @@ function newsWithSession(n: DemoNews, applications: readonly DemoApplication[]):
     return estado && SESSION_ENDS.includes(estado) && estado !== n.estado ? { ...n, estado } : n;
 }
 
+/**
+ * Flujo 10: «te pidió tu certificado de antecedentes» deja de ser cierto en
+ * cuanto lo comparte en MSG-02, y también si después deja de compartirlo: la
+ * línea dice lo último que hizo (// no está en el prototipo).
+ */
+function newsWithConversation(n: DemoNews, conversations: ReadonlyMap<string, ConversationState> | undefined): DemoNews {
+    if (n.destino.pantalla !== 'conversacion') return n;
+    const shared = conversations?.get(n.destino.conversationId)?.entries.filter((e) => e.kind === 'certificado') ?? [];
+    if (shared.length === 0) return n;
+    const hecho = shared.some((e) => !e.off) ? copy.home.compartiste : copy.home.dejasteDeCompartir;
+    const con = getConversation(n.destino.conversationId)?.con.nombre;
+    return { ...n, detalle: con ? `${con} · ${hecho}` : hecho };
+}
+
 /** A dónde lleva una postulación: PRC-01 (empleo), TUR-01 (turno confirmado) o su detalle. */
 function applicationTarget(a: DemoApplication): DemoTarget {
     if (a.processId) return { pantalla: 'proceso', processId: a.processId };
@@ -107,7 +125,7 @@ export function homeBlocks(bloques: readonly DemoHomeBlock[], session: HomeSessi
         if (b.tipo === 'novedades') {
             const items = b.items
                 .filter((n) => newsBelongsToSession(n.destino, applications))
-                .map((n) => newsWithSession(n, applications));
+                .map((n) => newsWithConversation(newsWithSession(n, applications), session.conversations));
             return items.length ? [{ ...b, items }] : [];
         }
         // «Aún no tienes actividad» deja de ser cierto en cuanto postula (ACT-02 ya lo muestra).

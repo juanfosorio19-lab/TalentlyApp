@@ -11,7 +11,7 @@ import { flowOriginState } from '../../../app/navigation/history';
 import { paths } from '../../../app/paths';
 import { useSheet } from '../../../app/sheets';
 import { getHomeFeed, getPublication } from '../../demo/data';
-import { useUnansweredConversations } from '../../demo/conversationState';
+import { useConversationStates, useUnansweredConversations } from '../../demo/conversationState';
 import { useManageSession, useOrgDashboard } from '../../demo/manageHooks';
 import { avisoBlockView } from '../../demo/manageSelectors';
 import { useCv } from '../../demo/profileState';
@@ -48,7 +48,9 @@ export function HomeScreen() {
     const cvSubido = useCv(actor.id, recienRegistrado) !== undefined;
     // «Tu aviso · N postulantes nuevos» y su estado: la misma cuenta que GES-01 y GES-02.
     const { manage, applications: sessionApplications } = useManageSession();
-    const blocks = homeBlocks(feed.bloques, { applications, cvSubido }).map((b) =>
+    // Lo hecho en Mensajes: el certificado que Marta compartió (flujo 10) responde «te pidió…».
+    const conversations = useConversationStates();
+    const blocks = homeBlocks(feed.bloques, { applications, cvSubido, conversations }).map((b) =>
         avisoBlockView(b, manage, sessionApplications),
     );
     const isOrg = actor.kind === 'organizacion';
