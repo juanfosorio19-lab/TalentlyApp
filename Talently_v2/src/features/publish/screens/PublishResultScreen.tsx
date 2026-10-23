@@ -1,7 +1,9 @@
 // PUBL-07 · Publicación enviada (/publicar/:tipo/listo), con ResultScreen:
 // «Publicada» (PUBL-07-turno) o «En revisión» (PUBL-07-aviso-hogar). Se llega
-// con replace al publicar, o desde VER-02 en el flujo 5: entonces termina de
-// publicar el aviso que quedó guardado. «Ver publicación» lleva a GES-01 del
+// al publicar (push sobre el paso 5) o desde VER-02 en el flujo 5 (replace
+// sobre VER-02): entonces termina de publicar el aviso que quedó guardado. En
+// los dos casos queda encima de una entrada del asistente ya publicado, que
+// atrás se salta (useWizard) hasta la pantalla de antes de la hoja PUBL-01. «Ver publicación» lleva a GES-01 del
 // turno o a GES-02 del aviso (los de los datos de demostración) e «Ir a
 // Inicio», a Inicio: los dos terminan el flujo (spec §5.3 regla 6) volviendo
 // de un salto a la pantalla desde la que se abrió PUBL-01, sin dejar en el

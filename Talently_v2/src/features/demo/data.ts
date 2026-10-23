@@ -1392,7 +1392,8 @@ export const DEMO_NOTIFICATIONS: DemoNotification[] = [
         titulo: 'Verificamos tu credencial SPD', origen: 'Jorge Muñoz', cuando: '30 nov', sinLeer: false, icono: 'verificacion',
         destino: { pantalla: 'verificacion' },
     },
-    // Pedro (2 sin leer en EXP-01).
+    // Pedro: 2 sin leer en DET-03-pedro, después del match. EXP-01 del prototipo ya las muestra antes de
+    // postular; la app no (sessionStore.startsWithoutApplication: hablan de una entrevista que aún no existe).
     {
         id: 'not-pedro-mensaje', viewerId: 'pedro', actorId: 'pedro', grupo: 'Hoy',
         titulo: 'Taller Los Aromos te escribió', origen: 'Empleo · Mecánico/a automotriz', cuando: 'hace 10 min', sinLeer: true, icono: 'mensaje',

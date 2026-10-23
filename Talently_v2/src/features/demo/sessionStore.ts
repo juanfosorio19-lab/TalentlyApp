@@ -47,6 +47,8 @@ export interface SentReview {
 
 interface SessionState {
     readNotifications: ReadonlySet<string>;
+    /** Conversaciones abiertas en MSG-02 (conversationState.markRead): su «te escribió» de la campana ya se leyó. */
+    readConversations: ReadonlySet<string>;
     /** `${actorId}:${publicationId}` → postulación de esta sesión. */
     applications: ReadonlyMap<string, SessionApplication>;
     /** Ids de DemoApplication con el turno cancelado en TUR-01. */
@@ -67,6 +69,7 @@ interface SessionState {
 
 const INITIAL: SessionState = {
     readNotifications: new Set(),
+    readConversations: new Set(),
     applications: new Map(),
     cancelledShifts: new Set(),
     phoneVerified: new Set(),
@@ -112,15 +115,41 @@ export function resetSession(): void {
  * «después» (ACT-02 ya dice «Postulado», PRC-01 ya está en entrevista). Para
  * recorrer los flujos 2 y 3, en estas el actor parte sin postulación hasta
  * que postula en la sesión (y ACT-02, la Agenda e Inicio tampoco la muestran).
+ *
+ * Jorge no está: los flujos 8 y 11 (PRF-01, ACT-02-jorge, MSG-01-jorge) parten
+ * con su postulación a «Guardia de seguridad 4×4», la conversación sin leer con
+ * Seguridad Andes y la campana en 2. DET-01-empleo, DET-02 y DET-03 de Jorge son
+ * tableros de apoyo que ningún flujo numerado recorre.
+ *
+ * Pedro (flujo 3) parte sin el match: la campana con 2 y Mensajes con 1 de
+ * EXP-01 del prototipo aparecen recién después de postular (DET-03-pedro).
+ * Mostrarlos antes hablaría de una entrevista y una conversación que todavía
+ * no existen; es una decisión de la app, no está en el prototipo.
  */
 const FLOW_START: Partial<Record<DemoActorId, readonly string[]>> = {
     matias: ['turno-garzones-matrimonio'], // flujo 2 · DET-01-turno
     pedro: ['empleo-mecanico-automotriz'], // flujo 3 · DET-01-empleo-pedro
-    jorge: ['empleo-guardia-4x4'], // apoyo · DET-01-empleo, DET-02, DET-03
 };
 
 export function startsWithoutApplication(actorId: DemoActorId, publicationId: string): boolean {
     return FLOW_START[actorId]?.includes(publicationId) ?? false;
+}
+
+/**
+ * ¿La sesión ya tiene el «después» que traen los datos para esta publicación?
+ * Postuló en la sesión y, si el match venía en camino, ya llegó (DET-03). En
+ * los segundos entre postular y el match, la sesión solo sabe que postuló
+ * («Postulado»): la entrevista, la conversación y sus notificaciones aparecen
+ * todas juntas con el match, como el «salto de tiempo» del prototipo.
+ */
+export function afterReachedInSession(
+    applications: ReadonlyMap<string, SessionApplication>,
+    pendingMatches: ReadonlyMap<string, PendingMatch>,
+    actorId: DemoActorId,
+    publicationId: string,
+): boolean {
+    const key = keyOf(actorId, publicationId);
+    return applications.has(key) && !pendingMatches.has(key);
 }
 
 /** Matías verifica su celular en AUTH-08 (flujo 2): al empezar la sesión todavía no lo tiene. */
@@ -176,26 +205,44 @@ export function notificationPublicationId(n: DemoNotification): string | undefin
 export function notificationInSession(
     n: DemoNotification,
     applications: ReadonlyMap<string, SessionApplication>,
+    pendingMatches: ReadonlyMap<string, PendingMatch> = state.pendingMatches,
 ): boolean {
     const publicationId = notificationPublicationId(n);
     if (!publicationId) return true;
-    return !startsWithoutApplication(n.actorId, publicationId) || applications.has(keyOf(n.actorId, publicationId));
+    return (
+        !startsWithoutApplication(n.actorId, publicationId) ||
+        afterReachedInSession(applications, pendingMatches, n.actorId, publicationId)
+    );
 }
+
+/** Conversación abierta en MSG-02 (conversationState.markRead): «X te escribió» queda leída en la campana. */
+export function noteConversationRead(conversationId: string): void {
+    if (state.readConversations.has(conversationId)) return;
+    set({ readConversations: new Set([...state.readConversations, conversationId]) });
+}
+
+/** ¿Ya se leyó? Marcada en NOT-01 o, si es «te escribió», abriendo esa conversación en Mensajes. */
+function isRead(n: DemoNotification, readNotifications: ReadonlySet<string>, readConversations: ReadonlySet<string>): boolean {
+    if (readNotifications.has(n.id)) return true;
+    return n.icono === 'mensaje' && n.destino?.pantalla === 'conversacion' && readConversations.has(n.destino.conversationId);
+}
+
+/** Lo que la bandeja lee de la sesión. */
+type InboxSource = Pick<SessionState, 'readNotifications' | 'readConversations' | 'applications' | 'pendingMatches'>;
 
 /**
  * La bandeja del actor. `recienRegistrado` (INI-01-jorge-nuevo) todavía no
  * tiene notificaciones. Sin las que hablan de una postulación que la sesión
- * todavía no tiene (notificationInSession). TODAS las campanas, el contador
- * y «Marcar todo como leído» usan esta lista.
+ * todavía no tiene (notificationInSession) y con «te escribió» leída si ya
+ * abrió esa conversación (la campana y Mensajes no se contradicen). TODAS las
+ * campanas, el contador y «Marcar todo como leído» usan esta lista.
  */
 export function useInbox(viewerId: DemoViewerId, recienRegistrado = false): Inbox {
-    const { readNotifications, applications } = useSessionState();
-    const items = useMemo(() => inboxItems(viewerId, recienRegistrado, readNotifications, applications), [
-        viewerId,
-        recienRegistrado,
-        readNotifications,
-        applications,
-    ]);
+    const { readNotifications, readConversations, applications, pendingMatches } = useSessionState();
+    const items = useMemo(
+        () => inboxItems(viewerId, recienRegistrado, { readNotifications, readConversations, applications, pendingMatches }),
+        [viewerId, recienRegistrado, readNotifications, readConversations, applications, pendingMatches],
+    );
     const unread = items.filter((n) => n.sinLeer).length;
     const markRead = useCallback((id: string) => markNotificationsRead([id]), []);
     const markAllRead = useCallback(() => markNotificationsRead(items.filter((n) => n.sinLeer).map((n) => n.id)), [items]);
@@ -203,16 +250,12 @@ export function useInbox(viewerId: DemoViewerId, recienRegistrado = false): Inbo
 }
 
 /** La bandeja sin React (para pruebas): lo leído al día y sin lo que la sesión todavía no tiene. */
-export function inboxItems(
-    viewerId: DemoViewerId,
-    recienRegistrado: boolean,
-    readNotifications: ReadonlySet<string> = state.readNotifications,
-    applications: ReadonlyMap<string, SessionApplication> = state.applications,
-): DemoNotification[] {
+export function inboxItems(viewerId: DemoViewerId, recienRegistrado: boolean, source: InboxSource = state): DemoNotification[] {
     if (recienRegistrado) return [];
+    const { readNotifications, readConversations, applications, pendingMatches } = source;
     return getNotifications(viewerId)
-        .filter((n) => notificationInSession(n, applications))
-        .map((n) => (n.sinLeer && readNotifications.has(n.id) ? { ...n, sinLeer: false } : n));
+        .filter((n) => notificationInSession(n, applications, pendingMatches))
+        .map((n) => (n.sinLeer && isRead(n, readNotifications, readConversations) ? { ...n, sinLeer: false } : n));
 }
 
 // ─── Postulaciones (DET-01/DET-02 escriben; ACT-02, Agenda, Inicio y el deck leen) ──
@@ -247,16 +290,20 @@ function detalleOf(publicationId: string): string {
 /**
  * Las postulaciones del actor tal como las ve en esta sesión: las de los
  * datos (sin las que el prototipo muestra antes de postular, salvo que ya
- * postuló; ninguna si está recién registrado) más las enviadas ahora, con
- * el turno cancelado al día. ACT-02, la
- * Agenda, Inicio y el deck usan SOLO esto.
+ * postuló y llegó el match; ninguna si está recién registrado) más las
+ * enviadas ahora, con el turno cancelado al día. Mientras el match viene en
+ * camino, la postulación es la de la sesión («Postulado», sin proceso): la
+ * entrevista de los datos llega con el match. ACT-02, la Agenda, Inicio y el
+ * deck usan SOLO esto.
  */
 export function useApplications(actorId: DemoActorId, recienRegistrado = false): DemoApplication[] {
-    const { applications, cancelledShifts, withdrawn } = useSessionState();
+    const { applications, cancelledShifts, withdrawn, pendingMatches } = useSessionState();
     return useMemo(() => {
         // Recién registrado: sin postulaciones de los datos, pero sí las que haga en esta sesión.
         const fromData = (recienRegistrado ? [] : getApplications(actorId)).filter(
-            (a) => !startsWithoutApplication(actorId, a.publicationId) || applications.has(keyOf(actorId, a.publicationId)),
+            (a) =>
+                !startsWithoutApplication(actorId, a.publicationId) ||
+                afterReachedInSession(applications, pendingMatches, actorId, a.publicationId),
         );
         const known = new Set(fromData.map((a) => a.publicationId));
         const fromSession: DemoApplication[] = [];
@@ -282,11 +329,14 @@ export function useApplications(actorId: DemoActorId, recienRegistrado = false):
             const withdrawnAt = a.processId ? withdrawn.get(keyOf(actorId, a.processId)) : undefined;
             if (withdrawnAt === undefined) return a;
             const again = applications.get(keyOf(actorId, a.publicationId));
-            if (stillWithdrawn(withdrawnAt, again?.at)) return { ...a, estado: 'Postulación retirada' as BadgeStatus };
+            // Retirada: el detalle ya no habla de la entrevista («Taller Los Aromos · Macul»), como PRC-01.
+            if (stillWithdrawn(withdrawnAt, again?.at)) {
+                return { ...a, estado: 'Postulación retirada' as BadgeStatus, detalle: detalleOf(a.publicationId) || a.detalle };
+            }
             // Volvió a postular después de retirar: vale la postulación nueva.
             return again ? { ...a, estado: again.estado } : a;
         });
-    }, [actorId, recienRegistrado, applications, cancelledShifts, withdrawn]);
+    }, [actorId, recienRegistrado, applications, cancelledShifts, withdrawn, pendingMatches]);
 }
 
 // ─── Celular verificado (AUTH-08) ───────────────────────────────────────────
@@ -434,10 +484,23 @@ export function decidedIn(
 
 // ─── Retirar postulación (PRC-01) ───────────────────────────────────────────
 
-/** Retira la postulación. Si vuelve a retirar después de postular de nuevo, cuenta la última vez. */
+/**
+ * Retira la postulación. Si vuelve a retirar después de postular de nuevo,
+ * cuenta la última vez. El «Me interesa» del deck con que postuló también se
+ * va: la publicación vuelve al deck y la lista deja de decir «Te interesa»,
+ * igual que si hubiera postulado desde DET-01.
+ */
 export function withdrawApplication(actorId: DemoActorId, processId: string, at = Date.now()): void {
     const withdrawn = new Map(state.withdrawn);
     withdrawn.set(keyOf(actorId, processId), at);
+    const publicationId = getProcess(processId)?.publicationId;
+    const decisionKey = publicationId ? keyOf(actorId, publicationId) : undefined;
+    if (decisionKey && state.decisions.get(decisionKey) === 'si') {
+        const decisions = new Map(state.decisions);
+        decisions.delete(decisionKey);
+        set({ withdrawn, decisions });
+        return;
+    }
     set({ withdrawn });
 }
 

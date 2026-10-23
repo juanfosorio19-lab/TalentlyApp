@@ -1,14 +1,15 @@
 // Capa raíz de toda pantalla v3: avisos (Snackbar), botón atrás de Android
 // con sus dos preguntas («¿Descartar cambios?» y «Presiona atrás otra vez
-// para salir») y restauración del scroll al volver.
+// para salir»), restauración del scroll y rescate del foco al cambiar de pantalla.
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Outlet, ScrollRestoration, useLocation, type Location } from 'react-router-dom';
+import { Outlet, ScrollRestoration, useLocation, useNavigationType, type Location } from 'react-router-dom';
 import { Dialog } from '../ui/Dialog';
 import { SnackbarProvider, useSnackbar } from '../ui/Snackbar';
 import { MatchHost } from '../features/publications/MatchHost';
 import { BackButtonManager, type BackPrompts } from './BackButtonManager';
+import { useFocusRescue } from './navigation/focus';
 import { historyIndex } from './navigation/history';
-import { noteFirstEntry, rememberTab } from './navigation/tabMemory';
+import { noteEntry, noteFirstEntry, rememberTab } from './navigation/tabMemory';
 import { isTabRoot, tabOf } from './paths';
 import { withoutSheet } from './sheets';
 
@@ -67,21 +68,37 @@ function Prompts({ children }: { children: (prompts: BackPrompts) => ReactNode }
 function TabMemory() {
     const location = useLocation();
     useEffect(() => {
-        noteFirstEntry(historyIndex(), location.pathname);
+        const index = historyIndex();
+        noteFirstEntry(index, location.pathname);
+        noteEntry(index, location.pathname);
         const tab = tabOf(location.pathname);
         if (tab && isTabRoot(location.pathname)) rememberTab(tab, location.pathname + withoutSheet(location.search, location.state));
     }, [location]);
     return null;
 }
 
+/**
+ * El foco al cambiar de pantalla (navigation/focus): si el control tocado ya
+ * no está y el foco cayó al body, al volver va al control de antes y, si no,
+ * al título de la pantalla nueva. Una sola vez para todas las pantallas.
+ */
+function FocusRescue() {
+    const { key } = useLocation();
+    const pop = useNavigationType() === 'POP';
+    useFocusRescue(key, pop);
+    return null;
+}
+
 export function RootLayout() {
-    const { pathname } = useLocation();
+    const { pathname, key } = useLocation();
     return (
-        <SnackbarProvider placement={isTabRoot(pathname) ? 'tabbar' : 'no-tabbar'}>
+        // `entryKey`: un aviso sin acción no sigue a la persona a la pantalla siguiente ni de vuelta a la anterior.
+        <SnackbarProvider placement={isTabRoot(pathname) ? 'tabbar' : 'no-tabbar'} entryKey={key}>
             <Prompts>
                 {(prompts) => (
                     <BackButtonManager prompts={prompts}>
                         <TabMemory />
+                        <FocusRescue />
                         <Outlet />
                         <MatchHost />
                         <ScrollRestoration getKey={scrollKey} />

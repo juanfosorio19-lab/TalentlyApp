@@ -7,12 +7,14 @@ import { EMPLEO_SIN_FILTROS, TURNO_SIN_FILTROS } from './filters';
 import {
     deckAndList,
     empleosOf,
+    homeComunaOf,
     membersOf,
     ownPublications,
     passesEmpleo,
     personasFor,
     personCard,
     porQueOf,
+    publicationCard,
     replacesFrom,
     searchHints,
     searchIn,
@@ -72,6 +74,24 @@ describe('EXP-01 · deck y lista', () => {
 
     it('sin filtros pasan todas', () => {
         expect(empleos.every((p) => passesEmpleo(p, EMPLEO_SIN_FILTROS))).toBe(true);
+    });
+});
+
+describe('comuna de casa (flujo 1: la de ONB-03)', () => {
+    const explore = getExplore('jorge');
+    const guardia = getPublication('empleo-guardia-4x4');
+
+    it('sin registro o con la misma comuna, la de la demo y con distancias', () => {
+        expect(homeComunaOf(explore, undefined)).toEqual({ comuna: 'Puente Alto', conDistancia: true });
+        expect(homeComunaOf(explore, null)).toEqual({ comuna: 'Puente Alto', conDistancia: true });
+        expect(homeComunaOf(explore, 'Puente Alto')).toEqual({ comuna: 'Puente Alto', conDistancia: true });
+    });
+
+    it('con otra comuna, esa; las tarjetas muestran solo la comuna del aviso', () => {
+        expect(homeComunaOf(explore, 'Ñuñoa')).toEqual({ comuna: 'Ñuñoa', conDistancia: false });
+        if (!guardia) throw new Error('falta empleo-guardia-4x4');
+        expect(publicationCard(guardia, handlers).place).toBe('a 4 km · Puente Alto');
+        expect(publicationCard(guardia, handlers, { conDistancia: false }).place).toBe('Puente Alto');
     });
 });
 

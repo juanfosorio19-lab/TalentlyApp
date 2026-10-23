@@ -16,6 +16,13 @@ import { Snackbar, type SnackbarAction, type SnackbarPlacement, type SnackbarTon
 /** Sin acción (Toast) se va a los 4 s; con acción, a los 8 s o al tocarla. */
 export const SNACKBAR_DURATION = { toast: 4000, action: 8000 } as const;
 
+/**
+ * Un aviso sin acción mostrado justo antes de cambiar de pantalla (en el mismo
+ * toque: «Cambiaste a …» y la navegación) es para la pantalla de destino: con
+ * menos de esto, el cambio de `entryKey` no lo cierra.
+ */
+export const NAVIGATE_GRACE_MS = 500;
+
 // Una región viva que se monta ya con su texto no siempre se anuncia: las
 // regiones están montadas desde antes y el texto llega un momento después.
 const ANNOUNCE_DELAY_MS = 100;
@@ -31,6 +38,11 @@ export interface ShowSnackbarOptions {
      * en él, justo encima del botón.
      */
     placement?: Exclude<SnackbarPlacement, 'static'>;
+    /**
+     * Sigue visible aunque cambie la pantalla (`entryKey` del provider). Sin
+     * esto, un aviso sin acción se cierra al pasar a otra pantalla o al volver.
+     */
+    keepOnNavigate?: boolean;
 }
 
 export interface SnackbarApi {
@@ -68,6 +80,14 @@ export interface SnackbarProviderProps {
      * nunca queda sobre la SideNav.
      */
     container?: HTMLElement | null;
+    /**
+     * La entrada del historial que se ve (la app pasa `location.key`). Al
+     * cambiar, el aviso sin acción de la pantalla anterior se cierra: no tapa
+     * el contenido de la siguiente ni el de la de antes al volver. No se cierran
+     * los que tienen acción («Deshacer»), los `keepOnNavigate` ni los que se
+     * mostraron hace menos de NAVIGATE_GRACE_MS (el mismo toque que navegó).
+     */
+    entryKey?: string;
 }
 
 type Current = ShowSnackbarOptions & { id: number };
@@ -77,7 +97,7 @@ type Current = ShowSnackbarOptions & { id: number };
  * `SnackbarOutlet` montado más reciente o, si no hay, flotando según
  * `placement`. Lo anuncia desde dos regiones vivas siempre montadas.
  */
-export function SnackbarProvider({ children, placement = 'tabbar', portal = true, container }: SnackbarProviderProps) {
+export function SnackbarProvider({ children, placement = 'tabbar', portal = true, container, entryKey }: SnackbarProviderProps) {
     const [current, setCurrent] = useState<Current | null>(null);
     // Con el foco en su acción (teclado o lector de pantalla), el tiempo se detiene.
     const [pausedId, setPausedId] = useState<number | null>(null);
@@ -87,6 +107,9 @@ export function SnackbarProvider({ children, placement = 'tabbar', portal = true
     const snackRef = useRef<HTMLDivElement>(null);
     // Dónde estaba el foco antes de entrar al aviso, para devolverlo cuando se va.
     const returnFocusRef = useRef<HTMLElement | null>(null);
+    // El aviso que ya lleva NAVIGATE_GRACE_MS a la vista: un cambio de pantalla lo cierra.
+    const [settledId, setSettledId] = useState<number | null>(null);
+    const [seenEntry, setSeenEntry] = useState(entryKey);
 
     // Si el foco está en el aviso que se va, vuelve a donde estaba (si no, caería en <body>).
     const releaseFocus = useCallback(() => {
@@ -109,6 +132,20 @@ export function SnackbarProvider({ children, placement = 'tabbar', portal = true
         },
         [releaseFocus],
     );
+
+    const currentId = current?.id;
+    useEffect(() => {
+        if (currentId === undefined) return;
+        const timer = window.setTimeout(() => setSettledId(currentId), NAVIGATE_GRACE_MS);
+        return () => window.clearTimeout(timer);
+    }, [currentId]);
+
+    // Otra pantalla: el aviso sin acción de la anterior se va. Uno recién mostrado (el mismo toque que
+    // navegó) es de la pantalla nueva y se queda; con acción o keepOnNavigate, también.
+    if (entryKey !== seenEntry) {
+        setSeenEntry(entryKey);
+        if (current && !current.action && !current.keepOnNavigate && settledId === current.id) setCurrent(null);
+    }
     const api = useMemo<SnackbarApi>(() => ({ show, hide }), [show, hide]);
 
     useEffect(() => {

@@ -7,6 +7,8 @@ import type { SegmentedOption } from '../../ui/SegmentedControl';
 import { addDays, formatDayShort, startOfWeek, type AgendaEventData, type IsoDate } from '../../ui/CalendarWeek';
 import { paths, type ActivitySegment } from '../../app/paths';
 import type { CalendarEvent } from '../../domain/calendario';
+import { applicantsOf, type SessionApplications } from '../demo/manageSelectors';
+import type { ManageState } from '../demo/manageState';
 import type { DemoActor, DemoActorId } from '../demo/session';
 import { startsWithoutApplication } from '../demo/sessionStore';
 import { DEMO_NOW_TIME, DEMO_TODAY, getAgenda, getManagedPublication, getManagedPublications, getProcess, getPublication } from '../demo/data';
@@ -158,6 +160,42 @@ export function applicationPath(a: DemoApplication): string {
     return paths.publicacion(a.publicationId);
 }
 
+/**
+ * Cuándo empieza el turno de una postulación, en minutos desde hoy en la
+ * demo: su bloque de Mi turno o el primero de la publicación (quien postula,
+ * postula a todos los días). `null` si no se sabe.
+ */
+function shiftStartOf(a: DemoApplication): number | null {
+    const publication = a.miTurno ? undefined : getPublication(a.publicationId);
+    const blocks = a.miTurno ? [a.miTurno.bloque] : publication?.tipo === 'turno' ? publication.bloques : [];
+    let first: number | null = null;
+    for (const b of blocks) {
+        const date = isoFromBlock(b);
+        const { start } = splitTimeRange(b.time);
+        if (!date || !start) continue;
+        const at = minutesUntil(date, start);
+        if (first === null || at < first) first = at;
+    }
+    return first;
+}
+
+/**
+ * Los turnos de ACT-02 en orden de fecha y hora de inicio (ACT-02-matias:
+ * jue 10, sáb 12, vie 18), también los que se postularon en esta sesión. Sin
+ * fecha conocida, al final y en el orden en que llegaron.
+ */
+export function sortShiftsByStart(applications: readonly DemoApplication[]): DemoApplication[] {
+    return applications
+        .map((a, i) => ({ a, i, at: shiftStartOf(a) }))
+        .sort((x, y) => {
+            if (x.at === y.at) return x.i - y.i;
+            if (x.at === null) return 1;
+            if (y.at === null) return -1;
+            return x.at - y.at;
+        })
+        .map(({ a }) => a);
+}
+
 // ─── Agenda (ACT-01) ────────────────────────────────────────────────────────
 
 export interface AgendaItem {
@@ -230,6 +268,26 @@ function coverageOf(
     return { where: copy.agenda.coverage(confirmed, block.total), status };
 }
 
+/** Estado de un proceso para quien contrata (el de la persona en GES-02), por id de proceso. */
+export type HiringStatusOf = (processId: string) => BadgeStatus | undefined;
+
+/**
+ * El estado de cada proceso de quien contrata tal como lo dice GES-02
+ * (applicantsOf de demo/manageSelectors, con lo que cambió en la sesión:
+ * «Contratado» desde PRC-01, «No seleccionado» desde GES-02).
+ */
+export function hiringStatusLookup(manage: ManageState, applications: SessionApplications): HiringStatusOf {
+    return (processId) => {
+        const publicationId = getProcess(processId)?.publicationId;
+        const managed = publicationId ? getManagedPublication(publicationId) : undefined;
+        if (!managed?.postulantes) return undefined;
+        return applicantsOf(managed, manage, applications).find((p) => p.processId === processId)?.estado;
+    };
+}
+
+/** Quien contrata ya cerró el proceso: la entrevista que venía no va. */
+const HIRING_CLOSED: ReadonlySet<BadgeStatus> = new Set<BadgeStatus>(['Contratado', 'No seleccionado']);
+
 /** Estados de un turno pendiente que la Agenda muestra con su Badge (README de CalendarWeek). */
 const PENDING_SHIFT: ReadonlySet<BadgeStatus> = new Set<BadgeStatus>(['Postulado', 'En lista de espera']);
 
@@ -270,19 +328,34 @@ function pendingShifts(actorId: DemoActorId, applications: readonly DemoApplicat
 /**
  * ¿Sigue en pie este compromiso de los datos en esta sesión? Un turno
  * confirmado, si la postulación sigue y no se canceló en TUR-01. Una
- * entrevista, si su proceso ya existe: en los flujos 2 y 3 el actor parte sin
- * postular (FLOW_START de demo/sessionStore) y su entrevista llega al postular.
+ * entrevista, si su proceso ya existe (en los flujos 2 y 3 el actor parte sin
+ * postular, FLOW_START de demo/sessionStore, y su entrevista llega al
+ * postular), la postulación no se retiró en PRC-01 y, para quien contrata,
+ * el proceso sigue abierto (no la contrató ni la descartó antes).
  */
-function isLive(e: DemoAgendaEvent, actorId: DemoActorId, applications: readonly DemoApplication[]): boolean {
+function isLive(
+    e: DemoAgendaEvent,
+    actorId: DemoActorId,
+    applications: readonly DemoApplication[],
+    hiringStatusOf?: HiringStatusOf,
+): boolean {
     const d = e.destino;
     if (d.pantalla === 'mi-turno') {
         const application = applications.find((a) => a.id === d.applicationId);
         return application !== undefined && application.estado !== 'Cancelaste';
     }
     if (d.pantalla === 'proceso') {
+        // Retiró su postulación en PRC-01: la entrevista se cancela («Ya no está disponible»), como dicen PRC-01 y ACT-02.
+        const application = applications.find((a) => a.processId === d.processId);
+        if (application?.estado === 'Postulación retirada') return false;
+        // Quien contrata la marcó «Contratado» en PRC-01 (o «No seleccionado» en GES-02) antes de la entrevista.
+        const hiring = hiringStatusOf?.(d.processId);
+        const date = isoFromDayText(e.fecha);
+        if (e.tipo === 'entrevista' && hiring && HIRING_CLOSED.has(hiring) && date && minutesUntil(date, e.inicio) > 0) return false;
         const publicationId = getProcess(d.processId)?.publicationId;
+        // Flujo 3: la entrevista existe recién con el match (la postulación de la sesión trae el proceso, useApplications).
         if (publicationId && startsWithoutApplication(actorId, publicationId)) {
-            return applications.some((a) => a.publicationId === publicationId);
+            return applications.some((a) => a.processId === d.processId);
         }
     }
     return true;
@@ -296,17 +369,22 @@ const byDateAndStart = (a: AgendaItem, b: AgendaItem) =>
  * y los turnos pendientes con su estado. `applications` son las de la sesión
  * (useApplications): sin las canceladas y sin lo que el actor aún no postuló.
  * `sessionOf`: lo que la organización cambió en GES-01 y GES-04 (ver
- * ManagedSession). Recién registrado, vacía.
+ * ManagedSession). `hiringStatusOf`: el estado de GES-02 de cada proceso de
+ * quien contrata (hiringStatusLookup). Recién registrado, vacía.
  */
 export function agendaFor(
     actor: DemoActor,
     applications: readonly DemoApplication[],
     { recienRegistrado }: ActivityOptions,
     sessionOf?: ManagedSessionOf,
+    hiringStatusOf?: HiringStatusOf,
 ): AgendaItem[] {
     if (recienRegistrado) return [];
     const items: AgendaItem[] = [];
-    const events = [...getAgenda(actor.id).filter((e) => isLive(e, actor.id, applications)), ...pendingShifts(actor.id, applications)];
+    const events = [
+        ...getAgenda(actor.id).filter((e) => isLive(e, actor.id, applications, hiringStatusOf)),
+        ...pendingShifts(actor.id, applications),
+    ];
     for (const e of events) {
         const date = isoFromDayText(e.fecha);
         if (!date) continue;

@@ -23,6 +23,9 @@ export const copy = {
                 : `Le avisaremos a ${org}. Ya no seguirás en este proceso.`,
         keep: 'Mantener postulación',
         withdrawn: 'Retiraste tu postulación',
+        /** Quien contrata para su hogar (PRC-01-hogar): el aviso es para una trabajadora de casa particular. */
+        markHired: 'Marcar como contratada',
+        hired: (name: string) => `Marcaste a ${name} como contratada`,
         checklistSteps: 'Pasos',
         checklistLink: 'Ir al sitio de la Dirección del Trabajo',
         calendarDownloaded: 'Descargamos la entrevista: ábrela para agregarla a tu calendario',

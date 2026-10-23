@@ -31,7 +31,7 @@ import { useOpenPath, type LinkTargetProps } from '../../../app/navigation/useOp
 import { paths } from '../../../app/paths';
 import { useSheet, useSwapSheet } from '../../../app/sheets';
 import { NotFoundScreen } from '../../../app/system/NotFoundScreen';
-import { getPublication } from '../../demo/data';
+import { getExplore, getPublication } from '../../demo/data';
 import { DEMO_ACTORS, useDemoSession, type DemoActorId } from '../../demo/session';
 import { applyTo, decide, scheduleMatch, undoDecision, useApplications, useSessionApplication, verifyPhone } from '../../demo/sessionStore';
 import type { DemoInfoTag, DemoPublication } from '../../demo/types';
@@ -54,7 +54,7 @@ import { matchConversation } from '../match';
 import { DEMO_LATENCY_MS, isWrittenFor, type CvFile } from '../mock';
 import { useLivePublication } from '../../demo/manageHooks';
 import { saveCv, useCv } from '../../demo/profileState';
-import { detailCta, isAccepting, rowIcon, rowText, shareUrl, type DetailCta } from '../model';
+import { detailCta, isAccepting, placeFor, rowIcon, rowText, shareUrl, type DetailCta } from '../model';
 import '../publications.css';
 
 export const screenId = 'DET-01';
@@ -87,7 +87,7 @@ function stateBadge(pub: DemoPublication, cta: DetailCta): BadgeStatus | null {
 }
 
 function PublicationDetail({ pub }: { pub: DemoPublication }) {
-    const { actor, recienRegistrado, setActor } = useDemoSession();
+    const { actor, recienRegistrado, setActor, onboarding } = useDemoSession();
     const goBack = useGoBack();
     const snackbar = useSnackbar();
     const later = useLater();
@@ -249,6 +249,8 @@ function PublicationDetail({ pub }: { pub: DemoPublication }) {
 
     const badge = stateBadge(pub, cta);
     const accepting = isAccepting(pub);
+    // Con la comuna de ONB-03 distinta de la de la demo, sin «a N km» (como en Explorar).
+    const place = placeFor(pub.lugar, onboarding?.comuna, getExplore(actor.id).turnos.comuna);
 
     let action = null;
     if (cta.kind === 'own') {
@@ -311,9 +313,9 @@ function PublicationDetail({ pub }: { pub: DemoPublication }) {
                 <DetailHero author={pub.autor} onVerification={() => verificationSheet.show()} />
                 <div className="tl-app-screen__content pub-content">
                     {pub.tipo === 'turno' ? (
-                        <ShiftBody pub={pub} badge={badge} forViewer={forViewer} titleRef={titleRef} />
+                        <ShiftBody pub={pub} place={place} badge={badge} forViewer={forViewer} titleRef={titleRef} />
                     ) : (
-                        <JobBody pub={pub} badge={badge} forViewer={forViewer} titleRef={titleRef} orgLink={linkProps(orgPath)} />
+                        <JobBody pub={pub} place={place} badge={badge} forViewer={forViewer} titleRef={titleRef} orgLink={linkProps(orgPath)} />
                     )}
                 </div>
             </main>
@@ -389,11 +391,14 @@ function Rows({ pub }: { pub: DemoPublication }) {
 /** Plantilla Turno: bloques por día, tarifa, forma de contratación, lugar, «Detalle del turno» y requisitos. */
 function ShiftBody({
     pub,
+    place,
     badge,
     forViewer,
     titleRef,
 }: {
     pub: Extract<DemoPublication, { tipo: 'turno' }>;
+    /** El lugar para quien mira (placeFor). */
+    place: string;
     badge: BadgeStatus | null;
     forViewer: boolean;
     titleRef: TitleRef;
@@ -426,7 +431,7 @@ function ShiftBody({
                 </Stack>
             )}
             <Facts variant="flush">
-                <Fact icon={IconLocation}>{pub.lugar}</Fact>
+                <Fact icon={IconLocation}>{place}</Fact>
             </Facts>
             {filas.length > 0 && (
                 <SectionCard title={filasTitulo ?? copy.sections.description}>
@@ -441,12 +446,15 @@ function ShiftBody({
 /** Plantilla Empleo (y, mientras no tengan la suya, servicio y clase): sueldo, InfoTag, lugar y secciones. */
 function JobBody({
     pub,
+    place,
     badge,
     forViewer,
     titleRef,
     orgLink,
 }: {
     pub: DemoPublication;
+    /** El lugar para quien mira (placeFor). */
+    place: string;
     badge: BadgeStatus | null;
     forViewer: boolean;
     titleRef: TitleRef;
@@ -476,7 +484,7 @@ function JobBody({
                     </InfoTags>
                 )}
                 <Facts>
-                    <Fact icon={IconLocation}>{pub.lugar}</Fact>
+                    <Fact icon={IconLocation}>{place}</Fact>
                 </Facts>
             </Stack>
             {(descripcion || (!filasTitulo && pub.detalle.filas.length > 0)) && (

@@ -16,8 +16,11 @@ import {
     getProcess,
     getPublication,
 } from '../demo/data';
+import { applicantsOf, type SessionApplications } from '../demo/manageSelectors';
+import type { ManageState } from '../demo/manageState';
 import type { DemoActor, DemoActorId } from '../demo/session';
 import type {
+    DemoApplicant,
     DemoApplication,
     DemoAuthor,
     DemoProcess,
@@ -104,6 +107,90 @@ export function timelineSteps(process: DemoProcess, withdrawn: boolean): Timelin
 /** El Badge bajo el título. */
 export function processStatus(process: DemoProcess, withdrawn: boolean): BadgeStatus {
     return withdrawn ? 'Postulación retirada' : process.estado;
+}
+
+// ─── Quien contrata (PRC-01-hogar) ──────────────────────────────────────────
+
+/**
+ * Quien contrata: la persona tal como está en GES-02 (applicantsOf de
+ * demo/manageSelectors, con lo que cambió en la sesión), así PRC-01, GES-02 y
+ * la Agenda dicen lo mismo. `undefined` para quien postuló o si la persona no
+ * está entre los postulantes.
+ */
+export function hiringApplicantOf(
+    process: DemoProcess,
+    manage: ManageState,
+    applications: SessionApplications,
+): DemoApplicant | undefined {
+    if (isApplicantView(process)) return undefined;
+    const managed = getManagedPublication(process.publicationId);
+    if (!managed) return undefined;
+    const people = applicantsOf(managed, manage, applications);
+    return people.find((p) => p.processId === process.id) ?? people.find((p) => p.personId === process.contraparte.id);
+}
+
+/** Desde «Contratado» se ve el checklist legal y ya no se marca de nuevo. */
+export const HIRED: BadgeStatus = 'Contratado';
+
+/** Cierres del proceso: lo que venía (la entrevista agendada) ya no va. */
+const CLOSED: readonly BadgeStatus[] = [HIRED, 'No seleccionado'];
+
+/** Estados de GES-02 desde los que se marca «Contratado» (ya avanzó y sigue abierto). */
+const IN_PROCESS: readonly BadgeStatus[] = ['En proceso', 'Entrevista', 'Oferta'];
+
+/** «8 dic · 20:15», «vie 11 dic · 10:00» → minutos locales; `null` si no trae día y hora («hoy · 12:00»). */
+function stepTime(fecha: string): number | null {
+    const at = parseWhen(fecha);
+    if (!at) return null;
+    const [date = '', time = ''] = at.split('T');
+    return atLocal(date, time);
+}
+
+/**
+ * Los pasos tal como están ahora en la demo: un paso «hecho» con fecha
+ * futura todavía no pasa. El primero queda como el actual, con su fecha
+ * agendada (la entrevista del vie 11 dic); los siguientes, pendientes y sin
+ * fecha.
+ */
+export function stepsAsOf(pasos: readonly DemoProcessStep[], now: number = demoNow()): DemoProcessStep[] {
+    let ahead = false;
+    return pasos.map((s) => {
+        if (ahead) return { etapa: s.etapa, estado: 'pending' };
+        const at = s.fecha ? stepTime(s.fecha) : null;
+        if (s.estado === 'done' && at !== null && at > now) {
+            ahead = true;
+            return { etapa: s.etapa, estado: 'current', fecha: s.fecha };
+        }
+        return s;
+    });
+}
+
+/**
+ * El proceso como lo ve quien contrata, con el estado de GES-02 (`estado`):
+ * el Badge, los pasos y el checklist legal, que aparece recién al marcar
+ * «Contratado» (spec §3: «Checklist legal al marcar Contratado»). Contratada
+ * en esta sesión, el último paso es «Contratado · hoy» y lo que todavía no
+ * pasaba (la entrevista, la oferta) se quita. No seleccionada, el último paso
+ * que pasó lleva el Badge. Sin estado de GES-02, el de los datos.
+ */
+export function hiringView(process: DemoProcess, estado: BadgeStatus | undefined, now: number = demoNow()): DemoProcess {
+    if (isApplicantView(process) || estado === undefined) return process;
+    const current = stepsAsOf(process.pasos, now);
+    const happened = current.filter((s) => s.estado === 'done');
+    let pasos = current;
+    if (estado === HIRED) {
+        pasos = happened.some((s) => s.etapa === HIRED)
+            ? happened
+            : [...happened, { etapa: HIRED, estado: 'done', fecha: `hoy · ${DEMO_NOW_TIME}` }];
+    } else if (CLOSED.includes(estado)) {
+        pasos = happened.map((s, i) => (i === happened.length - 1 ? { ...s, badge: estado } : s));
+    }
+    return { ...process, estado, pasos, checklist: estado === HIRED ? process.checklist : undefined };
+}
+
+/** ¿Quien contrata puede marcarla «Contratado»? Mientras siga en proceso (no nueva, no cerrada). */
+export function canMarkHired(process: DemoProcess, estado: BadgeStatus | undefined): boolean {
+    return !isApplicantView(process) && estado !== undefined && IN_PROCESS.includes(estado);
 }
 
 /** ¿Sigue en pie la postulación y se puede retirar? */

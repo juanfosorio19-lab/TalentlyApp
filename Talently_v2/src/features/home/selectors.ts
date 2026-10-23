@@ -5,7 +5,7 @@
 import type { ConversationState } from '../demo/conversationState';
 import { getConversation } from '../demo/data';
 import type { DemoActorId } from '../demo/session';
-import { processPublicationId, targetPath } from '../demo/targets';
+import { targetPath } from '../demo/targets';
 import type {
     DemoAgendaEvent,
     DemoApplication,
@@ -43,10 +43,10 @@ export interface HomeSessionState {
 
 /**
  * ¿La novedad habla de algo que el actor tiene en esta sesión? Los datos
- * traen el «después» del prototipo: Jorge y Pedro parten sin postular a
- * Guardia 4x4 y a Mecánico/a automotriz (inicio de los flujos 3 y de apoyo),
- * así que «te citó a entrevista» no se muestra hasta que postulan (y PRC-01
- * o ACT-02 dirían lo contrario). Los destinos que no son de una postulación
+ * traen el «después» del prototipo: Pedro parte sin postular a Mecánico/a
+ * automotriz (inicio del flujo 3), así que «te citó a entrevista» no se
+ * muestra hasta que postula y llega el match (y PRC-01 o ACT-02 dirían lo
+ * contrario). Los destinos que no son de una postulación
  * se quedan.
  */
 function newsBelongsToSession(destino: DemoTarget, applications: readonly DemoApplication[]): boolean {
@@ -58,8 +58,9 @@ function newsBelongsToSession(destino: DemoTarget, applications: readonly DemoAp
 /** La postulación de la sesión de la que habla una novedad (PRC-01, DET-01 o TUR-01). */
 function applicationOf(destino: DemoTarget, applications: readonly DemoApplication[]): DemoApplication | undefined {
     switch (destino.pantalla) {
+        // La del proceso: mientras el match de Pedro viene en camino, su postulación todavía no tiene la entrevista.
         case 'proceso':
-            return applications.find((a) => a.publicationId === processPublicationId(destino.processId));
+            return applications.find((a) => a.processId === destino.processId);
         case 'publicacion':
             return applications.find((a) => a.publicationId === destino.publicationId);
         case 'mi-turno':
@@ -72,10 +73,16 @@ function applicationOf(destino: DemoTarget, applications: readonly DemoApplicati
 /** Estados de la sesión que mandan sobre el de la novedad: lo que la persona hizo después (PRC-01, TUR-01). */
 const SESSION_ENDS: readonly DemoApplication['estado'][] = ['Postulación retirada', 'Cancelaste'];
 
-/** La novedad con el estado de la sesión si la persona retiró la postulación o canceló el turno (ACT-02 dice lo mismo). */
+/**
+ * La novedad con el estado de la sesión si la persona retiró la postulación o
+ * canceló el turno (ACT-02 dice lo mismo). El título y el detalle de la
+ * novedad («te citó a entrevista · lun 14 dic») ya no son ciertos: pasan a
+ * ser los de la publicación y la postulación de la sesión.
+ */
 function newsWithSession(n: DemoNews, applications: readonly DemoApplication[]): DemoNews {
-    const estado = applicationOf(n.destino, applications)?.estado;
-    return estado && SESSION_ENDS.includes(estado) && estado !== n.estado ? { ...n, estado } : n;
+    const a = applicationOf(n.destino, applications);
+    if (!a || !SESSION_ENDS.includes(a.estado) || a.estado === n.estado) return n;
+    return { ...n, estado: a.estado, titulo: a.titulo, detalle: a.detalle };
 }
 
 /**

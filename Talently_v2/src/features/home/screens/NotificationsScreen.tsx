@@ -34,7 +34,7 @@ import { useInbox } from '../../demo/sessionStore';
 import type { DemoNotification, DemoNotificationIcon } from '../../demo/types';
 import { notificationsFrom } from '../../../app/navigation/notifications';
 import { copy } from '../copy';
-import { useFocusTitleIfLost, useHomeNavigation } from '../navigation';
+import { useHomeNavigation } from '../navigation';
 import { groupNotifications, resolveNotification } from '../selectors';
 import '../home.css';
 
@@ -68,8 +68,6 @@ export function NotificationsScreen() {
     // «Marcar todas como leídas» desaparece al tocarlo: el foco pasa al primer grupo, no al body.
     const firstHeading = useRef<HTMLHeadingElement>(null);
     const switchableIds = switchable.map((a) => a.id);
-    // Se llega desde la campana (o de vuelta de CFG-01), que ya no está: el foco va al título, no al body.
-    useFocusTitleIfLost(location.key);
 
     const route = (n: DemoNotification) => resolveNotification(n, actor.id, switchableIds, canOpen);
 

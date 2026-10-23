@@ -72,12 +72,14 @@ export const screenId = 'MSG-02';
 export function ConversationScreen() {
     const { conversationId } = useParams();
     const viewer = useViewer();
-    const { applications } = useSessionState();
+    const { applications, pendingMatches } = useSessionState();
     // Jorge recién registrado todavía no tiene conversaciones.
     const conv = conversationId && !viewer.recienRegistrado ? getConversation(conversationId) : undefined;
     // Solo quien participa la ve (RLS de conversations en el spec §7.6), y solo si ya existe en la sesión
-    // (la de una postulación que el actor todavía no envía aparece al postular: conversationInSession).
-    if (!conv || conv.viewerId !== viewer.viewerId || !conversationInSession(conv, applications)) return <ConversationNotFound />;
+    // (la de una postulación que el actor todavía no envía aparece con el match: conversationInSession).
+    if (!conv || conv.viewerId !== viewer.viewerId || !conversationInSession(conv, applications, pendingMatches)) {
+        return <ConversationNotFound />;
+    }
     return <Conversation key={conv.id} conv={conv} viewer={viewer} />;
 }
 

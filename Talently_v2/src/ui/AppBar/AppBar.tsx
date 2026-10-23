@@ -90,6 +90,11 @@ export interface AppBarChatProps extends AppBarCommonProps {
     /** ⋯ abre la hoja Ver publicación · Reportar · Bloquear. */
     onMore: MouseEventHandler<HTMLButtonElement>;
     moreLabel?: string;
+    /**
+     * H1 de la pantalla, oculto a la vista (`.tl-vh`): el chat no tiene título visible, pero el lector
+     * de pantalla la anuncia y el foco tiene a dónde ir al llegar. Por defecto «Conversación con <nombre>».
+     */
+    heading?: string;
 }
 
 export type AppBarProps = AppBarLargeProps | AppBarStandardProps | AppBarChatProps;
@@ -105,6 +110,7 @@ type AnyAppBarProps = AppBarCommonProps & {
     peer?: AppBarChatPeer;
     onMore?: MouseEventHandler<HTMLButtonElement>;
     moreLabel?: string;
+    heading?: string;
 };
 
 /**
@@ -124,6 +130,7 @@ export function AppBar(props: AppBarProps) {
         peer,
         onMore,
         moreLabel = 'Más opciones',
+        heading,
         scrolled,
         className,
         ...rest
@@ -134,6 +141,9 @@ export function AppBar(props: AppBarProps) {
             <header className={cx('tl-appbar tl-appbar--chat', scrolled && 'is-scrolled', className)} {...rest}>
                 <div className="tl-statusbar" aria-hidden="true" />
                 <div className="tl-appbar__row">
+                    <h1 className="tl-vh" tabIndex={-1}>
+                        {heading ?? `Conversación con ${peer.name}`}
+                    </h1>
                     <BackButton label={backLabel} onClick={onBack} />
                     <ChatPeer peer={peer} />
                     <div className="tl-appbar__actions">

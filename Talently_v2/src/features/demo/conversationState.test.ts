@@ -15,7 +15,7 @@ import {
     unreadOf,
 } from './conversationState';
 import { getConversations } from './data';
-import { applyTo, getSessionState, resetSession } from './sessionStore';
+import { applyTo, getSessionState, markMatchSeen, resetSession, scheduleMatch } from './sessionStore';
 
 describe('bloquear', () => {
     it('revoca el certificado compartido y desbloquear no lo vuelve a compartir', () => {
@@ -54,9 +54,23 @@ describe('qué conversaciones existen en la sesión', () => {
         expect(ids('pedro')).not.toContain('conv-pedro-taller');
         applyTo('pedro', 'empleo-mecanico-automotriz', 'Postulado');
         expect(ids('pedro')).toContain('conv-pedro-taller');
-        expect(ids('jorge')).not.toContain('conv-jorge-seguridad-andes');
+        // Jorge (flujos 8 y 11) parte con la conversación de Seguridad Andes (MSG-01-jorge).
+        expect(ids('jorge')).toContain('conv-jorge-seguridad-andes');
         expect(ids('jorge')).toContain('conv-jorge-hotel-andino');
         expect(ids('jorge', true)).toEqual([]);
+    });
+
+    it('mientras el match viene en camino, la conversación todavía no existe', () => {
+        applyTo('pedro', 'empleo-mecanico-automotriz', 'Postulado');
+        scheduleMatch('pedro', 'empleo-mecanico-automotriz', 60_000);
+        expect(ids('pedro')).not.toContain('conv-pedro-taller');
+        markMatchSeen('pedro', 'empleo-mecanico-automotriz');
+        expect(ids('pedro')).toContain('conv-pedro-taller');
+    });
+
+    it('abrir la conversación deja leída su notificación «te escribió»', () => {
+        markRead('conv-marta-familia');
+        expect(getSessionState().readConversations.has('conv-marta-familia')).toBe(true);
     });
 
     it('no leídos y sin responder: bajan al abrir y al responder', () => {

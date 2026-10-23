@@ -8,7 +8,7 @@ import { IconCalendar, IconChat, IconHome, IconPerson, IconSearch } from '../ui/
 import { useUnreadMessages } from '../features/demo/conversationState';
 import { useDemoSession } from '../features/demo/session';
 import { historyIndex } from './navigation/history';
-import { inicioJustBelow, lastUrlOf } from './navigation/tabMemory';
+import { inicioAtFirstEntry, lastUrlOf } from './navigation/tabMemory';
 import { tabOf, type TabKey } from './paths';
 
 function useTabItems(): BottomTabBarItem<TabKey>[] {
@@ -40,7 +40,9 @@ export function AppShell() {
 
     // Cambiar de pestaña hace replace y vuelve a su última subruta (spec §5.3 regla 1). Excepción:
     // Inicio queda siempre debajo (paso 5 del atrás, que la web no puede detener): salir de Inicio
-    // cuando es la primera entrada apila la otra pestaña, y volver a él es un atrás.
+    // cuando es la primera entrada apila la otra pestaña, y volver a él vuelve de un salto a esa
+    // primera entrada, aunque haya otras en medio (DET-01 → «Ver mis postulaciones» deja Explorar
+    // debajo): en Inicio, el atrás de Android da «Presiona atrás otra vez para salir».
     const onSelect = (key: TabKey, event: MouseEvent<HTMLAnchorElement>) => {
         event.preventDefault();
         if (key === active) {
@@ -49,7 +51,7 @@ export function AppShell() {
         }
         const index = historyIndex();
         if (active === 'inicio' && index === 0) void navigate(lastUrlOf(key));
-        else if (key === 'inicio' && inicioJustBelow(index)) void navigate(-1);
+        else if (key === 'inicio' && index > 0 && inicioAtFirstEntry()) void navigate(-index);
         else void navigate(lastUrlOf(key), { replace: true });
     };
 

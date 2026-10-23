@@ -3,7 +3,7 @@ import { paths } from '../../app/paths';
 import { getApplications, getPublication } from '../demo/data';
 import { DEMO_ACTORS } from '../demo/session';
 import type { DemoPublication } from '../demo/types';
-import { detailCta, ownerFor, shareUrl } from './model';
+import { detailCta, ownerFor, placeFor, shareUrl } from './model';
 
 const pub = (id: string): DemoPublication => {
     const p = getPublication(id);
@@ -45,5 +45,14 @@ describe('enlace para compartir', () => {
         const url = shareUrl({ origin: 'https://talently.cl', pathname: '/v3.html' }, '#/p/empleo-mecanico-automotriz');
         expect(url).toBe('https://talently.cl/v3.html#/p/empleo-mecanico-automotriz');
         expect(shareUrl({ origin: 'https://talently.cl', pathname: '/inicio' }, '/p/x')).toBe('https://talently.cl/p/x');
+    });
+});
+
+describe('lugar en DET-01', () => {
+    it('sin «a N km» si la comuna de ONB-03 no es la de la demo', () => {
+        expect(placeFor('a 4 km · Puente Alto', undefined, 'Puente Alto')).toBe('a 4 km · Puente Alto');
+        expect(placeFor('a 4 km · Puente Alto', 'Puente Alto', 'Puente Alto')).toBe('a 4 km · Puente Alto');
+        expect(placeFor('a 4 km · Puente Alto', 'Ñuñoa', 'Puente Alto')).toBe('Puente Alto');
+        expect(placeFor('Macul', 'Ñuñoa', 'Puente Alto')).toBe('Macul');
     });
 });

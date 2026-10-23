@@ -98,3 +98,44 @@ describe('SnackbarProvider', () => {
         expect(alert.textContent).toBe('');
     });
 });
+
+describe('SnackbarProvider · al cambiar de pantalla (entryKey)', () => {
+    const snack = () => document.body.querySelector('.tl-snackbar')?.textContent ?? null;
+    function Screen({ entry }: { entry: string }) {
+        return (
+            <SnackbarProvider entryKey={entry}>
+                <Grab />
+            </SnackbarProvider>
+        );
+    }
+
+    it('un aviso sin acción de la pantalla anterior se cierra', () => {
+        render(<Screen entry="det-01" />);
+        show('Postulaste al turno');
+        act(() => vi.advanceTimersByTime(1000));
+        act(() => root!.render(<Screen entry="act-02" />));
+        expect(snack()).toBeNull();
+    });
+
+    it('uno mostrado en el mismo toque que navegó llega al destino, y se va si se vuelve', () => {
+        render(<Screen entry="not-01" />);
+        show('Cambiaste a Banquetería Rosa SpA');
+        act(() => root!.render(<Screen entry="ini-02" />));
+        expect(snack()).toContain('Cambiaste a Banquetería Rosa SpA');
+        act(() => vi.advanceTimersByTime(1000));
+        act(() => root!.render(<Screen entry="not-01" />));
+        expect(snack()).toBeNull();
+    });
+
+    it('con acción («Deshacer») o keepOnNavigate, sigue', () => {
+        render(<Screen entry="exp-01" />);
+        act(() => api!.show({ message: 'No te interesa', action: { label: 'Deshacer', onAction: () => {} } }));
+        act(() => vi.advanceTimersByTime(1000));
+        act(() => root!.render(<Screen entry="det-01" />));
+        expect(snack()).toContain('No te interesa');
+        act(() => api!.show({ message: 'Guardado', keepOnNavigate: true }));
+        act(() => vi.advanceTimersByTime(1000));
+        act(() => root!.render(<Screen entry="exp-01" />));
+        expect(snack()).toContain('Guardado');
+    });
+});

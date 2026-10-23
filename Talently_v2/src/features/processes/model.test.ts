@@ -1,15 +1,20 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { buildIcs } from '../../domain/calendario';
 import { getApplications, getProcess, getPublication } from '../demo/data';
-import { startsWithoutApplication } from '../demo/sessionStore';
+import { getManageState, resetManage, setApplicantStatus } from '../demo/manageState';
+import { getSessionState, startsWithoutApplication } from '../demo/sessionStore';
 import type { DemoActorId } from '../demo/session';
 import type { DemoApplication, DemoShiftBlock } from '../demo/types';
 import {
+    HIRED,
     addMinutes,
     atLocal,
+    canMarkHired,
     canWithdraw,
     demoNow,
     googleCalendarUrl,
+    hiringApplicantOf,
+    hiringView,
     interviewEvent,
     isApplicantView,
     parseWhen,
@@ -19,6 +24,7 @@ import {
     resolveReview,
     shiftHasEnded,
     shiftRole,
+    stepsAsOf,
     timelineSteps,
 } from './model';
 
@@ -53,8 +59,8 @@ describe('resolveProcess', () => {
             kind: 'not-applied',
             publicationId: 'empleo-mecanico-automotriz',
         });
-        expect(resolveProcess('app-jorge-guardia-4x4', 'jorge', fresh('jorge')).kind).toBe('not-applied');
-        // Las demás postulaciones de Jorge no parten de cero.
+        // Jorge (flujos 8 y 11) parte con sus postulaciones de los datos.
+        expect(processId(resolveProcess('app-jorge-guardia-4x4', 'jorge', fresh('jorge')))).toBe('proc-jorge-guardia-4x4');
         expect(processId(resolveProcess('proc-jorge-guardia-noche', 'jorge', fresh('jorge')))).toBe('proc-jorge-guardia-noche');
         // Después de postular en la sesión, PRC-01 la muestra.
         expect(processId(resolveProcess('proc-pedro-mecanico', 'pedro', applied('pedro')))).toBe('proc-pedro-mecanico');
@@ -232,5 +238,73 @@ describe('shiftHasEnded', () => {
 
     it('sin horario que se entienda no se da por terminado', () => {
         expect(shiftHasEnded(block({ time: 'por confirmar' }), atLocal('2027-06-01', '00:00'))).toBe(false);
+    });
+});
+
+describe('PRC-01 de quien contrata (flujo 5)', () => {
+    afterEach(() => resetManage());
+
+    const marta = () => proc('proc-carolina-marta');
+    const statusNow = () => hiringApplicantOf(marta(), getManageState(), getSessionState().applications)?.estado;
+
+    it('un paso «hecho» con fecha futura todavía no pasa: queda como el actual, con su fecha', () => {
+        const steps = stepsAsOf(marta().pasos);
+        expect(steps.map((s) => [s.etapa, s.estado, s.fecha])).toEqual([
+            ['Postulado', 'done', '8 dic · 20:15'],
+            ['Visto', 'done', '9 dic · 19:10'],
+            ['En proceso', 'done', '9 dic · 19:20'],
+            ['Entrevista', 'current', 'vie 11 dic · 10:00'],
+            ['Oferta', 'pending', undefined],
+            ['Contratado', 'pending', undefined],
+        ]);
+        // Lo que ya pasó no cambia (PRC-01 de Jorge).
+        expect(stepsAsOf(proc('proc-jorge-guardia-4x4').pasos)).toEqual(proc('proc-jorge-guardia-4x4').pasos);
+    });
+
+    it('dice lo mismo que GES-02: «En proceso», con la entrevista del vie 11 por delante y sin checklist', () => {
+        expect(statusNow()).toBe('En proceso');
+        const view = hiringView(marta(), statusNow());
+        expect(view.estado).toBe('En proceso');
+        expect(view.checklist).toBeUndefined();
+        expect(timelineSteps(view, false).find((s) => s.status === 'current')).toMatchObject({
+            label: 'Entrevista',
+            date: 'vie 11 dic · 10:00',
+        });
+        expect(canMarkHired(marta(), statusNow())).toBe(true);
+    });
+
+    it('al marcarla «Contratado» (el mismo estado de GES-02) aparece el checklist y el último paso es de hoy', () => {
+        const person = hiringApplicantOf(marta(), getManageState(), getSessionState().applications);
+        if (!person) throw new Error('Marta no está en GES-02');
+        setApplicantStatus('aviso-asesor-hogar', person.personId, HIRED);
+        expect(statusNow()).toBe('Contratado');
+        const view = hiringView(marta(), statusNow());
+        expect(view.estado).toBe('Contratado');
+        expect(view.checklist?.titulo).toBe('Para contratar como corresponde');
+        expect(view.pasos.map((s) => [s.etapa, s.estado, s.fecha])).toEqual([
+            ['Postulado', 'done', '8 dic · 20:15'],
+            ['Visto', 'done', '9 dic · 19:10'],
+            ['En proceso', 'done', '9 dic · 19:20'],
+            ['Contratado', 'done', 'hoy · 13:00'],
+        ]);
+        expect(canMarkHired(marta(), statusNow())).toBe(false);
+    });
+
+    it('no seleccionada en GES-02: cierra con el Badge en el último paso que pasó', () => {
+        const view = hiringView(marta(), 'No seleccionado');
+        expect(view.pasos.map((s) => [s.etapa, s.badge])).toEqual([
+            ['Postulado', undefined],
+            ['Visto', undefined],
+            ['En proceso', 'No seleccionado'],
+        ]);
+        expect(view.checklist).toBeUndefined();
+        expect(canMarkHired(marta(), 'No seleccionado')).toBe(false);
+    });
+
+    it('quien postuló ve su proceso tal cual', () => {
+        const pedro = proc('proc-pedro-mecanico');
+        expect(hiringApplicantOf(pedro, getManageState(), getSessionState().applications)).toBeUndefined();
+        expect(hiringView(pedro, undefined)).toBe(pedro);
+        expect(canMarkHired(pedro, undefined)).toBe(false);
     });
 });

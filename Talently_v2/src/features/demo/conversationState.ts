@@ -8,7 +8,15 @@
 // vuelva la base de datos, cada acción pasa a ser su RPC.
 import { useMemo, useSyncExternalStore } from 'react';
 import { getConversations } from './data';
-import { keyOf, startsWithoutApplication, useSessionState, type SessionApplication } from './sessionStore';
+import {
+    afterReachedInSession,
+    getSessionState,
+    noteConversationRead,
+    startsWithoutApplication,
+    useSessionState,
+    type PendingMatch,
+    type SessionApplication,
+} from './sessionStore';
 import type { DemoConversation, DemoViewerId } from './types';
 
 /** Lo que tarda el envío simulado («Enviando…» → «Enviado»). */
@@ -69,8 +77,10 @@ export function useConversationState(id: string): ConversationState {
     return all.get(id) ?? EMPTY_STATE;
 }
 
+/** La abrió: sus no leídos pasan a 0 y su «te escribió» de la campana queda leído (useInbox). */
 export function markRead(id: string): void {
     update(id, (s) => (s.read ? s : { ...s, read: true }));
+    noteConversationRead(id);
 }
 
 export function setDraft(id: string, draft: string): void {
@@ -165,16 +175,21 @@ export function resetConversations(): void {
 // ─── Qué conversaciones existen en la sesión ────────────────────────────────
 
 /**
- * ¿La conversación ya existe en esta sesión? Los datos traen el «después» de
- * los flujos 3 y de apoyo: «Taller Los Aromos» (Pedro) y «Seguridad Andes»
- * (Jorge) conversan sobre una postulación que, en una sesión nueva, el actor
- * todavía no envía (startsWithoutApplication). Aparecen al postular, igual
- * que sus notificaciones (useInbox) y su proceso (PRC-01).
+ * ¿La conversación ya existe en esta sesión? Los datos traen el «después» del
+ * flujo 3: «Taller Los Aromos» (Pedro) conversa sobre una postulación que, en
+ * una sesión nueva, el actor todavía no envía (startsWithoutApplication).
+ * Aparece cuando llega el match (DET-03), igual que sus notificaciones
+ * (useInbox) y su proceso (PRC-01): mientras el match viene en camino
+ * (`pendingMatches`), todavía no existe.
  */
-export function conversationInSession(conv: DemoConversation, applications: ReadonlyMap<string, SessionApplication>): boolean {
+export function conversationInSession(
+    conv: DemoConversation,
+    applications: ReadonlyMap<string, SessionApplication>,
+    pendingMatches: ReadonlyMap<string, PendingMatch> = getSessionState().pendingMatches,
+): boolean {
     const publicationId = conv.contexto.publicationId;
     if (!publicationId || !startsWithoutApplication(conv.viewerId, publicationId)) return true;
-    return applications.has(keyOf(conv.viewerId, publicationId));
+    return afterReachedInSession(applications, pendingMatches, conv.viewerId, publicationId);
 }
 
 /** Las conversaciones de quien mira, las que existen en la sesión (recién registrado: ninguna). */
@@ -182,15 +197,19 @@ export function conversationsOf(
     viewerId: DemoViewerId,
     recienRegistrado: boolean,
     applications: ReadonlyMap<string, SessionApplication>,
+    pendingMatches: ReadonlyMap<string, PendingMatch> = getSessionState().pendingMatches,
 ): DemoConversation[] {
     if (recienRegistrado) return [];
-    return getConversations(viewerId).filter((c) => conversationInSession(c, applications));
+    return getConversations(viewerId).filter((c) => conversationInSession(c, applications, pendingMatches));
 }
 
 /** MSG-01: las conversaciones de quien mira, al día con la sesión. */
 export function useConversations(viewerId: DemoViewerId, recienRegistrado = false): DemoConversation[] {
-    const { applications } = useSessionState();
-    return useMemo(() => conversationsOf(viewerId, recienRegistrado, applications), [viewerId, recienRegistrado, applications]);
+    const { applications, pendingMatches } = useSessionState();
+    return useMemo(
+        () => conversationsOf(viewerId, recienRegistrado, applications, pendingMatches),
+        [viewerId, recienRegistrado, applications, pendingMatches],
+    );
 }
 
 /** No leídos reales: los de los datos, salvo las conversaciones que ya abrió. */

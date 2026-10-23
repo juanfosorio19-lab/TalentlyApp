@@ -6,6 +6,7 @@
 //   4. historial interno → navigate(-1)
 //   5. pestaña distinta de Inicio → Inicio (replace); Bienvenida cuenta como Inicio
 //   6. Inicio → toast «Presiona atrás otra vez para salir»; 2.º toque en < 2 s → salir
+//      (en la raíz de Inicio el paso 4 no se usa: aunque quede algo debajo, atrás avisa y sale)
 // El BackButton del AppBar usa los pasos 1 a 4 con useGoBack(); si no hay
 // historial (se llegó por un enlace), vuelve con replace a la ruta que diga la
 // pantalla (useGoBack(fallback): /buscar → la última de Explorar) o, si no
@@ -15,7 +16,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { closeTopOverlay } from '../ui/overlay';
 import { hasDirtyForm, hasInternalHistory, runWizardBack } from './navigation/backHandlers';
-import { paths, tabOf } from './paths';
+import { isTabRoot, paths, tabOf } from './paths';
 
 const EXIT_WINDOW_MS = 2000;
 
@@ -42,8 +43,8 @@ export function BackButtonManager({ prompts, children }: { prompts: BackPrompts;
         locationRef.current = location;
     });
 
-    /** Pasos 1 a 4. Devuelve true si resolvió algo. */
-    const stepBack = useCallback(async (): Promise<boolean> => {
+    /** Pasos 1 a 4 (sin `history`, 1 a 3). Devuelve true si resolvió algo. */
+    const stepBack = useCallback(async (history = true): Promise<boolean> => {
         if (closeTopOverlay()) return true;
         if (hasDirtyForm()) {
             const discard = await promptsRef.current.confirmDiscard();
@@ -51,7 +52,7 @@ export function BackButtonManager({ prompts, children }: { prompts: BackPrompts;
             // Descartó: sigue hacia atrás sin volver a preguntar.
         }
         if (runWizardBack()) return true;
-        if (hasInternalHistory()) {
+        if (history && hasInternalHistory()) {
             navigate(-1);
             return true;
         }
@@ -66,7 +67,9 @@ export function BackButtonManager({ prompts, children }: { prompts: BackPrompts;
         }
         busy.current = true;
         try {
-            if (await stepBack()) return;
+            // En la raíz de Inicio, atrás no vuelve a lo que haya quedado debajo: avisa y sale (regla 6).
+            const atInicio = (pathname: string) => isTabRoot(pathname) && tabOf(pathname) === 'inicio';
+            if (await stepBack(!atInicio(locationRef.current.pathname))) return;
             const { pathname } = locationRef.current;
             // Bienvenida (fuera de la sesión) se trata como Inicio: atrás no entra a la
             // sesión que se acaba de cerrar; avisa y el segundo toque sale de la app.
@@ -106,7 +109,7 @@ export function BackButtonManager({ prompts, children }: { prompts: BackPrompts;
 
     const goBack = useCallback<GoBackTo>(
         (fallback) => {
-            void stepBack().then((done) => {
+            void stepBack(true).then((done) => {
                 if (done) return;
                 const tab = tabOf(locationRef.current.pathname);
                 void navigate(fallback ?? (tab ? paths[tab]() : paths.inicio()), { replace: true });

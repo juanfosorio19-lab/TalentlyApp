@@ -1,8 +1,20 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { buildIcs } from '../../domain/calendario';
 import { getApplication, getApplications, getNotifications } from '../demo/data';
+import { getManageState, resetManage, setApplicantStatus } from '../demo/manageState';
 import { DEMO_ACTORS } from '../demo/session';
-import { applyTo, cancelShift, getSessionState, keyOf, resetSession, reviewedBy, sendReview, startsWithoutApplication } from '../demo/sessionStore';
+import {
+    applyTo,
+    cancelShift,
+    getSessionState,
+    isWithdrawn,
+    keyOf,
+    resetSession,
+    reviewedBy,
+    sendReview,
+    startsWithoutApplication,
+    withdrawApplication,
+} from '../demo/sessionStore';
 import type { DemoApplication } from '../demo/types';
 import {
     TODAY,
@@ -16,6 +28,7 @@ import {
     groupByDay,
     groupOf,
     hasEnded,
+    hiringStatusLookup,
     icsFileName,
     isoFromDayText,
     metricLine,
@@ -24,6 +37,7 @@ import {
     publisherFor,
     resolveSegment,
     shiftCalendarEvent,
+    sortShiftsByStart,
     shiftWindow,
     toEventData,
     whenText,
@@ -35,17 +49,24 @@ const NOT_NEW = { recienRegistrado: false };
 
 /**
  * Lo mismo que hace useApplications de demo/sessionStore (sin React): las de
- * los datos sin las que el actor aún no postuló, con lo cancelado al día.
+ * los datos sin las que el actor aún no postuló, con lo cancelado y lo
+ * retirado al día.
  */
 function sessionApplications(actorId: keyof typeof DEMO_ACTORS): DemoApplication[] {
     const { applications, cancelledShifts } = getSessionState();
     return getApplications(actorId)
         .filter((a) => !startsWithoutApplication(actorId, a.publicationId) || applications.has(keyOf(actorId, a.publicationId)))
-        .map((a) => (cancelledShifts.has(a.id) ? { ...a, estado: 'Cancelaste' } : a));
+        .map((a) => {
+            if (cancelledShifts.has(a.id)) return { ...a, estado: 'Cancelaste' };
+            const appliedAt = applications.get(keyOf(actorId, a.publicationId))?.at;
+            if (a.processId && isWithdrawn(actorId, a.processId, appliedAt)) return { ...a, estado: 'Postulación retirada' };
+            return a;
+        });
 }
 
 afterEach(() => {
     resetSession();
+    resetManage();
 });
 
 /** Lo que GES-01 y GES-04 cambiaron en la sesión, por publicación. */
@@ -93,6 +114,35 @@ describe('ACT-02 · a dónde lleva cada postulación', () => {
     });
 });
 
+describe('ACT-02 · orden de los turnos', () => {
+    it('van por fecha y hora de inicio, también el que se toma en la sesión (flujo 2)', () => {
+        applyTo('matias', 'turno-garzones-matrimonio', 'Postulado');
+        const matias = sessionApplications('matias').filter((a) => a.tipo === 'turno');
+        expect(sortShiftsByStart(matias).map((a) => a.id)).toEqual(['app-matias-coctel', 'app-matias-matrimonio', 'app-matias-cena']);
+        // useApplications agrega arriba la que no viene en los datos: «Garzones para cóctel de lanzamiento», sáb 12 dic 19:00.
+        const lanzamiento: DemoApplication = {
+            ...(matias[0] as DemoApplication),
+            id: 'sesion-turno-coctel-lanzamiento',
+            publicationId: 'turno-coctel-lanzamiento',
+            miTurno: undefined,
+            estado: 'Postulado',
+        };
+        expect(sortShiftsByStart([lanzamiento, ...matias]).map((a) => a.id)).toEqual([
+            'app-matias-coctel',
+            'app-matias-matrimonio',
+            'sesion-turno-coctel-lanzamiento',
+            'app-matias-cena',
+        ]);
+    });
+
+    it('sin fecha conocida, al final y en el orden en que llegaron', () => {
+        const [first] = sessionApplications('matias');
+        if (!first) throw new Error('sin postulaciones');
+        const unknown = { ...first, id: 'x', publicationId: 'no-existe', miTurno: undefined };
+        expect(sortShiftsByStart([unknown, first]).map((a) => a.id)).toEqual([first.id, 'x']);
+    });
+});
+
 describe('ACT-01 · Agenda', () => {
     it('recién registrado, vacía', () => {
         expect(agendaFor(DEMO_ACTORS.jorge, sessionApplications('jorge'), { recienRegistrado: true })).toEqual([]);
@@ -117,6 +167,27 @@ describe('ACT-01 · Agenda', () => {
         applyTo('matias', 'turno-garzones-matrimonio', 'Postulado');
         const after = agendaFor(DEMO_ACTORS.matias, sessionApplications('matias'), NOT_NEW);
         expect(after.map((i) => i.date)).toEqual(['2026-12-10', '2026-12-12', '2026-12-18']);
+    });
+
+    it('al retirar la postulación en PRC-01, la entrevista sale de la Agenda (y vuelve si postula de nuevo)', () => {
+        applyTo('pedro', 'empleo-mecanico-automotriz', 'Postulado');
+        const appliedAt = getSessionState().applications.get(keyOf('pedro', 'empleo-mecanico-automotriz'))?.at ?? 0;
+        withdrawApplication('pedro', 'proc-pedro-mecanico', appliedAt + 1000);
+        expect(sessionApplications('pedro').map((a) => a.estado)).toEqual(['Postulación retirada']);
+        expect(agendaFor(DEMO_ACTORS.pedro, sessionApplications('pedro'), NOT_NEW)).toEqual([]);
+        // Vuelve a postular después de retirar (DET-01): la entrevista vuelve.
+        withdrawApplication('pedro', 'proc-pedro-mecanico', appliedAt - 1000);
+        expect(agendaFor(DEMO_ACTORS.pedro, sessionApplications('pedro'), NOT_NEW).map((i) => i.id)).toEqual(['ag-pedro-entrevista']);
+    });
+
+    it('Carolina ve la entrevista con Marta hasta que la marca «Contratado» en PRC-01 (flujo 5)', () => {
+        const lookup = () => hiringStatusLookup(getManageState(), getSessionState().applications);
+        const ids = () => agendaFor(DEMO_ACTORS.carolina, [], NOT_NEW, undefined, lookup()).map((i) => i.id);
+        expect(lookup()('proc-carolina-marta')).toBe('En proceso');
+        expect(ids()).toContain('ag-carolina-entrevista');
+        setApplicantStatus('aviso-asesor-hogar', 'marta', 'Contratado');
+        expect(lookup()('proc-carolina-marta')).toBe('Contratado');
+        expect(ids()).not.toContain('ag-carolina-entrevista');
     });
 
     it('un turno cancelado en TUR-01 sale de la Agenda', () => {

@@ -1,7 +1,7 @@
 // Navegación de «Inicio y notificaciones» sobre la base compartida: toda ruta
 // sale de paths.ts o de demo/targets y se abre con useOpenPath (si la
 // pantalla aún no existe, «Disponible pronto» en vez de SYS-404).
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import type { NavigateOptions } from 'react-router-dom';
 import { useOpenPath, type LinkTargetProps } from '../../app/navigation/useOpenPath';
 import { paths } from '../../app/paths';
@@ -35,43 +35,5 @@ export function useHomeNavigation() {
     return { go, link, targetLink, openTarget, soon, canOpen };
 }
 
-/**
- * Lleva el foco al título de la pantalla (el h1 del AppBar) cuando el elemento
- * tocado ya no está y el foco cayó al body: la campana al abrir NOT-01, o la
- * fila de una notificación que cambió de actor y volvió a Inicio. AppBar no
- * deja pasar tabIndex al título: se lo pone como useModalFocus.screenFallback,
- * con el anillo del sistema (tl-focus). Pedido en «requests» que AppBar lo traiga.
- */
-export function focusScreenTitle(): void {
-    const title = document.querySelector<HTMLElement>('.tl-app-screen h1.tl-appbar__title') ?? document.querySelector<HTMLElement>('h1.tl-appbar__title');
-    if (!title) return;
-    if (!title.hasAttribute('tabindex')) title.setAttribute('tabindex', '-1');
-    title.classList.add('tl-focus');
-    title.focus({ preventScroll: true });
-}
-
-/**
- * ¿Ya tocó o tecleó algo? Antes de eso (la app recién abierta, en cualquier
- * ruta) el foco es del navegador y no se mueve.
- */
-let interacted = false;
-if (typeof window !== 'undefined') {
-    const mark = () => {
-        interacted = true;
-    };
-    window.addEventListener('pointerdown', mark, { capture: true, once: true });
-    window.addEventListener('keydown', mark, { capture: true, once: true });
-}
-
-/**
- * Cada vez que cambia `trigger` (la entrada del historial), si el foco quedó
- * en el body, pasa al título de la pantalla.
- */
-export function useFocusTitleIfLost(trigger: unknown): void {
-    useEffect(() => {
-        if (!interacted) return;
-        const active = document.activeElement;
-        if (active && active !== document.body) return;
-        focusScreenTitle();
-    }, [trigger]);
-}
+// El foco al cambiar de pantalla (volver de NOT-01 con otro actor, abrir NOT-01 desde la campana)
+// lo rescata RootLayout para todas las pantallas: src/app/navigation/focus.ts.

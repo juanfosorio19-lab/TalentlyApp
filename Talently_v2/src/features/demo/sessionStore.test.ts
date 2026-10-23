@@ -10,6 +10,7 @@ import {
     isWithdrawn,
     markMatchSeen,
     markNotificationsRead,
+    noteConversationRead,
     resetSession,
     reviewedBy,
     scheduleMatch,
@@ -92,13 +93,46 @@ describe('sesión de demostración', () => {
     it('la bandeja no muestra lo de una postulación que la sesión todavía no tiene (flujos 2 y 3)', () => {
         const ids = (viewer: 'pedro' | 'jorge' | 'marta') => inboxItems(viewer, false).map((n) => n.id);
         expect(ids('pedro')).toEqual([]);
-        expect(ids('jorge')).not.toContain('not-jorge-entrevista');
-        expect(ids('jorge')).not.toContain('not-jorge-mensaje');
+        // Jorge (flujos 8 y 11) parte con su postulación a Guardia 4x4: entrevista y mensaje de Seguridad Andes.
+        expect(ids('jorge')).toContain('not-jorge-entrevista');
+        expect(ids('jorge')).toContain('not-jorge-mensaje');
         expect(ids('jorge')).toContain('not-jorge-match');
+        expect(startsWithoutApplication('jorge', 'empleo-guardia-4x4')).toBe(false);
         applyTo('pedro', 'empleo-mecanico-automotriz', 'Postulado');
         expect(ids('pedro')).toEqual(['not-pedro-mensaje', 'not-pedro-match', 'not-pedro-entrevista']);
         // Marta (flujo 10) es actor de la demo: su bandeja es la suya.
         expect(ids('marta')).toEqual(['not-marta-mensaje']);
         expect(inboxItems('jorge', true)).toEqual([]);
+    });
+
+    it('mientras el match viene en camino, la bandeja todavía no trae lo de después (flujo 3)', () => {
+        const ids = () => inboxItems('pedro', false).map((n) => n.id);
+        applyTo('pedro', 'empleo-mecanico-automotriz', 'Postulado');
+        scheduleMatch('pedro', 'empleo-mecanico-automotriz', 60_000);
+        expect(ids()).toEqual([]);
+        markMatchSeen('pedro', 'empleo-mecanico-automotriz');
+        expect(ids()).toEqual(['not-pedro-mensaje', 'not-pedro-match', 'not-pedro-entrevista']);
+    });
+
+    it('«te escribió» queda leída al abrir esa conversación (la campana y Mensajes dicen lo mismo)', () => {
+        const unread = () => inboxItems('marta', false).filter((n) => n.sinLeer).map((n) => n.id);
+        expect(unread()).toEqual(['not-marta-mensaje']);
+        noteConversationRead('conv-marta-familia');
+        expect(unread()).toEqual([]);
+        // Un match que lleva a la misma conversación no es «te escribió»: sigue sin leer.
+        noteConversationRead('conv-jorge-hotel-andino');
+        expect(inboxItems('jorge', false).find((n) => n.id === 'not-jorge-match')?.sinLeer).toBe(true);
+    });
+
+    it('retirar quita el «Me interesa» del deck: la publicación vuelve al deck', () => {
+        decide('pedro', 'empleo-mecanico-automotriz', 'si');
+        applyTo('pedro', 'empleo-mecanico-automotriz', 'Postulado');
+        expect(decidedIn(getSessionState(), 'pedro', 'empleo-mecanico-automotriz')).toBe('postulado');
+        withdrawApplication('pedro', 'proc-pedro-mecanico', Date.now() + 1000);
+        expect(decidedIn(getSessionState(), 'pedro', 'empleo-mecanico-automotriz')).toBeUndefined();
+        // Un «No me interesa» de otra publicación no se toca.
+        decide('pedro', 'otra', 'no');
+        withdrawApplication('pedro', 'proc-pedro-mecanico', Date.now() + 2000);
+        expect(getSessionState().decisions.get('pedro:otra')).toBe('no');
     });
 });

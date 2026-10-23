@@ -1,10 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { flowOriginOf, flowOriginState, historyIndex, returnToEntry } from './history';
-import { tabAwareOptions } from './useOpenPath';
+import { noteEntry, resetEntriesForTests } from './tabMemory';
+import { backToTabRootBelow, tabAwareOptions } from './useOpenPath';
 
 const setIdx = (idx: number | undefined) => window.history.replaceState(idx === undefined ? null : { idx }, '');
 
-afterEach(() => setIdx(undefined));
+afterEach(() => {
+    setIdx(undefined);
+    resetEntriesForTests();
+});
 
 describe('historial de la app', () => {
     it('lee el índice de React Router', () => {
@@ -57,5 +61,21 @@ describe('tabAwareOptions (spec §5.3 reglas 1 y 2)', () => {
     it('un replace explícito manda', () => {
         setIdx(0);
         expect(tabAwareOptions('/mensajes', '/inicio', { replace: true })).toEqual({ replace: true });
+    });
+});
+
+describe('backToTabRootBelow (sin dos entradas de la misma pestaña seguidas)', () => {
+    it('desde una pantalla apilada, si la raíz de destino es la entrada de abajo, vuelve a ella', () => {
+        noteEntry(0, '/inicio');
+        noteEntry(1, '/actividad');
+        setIdx(2);
+        expect(backToTabRootBelow('/actividad?seg=postulaciones', '/p/turno-x')).toBe(true);
+        // Otra pestaña debajo: replace normal.
+        expect(backToTabRootBelow('/explorar?tipo=turno', '/p/turno-x')).toBe(false);
+        // Desde una raíz de pestaña (cambiar de segmento) o con un replace explícito, no.
+        expect(backToTabRootBelow('/actividad?seg=agenda', '/actividad')).toBe(false);
+        expect(backToTabRootBelow('/actividad', '/p/turno-x', { replace: true })).toBe(false);
+        // Una pantalla apilada nunca.
+        expect(backToTabRootBelow('/p/otra', '/p/turno-x')).toBe(false);
     });
 });

@@ -2,10 +2,13 @@
 // PRC-01-pedro y PRC-01-hogar). El Timeline de estados es el mismo para los
 // dos lados. Quien postuló ve la entrevista agendada (SystemCard con «Agregar
 // al calendario»), la conversación, la publicación y «Retirar postulación»
-// (Dialog). Quien contrata para su hogar ve, ya contratada la persona, el
-// checklist legal «Para contratar como corresponde» y sus opciones. La
-// postulación sale de la sesión (useApplications): si todavía no postula
-// (inicio de los flujos 2 y 3), un EmptyState lleva a la publicación.
+// (Dialog). Quien contrata para su hogar ve el estado de la persona tal como
+// lo dice GES-02 (hiringApplicantOf) y la marca «Contratado» desde aquí: recién
+// entonces aparece el checklist legal «Para contratar como corresponde»
+// (PRC-01-hogar, con su Snackbar). La postulación sale de la sesión
+// (useApplications): si todavía no postula (inicio de los flujos 2 y 3), un
+// EmptyState lleva a la publicación. «Ver conversación» y «Ver publicación»
+// vuelven atrás si PRC-01 se abrió desde ahí (useCrossLink), sin ping-pong.
 import { useEffect, useMemo, useRef, type MouseEvent } from 'react';
 import { useParams } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
@@ -18,7 +21,7 @@ import { CheckboxGroup } from '../../../ui/Checkbox';
 import { Dialog } from '../../../ui/Dialog';
 import { EmptyState } from '../../../ui/EmptyState';
 import { IconButton } from '../../../ui/IconButton';
-import { IconCalendar, IconChat, IconCloseCircle, IconMore, IconOffers, IconPeople, IconPerson } from '../../../ui/icons';
+import { IconCalendar, IconChat, IconCheck, IconCloseCircle, IconMore, IconOffers, IconPeople, IconPerson } from '../../../ui/icons';
 import { Stack } from '../../../ui/Layout';
 import { List, ListItem } from '../../../ui/ListItem';
 import { SectionCard } from '../../../ui/SectionCard';
@@ -29,15 +32,22 @@ import { useGoBack } from '../../../app/BackButtonManager';
 import { useOpenPath } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
 import { buildIcs } from '../../../domain/calendario';
+import { useManageSession } from '../../demo/manageHooks';
+import { firstName } from '../../demo/manageSelectors';
+import { setApplicantStatus } from '../../demo/manageState';
 import { useDemoSession } from '../../demo/session';
 import { useApplications, useSessionApplication, useWithdrawn, withdrawApplication } from '../../demo/sessionStore';
 import type { DemoChecklist, DemoProcess, DemoSystemCard } from '../../demo/types';
 import { DT_URL, copy } from '../copy';
-import { useAvailableSheet, useOpenFromSheet } from '../hooks';
+import { useAvailableSheet, useCrossLink, useOpenFromSheet } from '../hooks';
 import {
+    HIRED,
+    canMarkHired,
     canWithdraw,
     counterpartPath,
     googleCalendarUrl,
+    hiringApplicantOf,
+    hiringView,
     interviewEvent,
     isApplicantView,
     processStatus,
@@ -68,13 +78,14 @@ export function ProcessScreen() {
 function NoProcess({ target }: { target: Exclude<ProcessTarget, { kind: 'process' }> }) {
     const goBack = useGoBack();
     const { open } = useOpenPath();
+    const cross = useCrossLink();
     const { actor } = useDemoSession();
     const content =
         target.kind === 'not-applied'
             ? {
                   title: copy.process.notAppliedTitle,
                   text: copy.process.notAppliedText,
-                  action: { label: copy.process.publication, onClick: () => open(paths.publicacion(target.publicationId)) },
+                  action: { label: copy.process.publication, onClick: () => cross.go(paths.publicacion(target.publicationId)) },
               }
             : {
                   title: copy.process.notFoundTitle,
@@ -93,13 +104,21 @@ function NoProcess({ target }: { target: Exclude<ProcessTarget, { kind: 'process
     );
 }
 
-function Process({ process }: { process: DemoProcess }) {
+function Process({ process: data }: { process: DemoProcess }) {
     const goBack = useGoBack();
     const scrolled = useScrolled();
     const snackbar = useSnackbar();
-    const { canOpen, linkProps } = useOpenPath();
+    const { canOpen } = useOpenPath();
+    const cross = useCrossLink();
     const { actor } = useDemoSession();
     const headingRef = useRef<HTMLHeadingElement>(null);
+
+    // Quien contrata: el estado de la persona en GES-02 manda (Badge, pasos y checklist).
+    const { manage, applications: sessionApplications } = useManageSession();
+    const person = hiringApplicantOf(data, manage, sessionApplications);
+    const hiring = person?.estado;
+    const process = useMemo(() => hiringView(data, hiring), [data, hiring]);
+    const markable = canMarkHired(data, hiring);
 
     // Si volvió a postular después de retirar (DET-01), la postulación está en pie otra vez.
     const appliedAt = useSessionApplication(actor.id, process.publicationId)?.at;
@@ -129,6 +148,23 @@ function Process({ process }: { process: DemoProcess }) {
         withdrawApplication(actor.id, process.id);
         withdrawSheet.hide();
         snackbar.show({ message: copy.process.withdrawn });
+    };
+
+    // «Marcar como contratada» también deja de existir: el foco y la vista vuelven al título, con el checklist debajo.
+    const focusAfterHire = useRef(false);
+    const hired = hiring === HIRED;
+    useEffect(() => {
+        if (!hired || !focusAfterHire.current) return;
+        focusAfterHire.current = false;
+        headingRef.current?.focus();
+    }, [hired]);
+
+    const markHired = () => {
+        focusAfterHire.current = true;
+        // El mismo estado que GES-02 (demo/manageState): la lista, la Agenda y este proceso lo ven igual.
+        if (!person) return;
+        setApplicantStatus(process.publicationId, person.personId, HIRED);
+        snackbar.show({ message: copy.process.hired(firstName(other.nombre)), tone: 'success' });
     };
 
     const addToCalendar = async (card: DemoSystemCard) => {
@@ -216,16 +252,22 @@ function Process({ process }: { process: DemoProcess }) {
                                     icon={IconChat}
                                     title={copy.process.chat}
                                     sub={other.nombre}
-                                    {...linkProps(paths.conversacion(process.conversationId))}
+                                    {...cross.link(paths.conversacion(process.conversationId))}
                                 />
                             )}
                             <ListItem
                                 icon={IconOffers}
                                 title={applicant ? copy.process.publication : copy.process.ownPublication}
                                 sub={applicant ? process.titulo : process.subtitulo}
-                                {...linkProps(publicationPath(process))}
+                                {...cross.link(publicationPath(process))}
                             />
                         </List>
+
+                        {markable && (
+                            <List>
+                                <ListItem icon={IconCheck} title={copy.process.markHired} onClick={markHired} />
+                            </List>
+                        )}
 
                         {withdrawable && (
                             <List>

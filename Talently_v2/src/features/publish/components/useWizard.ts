@@ -1,6 +1,6 @@
 // La navegación de un asistente de publicar (spec §5.3): cada paso vive en la
 // URL (/publicar/:tipo/:paso, con replace: el historial guarda una sola
-// entrada del asistente y al terminar se reemplaza por el resultado), atrás
+// entrada del asistente y al publicar PUBL-07 se abre encima), atrás
 // vuelve al paso anterior (useWizardBack), salir desde el paso 1 con cambios
 // pregunta «¿Descartar cambios?» (useDirtyGuard) y «Guardar y salir» deja el
 // borrador para seguir después desde ese paso.
@@ -9,8 +9,9 @@
 // hace lo mismo que el de Android: useBlocker lo detiene y lo resuelve
 // useGoBack (paso anterior o «¿Descartar cambios?» en el paso 1). Y un
 // asistente ya publicado no se vuelve a mostrar: si atrás cae en una entrada
-// suya (flujo 5: debajo de VER-02 quedan el paso 5 y su hoja de identidad),
-// se salta hasta la pantalla de antes.
+// suya (el paso 5 debajo de PUBL-07 en el flujo 4; en el flujo 5, el paso 5 y
+// su hoja de identidad debajo de VER-02), se salta hasta la pantalla de antes
+// de la hoja PUBL-01.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useNavigationType, type BlockerFunction } from 'react-router-dom';
 import { useSnackbar } from '../../../ui/Snackbar';

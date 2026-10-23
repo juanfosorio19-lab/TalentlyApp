@@ -113,3 +113,14 @@ export function requirementIcon(texto: string): IconComponent {
     if (texto.includes('experiencia')) return IconClock;
     return IconDocument;
 }
+
+/**
+ * El lugar para quien mira (DET-01): «a 4 km · Puente Alto» o, si la comuna
+ * de casa que dejó el registro (ONB-03, demo/session `onboarding.comuna`) no
+ * es la de la demo, desde la que se calcularon las distancias, solo la
+ * comuna del aviso («Puente Alto»), como las tarjetas de Explorar.
+ */
+export function placeFor(lugar: string, homeComuna: string | null | undefined, demoComuna: string): string {
+    if (!homeComuna || homeComuna === demoComuna) return lugar;
+    return lugar.split('·').pop()?.trim() ?? lugar;
+}

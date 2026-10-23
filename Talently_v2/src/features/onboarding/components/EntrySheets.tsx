@@ -27,12 +27,13 @@ const PERSONAS = ['matias', 'jorge', 'pedro', 'carolina', 'rosa'] as const satis
 export function DemoLoginSheet() {
     const sheet = useSheet(LOGIN_SHEET);
     const navigate = useNavigate();
-    const { setActor } = useDemoSession();
+    const { signIn } = useDemoSession();
     const { leave } = useFlow();
     const { retomar } = useDraft();
 
+    // Elegir una persona es entrar a SU cuenta, no a la recién creada (aunque sea Jorge).
     const enterAs = (id: DemoActorId) => {
-        setActor(id);
+        signIn(id);
         leave(onbPaths.inicio());
     };
 

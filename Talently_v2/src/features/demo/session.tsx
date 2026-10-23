@@ -79,7 +79,14 @@ interface DemoSession {
      * Inicio, Actividad, las campanas y Mensajes se ven vacíos.
      */
     recienRegistrado: boolean;
+    /** Cambia de actor dentro de la misma cuenta (SHT-ACTOR, NOT-01); otra persona deja de ser la cuenta recién creada. */
     setActor: (id: DemoActorId) => void;
+    /**
+     * «Ya tengo cuenta» (AUTH-01): entra a la cuenta de una persona de la demo.
+     * Siempre deja de ser la cuenta recién creada, aunque sea Jorge: elegir
+     * «Jorge Muñoz» es su cuenta del prototipo, no la del registro de recién.
+     */
+    signIn: (id: DemoActorId) => void;
     /** Actores entre los que puede cambiar (SHT-ACTOR): la persona y sus organizaciones. */
     switchable: DemoActor[];
 }
@@ -122,6 +129,11 @@ export function DemoSessionProvider({ children }: { children: ReactNode }) {
         },
         [actorId],
     );
+    const signIn = useCallback((id: DemoActorId) => {
+        setNuevo(false);
+        setOnboarding(undefined);
+        setActorId(id);
+    }, []);
     const startAsNewUser = useCallback((result?: DemoOnboardingResult) => {
         setActorId('jorge');
         setNuevo(true);
@@ -135,12 +147,13 @@ export function DemoSessionProvider({ children }: { children: ReactNode }) {
         return {
             actor,
             setActor,
+            signIn,
             switchable,
             startAsNewUser,
             recienRegistrado,
             onboarding: recienRegistrado ? onboarding : undefined,
         };
-    }, [actorId, setActor, startAsNewUser, nuevo, onboarding]);
+    }, [actorId, setActor, signIn, startAsNewUser, nuevo, onboarding]);
     return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

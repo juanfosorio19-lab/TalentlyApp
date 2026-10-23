@@ -2,13 +2,17 @@
 // desde la propia app). Lo usan todos los features en vez de navigate() o de
 // armar <a href> a mano. Ir a la raíz de una pestaña hace replace (spec §5.3
 // regla 1: cambiar de pestaña no apila); una pantalla apilada, push (regla 2).
-// Quien necesite otra cosa lo dice con `replace` explícito.
+// Quien necesite otra cosa lo dice con `replace` explícito. Si la raíz de esa
+// pestaña es justo la entrada de abajo (DET-01 abierto desde ACT-02 →
+// «Ver mis postulaciones»), vuelve a ella y la reemplaza: nunca quedan dos
+// entradas de la misma pestaña seguidas (el primer atrás no repite la pantalla).
 import { useCallback, type MouseEvent } from 'react';
 import { useHref, useLocation, useNavigate, type NavigateOptions } from 'react-router-dom';
 import { useSnackbar } from '../../ui/Snackbar';
 import { isTabRoot, tabOf } from '../paths';
-import { historyIndex } from './history';
+import { historyIndex, returnToEntry } from './history';
 import { canOpen } from './routeRegistry';
+import { tabRootJustBelow } from './tabMemory';
 
 export const SOON_MESSAGE = 'Disponible pronto';
 
@@ -45,6 +49,16 @@ export function tabAwareOptions(path: string, from: string, options?: NavigateOp
     return { ...options, replace: !leavingFirstInicio };
 }
 
+/**
+ * ¿Ir a `path` es volver a la entrada de abajo? Sí si es la raíz de una
+ * pestaña, se sale de una pantalla apilada y la entrada de abajo es esa misma
+ * raíz (tabRootJustBelow). Un `replace` explícito manda.
+ */
+export function backToTabRootBelow(path: string, from: string, options?: NavigateOptions): boolean {
+    if (options?.replace !== undefined || isTabRoot(from)) return false;
+    return tabRootJustBelow(historyIndex(), pathOnly(path));
+}
+
 export function useOpenPath(): OpenPath {
     const navigate = useNavigate();
     const { pathname } = useLocation();
@@ -54,12 +68,24 @@ export function useOpenPath(): OpenPath {
 
     const soon = useCallback(() => snackbar.show({ message: SOON_MESSAGE }), [snackbar]);
 
+    const go = useCallback(
+        (path: string, options?: NavigateOptions) => {
+            if (backToTabRootBelow(path, pathname, options)) {
+                // Vuelve a la raíz de la pestaña que está debajo y la cambia por el destino (su `?seg=`).
+                returnToEntry(historyIndex() - 1, (d) => void navigate(d), () => void navigate(path, { ...options, replace: true }));
+                return;
+            }
+            void navigate(path, tabAwareOptions(path, pathname, options));
+        },
+        [navigate, pathname],
+    );
+
     const open = useCallback(
         (path: string, options?: NavigateOptions) => {
-            if (canOpen(path)) void navigate(path, tabAwareOptions(path, pathname, options));
+            if (canOpen(path)) go(path, options);
             else soon();
         },
-        [navigate, pathname, soon],
+        [go, soon],
     );
 
     const linkProps = useCallback(
@@ -71,11 +97,11 @@ export function useOpenPath(): OpenPath {
                     // Con Ctrl/⌘ o botón del medio, que el navegador abra otra pestaña.
                     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
                     e.preventDefault();
-                    void navigate(path, tabAwareOptions(path, pathname, options));
+                    go(path, options);
                 },
             };
         },
-        [base, navigate, pathname, soon],
+        [base, go, soon],
     );
 
     return { canOpen, open, linkProps, soon };

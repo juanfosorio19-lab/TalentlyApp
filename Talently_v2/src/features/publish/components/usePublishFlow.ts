@@ -48,8 +48,12 @@ export function usePublishFlow<T>({ kind, step, actor, store, initial, hasErrors
         // «Te avisaremos cuando puedas destacar…» (Premium en el paso 5) no sigue sobre PUBL-07 ni GES-01.
         snackbar.hide();
         markPublished(actor.id, summary());
-        // Al terminar un flujo, replace hacia su resultado (spec §5.3 regla 6): atrás no vuelve al asistente.
-        navigate(publishedPath(kind), { replace: true });
+        // PUBL-07 se abre con push, sobre el paso 5 (spec §5.3 regla 6: atrás no vuelve al asistente ni a la
+        // hoja PUBL-01). Con replace quedaría encima de la hoja de Inicio y atrás la reabriría; así, atrás cae
+        // en el paso 5 de un asistente ya publicado y sin borrador, que useWizard salta (`skipping`) hasta la
+        // pantalla de antes, igual que al volver de VER-02 en el flujo 5. «Ver publicación» e «Ir a Inicio»
+        // vuelven de un salto a esa pantalla (useFinishFlow), sin pasar por el asistente.
+        navigate(publishedPath(kind));
         store.discard(actor.id);
     };
 

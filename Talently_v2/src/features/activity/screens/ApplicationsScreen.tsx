@@ -5,7 +5,8 @@
 // aquí, las que el prototipo muestra antes de postular no, y un turno
 // cancelado en TUR-01 dice «Cancelaste», igual que en la Agenda e Inicio.
 // Un turno confirmado abre Mi turno (TUR-01, flujo 2); un empleo, su proceso
-// (PRC-01); un turno postulado o en lista de espera, su detalle (DET-01).
+// (PRC-01); un turno postulado o en lista de espera, su detalle (DET-01). Los
+// turnos van por fecha y hora de inicio (sortShiftsByStart).
 import { Avatar } from '../../../ui/Avatar';
 import { Badge } from '../../../ui/Badge';
 import { EmptyState } from '../../../ui/EmptyState';
@@ -19,7 +20,7 @@ import { useApplications } from '../../demo/sessionStore';
 import type { DemoApplication } from '../../demo/types';
 import { ListGroup } from '../components/ListGroup';
 import { copy } from '../copy';
-import { applicationPath } from '../selectors';
+import { applicationPath, sortShiftsByStart } from '../selectors';
 import '../activity.css';
 
 export const screenId = 'ACT-02';
@@ -29,7 +30,8 @@ export function ApplicationsScreen() {
     const { actor, recienRegistrado } = useDemoSession();
     const applications = useApplications(actor.id, recienRegistrado);
     const empleos = applications.filter((a) => a.tipo === 'empleo');
-    const turnos = applications.filter((a) => a.tipo === 'turno');
+    // Los turnos, por fecha y hora de inicio (ACT-02-matias): el que se toma en el flujo 2 queda en su día, no arriba.
+    const turnos = sortShiftsByStart(applications.filter((a) => a.tipo === 'turno'));
 
     const row = (a: DemoApplication) => (
         <ListItem

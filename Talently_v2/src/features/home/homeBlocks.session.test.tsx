@@ -6,7 +6,7 @@ import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 import { getHomeFeed } from '../demo/data';
 import type { DemoActorId } from '../demo/session';
-import { applyTo, cancelShift, resetSession, useApplications } from '../demo/sessionStore';
+import { applyTo, cancelShift, markMatchSeen, resetSession, scheduleMatch, useApplications, withdrawApplication } from '../demo/sessionStore';
 import type { DemoApplication, DemoHomeBlock } from '../demo/types';
 import { homeBlocks } from './selectors';
 
@@ -58,10 +58,33 @@ describe('INI-01 · «Postulaciones con novedades» solo de lo que la sesión ti
         expect(block?.items.map((n) => n.id)).toEqual(['nov-pedro-entrevista']);
     });
 
-    it('Jorge solo ve la de Hotel Andino hasta que postula a Guardia 4x4', () => {
-        expect(news(blocksOf('jorge'))?.items.map((n) => n.id)).toEqual(['nov-jorge-hotel']);
-        applyTo('jorge', 'empleo-guardia-4x4', 'Postulado');
+    it('Jorge parte con su entrevista de Guardia 4x4 (flujos 8 y 11) y la de Hotel Andino', () => {
         expect(news(blocksOf('jorge'))?.items.map((n) => n.id)).toEqual(['nov-jorge-entrevista', 'nov-jorge-hotel']);
+    });
+
+    it('mientras el match viene en camino, Pedro solo postuló: sin «te citó a entrevista»', () => {
+        applyTo('pedro', 'empleo-mecanico-automotriz', 'Postulado');
+        scheduleMatch('pedro', 'empleo-mecanico-automotriz', 60_000);
+        expect(news(blocksOf('pedro'))).toBeUndefined();
+        const app = sessionApplications('pedro').find((a) => a.publicationId === 'empleo-mecanico-automotriz');
+        expect(app?.estado).toBe('Postulado');
+        expect(app?.processId).toBeUndefined();
+        markMatchSeen('pedro', 'empleo-mecanico-automotriz');
+        expect(news(blocksOf('pedro'))?.items.map((n) => n.id)).toEqual(['nov-pedro-entrevista']);
+    });
+
+    it('después de retirar, la novedad y ACT-02 ya no hablan de la entrevista', () => {
+        applyTo('pedro', 'empleo-mecanico-automotriz', 'Postulado');
+        withdrawApplication('pedro', 'proc-pedro-mecanico', Date.now() + 1000);
+        const app = sessionApplications('pedro').find((a) => a.publicationId === 'empleo-mecanico-automotriz');
+        expect(app).toMatchObject({ estado: 'Postulación retirada', detalle: 'Taller Los Aromos · Macul' });
+        expect(news(blocksOf('pedro'))?.items).toEqual([
+            expect.objectContaining({
+                titulo: 'Mecánico/a automotriz',
+                detalle: 'Taller Los Aromos · Macul',
+                estado: 'Postulación retirada',
+            }),
+        ]);
     });
 
     it('la de Matías (Hotel Andino vio tu postulación) sigue: esa postulación existe', () => {

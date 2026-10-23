@@ -2,7 +2,7 @@
 // 1 Oficio y plantilla · 2 Fechas y bloques · 3 Tarifa, contratación y
 // requisitos · 4 Vista previa · 5 PUBL-08 Tipo de publicación. Lo escrito
 // vive en el borrador del actor (store.ts): se conserva al ir y volver entre
-// pasos. Al publicar, replace a PUBL-07.
+// pasos. Al publicar, PUBL-07 se abre encima (usePublishFlow).
 import { useMemo, type ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Banner } from '../../../ui/Banner';

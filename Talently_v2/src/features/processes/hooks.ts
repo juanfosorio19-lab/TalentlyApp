@@ -1,9 +1,9 @@
 // Ayudas de Procesos y reseñas: scroll bajo el CTA fijo, hojas de la URL
-// (?sheet=) que la pantalla no siempre puede mostrar y acciones que salen de
-// una hoja.
+// (?sheet=) que la pantalla no siempre puede mostrar, acciones que salen de
+// una hoja y enlaces cruzados que vuelven en vez de apilar.
 import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useOpenPath } from '../../app/navigation/useOpenPath';
+import { useOpenPath, type LinkTargetProps } from '../../app/navigation/useOpenPath';
 import { useSheet, type UrlSheet } from '../../app/sheets';
 
 function subscribeToLayout(onChange: () => void): () => void {
@@ -90,4 +90,51 @@ export function useAvailableSheet(name: string, available: boolean): UrlSheet {
     }, [available, hide, open]);
 
     return { ...sheet, open: open && available, hide };
+}
+
+/**
+ * Lo que deja en `location.state` quien abre otra pantalla con un enlace
+ * cruzado (PRC-01 ↔ MSG-02, PRC-01 ↔ DET-01): la ruta de donde viene.
+ */
+export interface CrossLinkState {
+    from: string;
+}
+
+/** La ruta de donde se abrió esta entrada con un enlace cruzado, si la hay. */
+export function crossLinkFrom(state: unknown): string | null {
+    if (typeof state !== 'object' || state === null || !('from' in state)) return null;
+    return typeof state.from === 'string' ? state.from : null;
+}
+
+const pathOnly = (path: string) => path.split(/[?#]/)[0] ?? path;
+
+/**
+ * Enlaces cruzados sin ping-pong (como Términos ↔ Privacidad, spec §5.3
+ * regla 2): si esta pantalla se abrió desde `path`, ir a `path` es volver
+ * (navigate(-1)) en vez de apilar otra copia; si no, se abre apilada con
+ * `{ from }` para que aquella pueda hacer lo mismo.
+ */
+export function useCrossLink(): { link: (path: string) => LinkTargetProps; go: (path: string) => void } {
+    const navigate = useNavigate();
+    const { pathname, state } = useLocation();
+    const { linkProps, open } = useOpenPath();
+    const from = crossLinkFrom(state);
+    const crossState: CrossLinkState = { from: pathname };
+
+    const isBack = (path: string) => from !== null && from === pathOnly(path);
+    const link = (path: string): LinkTargetProps => {
+        const props = linkProps(path, { state: crossState });
+        if (!isBack(path)) return props;
+        return {
+            href: props.href,
+            onClick: (event) => {
+                // Con Ctrl/⌘ o botón del medio, que el navegador abra otra pestaña.
+                if (event.metaKey || event.ctrlKey || event.shiftKey || event.button === 1) return;
+                event.preventDefault();
+                void navigate(-1);
+            },
+        };
+    };
+    const go = (path: string) => (isBack(path) ? void navigate(-1) : open(path, { state: crossState }));
+    return { link, go };
 }

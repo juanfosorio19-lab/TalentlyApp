@@ -22,7 +22,7 @@ import { HomeAppBar } from '../components/HomeAppBar';
 import { PublishSheet } from '../components/PublishSheet';
 import { VerificationSheet } from '../components/VerificationSheet';
 import { publisherName } from '../mock';
-import { useFocusTitleIfLost, useHomeNavigation } from '../navigation';
+import { useHomeNavigation } from '../navigation';
 import { homeBlocks, selectedKind, wizardOf, type PublishKind, type Publisher } from '../selectors';
 import { OrgHomeScreen } from './OrgHomeScreen';
 import { PersonHomeScreen } from './PersonHomeScreen';
@@ -62,8 +62,6 @@ export function HomeScreen() {
     const { go, link } = useHomeNavigation();
     const location = useLocation();
     const [, setParams] = useSearchParams();
-    // Volver de NOT-01 con otro actor (flujo 7) desmonta la fila tocada: el foco va a «Hola, …», no al body.
-    useFocusTitleIfLost(location.key);
 
     // PUBL-01: la opción marcada vive en la URL (`tipo`), así sigue marcada al volver del asistente.
     const publish = useSheet('publicar', ['tipo']);

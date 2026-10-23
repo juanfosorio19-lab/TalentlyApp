@@ -2,7 +2,7 @@
 // vuelve a la última subruta de cada una (/explorar?tipo=turno). El scroll lo
 // restaura ScrollRestoration (RootLayout), con clave por ruta en las raíces
 // de pestaña. Vive en memoria: al reabrir la app todo parte en Inicio.
-import { paths, type TabKey } from '../paths';
+import { isTabRoot, paths, type TabKey } from '../paths';
 
 const memory = new Map<TabKey, string>();
 
@@ -31,9 +31,37 @@ export function noteFirstEntry(index: number, pathname: string): void {
     if (index === 0) inicioFirst = pathname === paths.inicio();
 }
 
-/** ¿La entrada de abajo es Inicio (la primera)? Entonces volver a Inicio es un atrás, no otra entrada. */
-export function inicioJustBelow(index: number): boolean {
-    return index === 1 && inicioFirst;
+/**
+ * ¿La primera entrada es la raíz de Inicio? Entonces volver a Inicio por la
+ * TabBar es volver a esa entrada de un salto (`navigate(-index)`), no otra
+ * entrada encima: así el atrás de Android en Inicio da «Presiona atrás otra
+ * vez para salir» (paso 6) en vez de volver a lo que quedó debajo.
+ */
+export const inicioAtFirstEntry = (): boolean => inicioFirst;
+
+// ─── La ruta de cada entrada (para no dejar dos de la misma pestaña seguidas) ──
+
+/** Índice del historial → pathname de la última ruta vista en esa entrada (RootLayout · TabMemory). */
+const entryPaths = new Map<number, string>();
+
+export function noteEntry(index: number, pathname: string): void {
+    entryPaths.set(index, pathname);
+}
+
+/**
+ * ¿La entrada de abajo es justo la raíz de pestaña `destPathname`? Ir a ella
+ * desde una pantalla apilada (DET-01 abierto desde ACT-02 → «Ver mis
+ * postulaciones») vuelve a esa entrada y la reemplaza (useOpenPath), en vez
+ * de reemplazar la de arriba y dejar dos Actividad seguidas.
+ */
+export function tabRootJustBelow(index: number, destPathname: string): boolean {
+    return index > 0 && isTabRoot(destPathname) && entryPaths.get(index - 1) === destPathname;
+}
+
+/** Solo pruebas. */
+export function resetEntriesForTests(): void {
+    entryPaths.clear();
+    inicioFirst = false;
 }
 
 /**
