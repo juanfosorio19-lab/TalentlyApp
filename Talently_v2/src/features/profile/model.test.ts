@@ -19,7 +19,6 @@ import {
     verificationDetails,
     visibleLinks,
     withoutSessionTips,
-    withPrototypeData,
     type SessionProfileState,
 } from './model';
 
@@ -58,7 +57,7 @@ describe('composeProfile', () => {
         const nuevo = recienRegistradoProfile(getProfile('jorge'));
         expect(labels(composeProfile(nuevo, NADA))).toEqual([]);
         const after = composeProfile(nuevo, { ...NADA, phoneVerifiedInSession: true });
-        expect(after.asiTeVen.verificaciones).toEqual([{ label: 'Teléfono verificado', status: 'verified' }]);
+        expect(after.asiTeVen.verificaciones).toEqual([{ label: 'Teléfono verificado', status: 'verified', fecha: 'hoy' }]);
         expect(verificacionLink(after)).toBe('Teléfono verificado');
     });
 
@@ -68,7 +67,7 @@ describe('composeProfile', () => {
     });
 
     it('Carolina, con la identidad pendiente: teléfono verificado (VER-01) y el Hogar le pide verificarla', () => {
-        const base = withPrototypeData(getProfile('carolina'));
+        const base = getProfile('carolina');
         const pending = composeProfile(base, { ...NADA, identityPendingAtStart: true });
         expect(labels(pending)).toEqual(['Teléfono verificado']);
         expect(verificacionLink(pending)).toBe('Teléfono verificado');
@@ -80,17 +79,17 @@ describe('composeProfile', () => {
     });
 
     it('Carolina después de enviar VER-02: identidad en revisión, sin la tarjeta', () => {
-        const base = withPrototypeData(getProfile('carolina'));
+        const base = getProfile('carolina');
         const sent = composeProfile(base, { ...NADA, identityPendingAtStart: true, identitySubmitted: true });
         expect(sent.asiTeVen.verificaciones).toEqual([
-            { label: 'Teléfono verificado', status: 'verified' },
+            { label: 'Teléfono verificado', status: 'verified', fecha: '1 dic 2026' },
             { label: 'Identidad en revisión', status: 'review' },
         ]);
         expect(sent.perfiles.find((t) => t.id === 'hogar')?.completitud).toBeUndefined();
     });
 
     it('Rosa no parte con la identidad pendiente: la conserva', () => {
-        expect(labels(composeProfile(withPrototypeData(getProfile('rosa')), NADA))).toEqual(['Identidad verificada']);
+        expect(labels(composeProfile(getProfile('rosa'), NADA))).toEqual(['Identidad verificada']);
     });
 
     it('usa los perfiles editados en la sesión sin tocar los datos de la demostración', () => {
@@ -117,7 +116,7 @@ describe('composeProfile', () => {
     });
 
     it('lo que se guarda no lleva la tarjeta de la identidad que pone la sesión', () => {
-        const pending = composeProfile(withPrototypeData(getProfile('carolina')), { ...NADA, identityPendingAtStart: true });
+        const pending = composeProfile(getProfile('carolina'), { ...NADA, identityPendingAtStart: true });
         expect(withoutSessionTips(pending.perfiles).every((t) => t.completitud === undefined)).toBe(true);
         // La del Hogar de Jorge viene de los datos: se queda.
         expect(withoutSessionTips(getProfile('jorge').perfiles).every((t) => t.completitud !== undefined)).toBe(true);
@@ -126,7 +125,7 @@ describe('composeProfile', () => {
 
 describe('verificationDetails (hoja «Verificación de …»)', () => {
     const of = (id: DemoActorId, session = false) =>
-        verificationDetails(id, composeProfile(withPrototypeData(getProfile(id)), NADA).asiTeVen.verificaciones, session);
+        verificationDetails(composeProfile(getProfile(id), NADA).asiTeVen.verificaciones, session);
 
     it('las mismas fechas de VER-01 y NOT-01', () => {
         expect(of('jorge')).toEqual({
@@ -141,7 +140,7 @@ describe('verificationDetails (hoja «Verificación de …»)', () => {
     it('lo verificado en la sesión dice «hoy»', () => {
         expect(of('matias', true)).toEqual({ 'Teléfono verificado': 'Código SMS · hoy' });
         const nuevo = composeProfile(recienRegistradoProfile(getProfile('jorge')), { ...NADA, phoneVerifiedInSession: true });
-        expect(verificationDetails('jorge', nuevo.asiTeVen.verificaciones, true)).toEqual({
+        expect(verificationDetails(nuevo.asiTeVen.verificaciones, true)).toEqual({
             'Teléfono verificado': 'Código SMS · hoy',
         });
     });

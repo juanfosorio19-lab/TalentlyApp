@@ -14,11 +14,11 @@ import type { DemoActorId } from './session';
 export type { BadgeStatus, DemoActorId };
 
 /**
- * Quien mira una pantalla: los actores de la sesión y Marta Huanca, que solo
- * aparece como quien mira en el flujo 10 (MSG-01 de Marta). Marta no es un
- * actor de la sesión de demostración.
+ * Quien mira una pantalla: un actor de la sesión (Marta Huanca, la del flujo
+ * 10, también lo es: `?demo=marta`). Se conserva el nombre para las
+ * bandejas y conversaciones.
  */
-export type DemoViewerId = DemoActorId | 'marta';
+export type DemoViewerId = DemoActorId;
 
 export type DemoPublicationType = 'empleo' | 'turno' | 'servicio' | 'clase';
 
@@ -50,6 +50,13 @@ export interface DemoVerification {
     status: VerificationStatus;
     /** «vence 11/2027», bajo la insignia. */
     vence?: string;
+    /**
+     * Cuándo se verificó: «2 dic 2026» u «hoy». UNA sola fecha por
+     * verificación para VER-01 («Verificado el …»), NOT-01 y la hoja
+     * «Verificación de …» (demo/verifications.verificationDetail). Sin fecha,
+     * la hoja dice solo qué se revisó (no se inventa).
+     */
+    fecha?: string;
 }
 
 /** Nota con estrellas: «4,9 (25)». `null` donde se usa = «Sin reseñas aún». */
@@ -112,6 +119,8 @@ export interface DemoOrg {
     rubro?: string;
     /** «50 a 199 trabajadores». */
     tamano?: string;
+    /** Cuándo se verificó la organización (VER-01 y NOT-01: «28 nov 2026»). */
+    verificadaEl?: string;
 }
 
 export interface DemoPerson {
@@ -127,6 +136,8 @@ export interface DemoPerson {
     nota?: DemoRating | null;
     /** «Confiabilidad 97 %»; `null` = «Aún sin turnos suficientes». */
     confiabilidad?: string | null;
+    /** Actores de la sesión: desde cuándo existe la cuenta (VER-01 «Cuenta básica · Desde el …»). */
+    desde?: string;
 }
 
 /** Quien publica o con quien se conversa, ya resuelto para la cabecera de una tarjeta. */
@@ -577,6 +588,8 @@ export interface DemoProfile {
     asiTeVen: {
         nombre: string;
         iniciales: string;
+        /** Foto elegida en el onboarding (URL); sin ella, las iniciales. */
+        foto?: string;
         comuna: string;
         verificaciones: DemoVerification[];
         /** Nota por rol: «Trabajo 4,9 (25) · Hogar Sin reseñas aún». */
@@ -592,6 +605,38 @@ export interface DemoProfile {
         notificaciones: string;
         apariencia: string;
     };
+}
+
+/** Un CV en PDF del perfil de trabajo («CV Jorge Muñoz.pdf» · «180 KB»). */
+export interface DemoCv {
+    nombre: string;
+    /** «180 KB». */
+    detalle: string;
+}
+
+// ─── Onboarding (flujo 1: ONB-03 a ONB-99 → INI-01-jorge-nuevo) ─────────────
+
+/** Estado de la credencial que pide el oficio (ONB-T4 y ONB-99). */
+export type DemoCredentialState = 'pendiente' | 'despues' | 'revision';
+
+/**
+ * Lo que dejó el onboarding al terminar (ONB-99 → «Ir a Inicio»): Inicio
+ * («Hola, <nombre>»), Perfil y VER-01 de la persona recién registrada
+ * muestran SOLO esto. Lo guarda demo/session.tsx (startAsNewUser).
+ */
+export interface DemoOnboardingResult {
+    nombre: string;
+    apellido: string;
+    /** Nombre de la comuna («Puente Alto»), o `null` si no la eligió. */
+    comuna: string | null;
+    /** Foto elegida (URL), o `null`. */
+    foto: string | null;
+    /** Oficios de ONB-T1, el principal primero: «Guardia de seguridad» · «5 a 10 años de experiencia». */
+    oficios: { nombre: string; experiencia: string | null; principal: boolean }[];
+    /** Credencial SPD (ONB-T4): `null` si ningún oficio la pide. */
+    credencial: DemoCredentialState | null;
+    /** ONB-T5: «Guardia de seguridad en Condominio Los Peumos · 2021 a 2026», si lo dejó. */
+    ultimoTrabajo?: string;
 }
 
 // ─── Explorar (EXP-01, EXP-02) ──────────────────────────────────────────────

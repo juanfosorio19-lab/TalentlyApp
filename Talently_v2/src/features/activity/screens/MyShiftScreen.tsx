@@ -4,8 +4,8 @@
 // confirmación de asistencia 24 h y 2 h antes, la conversación, compartir el
 // turno y cancelarlo (con la regla de 12 h). Si el turno ya pasó, o hay uno
 // anterior por evaluar (la evaluación se pide antes de postular al siguiente,
-// spec §5.2), «Dejar reseña» lleva a REV-01 (flujo 2); la tarjeta del turno
-// anterior deja de pedirse cuando ya fue a evaluarlo (reviewReminders). Cancelado, queda el
+// spec §5.2), «Dejar reseña» lleva a REV-01 (flujo 2); una evaluación ya
+// enviada en REV-01 (demo/sessionStore.useReviewed) no se vuelve a pedir. Cancelado, queda el
 // bloque con su Badge «Cancelaste» y la conversación. La postulación sale de
 // la sesión (useApplications) y la cancelación se guarda allí (cancelShift):
 // ACT-02, la Agenda e Inicio la ven igual. El :assignmentId es el id de la
@@ -47,7 +47,7 @@ import { paths } from '../../../app/paths';
 import { useSheet } from '../../../app/sheets';
 import { buildIcs } from '../../../domain/calendario';
 import { useDemoSession } from '../../demo/session';
-import { cancelShift, useApplications, useInbox } from '../../demo/sessionStore';
+import { cancelShift, useApplications, useInbox, useReviewed } from '../../demo/sessionStore';
 import { targetPath } from '../../demo/targets';
 import type { DemoApplication, DemoMyShift, DemoRow } from '../../demo/types';
 import { DetailRow } from '../components/DetailRow';
@@ -55,7 +55,6 @@ import { FactList } from '../components/FactList';
 import { useFocusAfterClose } from '../components/useFocusAfterClose';
 import { VerificationSheet } from '../components/VerificationSheet';
 import { copy } from '../copy';
-import { markReviewStarted, useReviewsStarted } from '../reviewReminders';
 import {
     googleCalendarUrl,
     hasEnded,
@@ -126,12 +125,10 @@ interface ReviewCardProps {
     path: string;
     /** El turno ya pasó: evaluarlo es la acción principal de la pantalla. */
     primary?: boolean;
-    /** Al tocar «Dejar reseña», antes de ir a REV-01. */
-    onOpen?: () => void;
 }
 
 /** «Dejar reseña» → REV-01. */
-function ReviewCard({ title, text, path, primary, onOpen }: ReviewCardProps) {
+function ReviewCard({ title, text, path, primary }: ReviewCardProps) {
     const { open } = useOpenPath();
     return (
         <Card>
@@ -143,10 +140,7 @@ function ReviewCard({ title, text, path, primary, onOpen }: ReviewCardProps) {
                 <Button
                     variant={primary ? 'primary' : 'tonal'}
                     icon={IconStar}
-                    onClick={() => {
-                        onOpen?.();
-                        open(path);
-                    }}
+                    onClick={() => open(path)}
                 >
                     {copy.shift.review}
                 </Button>
@@ -177,9 +171,9 @@ function MyShift({ application, shift }: { application: DemoApplication; shift: 
     const fecha = `${shift.bloque.weekday} ${shift.bloque.day} ${shift.bloque.month}`;
     const address = rowValue(shift, 'Dirección');
     const reviewPath = targetPath({ pantalla: 'evaluar', publicationId: application.publicationId }, actor.id);
-    // Las que ya fue a evaluar desde aquí no se vuelven a pedir al volver de REV-01.
-    const reviewsStarted = useReviewsStarted(actor.id);
-    const pendingReviews = pendingReviewsFor(notifications, actor.id, application.publicationId, reviewsStarted);
+    // Lo ya evaluado en REV-01 (demo/sessionStore) no se vuelve a pedir: ni este turno ni el anterior.
+    const reviewed = useReviewed(actor.id);
+    const pendingReviews = pendingReviewsFor(notifications, actor.id, application.publicationId, reviewed);
 
     // Al cancelar se van «Cancelar turno» y su diálogo: el foco pasa al título (no queda en el body).
     // El diálogo se cierra en el mismo cambio (y su foco vuelve a un botón que ya no está): esto corre después.
@@ -315,7 +309,7 @@ function MyShift({ application, shift }: { application: DemoApplication; shift: 
                             )}
                         </Stack>
 
-                        {!cancelled && ended && (
+                        {!cancelled && ended && !reviewed.has(application.publicationId) && (
                             <ReviewCard title={copy.shift.reviewTitle} text={copy.shift.reviewNote} path={reviewPath} primary />
                         )}
 
@@ -348,7 +342,6 @@ function MyShift({ application, shift }: { application: DemoApplication; shift: 
                                 title={r.title}
                                 text={copy.shift.pendingReviewNote(r.from)}
                                 path={targetPath(r.target, actor.id)}
-                                onOpen={() => markReviewStarted(actor.id, r.publicationId)}
                             />
                         ))}
 

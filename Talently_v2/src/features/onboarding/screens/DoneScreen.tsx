@@ -16,7 +16,7 @@ import { PHOTO_SHEET, PhotoSheet } from '../components/Photo';
 import { StepFrame } from '../components/StepFrame';
 import { useFocusRescue } from '../components/useFocusRescue';
 import { useFlow, useFlowEntry, useStepBack } from '../flow';
-import { buscaDe, faltantes, resumen } from '../model';
+import { buscaDe, faltantes, resultadoOnboarding, resumen } from '../model';
 import { onbPaths } from '../paths';
 import { resetDraft, useDraft } from '../store';
 import '../onboarding.css';
@@ -42,10 +42,14 @@ export function DoneScreen() {
     const lineas = resumen(draft);
     const nombre = draft.datos.nombre.trim();
 
-    /** Termina el onboarding: la demostración pasa a Jorge recién registrado y el registro se olvida. */
+    /**
+     * Termina el onboarding: la demostración pasa a Jorge recién registrado con
+     * lo que dejó el registro (nombre, comuna, oficios, credencial, foto) y el
+     * borrador se olvida.
+     */
     const terminar = (dest: string) => {
-        startAsNewUser();
-        resetDraft();
+        startAsNewUser(resultadoOnboarding(draft));
+        resetDraft({ conservarFoto: true });
         leave(dest);
     };
     // No hay paso anterior: el bloque ya quedó creado. Atrás lleva a Inicio.

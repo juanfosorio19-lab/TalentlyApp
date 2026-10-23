@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, type MouseEvent } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useOpenPath } from '../../../app/navigation/useOpenPath';
 import type { DemoActorId } from '../../demo/session';
-import { keyOf, useDecided, useSessionState } from '../../demo/sessionStore';
+import { useDecided } from '../../demo/sessionStore';
 import { withParams } from '../filters';
 import { replacesFrom, type CardHandlers, type Decided } from '../model';
 
@@ -78,22 +78,13 @@ export function useGo() {
 }
 
 /**
- * Lo ya decidido por el actor (demo/sessionStore): postuló, «Me interesa» o
- * «No me interesa» en el deck o en el detalle. Jorge recién registrado
- * (INI-01-jorge-nuevo) no trae las postulaciones de los datos: solo cuenta
- * lo que hizo en esta sesión.
+ * Lo ya decidido por el actor (demo/sessionStore.useDecided): postuló, «Me
+ * interesa» o «No me interesa» en el deck o en el detalle. Jorge recién
+ * registrado (INI-01-jorge-nuevo) solo cuenta lo que hizo en esta sesión, y
+ * una postulación retirada en PRC-01 ya no cuenta.
  */
 export function useDecisions(actorId: DemoActorId, recienRegistrado: boolean): (publicationId: string) => Decided {
-    const decided = useDecided(actorId);
-    const { applications, decisions } = useSessionState();
-    return useCallback(
-        (publicationId: string) => {
-            if (!recienRegistrado) return decided(publicationId);
-            const key = keyOf(actorId, publicationId);
-            return applications.has(key) ? 'postulado' : decisions.get(key);
-        },
-        [actorId, recienRegistrado, decided, applications, decisions],
-    );
+    return useDecided(actorId, recienRegistrado);
 }
 
 /** Ejecuta algo un rato después (la latencia de la demo); se cancela si la pantalla se desmonta. */

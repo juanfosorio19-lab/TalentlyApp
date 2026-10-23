@@ -3,12 +3,10 @@
 // y horas «HH:MM». Todo es lógica pura: se prueba en time.test.ts.
 import { addDays, dayOfMonth, formatDayShort, weekdayShort, type IsoDate } from '../../../ui/CalendarWeek';
 import type { SheetPickerOption } from '../../../ui/SheetPicker';
+import { DEMO_TODAY_ISO as DEMO_TODAY_ISO_DATA } from '../../demo/data';
 
-/**
- * Hoy en la demo (demo/README: «hoy en la demo es jue 10 dic 2026»).
- * Pedido en «requests» como constante ISO de demo/data.
- */
-export const DEMO_TODAY_ISO: IsoDate = '2026-12-10';
+/** Hoy en la demo («jue 10 dic 2026»), como día civil: demo/data. */
+export const DEMO_TODAY_ISO: IsoDate = DEMO_TODAY_ISO_DATA;
 
 /** Cuántos días hacia adelante se puede publicar un turno. no está en el prototipo. */
 const DAYS_AHEAD = 60;

@@ -20,6 +20,7 @@ import {
     pesoLegible,
     pideNacimiento,
     quitarOficio,
+    resultadoOnboarding,
     resumen,
     separarNombre,
     textoBusqueda,
@@ -223,5 +224,28 @@ describe('resumen de ONB-99', () => {
         };
         expect(faltantes(garzon)).toEqual(['foto']);
         expect(resumen(garzon)).not.toContain('Sistema 4x4, de día y de noche');
+    });
+});
+
+describe('resultadoOnboarding (lo que ven Inicio, Perfil y VER-01 al terminar)', () => {
+    it('el borrador del flujo 1: Jorge Muñoz, Puente Alto, sus oficios y la credencial por subir', () => {
+        const r = resultadoOnboarding(borradorInicial());
+        expect(r).toMatchObject({ nombre: 'Jorge', apellido: 'Muñoz', comuna: 'Puente Alto', foto: null, credencial: 'pendiente' });
+        expect(r.oficios).toEqual([
+            { nombre: 'Guardia de seguridad', experiencia: '5 a 10 años', principal: true },
+            { nombre: 'Guardia de eventos', experiencia: '3 a 5 años', principal: false },
+        ]);
+        expect(r.ultimoTrabajo).toBe('Guardia de seguridad en Condominio Los Peumos · 2021 a 2026');
+    });
+
+    it('lo que la persona escribió manda: otro nombre, la credencial en revisión y la foto', () => {
+        const d = borradorInicial();
+        const r = resultadoOnboarding({
+            ...d,
+            datos: { ...d.datos, nombre: ' Camila ', apellido: 'Soto', foto: 'blob:foto' },
+            trabajo: { ...d.trabajo, credencial: { estado: 'subiendo', progreso: 40, archivo: null }, experienciaOmitida: true },
+        });
+        expect(r).toMatchObject({ nombre: 'Camila', apellido: 'Soto', foto: 'blob:foto', credencial: 'revision' });
+        expect(r.ultimoTrabajo).toBeUndefined();
     });
 });

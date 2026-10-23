@@ -5,11 +5,15 @@
 // (spec §5.4): SHT-ACTOR `?sheet=actor`, PUBL-01 `?sheet=publicar&tipo=` y
 // «Verificación de …» `?sheet=verificacion&pub=`. Siguen montadas al cambiar
 // de actor, así «Usar Talently como» se cierra con su animación.
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { paths } from '../../../app/paths';
 import { useSheet } from '../../../app/sheets';
 import { getHomeFeed, getPublication } from '../../demo/data';
+import { useUnansweredConversations } from '../../demo/conversationState';
+import { useManageSession, useOrgDashboard } from '../../demo/manageHooks';
+import { avisoBlockView } from '../../demo/manageSelectors';
+import { useCv } from '../../demo/profileState';
 import { useDemoSession } from '../../demo/session';
 import { useApplications } from '../../demo/sessionStore';
 import type { DemoHomeBlock } from '../../demo/types';
@@ -26,16 +30,6 @@ import '../home.css';
 /** INI-01 (persona) o INI-02 (organización), según el actor. */
 export const screenId = 'INI-01';
 
-/**
- * ¿Subió su CV en Perfil durante la sesión? Perfil todavía lo guarda en su
- * propio store (profile/store.ts, que Inicio no puede importar). Pendiente,
- * bloqueado por el pedido `saveCv(actorId, recienRegistrado, file)` y
- * `useCvSubido(actorId, recienRegistrado)` en demo/sessionStore («requests»):
- * ese día esta constante se borra y se pasa `cvSubido: useCvSubido(actor.id,
- * recienRegistrado)`; selectors.homeBlocks ya quita «Te falta 1 cosa · Subir CV».
- */
-const CV_SUBIDO_EN_SESION = false;
-
 /** ¿Este Inicio tiene «Publicar»? La organización siempre; la persona, si su feed lo trae (hogar). */
 function canPublish(blocks: readonly DemoHomeBlock[], isOrg: boolean): boolean {
     return isOrg || blocks.some((b) => b.tipo === 'publicar' || b.tipo === 'que-necesitas');
@@ -45,11 +39,23 @@ function canPublish(blocks: readonly DemoHomeBlock[], isOrg: boolean): boolean {
 const publishPath = (kind: PublishKind) => `${paths.inicio()}?${new URLSearchParams({ sheet: 'publicar', tipo: kind })}`;
 
 export function HomeScreen() {
-    const { actor, recienRegistrado } = useDemoSession();
+    const { actor, recienRegistrado, onboarding } = useDemoSession();
     const applications = useApplications(actor.id, recienRegistrado);
-    const feed = getHomeFeed(actor.id, { recienRegistrado });
-    const blocks = homeBlocks(feed.bloques, { applications, cvSubido: CV_SUBIDO_EN_SESION });
+    // Recién registrado: «Hola, <nombre>» y la tarjeta de la credencial según lo que dejó el onboarding.
+    const feed = getHomeFeed(actor.id, { recienRegistrado, onboarding });
+    // El CV subido en Perfil (demo/profileState): «Te falta 1 cosa · Subir CV» ya no aplica.
+    const cvSubido = useCv(actor.id, recienRegistrado) !== undefined;
+    // «Tu aviso · N postulantes nuevos» y su estado: la misma cuenta que GES-01 y GES-02.
+    const { manage, applications: sessionApplications } = useManageSession();
+    const blocks = homeBlocks(feed.bloques, { applications, cvSubido }).map((b) =>
+        avisoBlockView(b, manage, sessionApplications),
+    );
     const isOrg = actor.kind === 'organizacion';
+    // INI-02: KPIs y «Requiere tu atención» al día con GES-01, GES-02 y GES-04; «Conversaciones sin
+    // responder», con Mensajes (demo/conversationState: baja al responder).
+    const unanswered = useUnansweredConversations(actor.id, recienRegistrado);
+    const kpiOverrides = useMemo(() => ({ conversaciones: String(unanswered) }), [unanswered]);
+    const panel = useOrgDashboard(actor.id, kpiOverrides);
     const { go, link } = useHomeNavigation();
     const location = useLocation();
     const [, setParams] = useSearchParams();
@@ -102,7 +108,7 @@ export function HomeScreen() {
         <>
             <HomeAppBar title={feed.saludo} />
             {isOrg ? (
-                <OrgHomeScreen feed={feed} onPublish={() => showPublish()} />
+                <OrgHomeScreen panel={panel} onPublish={() => showPublish()} />
             ) : (
                 <PersonHomeScreen
                     blocks={blocks}

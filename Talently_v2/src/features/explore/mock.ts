@@ -109,28 +109,3 @@ export const SINONIMOS: Readonly<Record<string, readonly string[]>> = {
     'empleada domestica': ['Asesor/a del hogar'],
 };
 
-/**
- * Turnos recién publicados cuyos postulados llegan después del «salto de
- * tiempo» (flujo 4: GES-04 parte «Aún no hay postulados»). La misma regla que
- * usa GES-04; pedido en «requests» que la sesión de Gestionar (llegada,
- * pausa, cierre y confirmados) pase a demo/sessionStore. Mientras tanto, en
- * Explorar estos postulados todavía no están.
- */
-export const POSTULADOS_POR_LLEGAR: readonly { publicationId: string; rosterId: string }[] = [
-    { publicationId: 'turno-garzones-finde', rosterId: 'finde-sab-19' },
-];
-
-/**
- * Hoja «Verificación de …»: qué revisó Talently según la insignia, con los
- * mismos textos que DET-01, Actividad e Inicio (spec §4.5: un diccionario;
- * pedido en «requests» moverlo a demo/). La demo no trae la fecha de cada
- * verificación; cuando la traiga, va en la línea.
- */
-export const QUE_SE_VERIFICO: Readonly<Record<string, string>> = {
-    'Organización verificada': 'RUT y documentos de la organización revisados',
-    'Teléfono verificado': 'Código por SMS',
-    'Identidad verificada': 'Cédula y selfie revisadas',
-    'Credencial SPD verificada': 'Credencial revisada con su vencimiento',
-    // no está en DET-01: ninguna publicación lo trae; mismo estilo que el resto.
-    'Apta para trabajar con menores': 'Certificado de inhabilidades revisado',
-};

@@ -7,6 +7,7 @@ import type { TimelineStep } from '../../ui/Timeline';
 import type { CalendarEvent } from '../../domain/calendario';
 import { paths } from '../../app/paths';
 import {
+    DEMO_NOW_TIME,
     DEMO_TODAY,
     getApplication,
     getConversations,
@@ -195,8 +196,8 @@ export function googleCalendarUrl(event: CalendarEvent): string {
 // demo. Mientras tanto, misma regla: el turno terminó si su hora de término
 // (al día siguiente si cruza la medianoche) ya pasó.
 
-/** Hora de hoy en la demo: el índice del prototipo F1 dice «jue 10 dic 2026, 13:00» (data.ts solo trae el día). */
-export const DEMO_NOW_TIME = '13:00';
+/** Hora de hoy en la demo (demo/data: «jue 10 dic 2026, 13:00»). */
+export { DEMO_NOW_TIME };
 
 function minutesOfDay(hhmm: string): number | null {
     const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm.trim());

@@ -1,54 +1,9 @@
 // Datos que el feature necesita y que src/features/demo aún no trae (pedidos
 // en «requests»). Todo esto: no está en el prototipo, salvo que se diga.
-import type { BadgeStatus, DemoActorId, DemoProfileTip } from '../demo/types';
+import type { BadgeStatus, DemoProfileTip } from '../demo/types';
 
-/**
- * Hoja «Verificación de …» (catálogo de VerificationBadge): cómo y cuándo se
- * verificó cada insignia del actor, con las mismas fechas de VER-01 y NOT-01
- * (pedido en «requests» como una sola fuente en demo). Nunca RUT, fecha de
- * nacimiento ni fotos. Lo verificado en esta sesión (el teléfono en AUTH-08 o
- * VER-01) dice «hoy»: lo resuelve `verificationDetails` (model.ts).
- */
-export const VERIFICATION_DETAIL: Partial<Record<DemoActorId, Record<string, string>>> = {
-    jorge: {
-        'Teléfono verificado': 'Código SMS · 2 dic 2026',
-        // La fecha de vencimiento sí está en el prototipo (PRF-01 · Credenciales).
-        'Credencial SPD verificada': 'Credencial revisada · vence 03/2028',
-    },
-    // Flujo 2: Matías verifica su teléfono hoy, al tomar su primer turno (AUTH-08): «Código SMS · hoy».
-    pedro: { 'Teléfono verificado': 'Código SMS · 4 dic 2026' },
-    // VER-01: «Teléfono verificado · Verificado el 1 dic 2026». Su identidad la verifica en el flujo 5 (VER-02).
-    carolina: { 'Teléfono verificado': 'Código SMS · 1 dic 2026' },
-    // VER-01 «Verificado hoy» y NOT-01 «Verificamos tu identidad · hace 3 h».
-    rosa: { 'Identidad verificada': 'Cédula y selfie revisadas · hoy' },
-    // VER-01 «Verificada el 28 nov 2026» y NOT-01 «Verificamos Banquetería Rosa SpA · 28 nov».
-    banqueteria: { 'Organización verificada': 'RUT y documentos revisados · 28 nov 2026' },
-};
-
-/** Lo verificado en esta sesión (AUTH-08 o VER-01). no está en el prototipo. */
-export const PHONE_DETAIL_TODAY = 'Código SMS · hoy';
 /** Identidad enviada en VER-02 (VER-01: «En revisión · te avisamos en menos de 24 h»). */
 export const IDENTITY_DETAIL_REVIEW = 'En revisión · te avisamos en menos de 24 h';
-
-/**
- * Flujo 5: Carolina verifica su identidad en VER-02 antes de publicar su aviso
- * (PUBL-04-identidad). Los datos traen el «después» (Identidad verificada);
- * como `phonePendingAtStart`, parte sin verificar. La MISMA lista de VER-01 y
- * PUBL-04: pedida en «requests» como `identityPendingAtStart` en
- * demo/sessionStore; ese día esto se borra.
- */
-const IDENTITY_PENDING_AT_START: readonly DemoActorId[] = ['carolina'];
-
-export function identityPendingAtStart(actorId: DemoActorId): boolean {
-    return IDENTITY_PENDING_AT_START.includes(actorId);
-}
-
-/**
- * PUBL-04-identidad («Tu teléfono está verificado») y VER-01 dicen que
- * Carolina tiene el teléfono verificado; demo/data aún no lo trae (pedido en
- * «requests»: `PERSONS.carolina.verificaciones` con `V.telefono`).
- */
-export const PHONE_VERIFIED_IN_PROTOTYPE: readonly DemoActorId[] = ['carolina'];
 
 /**
  * «Te falta 1 cosa» del Hogar mientras la identidad está pendiente: la misma

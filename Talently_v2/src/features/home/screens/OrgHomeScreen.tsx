@@ -2,12 +2,14 @@
 // (abre PUBL-01: Empleo o Turno) y «Requiere tu atención» (turnos sin
 // cubrir, postulantes sin revisar y evaluaciones pendientes), cada fila con
 // su destino (GES-04, GES-02) de demo/targets, abierto con useOpenPath.
+// El panel llega al día con la sesión (demo/manageHooks.useOrgDashboard):
+// las cifras son las mismas de GES-01, GES-02 y GES-04.
 import { Button } from '../../../ui/Button';
 import { Card } from '../../../ui/Card';
 import { IconAdd, IconDocument, IconPeople, IconStar, type IconComponent } from '../../../ui/icons';
 import { ScreenSection, Stack } from '../../../ui/Layout';
 import { List, ListItem } from '../../../ui/ListItem';
-import type { DemoAttentionItem, DemoHomeFeed } from '../../demo/types';
+import type { DemoAttentionItem, DemoOrgDashboard } from '../../demo/types';
 import { copy } from '../copy';
 import { useHomeNavigation } from '../navigation';
 import '../home.css';
@@ -21,14 +23,12 @@ const ATTENTION_ICON: Record<DemoAttentionItem['icono'], IconComponent> = {
 };
 
 export interface OrgHomeScreenProps {
-    feed: DemoHomeFeed;
+    panel: DemoOrgDashboard | undefined;
     onPublish: () => void;
 }
 
-export function OrgHomeScreen({ feed, onPublish }: OrgHomeScreenProps) {
+export function OrgHomeScreen({ panel, onPublish }: OrgHomeScreenProps) {
     const { targetLink } = useHomeNavigation();
-    const panelBlock = feed.bloques.find((b) => b.tipo === 'panel');
-    const panel = panelBlock?.tipo === 'panel' ? panelBlock.panel : undefined;
 
     return (
         <main className="tl-app-screen__body">

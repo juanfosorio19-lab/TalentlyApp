@@ -8,7 +8,7 @@ import { IconDocument, IconPhone, IconReport, IconShield, type IconComponent } f
 import { List, ListItem } from '../../../ui/ListItem';
 import type { DemoVerification } from '../../demo/types';
 import { copy } from '../copy';
-import { VERIFICATION_DETAIL } from '../mock';
+import { verificationDetail } from '../../demo/verifications';
 import '../publications.css';
 
 function verificationIcon(label: string): IconComponent {
@@ -35,7 +35,7 @@ export function VerificationSheet({ open, onClose, name, verifications }: Verifi
                         key={v.label}
                         icon={verificationIcon(v.label)}
                         title={v.label}
-                        sub={[VERIFICATION_DETAIL[v.label], v.vence].filter(Boolean).join(' · ') || undefined}
+                        sub={verificationDetail(v)}
                     />
                 ))}
             </List>

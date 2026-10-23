@@ -8,6 +8,7 @@ import { IconAlert, IconClock, IconInfo, IconShield, type IconComponent } from '
 import { List, ListItem } from '../../../ui/ListItem';
 import type { VerificationStatus } from '../../../ui/VerificationBadge';
 import type { DemoApplicant } from '../../demo/types';
+import { verificationDetail } from '../../demo/verifications';
 import { copy } from '../copy';
 
 const ICON: Record<VerificationStatus, IconComponent> = {
@@ -15,14 +16,6 @@ const ICON: Record<VerificationStatus, IconComponent> = {
     review: IconClock,
     unverified: IconInfo,
     expired: IconAlert,
-};
-
-/** Qué se revisó en cada insignia. */
-const WHAT: Record<string, string> = {
-    'Apta para trabajar con menores': 'Talently revisó su certificado de inhabilidades vigente',
-    'Identidad verificada': 'Revisamos su cédula y una selfie',
-    'Teléfono verificado': 'Confirmó su número con un código SMS',
-    'Credencial SPD verificada': 'Revisamos su credencial SPD (ex OS-10)',
 };
 
 export interface VerificationSheetProps {
@@ -46,7 +39,7 @@ export function VerificationSheet({ person, onClose }: VerificationSheetProps) {
                                 key={v.label}
                                 icon={ICON[v.status]}
                                 title={v.label}
-                                sub={[WHAT[v.label], v.vence].filter(Boolean).join(' · ') || undefined}
+                                sub={verificationDetail(v)}
                             />
                         ))}
                     </List>

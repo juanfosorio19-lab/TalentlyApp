@@ -22,7 +22,7 @@ import {
     sortRows,
     viewerWorks,
 } from './model';
-import { EMPTY_STATE, type ConversationState } from './store';
+import { EMPTY_STATE, type ConversationState } from '../demo/conversationState';
 
 const conv = (id: string) => {
     const c = getConversation(id);

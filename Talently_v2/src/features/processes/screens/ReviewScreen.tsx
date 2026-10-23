@@ -24,11 +24,10 @@ import { useDirtyGuard } from '../../../app/navigation/backHandlers';
 import { useOpenPath } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
 import { useDemoSession } from '../../demo/session';
-import { useApplications } from '../../demo/sessionStore';
+import { sendReview, useApplications, useReview } from '../../demo/sessionStore';
 import { copy } from '../copy';
 import { useMoreBelow } from '../hooks';
 import { resolveReview, seeksWork, type ReviewSubject } from '../model';
-import { sendReview, useReview } from '../store';
 import '../processes.css';
 
 export const screenId = 'REV-01';

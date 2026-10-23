@@ -8,7 +8,7 @@ import { List, ListItem } from '../../../ui/ListItem';
 import type { VerificationStatus } from '../../../ui/VerificationBadge';
 import type { DemoAuthor } from '../../demo/types';
 import { copy } from '../copy';
-import { verificationDetail } from '../mock';
+import { verificationDetail } from '../../demo/verifications';
 
 const ICON: Record<VerificationStatus, IconComponent> = {
     verified: IconShield,

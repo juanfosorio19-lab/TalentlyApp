@@ -17,7 +17,7 @@ import { paths } from '../../../app/paths';
 import { useDemoSession, type DemoActorId } from '../../demo/session';
 import { COPY } from '../copy';
 import { trabaja } from '../model';
-import { useBoostNotify } from '../store';
+import { useBoostNotify } from '../../demo/profileState';
 import '../profile.css';
 
 export const screenId = 'PRF-12';

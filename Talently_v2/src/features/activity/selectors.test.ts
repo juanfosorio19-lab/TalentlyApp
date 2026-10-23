@@ -2,9 +2,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { buildIcs } from '../../domain/calendario';
 import { getApplication, getApplications, getNotifications } from '../demo/data';
 import { DEMO_ACTORS } from '../demo/session';
-import { applyTo, cancelShift, getSessionState, keyOf, resetSession, startsWithoutApplication } from '../demo/sessionStore';
+import { applyTo, cancelShift, getSessionState, keyOf, resetSession, reviewedBy, sendReview, startsWithoutApplication } from '../demo/sessionStore';
 import type { DemoApplication } from '../demo/types';
-import { getReviewsStarted, markReviewStarted, resetReviewReminders } from './reviewReminders';
 import {
     TODAY,
     WEEK_END,
@@ -47,7 +46,6 @@ function sessionApplications(actorId: keyof typeof DEMO_ACTORS): DemoApplication
 
 afterEach(() => {
     resetSession();
-    resetReviewReminders();
 });
 
 /** Lo que GES-01 y GES-04 cambiaron en la sesión, por publicación. */
@@ -268,12 +266,11 @@ describe('TUR-01 · Mi turno', () => {
         expect(pendingReviewsFor(getNotifications('jorge'), 'jorge')).toEqual([]);
     });
 
-    it('después de ir a evaluar desde TUR-01 (REV-01), ya no se pide de nuevo', () => {
-        markReviewStarted('matias', 'turno-garzones-finde-5dic');
-        expect(getReviewsStarted('matias')).toEqual(new Set(['turno-garzones-finde-5dic']));
-        expect(getReviewsStarted('jorge').size).toBe(0);
-        expect(
-            pendingReviewsFor(getNotifications('matias'), 'matias', 'turno-garzones-coctel-corporativo', getReviewsStarted('matias')),
-        ).toEqual([]);
+    it('con la evaluación enviada en REV-01 (demo/sessionStore), ya no se pide de nuevo', () => {
+        sendReview('matias', 'turno-garzones-finde-5dic', { rating: 5, tags: [], comment: '' });
+        const reviewed = reviewedBy(getSessionState().reviews, 'matias');
+        expect(reviewed).toEqual(new Set(['turno-garzones-finde-5dic']));
+        expect(reviewedBy(getSessionState().reviews, 'jorge').size).toBe(0);
+        expect(pendingReviewsFor(getNotifications('matias'), 'matias', 'turno-garzones-coctel-corporativo', reviewed)).toEqual([]);
     });
 });

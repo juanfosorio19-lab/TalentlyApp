@@ -10,22 +10,9 @@ const C = COPY.ver01;
 
 // ─── Estado de cada verificación ────────────────────────────────────────────
 
-/** pending: falta · review: enviada en esta sesión, esperando respuesta · verified: verificada. */
-export type IdentityStatus = 'pending' | 'review' | 'verified';
-
-export interface IdentityInput {
-    /** La persona tiene «Identidad verificada» en los datos de demostración. */
-    inData: boolean;
-    /** El flujo del prototipo la muestra antes de verificarse (Carolina, flujo 5). */
-    pendingAtStart: boolean;
-    /** La envió en VER-02 durante esta sesión. */
-    submitted: boolean;
-}
-
-export function identityStatusOf({ inData, pendingAtStart, submitted }: IdentityInput): IdentityStatus {
-    if (submitted) return 'review';
-    return inData && !pendingAtStart ? 'verified' : 'pending';
-}
+/** La regla de la identidad es una sola, en demo/verifications (VER-01, VER-02, PUBL-04, PUBL-07 y Perfil). */
+export { identityStatusOf, type IdentityInput, type IdentityStatus } from '../demo/verifications';
+import type { IdentityStatus } from '../demo/verifications';
 
 export interface PhoneInput {
     /**

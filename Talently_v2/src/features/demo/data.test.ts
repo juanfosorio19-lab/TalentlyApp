@@ -88,6 +88,7 @@ describe('Inicio por actor', () => {
             carolina: [1, 2], // INI-01-carolina
             rosa: [2, 0], // INI-01-rosa
             banqueteria: [2, 3], // INI-02
+            marta: [1, 1], // MSG-01-marta
         };
         for (const id of ACTOR_IDS) {
             const feed = getHomeFeed(id);
@@ -249,5 +250,27 @@ describe('Textos y montos', () => {
         const conKm = DEMO_PUBLICATIONS.map((p) => p.lugar).filter((l) => l.includes('km'));
         expect(conKm.length).toBeGreaterThan(0);
         conKm.forEach((l) => expect(l).toMatch(/^a \d+ km · \S/));
+    });
+});
+
+describe('INI-01-jorge-nuevo con lo que dejó el onboarding', () => {
+    it('sin recorrer el registro, el del prototipo: «Hola, Jorge» y «Te falta la credencial SPD»', () => {
+        const feed = getHomeFeed('jorge', { recienRegistrado: true });
+        expect(feed.saludo).toBe('Hola, Jorge');
+        expect(feed.bloques.some((b) => b.tipo === 'completar')).toBe(true);
+    });
+
+    it('con el nombre escrito y la credencial en revisión: «Hola, Camila» y sin la tarjeta', () => {
+        const feed = getHomeFeed('jorge', {
+            recienRegistrado: true,
+            onboarding: {
+                nombre: 'Camila', apellido: 'Soto', comuna: 'Maipú', foto: null,
+                oficios: [{ nombre: 'Guardia de seguridad', experiencia: null, principal: true }],
+                credencial: 'revision',
+            },
+        });
+        expect(feed.saludo).toBe('Hola, Camila');
+        expect(feed.bloques.some((b) => b.tipo === 'completar')).toBe(false);
+        expect(getHomeFeed('jorge').saludo).toBe('Hola, Jorge');
     });
 });

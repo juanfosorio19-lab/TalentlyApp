@@ -9,7 +9,7 @@ import type { CalendarEvent } from '../../domain/calendario';
 import { DEMO_TODAY, getApplications, getManagedPublication, getProcess } from '../demo/data';
 import type { DemoConversation, DemoMessage, DemoSystemCard, DemoViewerId } from '../demo/types';
 import { copy, type InboxFilter } from './copy';
-import type { ConversationState } from './store';
+import type { ConversationState } from '../demo/conversationState';
 
 // ─── Contexto («Turno · Garzón · hoy») ──────────────────────────────────────
 

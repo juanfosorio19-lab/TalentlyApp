@@ -2,8 +2,8 @@
 // las hojas que parten de cero cada vez que se abren y el celular verificado.
 import { useCallback, useState, useSyncExternalStore } from 'react';
 import type { DemoActorId } from '../../demo/session';
-import { isPhoneVerified, useSessionState } from '../../demo/sessionStore';
-import { phoneVerifiedInData } from '../mock';
+import { usePhoneVerified as useSessionPhoneVerified } from '../../demo/sessionStore';
+import { phoneInData } from '../../demo/verifications';
 
 function subscribeToLayout(onChange: () => void): () => void {
     window.addEventListener('scroll', onChange, { passive: true });
@@ -47,10 +47,9 @@ export function useOpenCount(open: boolean): number {
 
 /**
  * ¿Tiene el celular verificado? Lo de los datos (salvo Jorge recién
- * registrado y quien lo verifica en su flujo) o lo verificado en esta sesión.
+ * registrado y quien lo verifica en su flujo) o lo verificado en esta sesión:
+ * demo/sessionStore.usePhoneVerified, el mismo de VER-01, PUBL-04 y Perfil.
  */
 export function usePhoneVerified(actorId: DemoActorId, recienRegistrado: boolean): boolean {
-    // Se vuelve a pintar cuando cambia la sesión (verifyPhone).
-    useSessionState();
-    return isPhoneVerified(actorId, !recienRegistrado && phoneVerifiedInData(actorId));
+    return useSessionPhoneVerified(actorId, phoneInData(actorId, recienRegistrado));
 }

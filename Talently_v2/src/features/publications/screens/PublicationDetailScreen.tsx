@@ -51,7 +51,8 @@ import { PhoneSheet } from '../components/PhoneSheet';
 import { useLater } from '../components/useLater';
 import { copy } from '../copy';
 import { matchConversation } from '../match';
-import { DEMO_LATENCY_MS, isWrittenFor, profileCv } from '../mock';
+import { DEMO_LATENCY_MS, isWrittenFor } from '../mock';
+import { useCv } from '../../demo/profileState';
 import { detailCta, isAccepting, rowIcon, rowText, shareUrl, type DetailCta } from '../model';
 import '../publications.css';
 
@@ -130,7 +131,8 @@ function PublicationDetail({ pub }: { pub: DemoPublication }) {
     const phoneOk = usePhoneVerified(actor.id, recienRegistrado);
     const cta = detailCta(actor, pub, applications, sessionApplication?.estado);
     const forViewer = !recienRegistrado && isWrittenFor(actor.id, pub.id);
-    const cv = recienRegistrado ? undefined : profileCv(actor.id);
+    // El CV del perfil (demo/profileState): el de los datos o el subido en PRF-01 en esta sesión.
+    const cv = useCv(actor.id, recienRegistrado);
     const orgPath = pub.autor.tipo === 'persona' ? paths.perfilPublico(pub.autor.id) : paths.organizacion(pub.autor.id);
     const shareHref = useHref(paths.publicacion(pub.id));
 

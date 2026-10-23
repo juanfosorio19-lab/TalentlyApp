@@ -5,16 +5,16 @@ import type { MouseEvent } from 'react';
 import { Outlet, useHref, useLocation, useNavigate } from 'react-router-dom';
 import { BottomTabBar, type BottomTabBarItem } from '../ui/BottomTabBar';
 import { IconCalendar, IconChat, IconHome, IconPerson, IconSearch } from '../ui/icons';
+import { useUnreadMessages } from '../features/demo/conversationState';
 import { useDemoSession } from '../features/demo/session';
-import { useUnreadMessages } from '../features/messaging/unread';
 import { lastUrlOf } from './navigation/tabMemory';
 import { tabOf, type TabKey } from './paths';
 
 function useTabItems(): BottomTabBarItem<TabKey>[] {
     const { actor, recienRegistrado } = useDemoSession();
-    // Solo no leídos reales: baja al abrir la conversación (estado de la sesión de demostración).
-    const unreadMessages = useUnreadMessages(actor.id);
-    const unread = recienRegistrado ? 0 : unreadMessages;
+    // Solo no leídos reales, los mismos de MSG-01: baja al abrir la conversación y no cuenta las que
+    // la sesión todavía no tiene (demo/conversationState). Recién registrado: ninguno.
+    const unread = useUnreadMessages(actor.id, recienRegistrado);
     const hrefs = {
         inicio: useHref(lastUrlOf('inicio')),
         explorar: useHref(lastUrlOf('explorar')),

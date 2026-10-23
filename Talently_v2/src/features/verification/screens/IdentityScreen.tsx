@@ -41,7 +41,7 @@ import {
     type IdentityStatus,
     type IdentityStep,
 } from '../model';
-import { submitIdentity } from '../store';
+import { submitIdentity } from '../../demo/sessionStore';
 import { useVerification } from '../useVerification';
 import type { FromVerificationState } from './VerificationScreen';
 import '../verification.css';

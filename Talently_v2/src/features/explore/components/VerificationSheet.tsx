@@ -16,7 +16,7 @@ import { useSessionState } from '../../demo/sessionStore';
 import type { DemoVerification } from '../../demo/types';
 import { copy } from '../copy';
 import { withParams } from '../filters';
-import { QUE_SE_VERIFICO } from '../mock';
+import { verificationDetail } from '../../demo/verifications';
 import { personVerifications } from '../model';
 
 const SHEET = 'verificacion';
@@ -97,7 +97,7 @@ export function VerificationSheet() {
                             key={v.label}
                             icon={iconOf(v.label)}
                             title={v.label}
-                            sub={[QUE_SE_VERIFICO[v.label], v.vence && copy.verificacion.vence(v.vence)].filter(Boolean)}
+                            sub={verificationDetail(v)}
                         />
                     ))}
                 </List>

@@ -3,9 +3,12 @@
 // Sin React: lo prueban model.test.ts.
 import type { PayUnit } from '../../ui/Amount';
 import type { AvailabilityCell } from '../../ui/AvailabilityGrid';
+import type { DemoOnboardingResult } from '../demo/types';
 import {
     DIA_NOCHE,
+    EXPERIENCIAS,
     OFICIOS,
+    comunaName,
     SISTEMAS_TURNO,
     getOficio,
     type DisponibleDesde,
@@ -444,4 +447,45 @@ export function resumen(draft: OnboardingDraft): string[] {
     if (conRequisitos && trabajo.credencial.estado === 'revision') lineas.push('Credencial SPD en revisión');
     if (busca.empleo && !trabajo.experienciaOmitida && trabajo.experiencia.empleador.trim()) lineas.push('Tu último trabajo');
     return lineas.filter(Boolean);
+}
+
+// ─── Lo que queda al terminar (ONB-99 → INI-01-jorge-nuevo) ─────────────────
+
+/** «03/2021» → «2021». */
+const anioDe = (mes: string) => /\d{4}$/.exec(mes.trim())?.[0] ?? '';
+
+/** ONB-T5: «Guardia de seguridad en Condominio Los Peumos · 2021 a 2026» (vacío si lo omitió). */
+export function textoUltimoTrabajo(trabajo: TrabajoDraft): string | undefined {
+    const e = trabajo.experiencia;
+    if (trabajo.experienciaOmitida || !e.empleador.trim()) return undefined;
+    const quien = [e.cargo.trim(), e.empleador.trim()].filter(Boolean).join(' en ');
+    const desde = anioDe(e.desde);
+    const hasta = e.actual ? 'hoy' : anioDe(e.hasta);
+    const cuando = desde && hasta ? `${desde} a ${hasta}` : desde || hasta;
+    return [quien, cuando].filter(Boolean).join(' · ');
+}
+
+/**
+ * Lo que el onboarding deja en la sesión (demo/session `startAsNewUser`):
+ * Inicio («Hola, <nombre>»), Perfil y VER-01 muestran solo esto.
+ */
+export function resultadoOnboarding(draft: OnboardingDraft): DemoOnboardingResult {
+    const { datos, trabajo } = draft;
+    const oficios = oficiosElegidos(trabajo);
+    const principal = oficios.find((o) => o.id === trabajo.principal) ?? oficios[0];
+    const orden = principal ? [principal, ...oficios.filter((o) => o !== principal)] : oficios;
+    const experienciaDe = (id: string) => {
+        const valor = trabajo.oficios.find((o) => o.id === id)?.experiencia;
+        return EXPERIENCIAS.find((x) => x.value === valor)?.label ?? null;
+    };
+    const estado = trabajo.credencial.estado;
+    return {
+        nombre: datos.nombre.trim(),
+        apellido: datos.apellido.trim(),
+        comuna: comunaName(datos.comuna),
+        foto: datos.foto,
+        oficios: orden.map((o) => ({ nombre: o.name, experiencia: experienciaDe(o.id), principal: o === principal })),
+        credencial: oficioConRequisitos(trabajo) ? (estado === 'subiendo' ? 'revision' : estado) : null,
+        ultimoTrabajo: textoUltimoTrabajo(trabajo),
+    };
 }

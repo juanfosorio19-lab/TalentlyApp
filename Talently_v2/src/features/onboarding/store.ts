@@ -87,12 +87,16 @@ export function setRetomar(path: string | null): void {
     emit({ ...draft, retomar: path });
 }
 
-/** Al terminar el onboarding: el próximo registro parte de cero (y se borra del teléfono). */
-export function resetDraft(): void {
+/**
+ * Al terminar el onboarding: el próximo registro parte de cero (y se borra del
+ * teléfono). Con `conservarFoto`, la foto sigue viva: ya es la del perfil de
+ * la sesión (demo/session `onboarding`).
+ */
+export function resetDraft({ conservarFoto = false }: { conservarFoto?: boolean } = {}): void {
     stopUpload();
     stopPhotoUpload();
     clave = '';
-    if (draft.datos.foto) URL.revokeObjectURL(draft.datos.foto);
+    if (draft.datos.foto && !conservarFoto) URL.revokeObjectURL(draft.datos.foto);
     emit(borradorInicial(), false);
     guardar(null);
 }

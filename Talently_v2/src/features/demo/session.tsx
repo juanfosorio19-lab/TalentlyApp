@@ -4,8 +4,9 @@
 // (02-arquitectura §4.2, providers/) sin tocar las pantallas.
 // Personas y datos: los de los flujos del prototipo de Claude Design (flujos.json).
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import type { DemoOnboardingResult } from './types';
 
-export type DemoActorId = 'matias' | 'jorge' | 'pedro' | 'carolina' | 'rosa' | 'banqueteria';
+export type DemoActorId = 'matias' | 'jorge' | 'pedro' | 'carolina' | 'rosa' | 'banqueteria' | 'marta';
 
 export interface DemoActor {
     id: DemoActorId;
@@ -50,12 +51,28 @@ export const DEMO_ACTORS: Record<DemoActorId, DemoActor> = {
         id: 'banqueteria', shortName: 'Banquetería Rosa', fullName: 'Banquetería Rosa SpA', kind: 'organizacion',
         comuna: 'San Miguel', capabilities: ['organizacion'], owner: 'rosa', flow: '4 · Rosa publica un turno',
     },
+    marta: {
+        // Flujo 10 (?demo=marta): busca empleo como asesora del hogar y conversa con la Familia en Ñuñoa.
+        id: 'marta', shortName: 'Marta', fullName: 'Marta Huanca', kind: 'persona', comuna: 'La Florida',
+        capabilities: ['empleo'], flow: '10 · Marta comparte su certificado',
+    },
 };
 
 interface DemoSession {
     actor: DemoActor;
-    /** Fin del onboarding (flujo 1): pasa a Jorge recién registrado (INI-01-jorge-nuevo). */
-    startAsNewUser: () => void;
+    /**
+     * Fin del onboarding (flujo 1): pasa a Jorge recién registrado
+     * (INI-01-jorge-nuevo) con lo que dejó el registro (nombre, comuna,
+     * oficios, credencial, foto). Sin resultado, el del prototipo.
+     */
+    startAsNewUser: (result?: DemoOnboardingResult) => void;
+    /**
+     * Lo que dejó el onboarding, solo mientras `recienRegistrado`: Inicio
+     * («Hola, <nombre>»), Perfil y VER-01 muestran esto y nada más. Sin
+     * recorrer el registro (`?nuevo=1`), `undefined`: vale el del prototipo
+     * (getHomeFeed y los demás lo completan con defaultOnboardingResult).
+     */
+    onboarding?: DemoOnboardingResult;
     /**
      * INI-01-jorge-nuevo: la app se abrió con `nuevo=1` (`?demo=jorge&nuevo=1`
      * o `#/inicio?nuevo=1`) y el actor es Jorge, el único con esa variante.
@@ -87,20 +104,43 @@ function initialActor(): DemoActorId {
     return fromUrl && fromUrl in DEMO_ACTORS ? (fromUrl as DemoActorId) : 'matias';
 }
 
+/** La persona detrás del actor (una organización: quien la administra). */
+const personOf = (id: DemoActorId): DemoActorId => DEMO_ACTORS[id].owner ?? id;
+
 export function DemoSessionProvider({ children }: { children: ReactNode }) {
     const [actorId, setActorId] = useState<DemoActorId>(initialActor);
     const [nuevo, setNuevo] = useState(NUEVO_EN_URL);
-    const setActor = useCallback((id: DemoActorId) => setActorId(id), []);
-    const startAsNewUser = useCallback(() => {
+    const [onboarding, setOnboarding] = useState<DemoOnboardingResult | undefined>(undefined);
+    const setActor = useCallback(
+        (id: DemoActorId) => {
+            // Entrar como otra persona («Ya tengo cuenta», NOT-01) deja de ser la cuenta recién creada.
+            if (personOf(id) !== personOf(actorId)) {
+                setNuevo(false);
+                setOnboarding(undefined);
+            }
+            setActorId(id);
+        },
+        [actorId],
+    );
+    const startAsNewUser = useCallback((result?: DemoOnboardingResult) => {
         setActorId('jorge');
         setNuevo(true);
+        setOnboarding(result);
     }, []);
     const value = useMemo<DemoSession>(() => {
         const actor = DEMO_ACTORS[actorId];
         const person = actor.owner ? DEMO_ACTORS[actor.owner] : actor;
         const switchable = [person, ...(person.orgs ?? []).map((o) => DEMO_ACTORS[o])];
-        return { actor, setActor, switchable, startAsNewUser, recienRegistrado: nuevo && actor.id === 'jorge' };
-    }, [actorId, setActor, startAsNewUser, nuevo]);
+        const recienRegistrado = nuevo && actor.id === 'jorge';
+        return {
+            actor,
+            setActor,
+            switchable,
+            startAsNewUser,
+            recienRegistrado,
+            onboarding: recienRegistrado ? onboarding : undefined,
+        };
+    }, [actorId, setActor, startAsNewUser, nuevo, onboarding]);
     return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

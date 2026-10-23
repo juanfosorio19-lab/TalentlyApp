@@ -9,7 +9,7 @@ import { List, ListItem } from '../../../ui/ListItem';
 import type { VerificationStatus } from '../../../ui/VerificationBadge';
 import type { DemoVerification } from '../../demo/types';
 import { copy } from '../copy';
-import { VERIFICATION_DETAIL } from '../mock';
+import { verificationDetail } from '../../demo/verifications';
 import '../activity.css';
 
 const STATUS_ICON: Record<VerificationStatus, IconComponent> = {
@@ -31,10 +31,9 @@ export function VerificationSheet({ open, onClose, name, verifications }: Verifi
     return (
         <BottomSheet open={open} onClose={onClose} title={copy.verification.title(name)}>
             <List flat>
-                {verifications.map((v) => {
-                    const sub = [VERIFICATION_DETAIL[v.label], v.vence].filter(Boolean).join(' · ');
-                    return <ListItem key={v.label} icon={STATUS_ICON[v.status]} title={v.label} sub={sub || undefined} />;
-                })}
+                {verifications.map((v) => (
+                    <ListItem key={v.label} icon={STATUS_ICON[v.status]} title={v.label} sub={verificationDetail(v)} />
+                ))}
             </List>
             <p className="caption act-muted">{copy.verification.note}</p>
         </BottomSheet>

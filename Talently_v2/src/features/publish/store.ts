@@ -107,11 +107,9 @@ interface PublishState {
     published: ReadonlyMap<string, PublishedSummary>;
     /** `${actorId}:${kind}` → tocó «Verificar ahora»: al volver de VER-02, PUBL-07 termina de publicar. */
     awaitingIdentity: ReadonlySet<string>;
-    /** Envió su identidad a revisión en esta sesión: no se le vuelve a pedir. */
-    identitySent: ReadonlySet<DemoActorId>;
 }
 
-const INITIAL: PublishState = { published: new Map(), awaitingIdentity: new Set(), identitySent: new Set() };
+const INITIAL: PublishState = { published: new Map(), awaitingIdentity: new Set() };
 const session = createExternal<PublishState>(INITIAL);
 
 const keyOf = (actorId: DemoActorId, kind: WizardKind) => `${actorId}:${kind}`;
@@ -153,22 +151,12 @@ export function getPublished(actorId: DemoActorId, kind: WizardKind): PublishedS
     return session.get().published.get(keyOf(actorId, kind));
 }
 
-export function markIdentitySent(actorId: DemoActorId): void {
-    const s = session.get();
-    if (s.identitySent.has(actorId)) return;
-    session.set({ ...s, identitySent: new Set([...s.identitySent, actorId]) });
-}
-
 export function usePublished(actorId: DemoActorId, kind: WizardKind): PublishedSummary | undefined {
     return session.useStore().published.get(keyOf(actorId, kind));
 }
 
 export function useAwaitingIdentity(actorId: DemoActorId, kind: WizardKind): boolean {
     return session.useStore().awaitingIdentity.has(keyOf(actorId, kind));
-}
-
-export function useIdentitySent(actorId: DemoActorId): boolean {
-    return session.useStore().identitySent.has(actorId);
 }
 
 /** Solo para pruebas. */

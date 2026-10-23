@@ -3,15 +3,20 @@
 // acción y cómo se nombra una sección en la URL (?sheet=editar&s=…). Sin
 // React: lo prueban model.test.ts y lo usan las pantallas.
 import { paths } from '../../app/paths';
-import type { DemoActor, DemoActorId } from '../demo/session';
-import type { DemoProfile, DemoProfileSection, DemoProfileTab, DemoProfileTip, DemoRow, DemoVerification } from '../demo/types';
-import {
-    IDENTITY_DETAIL_REVIEW,
-    IDENTITY_TIP,
-    PHONE_DETAIL_TODAY,
-    PHONE_VERIFIED_IN_PROTOTYPE,
-    VERIFICATION_DETAIL,
-} from './mock';
+import type { DemoActor } from '../demo/session';
+import type {
+    DemoCv,
+    DemoOnboardingResult,
+    DemoProfile,
+    DemoProfileSection,
+    DemoProfileTab,
+    DemoProfileTip,
+    DemoRow,
+    DemoVerification,
+} from '../demo/types';
+import { credentialMissing, defaultOnboardingResult } from '../demo/data';
+import { IDENTIDAD_VERIFICADA, TELEFONO_VERIFICADO, verificationDetail as detailOf } from '../demo/verifications';
+import { IDENTITY_DETAIL_REVIEW, IDENTITY_TIP } from './mock';
 
 // ─── Quién trabaja ──────────────────────────────────────────────────────────
 
@@ -22,8 +27,6 @@ export function trabaja(actor: DemoActor): boolean {
 
 // ─── Perfil con lo que pasó en la sesión ────────────────────────────────────
 
-const TELEFONO_VERIFICADO = 'Teléfono verificado';
-const IDENTIDAD_VERIFICADA = 'Identidad verificada';
 /** Insignia de la identidad enviada en VER-02 y aún sin respuesta. no está en el prototipo. */
 export const IDENTIDAD_EN_REVISION = 'Identidad en revisión';
 /** Detalle de «Verificación y credenciales» sin insignias (el mismo de demo/data). */
@@ -43,17 +46,6 @@ function withVerifications(profile: DemoProfile, verificaciones: DemoVerificatio
     };
 }
 
-/**
- * Lo que el prototipo dice del actor y demo/data aún no trae (pedido en
- * «requests»): el teléfono verificado de Carolina (PUBL-04-identidad y VER-01).
- */
-export function withPrototypeData(profile: DemoProfile): DemoProfile {
-    const { verificaciones } = profile.asiTeVen;
-    if (!PHONE_VERIFIED_IN_PROTOTYPE.includes(profile.actorId)) return profile;
-    if (verificaciones.some((v) => v.label === TELEFONO_VERIFICADO)) return profile;
-    return withVerifications(profile, [{ label: TELEFONO_VERIFICADO, status: 'verified' }, ...verificaciones]);
-}
-
 export interface SessionProfileState {
     /** Verificó el teléfono en esta sesión (AUTH-08 o VER-01; demo/sessionStore `verifyPhone`). */
     phoneVerifiedInSession: boolean;
@@ -62,12 +54,14 @@ export interface SessionProfileState {
      * (Matías lo verifica en AUTH-08, flujo 2; demo/sessionStore `phonePendingAtStart`).
      */
     phonePendingAtStart: boolean;
-    /** Lo mismo con la identidad (Carolina la verifica en VER-02, flujo 5). */
+    /** Lo mismo con la identidad (Carolina la verifica en VER-02, flujo 5; demo/verifications `identityPendingAtStart`). */
     identityPendingAtStart: boolean;
-    /** Envió VER-02 en esta sesión: la identidad queda en revisión. */
+    /** Envió VER-02 en esta sesión (demo/sessionStore `useIdentityStatus` = 'review'): la identidad queda en revisión. */
     identitySubmitted: boolean;
     /** Los perfiles (Trabajo, Hogar…) con lo que la persona editó en esta sesión. */
     tabs?: readonly DemoProfileTab[];
+    /** El CV de la persona (demo/profileState `useCv`): el subido en la sesión o el de los datos. */
+    cv?: DemoCv;
 }
 
 /** Las insignias con lo que pasó en la sesión (el mismo orden de VER-01: teléfono, identidad, el resto). */
@@ -75,7 +69,7 @@ function sessionVerifications(base: readonly DemoVerification[], session: Sessio
     let out = [...base];
     const has = (label: string) => out.some((v) => v.label === label);
     if (session.phoneVerifiedInSession) {
-        if (!has(TELEFONO_VERIFICADO)) out = [{ label: TELEFONO_VERIFICADO, status: 'verified' }, ...out];
+        if (!has(TELEFONO_VERIFICADO)) out = [{ label: TELEFONO_VERIFICADO, status: 'verified', fecha: 'hoy' }, ...out];
     } else if (session.phonePendingAtStart) {
         out = out.filter((v) => v.label !== TELEFONO_VERIFICADO);
     }
@@ -119,6 +113,9 @@ export function composeProfile(base: DemoProfile, session: SessionProfileState):
         if (comuna && comuna !== profile.asiTeVen.comuna) profile = { ...profile, asiTeVen: { ...profile.asiTeVen, comuna } };
     }
 
+    // El CV de la sesión (el mismo que leen Inicio y DET-02): la sección CV lo muestra y «Te falta 1 cosa · Subir CV» ya no aplica.
+    if (session.cv) profile = { ...profile, perfiles: profile.perfiles.map((t) => withCv(t, session.cv as DemoCv)) };
+
     // Identidad pendiente: el Hogar pide verificarla, igual que el de Jorge (VER-02).
     if (session.identityPendingAtStart && !session.identitySubmitted) {
         profile = {
@@ -127,6 +124,18 @@ export function composeProfile(base: DemoProfile, session: SessionProfileState):
         };
     }
     return profile;
+}
+
+/** El perfil con su CV: la sección «CV» con el archivo y sin la tarjeta que lo pide. */
+function withCv(tab: DemoProfileTab, cv: DemoCv): DemoProfileTab {
+    const index = tab.secciones.findIndex((s) => s.titulo === 'CV');
+    if (index < 0) return tab;
+    const current = tab.secciones[index];
+    const same = current?.tipo === 'archivo' && current.nombre === cv.nombre && current.detalle === cv.detalle;
+    const archivo: DemoProfileSection = { tipo: 'archivo', titulo: 'CV', nombre: cv.nombre, detalle: cv.detalle, editable: true };
+    const secciones = same ? tab.secciones : tab.secciones.map((s, i) => (i === index ? archivo : s));
+    const completitud = tab.completitud && isCvAction(tab.completitud.accion) ? undefined : tab.completitud;
+    return secciones === tab.secciones && completitud === tab.completitud ? tab : { ...tab, secciones, completitud };
 }
 
 /**
@@ -138,21 +147,21 @@ export function withoutSessionTips(tabs: readonly DemoProfileTab[]): DemoProfile
 }
 
 /**
- * Hoja «Verificación de …»: cómo y cuándo se verificó cada insignia. Lo
- * verificado en esta sesión dice «hoy» (VER-01: «Verificado hoy»).
+ * Hoja «Verificación de …»: cómo y cuándo se verificó cada insignia, con la
+ * única fecha de los datos (demo/verifications.verificationDetail, la misma
+ * de VER-01 y NOT-01). Lo verificado en esta sesión dice «hoy» (VER-01:
+ * «Verificado hoy») y la identidad enviada, que está en revisión.
  */
 export function verificationDetails(
-    actorId: DemoActorId,
     verificaciones: readonly DemoVerification[],
     phoneVerifiedInSession: boolean,
 ): Record<string, string> {
-    const known = VERIFICATION_DETAIL[actorId] ?? {};
     const out: Record<string, string> = {};
     for (const v of verificaciones) {
         let detalle: string | undefined;
-        if (v.label === TELEFONO_VERIFICADO) detalle = phoneVerifiedInSession ? PHONE_DETAIL_TODAY : (known[v.label] ?? PHONE_DETAIL_TODAY);
+        if (v.label === TELEFONO_VERIFICADO && phoneVerifiedInSession) detalle = detailOf({ ...v, fecha: 'hoy' });
         else if (v.label === IDENTIDAD_EN_REVISION) detalle = IDENTITY_DETAIL_REVIEW;
-        else detalle = known[v.label] ?? v.vence;
+        else detalle = detailOf(v);
         if (detalle) out[v.label] = detalle;
     }
     return out;
@@ -162,31 +171,52 @@ export function verificationDetails(
 
 const sectionOf = (tab: DemoProfileTab | undefined, titulo: string) => tab?.secciones.find((s) => s.titulo === titulo);
 
+/** La credencial que pide el oficio de guardia (ONB-T4). */
+const SPD_LABEL = 'Credencial SPD (ex OS-10)';
+
+/** «Jorge Muñoz» → «JM». */
+const initialsOf = (nombre: string, apellido: string) =>
+    [nombre, apellido].map((w) => w.trim().charAt(0).toLocaleUpperCase('es-CL')).join('') || '?';
+
 /**
- * El perfil de Jorge al terminar el onboarding (flujo 1): solo lo que capturó
- * (ONB-03 y ONB-T1 a ONB-T5, resumido en ONB-99). Sin insignias (el teléfono
- * fue opcional y la credencial SPD quedó para «Después»), sin reseñas, sin
- * perfil Hogar, sin «Sobre mí» ni idiomas, y con la credencial SPD como lo
- * que le falta (la misma tarjeta de su Inicio). Pedido en «requests» como
- * `getProfile(actorId, { recienRegistrado })` en demo/data.
+ * El perfil de Jorge al terminar el onboarding (flujo 1): SOLO lo que dejó el
+ * registro (`result`, demo/session `onboarding`: nombre, comuna, foto,
+ * oficios de ONB-T1, la credencial de ONB-T4 y el último trabajo de ONB-T5).
+ * Sin insignias (el teléfono fue opcional), sin reseñas, sin perfil Hogar,
+ * sin «Sobre mí» ni idiomas. La credencial SPD: «En revisión» si la subió;
+ * si no, es lo que le falta (la misma tarjeta de su Inicio).
  */
-export function recienRegistradoProfile(base: DemoProfile): DemoProfile {
+export function recienRegistradoProfile(base: DemoProfile, result: DemoOnboardingResult = defaultOnboardingResult()): DemoProfile {
     const trabajo = base.perfiles.find((t) => t.id === 'trabajo');
     const pretension = sectionOf(trabajo, 'Pretensión'); // ONB-T3: $650.000 al mes y $40.000 por turno
     const cv = sectionOf(trabajo, 'CV'); // ONB-T5: no subió su CV
     const credenciales = sectionOf(trabajo, 'Credenciales');
     const antecedentes: DemoRow[] =
         credenciales?.tipo === 'filas' ? credenciales.filas.filter((r) => r.label.startsWith('Certificado de antecedentes')) : [];
+    const comuna = result.comuna ?? base.asiTeVen.comuna;
+    const varios = result.oficios.length > 1;
+    const spd: DemoRow[] =
+        result.credencial === null
+            ? []
+            : result.credencial === 'revision'
+              ? [{ label: SPD_LABEL, badge: 'En revisión' }]
+              : // ONB-T4: «Sin credencial SPD vigente no podrás ser confirmado en turnos de guardia.»
+                [{ label: SPD_LABEL, badge: 'Obligatoria', detalle: 'Sin credencial SPD vigente no podrás ser confirmado en turnos de guardia.' }];
 
     const secciones: DemoProfileSection[] = [
         {
             tipo: 'filas', titulo: 'Oficios y experiencia', editable: true,
             filas: [
-                // ONB-T1.
-                { label: 'Guardia de seguridad', value: '5 a 10 años de experiencia', badge: 'Principal' },
-                { label: 'Guardia de eventos', value: '3 a 5 años de experiencia' },
-                // ONB-T5: Condominio Los Peumos, de 03/2021 a 10/2026.
-                { label: 'Último trabajo', value: 'Guardia de seguridad en Condominio Los Peumos · 2021 a 2026' },
+                // ONB-T1, el principal primero.
+                ...result.oficios.map(
+                    (o): DemoRow => ({
+                        label: o.nombre,
+                        value: o.experiencia ? `${o.experiencia} de experiencia` : undefined,
+                        badge: o.principal && varios ? 'Principal' : undefined,
+                    }),
+                ),
+                // ONB-T5.
+                ...(result.ultimoTrabajo ? [{ label: 'Último trabajo', value: result.ultimoTrabajo }] : []),
             ],
         },
         {
@@ -199,39 +229,41 @@ export function recienRegistradoProfile(base: DemoProfile): DemoProfile {
                 { label: 'Sistema de turno', value: '4x4 · de día y de noche' },
                 // ONB-99: «4 franjas, hasta 20 km».
                 { label: 'Turnos por día', value: 'Vie noche · Sáb tarde y noche · Dom tarde' },
-                { label: 'Hasta dónde te mueves', value: `20 km desde ${base.asiTeVen.comuna}` },
+                { label: 'Hasta dónde te mueves', value: `20 km desde ${comuna}` },
             ],
         },
         ...(pretension ? [pretension] : []),
-        {
-            tipo: 'filas', titulo: 'Credenciales', editable: true,
-            filas: [
-                // ONB-T4: «Sin credencial SPD vigente no podrás ser confirmado en turnos de guardia.»
-                {
-                    label: 'Credencial SPD (ex OS-10)', badge: 'Obligatoria',
-                    detalle: 'Sin credencial SPD vigente no podrás ser confirmado en turnos de guardia.',
-                },
-                ...antecedentes,
-            ],
-        },
+        ...(spd.length || antecedentes.length
+            ? [{ tipo: 'filas' as const, titulo: 'Credenciales', editable: true, filas: [...spd, ...antecedentes] }]
+            : []),
         ...(cv ? [cv] : []),
     ];
 
     const tab: DemoProfileTab = {
         id: 'trabajo', nombre: 'Trabajo',
-        // INI-01-jorge-nuevo y ONB-99.
-        completitud: {
-            titulo: 'Te falta la credencial SPD', badge: 'Obligatoria',
-            texto: 'Sin ella no podrás ser confirmado en turnos de guardia.', accion: 'Subir credencial',
-            destino: { pantalla: 'verificacion' },
-        },
+        // INI-01-jorge-nuevo y ONB-99: lo que falta, solo si de verdad falta.
+        completitud: credentialMissing(result)
+            ? {
+                  titulo: 'Te falta la credencial SPD', badge: 'Obligatoria',
+                  texto: 'Sin ella no podrás ser confirmado en turnos de guardia.', accion: 'Subir credencial',
+                  destino: { pantalla: 'verificacion' },
+              }
+            : undefined,
         secciones,
     };
 
     const sinInsignias = withVerifications(base, []);
+    const nombre = [result.nombre, result.apellido].map((w) => w.trim()).filter(Boolean).join(' ');
     return {
         ...sinInsignias,
-        asiTeVen: { ...sinInsignias.asiTeVen, notas: [{ rol: 'Trabajo', nota: null }] },
+        asiTeVen: {
+            ...sinInsignias.asiTeVen,
+            nombre: nombre || sinInsignias.asiTeVen.nombre,
+            iniciales: initialsOf(result.nombre, result.apellido),
+            foto: result.foto ?? undefined,
+            comuna,
+            notas: [{ rol: 'Trabajo', nota: null }],
+        },
         perfiles: [tab],
         vacio: undefined,
     };

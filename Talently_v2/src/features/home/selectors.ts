@@ -46,16 +46,32 @@ export interface HomeSessionState {
  * se quedan.
  */
 function newsBelongsToSession(destino: DemoTarget, applications: readonly DemoApplication[]): boolean {
+    return destino.pantalla === 'proceso' || destino.pantalla === 'publicacion' || destino.pantalla === 'mi-turno'
+        ? applicationOf(destino, applications) !== undefined
+        : true;
+}
+
+/** La postulación de la sesión de la que habla una novedad (PRC-01, DET-01 o TUR-01). */
+function applicationOf(destino: DemoTarget, applications: readonly DemoApplication[]): DemoApplication | undefined {
     switch (destino.pantalla) {
         case 'proceso':
-            return applications.some((a) => a.publicationId === processPublicationId(destino.processId));
+            return applications.find((a) => a.publicationId === processPublicationId(destino.processId));
         case 'publicacion':
-            return applications.some((a) => a.publicationId === destino.publicationId);
+            return applications.find((a) => a.publicationId === destino.publicationId);
         case 'mi-turno':
-            return applications.some((a) => a.id === destino.applicationId);
+            return applications.find((a) => a.id === destino.applicationId);
         default:
-            return true;
+            return undefined;
     }
+}
+
+/** Estados de la sesión que mandan sobre el de la novedad: lo que la persona hizo después (PRC-01, TUR-01). */
+const SESSION_ENDS: readonly DemoApplication['estado'][] = ['Postulación retirada', 'Cancelaste'];
+
+/** La novedad con el estado de la sesión si la persona retiró la postulación o canceló el turno (ACT-02 dice lo mismo). */
+function newsWithSession(n: DemoNews, applications: readonly DemoApplication[]): DemoNews {
+    const estado = applicationOf(n.destino, applications)?.estado;
+    return estado && SESSION_ENDS.includes(estado) && estado !== n.estado ? { ...n, estado } : n;
 }
 
 /** A dónde lleva una postulación: PRC-01 (empleo), TUR-01 (turno confirmado) o su detalle. */
@@ -89,7 +105,9 @@ export function homeBlocks(bloques: readonly DemoHomeBlock[], session: HomeSessi
         if (b.tipo === 'agenda') return [{ ...b, eventos: currentAgenda(b.eventos, applications) }];
         if (b.tipo === 'completar' && session.cvSubido && isCvTip(b.aviso)) return [];
         if (b.tipo === 'novedades') {
-            const items = b.items.filter((n) => newsBelongsToSession(n.destino, applications));
+            const items = b.items
+                .filter((n) => newsBelongsToSession(n.destino, applications))
+                .map((n) => newsWithSession(n, applications));
             return items.length ? [{ ...b, items }] : [];
         }
         // «Aún no tienes actividad» deja de ser cierto en cuanto postula (ACT-02 ya lo muestra).

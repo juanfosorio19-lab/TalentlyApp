@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { getExplore, getPublication } from '../demo/data';
+import { arrive, getManageState, resetManage, setPublicationStatus } from '../demo/manageState';
 import { DEMO_ACTORS } from '../demo/session';
 import type { DemoTurno } from '../demo/types';
 import { EMPLEO_SIN_FILTROS, TURNO_SIN_FILTROS } from './filters';
@@ -28,28 +29,31 @@ import {
 } from './model';
 
 const noApplications = new Map();
+const manage = () => getManageState();
+
+afterEach(() => resetManage());
 const handlers: CardHandlers = { href: '#', onOpen: () => undefined, onVerify: () => undefined };
 
 const turno = (id: string) => getPublication(id) as DemoTurno;
 
 describe('segmentos de Explorar (spec §5.2)', () => {
     it('cada actor ve los suyos', () => {
-        expect(segmentsOf(DEMO_ACTORS.matias)).toEqual(['empleo', 'turno']);
-        expect(segmentsOf(DEMO_ACTORS.banqueteria)).toEqual(['personas']);
-        expect(segmentsOf(DEMO_ACTORS.carolina)).toEqual(['personas']);
-        expect(segmentsOf(DEMO_ACTORS.rosa)).toEqual(['empleo', 'turno']);
+        expect(segmentsOf(DEMO_ACTORS.matias, false, manage())).toEqual(['empleo', 'turno']);
+        expect(segmentsOf(DEMO_ACTORS.banqueteria, false, manage())).toEqual(['personas']);
+        expect(segmentsOf(DEMO_ACTORS.carolina, false, manage())).toEqual(['personas']);
+        expect(segmentsOf(DEMO_ACTORS.rosa, false, manage())).toEqual(['empleo', 'turno']);
     });
 
     it('un segmento que no aplica cae en el del actor', () => {
-        const segs = segmentsOf(DEMO_ACTORS.matias);
+        const segs = segmentsOf(DEMO_ACTORS.matias, false, manage());
         expect(segmentFor(DEMO_ACTORS.matias, segs, 'personas')).toBe('turno');
         expect(segmentFor(DEMO_ACTORS.matias, segs, 'empleo')).toBe('empleo');
-        expect(segmentFor(DEMO_ACTORS.pedro, segmentsOf(DEMO_ACTORS.pedro), null)).toBe('empleo');
+        expect(segmentFor(DEMO_ACTORS.pedro, segmentsOf(DEMO_ACTORS.pedro, false, manage()), null)).toBe('empleo');
     });
 
     it('Jorge recién registrado no tiene publicaciones propias', () => {
-        expect(ownPublications(DEMO_ACTORS.jorge, true)).toEqual([]);
-        expect(segmentsOf(DEMO_ACTORS.jorge, true)).not.toContain('personas');
+        expect(ownPublications(DEMO_ACTORS.jorge, true, manage())).toEqual([]);
+        expect(segmentsOf(DEMO_ACTORS.jorge, true, manage())).not.toContain('personas');
     });
 });
 
@@ -95,9 +99,9 @@ describe('EXP-05 · personas sugeridas', () => {
         expect(porQueOf(undefined, 'Maipú', 'San Miguel')).toBe('calza con el oficio que buscas');
         expect(porQueOf(undefined, 'San Miguel', 'San Miguel')).toBe('calza con el oficio que buscas y vive en San Miguel');
         expect(porQueOf('sáb 5 dic', 'San Miguel', 'San Miguel')).toBe('calza con el oficio que buscas y ya trabajó contigo el sáb 5 dic');
-        const pub = ownPublications(DEMO_ACTORS.banqueteria)[0];
+        const pub = ownPublications(DEMO_ACTORS.banqueteria, false, manage())[0];
         expect(pub).toBeDefined();
-        const estado = pub ? personasFor(DEMO_ACTORS.banqueteria, pub, noApplications) : null;
+        const estado = pub ? personasFor(DEMO_ACTORS.banqueteria, pub, noApplications, manage()) : null;
         if (estado?.tipo === 'sugeridas') {
             for (const s of estado.sugeridas) expect(s.porQue).not.toContain(pub?.titulo ?? '');
         }
@@ -106,17 +110,34 @@ describe('EXP-05 · personas sugeridas', () => {
 
 describe('EXP-05 · quienes ya están en la publicación', () => {
     it('los postulados que llegan después del «salto de tiempo» todavía no están (como en GES-04)', () => {
-        const members = membersOf('turno-garzones-finde', noApplications);
+        const members = membersOf('turno-garzones-finde', noApplications, manage());
         for (const id of ['martin-silva', 'fernanda-castro', 'nicolas-vargas', 'antonia-reyes']) expect(members.has(id)).toBe(false);
         const pub = getPublication('turno-garzones-finde');
-        const estado = pub ? personasFor(DEMO_ACTORS.banqueteria, pub, noApplications) : null;
+        const estado = pub ? personasFor(DEMO_ACTORS.banqueteria, pub, noApplications, manage()) : null;
         expect(estado?.tipo).toBe('sugeridas');
         if (estado?.tipo === 'sugeridas') expect(estado.sugeridas.map((s) => s.person.id)).toContain('martin-silva');
+    });
+
+    it('después del «salto de tiempo» (GES-04) los postulados ya están y no se sugieren', () => {
+        arrive('turno-garzones-finde', 'finde-sab-19');
+        const members = membersOf('turno-garzones-finde', noApplications, manage());
+        expect(members.get('martin-silva')?.kind).toBe('postulado');
+        const pub = getPublication('turno-garzones-finde');
+        const estado = pub ? personasFor(DEMO_ACTORS.banqueteria, pub, noApplications, manage()) : null;
+        if (estado?.tipo === 'sugeridas') expect(estado.sugeridas.map((s) => s.person.id)).not.toContain('martin-silva');
+    });
+
+    it('pausar o cerrar en GES-01 la saca de EXP-05 y de la búsqueda', () => {
+        expect(ownPublications(DEMO_ACTORS.banqueteria, false, manage()).map((p) => p.id)).toContain('turno-garzones-finde');
+        setPublicationStatus('turno-garzones-finde', { estado: 'Pausada' });
+        expect(ownPublications(DEMO_ACTORS.banqueteria, false, manage()).map((p) => p.id)).not.toContain('turno-garzones-finde');
+        const matias = searchScope(DEMO_ACTORS.matias, false, noApplications, manage());
+        expect(matias.turnos.map((p) => p.id)).not.toContain('turno-garzones-finde');
     });
 });
 
 describe('EXP-07 · buscar', () => {
-    const scopeOf = (id: keyof typeof DEMO_ACTORS) => searchScope(DEMO_ACTORS[id], false, noApplications);
+    const scopeOf = (id: keyof typeof DEMO_ACTORS) => searchScope(DEMO_ACTORS[id], false, noApplications, manage());
 
     it('sin tildes y con sinónimos', () => {
         expect(searchIn(scopeOf('pedro'), 'mecanico').empleos.length).toBeGreaterThan(0);
@@ -138,7 +159,7 @@ describe('EXP-07 · buscar', () => {
 
     it('la búsqueda es global, sin las publicaciones propias; quien contrata también busca personas', () => {
         const carolina = scopeOf('carolina');
-        const own = new Set(ownPublications(DEMO_ACTORS.carolina).map((p) => p.id));
+        const own = new Set(ownPublications(DEMO_ACTORS.carolina, false, manage()).map((p) => p.id));
         expect(own.size).toBeGreaterThan(0);
         expect([...carolina.empleos, ...carolina.turnos].some((p) => own.has(p.id))).toBe(false);
         expect(searchIn(carolina, 'nana').personas.length).toBeGreaterThan(0);
@@ -151,7 +172,7 @@ describe('EXP-07 · buscar', () => {
             [suggestionId(pub, 'javiera-contreras')]: 'si',
             [suggestionId(pub, 'felipe-araya')]: 'no',
         };
-        const scope = searchScope(DEMO_ACTORS.banqueteria, false, noApplications, (id) => decisions[id]);
+        const scope = searchScope(DEMO_ACTORS.banqueteria, false, noApplications, manage(), (id) => decisions[id]);
         const javiera = searchIn(scope, 'javiera').personas.find((s) => s.person.id === 'javiera-contreras');
         expect(javiera?.invitada).toBe(true);
         expect(javiera?.publicationId).toBe(pub);

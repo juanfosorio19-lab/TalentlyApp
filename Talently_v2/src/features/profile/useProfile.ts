@@ -1,14 +1,16 @@
 // El perfil del actor tal como se ve ahora (PRF-01 y PRF-02): los datos de
-// la demostración, la variante de Jorge recién registrado, lo verificado en
-// la sesión (demo/sessionStore) y lo que la persona editó (store.ts).
+// la demostración, la variante de Jorge recién registrado (lo que dejó su
+// onboarding, demo/session), lo verificado en la sesión (demo/sessionStore) y
+// lo que la persona editó o subió (demo/profileState, que Inicio y DET-02
+// también leen).
 import { useCallback, useMemo } from 'react';
 import { getProfile } from '../demo/data';
 import { useDemoSession } from '../demo/session';
-import { phonePendingAtStart, useSessionState } from '../demo/sessionStore';
+import { phonePendingAtStart, useIdentityStatus, useSessionState } from '../demo/sessionStore';
 import type { DemoProfile, DemoProfileTab } from '../demo/types';
-import { identityPendingAtStart } from './mock';
-import { composeProfile, recienRegistradoProfile, verificationDetails, withoutSessionTips, withPrototypeData } from './model';
-import { profileKey, saveProfileTabs, useProfileTabs } from './store';
+import { identityPendingAtStart } from '../demo/verifications';
+import { composeProfile, recienRegistradoProfile, verificationDetails, withoutSessionTips } from './model';
+import { profileKey, saveProfileTabs, useCv, useProfileTabs } from '../demo/profileState';
 
 export interface ProfileState {
     profile: DemoProfile;
@@ -19,29 +21,31 @@ export interface ProfileState {
 }
 
 export function useProfile(): ProfileState {
-    const { actor, recienRegistrado } = useDemoSession();
+    const { actor, recienRegistrado, onboarding } = useDemoSession();
     const { phoneVerified } = useSessionState();
     const key = profileKey(actor.id, recienRegistrado);
     const tabs = useProfileTabs(key);
+    const cv = useCv(actor.id, recienRegistrado);
     const phoneVerifiedInSession = phoneVerified.has(actor.id);
+    // La identidad enviada en VER-02 (desde VER-01 o desde PUBL-04): la misma de VER-01 y PUBL-04.
+    const identitySubmitted = useIdentityStatus(actor.id) === 'review';
 
     const profile = useMemo(() => {
-        const data = withPrototypeData(getProfile(actor.id));
-        const base = recienRegistrado ? recienRegistradoProfile(data) : data;
+        const data = getProfile(actor.id);
+        const base = recienRegistrado ? recienRegistradoProfile(data, onboarding) : data;
         return composeProfile(base, {
             phoneVerifiedInSession,
             phonePendingAtStart: phonePendingAtStart(actor.id),
             identityPendingAtStart: !recienRegistrado && identityPendingAtStart(actor.id),
-            // VER-02 guarda el envío en su propio feature: pedido en «requests» como
-            // `useIdentityStatus(personId)` en demo/sessionStore. Mientras, el Perfil no lo ve.
-            identitySubmitted: false,
+            identitySubmitted,
             tabs,
+            cv,
         });
-    }, [actor.id, recienRegistrado, phoneVerifiedInSession, tabs]);
+    }, [actor.id, recienRegistrado, onboarding, phoneVerifiedInSession, identitySubmitted, tabs, cv]);
 
     const details = useMemo(
-        () => verificationDetails(actor.id, profile.asiTeVen.verificaciones, phoneVerifiedInSession),
-        [actor.id, profile.asiTeVen.verificaciones, phoneVerifiedInSession],
+        () => verificationDetails(profile.asiTeVen.verificaciones, phoneVerifiedInSession),
+        [profile.asiTeVen.verificaciones, phoneVerifiedInSession],
     );
 
     const saveTab = useCallback(

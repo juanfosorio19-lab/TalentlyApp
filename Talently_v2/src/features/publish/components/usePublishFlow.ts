@@ -8,10 +8,11 @@ import { useSnackbar } from '../../../ui/Snackbar';
 import { useOpenPath } from '../../../app/navigation/useOpenPath';
 import { useSheet } from '../../../app/sheets';
 import type { DemoActor } from '../../demo/session';
-import { isPhoneVerified, useSessionState } from '../../demo/sessionStore';
+import { usePhoneVerified, useIdentityStatus } from '../../demo/sessionStore';
+import { identityInData } from '../../demo/verifications';
 import { PLAN_STEP, needsIdentity, phoneVerifiedInData, type WizardKind } from '../model/publisher';
 import { identityPath, publishedPath } from '../publishPaths';
-import { awaitIdentity, cancelAwaitIdentity, markPublished, useIdentitySent, type DraftStore, type PublishedSummary } from '../store';
+import { awaitIdentity, cancelAwaitIdentity, markPublished, type DraftStore, type PublishedSummary } from '../store';
 
 export const IDENTITY_SHEET = 'identidad';
 
@@ -35,9 +36,11 @@ export function usePublishFlow<T>({ kind, step, actor, store, initial, hasErrors
     const snackbar = useSnackbar();
     const { open } = useOpenPath();
     // El teléfono verificado en esta sesión (VER-01, AUTH-08) cuenta al momento: la hoja lo lee de aquí.
-    useSessionState();
+    // Recién registrado, los datos no cuentan (INI-01-jorge-nuevo), pero sí lo verificado en esta sesión.
+    const phoneVerified = usePhoneVerified(actor.id, !recienRegistrado && phoneVerifiedInData(actor.id));
+    // La identidad es una sola (demo/sessionStore): enviada desde VER-01 o desde aquí, PUBL-04 ya no la pide.
+    const identity = useIdentityStatus(actor.id, identityInData(actor.id, recienRegistrado));
     const identitySheet = useSheet(IDENTITY_SHEET);
-    const identitySent = useIdentitySent(actor.id);
     const [errorStep, setErrorStep] = useState<number | null>(null);
     const [errorTick, setErrorTick] = useState(0);
 
@@ -61,7 +64,7 @@ export function usePublishFlow<T>({ kind, step, actor, store, initial, hasErrors
             goTo(step + 1);
             return;
         }
-        if (needsIdentity(actor, identitySent)) identitySheet.show();
+        if (needsIdentity(actor, identity)) identitySheet.show();
         else publish();
     };
 
@@ -87,8 +90,7 @@ export function usePublishFlow<T>({ kind, step, actor, store, initial, hasErrors
         identitySheet,
         dismissIdentity,
         verifyIdentity,
-        // Recién registrado, los datos no cuentan (INI-01-jorge-nuevo), pero sí lo verificado en esta sesión.
-        phoneVerified: isPhoneVerified(actor.id, !recienRegistrado && phoneVerifiedInData(actor.id)),
-        identityPending: needsIdentity(actor, identitySent),
+        phoneVerified,
+        identityPending: needsIdentity(actor, identity),
     };
 }

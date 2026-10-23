@@ -168,7 +168,6 @@ export const copy = {
     verificacion: {
         titulo: (nombre: string) => `Verificación de ${nombre}`,
         nota: 'Talently nunca muestra el RUT, la fecha de nacimiento ni las fotos de la cédula.',
-        vence: (vence: string) => vence.charAt(0).toUpperCase() + vence.slice(1),
         ninguna: (nombre: string) => `${nombrePila(nombre)} todavía no verifica sus datos en Talently.`,
     },
 

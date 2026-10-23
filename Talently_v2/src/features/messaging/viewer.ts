@@ -1,11 +1,9 @@
-// Quién mira Mensajes: el actor de la sesión (useDemoSession) o, en el flujo
-// 10, Marta Huanca (mock.ts: ?demo=marta, mientras la demo no la tenga como
-// actor). La bandeja, la conversación y el badge de la pestaña (unread.ts)
-// leen de aquí. La campana no: abre NOT-01, que es del actor de la sesión, y
-// cuenta lo mismo que esa pantalla (NotificationsButton).
+// Quién mira Mensajes: el actor de la sesión (useDemoSession; en el flujo 10,
+// `?demo=marta`, Marta Huanca, que también es actor de la demo). La bandeja,
+// la conversación, la campana (NOT-01) y el badge de la pestaña
+// (demo/conversationState.useUnreadMessages) leen al mismo actor.
 import { useDemoSession, type DemoActor } from '../demo/session';
 import type { DemoViewerId } from '../demo/types';
-import { VIEWER_OVERRIDE } from './mock';
 
 export interface Viewer {
     viewerId: DemoViewerId;
@@ -24,19 +22,9 @@ export interface Viewer {
     seeksWork: boolean;
     /** A qué segmento de Explorar lleva el EmptyState: turnos, salvo quien solo busca empleo. */
     explore: 'turno' | 'empleo';
-    /**
-     * Quien mira es el actor de la sesión. `false` en el flujo 10 (Marta): las
-     * pantallas de otros features (DET-01, PRC-01, NOT-01…) se dibujan para el
-     * actor de la sesión (Matías), así que Mensajes no lleva a ellas.
-     */
-    isActor: boolean;
 }
 
 function viewerOf(actor: DemoActor, recienRegistrado: boolean): Viewer {
-    if (VIEWER_OVERRIDE === 'marta') {
-        // Marta busca empleo como asesora del hogar (flujo 10).
-        return { viewerId: 'marta', recienRegistrado: false, audience: 'persona', seeksWork: true, explore: 'empleo', isActor: false };
-    }
     const caps = actor.capabilities;
     const seeks = caps.includes('turnos') || caps.includes('empleo');
     return {
@@ -45,7 +33,6 @@ function viewerOf(actor: DemoActor, recienRegistrado: boolean): Viewer {
         audience: actor.kind === 'organizacion' ? 'organizacion' : 'persona',
         seeksWork: actor.kind !== 'organizacion' && (seeks || caps.length === 0),
         explore: caps.includes('empleo') && !caps.includes('turnos') ? 'empleo' : 'turno',
-        isActor: true,
     };
 }
 

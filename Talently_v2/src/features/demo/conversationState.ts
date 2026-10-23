@@ -1,10 +1,18 @@
-// Estado local de las conversaciones mientras Supabase está pausado: lo que
-// la persona hace en esta sesión sobre los datos de demostración (mensajes
-// enviados, leídos, borrador, certificado compartido, bloqueo). Vive en
-// memoria: al recargar vuelve a los datos de features/demo. Cuando vuelva la
-// base de datos, cada acción pasa a ser su RPC y este módulo se borra.
-import { useSyncExternalStore } from 'react';
-import { SEND_DELAY_MS } from './mock';
+// Las conversaciones durante la sesión de demostración, en UN solo lugar para
+// Mensajes (MSG-01, MSG-02), el badge de la pestaña Mensajes (AppShell) y el
+// KPI «Conversaciones sin responder» de INI-02: lo que la persona hace sobre
+// los datos (mensajes enviados, leídos, borrador, certificado compartido,
+// bloqueo) y qué conversaciones existen ya en la sesión (las de una
+// postulación que el actor todavía no envía, no: conversationInSession).
+// Vive en memoria: al recargar vuelve a los datos de features/demo. Cuando
+// vuelva la base de datos, cada acción pasa a ser su RPC.
+import { useMemo, useSyncExternalStore } from 'react';
+import { getConversations } from './data';
+import { keyOf, startsWithoutApplication, useSessionState, type SessionApplication } from './sessionStore';
+import type { DemoConversation, DemoViewerId } from './types';
+
+/** Lo que tarda el envío simulado («Enviando…» → «Enviado»). */
+export const SEND_DELAY_MS = 700;
 
 /** Estado real de un mensaje propio enviado en esta sesión (MessageBubble). */
 export type LocalStatus = 'sending' | 'sent' | 'queued';
@@ -148,20 +156,71 @@ if (typeof window !== 'undefined') {
     });
 }
 
-function subscribeOnline(listener: () => void): () => void {
-    window.addEventListener('online', listener);
-    window.addEventListener('offline', listener);
-    return () => {
-        window.removeEventListener('online', listener);
-        window.removeEventListener('offline', listener);
-    };
+/** Solo para pruebas: vuelve al estado inicial. */
+export function resetConversations(): void {
+    snapshot = new Map();
+    listeners.forEach((l) => l());
 }
 
-/** `false` sin conexión: Banner «Sin conexión…» y los mensajes nuevos quedan en cola. */
-export function useOnline(): boolean {
-    return useSyncExternalStore(
-        subscribeOnline,
-        () => navigator.onLine,
-        () => true,
-    );
+// ─── Qué conversaciones existen en la sesión ────────────────────────────────
+
+/**
+ * ¿La conversación ya existe en esta sesión? Los datos traen el «después» de
+ * los flujos 3 y de apoyo: «Taller Los Aromos» (Pedro) y «Seguridad Andes»
+ * (Jorge) conversan sobre una postulación que, en una sesión nueva, el actor
+ * todavía no envía (startsWithoutApplication). Aparecen al postular, igual
+ * que sus notificaciones (useInbox) y su proceso (PRC-01).
+ */
+export function conversationInSession(conv: DemoConversation, applications: ReadonlyMap<string, SessionApplication>): boolean {
+    const publicationId = conv.contexto.publicationId;
+    if (!publicationId || !startsWithoutApplication(conv.viewerId, publicationId)) return true;
+    return applications.has(keyOf(conv.viewerId, publicationId));
+}
+
+/** Las conversaciones de quien mira, las que existen en la sesión (recién registrado: ninguna). */
+export function conversationsOf(
+    viewerId: DemoViewerId,
+    recienRegistrado: boolean,
+    applications: ReadonlyMap<string, SessionApplication>,
+): DemoConversation[] {
+    if (recienRegistrado) return [];
+    return getConversations(viewerId).filter((c) => conversationInSession(c, applications));
+}
+
+/** MSG-01: las conversaciones de quien mira, al día con la sesión. */
+export function useConversations(viewerId: DemoViewerId, recienRegistrado = false): DemoConversation[] {
+    const { applications } = useSessionState();
+    return useMemo(() => conversationsOf(viewerId, recienRegistrado, applications), [viewerId, recienRegistrado, applications]);
+}
+
+/** No leídos reales: los de los datos, salvo las conversaciones que ya abrió. */
+export function unreadOf(conversations: readonly DemoConversation[], states: ReadonlyMap<string, ConversationState>): number {
+    return conversations.reduce((total, c) => total + (states.get(c.id)?.read ? 0 : c.sinLeer), 0);
+}
+
+/** El badge de la pestaña Mensajes: lo mismo que cuenta MSG-01. */
+export function useUnreadMessages(viewerId: DemoViewerId, recienRegistrado = false): number {
+    const conversations = useConversations(viewerId, recienRegistrado);
+    return unreadOf(conversations, useConversationStates());
+}
+
+/**
+ * ¿Falta responder? El último mensaje de texto es de la otra parte y quien
+ * mira no escribió nada en esta sesión. Un match sin mensajes no cuenta.
+ */
+export function isUnanswered(conv: DemoConversation, state: ConversationState): boolean {
+    if (state.blocked) return false;
+    if (state.entries.some((e) => e.kind === 'texto')) return false;
+    const last = conv.mensajes.filter((m) => m.tipo === 'texto').at(-1);
+    return last?.tipo === 'texto' && last.de === 'otro';
+}
+
+/** «Conversaciones sin responder» (KPI de INI-02). */
+export function unansweredOf(conversations: readonly DemoConversation[], states: ReadonlyMap<string, ConversationState>): number {
+    return conversations.filter((c) => isUnanswered(c, states.get(c.id) ?? EMPTY_STATE)).length;
+}
+
+export function useUnansweredConversations(viewerId: DemoViewerId, recienRegistrado = false): number {
+    const conversations = useConversations(viewerId, recienRegistrado);
+    return unansweredOf(conversations, useConversationStates());
 }

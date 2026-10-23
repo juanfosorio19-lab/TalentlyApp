@@ -5,9 +5,11 @@ import { useEffect, useRef, useState } from 'react';
 import { useSnackbar } from '../../../ui/Snackbar';
 import { paths } from '../../../app/paths';
 import { useOpenPath } from '../../../app/navigation/useOpenPath';
+import { saveCv as saveSessionCv } from '../../demo/profileState';
+import { useDemoSession } from '../../demo/session';
 import type { DemoProfileSection, DemoProfileTab } from '../../demo/types';
 import { COPY, SAVED_BY_SECTION } from '../copy';
-import { editAction, findEditable, isCvAction, sectionSlug, tipAction, type EditableSection } from '../model';
+import { editAction, findEditable, sectionSlug, tipAction, type EditableSection } from '../model';
 import { useStillSheet } from '../useStillSheet';
 import { CvSheet, type CvFile } from './CvSheet';
 import { EditSectionSheet } from './EditSectionSheet';
@@ -23,6 +25,7 @@ export interface ProfileTabContentProps {
 
 export function ProfileTabContent({ tab, comuna, onChange }: ProfileTabContentProps) {
     const { show } = useSnackbar();
+    const { actor, recienRegistrado } = useDemoSession();
     const { open: openPath, soon } = useOpenPath();
     const editar = useStillSheet('editar');
     const cv = useStillSheet('cv');
@@ -89,11 +92,9 @@ export function ProfileTabContent({ tab, comuna, onChange }: ProfileTabContentPr
     };
 
     const saveCv = (file: CvFile) => {
-        const archivo: DemoProfileSection = { tipo: 'archivo', titulo: 'CV', nombre: file.nombre, detalle: file.detalle, editable: true };
-        const secciones = tab.secciones.map((s, i) => (i === cvIndex ? archivo : s));
-        // Con el CV arriba, «Te falta 1 cosa» ya no aplica.
-        const completitud = tab.completitud && isCvAction(tab.completitud.accion) ? undefined : tab.completitud;
-        onChange({ ...tab, secciones, completitud });
+        // El CV vive en demo/profileState (useCv): Perfil lo muestra en su sección, Inicio deja de pedirlo
+        // («Te falta 1 cosa · Subir CV») y DET-02 lo ofrece «Del perfil».
+        saveSessionCv(actor.id, file, recienRegistrado);
         cvSaved.current = true;
         cv.hide();
         show({ message: COPY.cv.guardado, tone: 'success' });

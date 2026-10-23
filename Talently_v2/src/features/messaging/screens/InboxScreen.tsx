@@ -17,12 +17,11 @@ import { List, ListItem } from '../../../ui/ListItem';
 import { NewMatches, type NewMatch } from '../../../ui/NewMatches';
 import { useOpenPath, type LinkTargetProps } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
-import { getConversations } from '../../demo/data';
 import { InboxFilterChips } from '../components/InboxFilterChips';
 import { NotificationsButton } from '../components/NotificationsButton';
 import { copy } from '../copy';
 import { ALL, filteredEmpty, inboxFilters, inboxRow, matchesFilter, peerKind, selectedFilter, sortRows, type InboxRow } from '../model';
-import { EMPTY_STATE, useConversationStates } from '../store';
+import { EMPTY_STATE, useConversationStates, useConversations } from '../../demo/conversationState';
 import { useViewer, type Viewer } from '../viewer';
 import '../messaging.css';
 
@@ -37,10 +36,12 @@ export function InboxScreen() {
     const { open, linkProps } = useOpenPath();
     const allChipRef = useRef<HTMLButtonElement>(null);
 
-    // Jorge recién registrado (INI-01-jorge-nuevo): todavía no tiene conversaciones.
+    // Las que existen en la sesión (demo/conversationState): Jorge recién registrado todavía no
+    // tiene conversaciones, y la de una postulación que aún no envía aparece al postular.
+    const conversations = useConversations(viewerId, recienRegistrado);
     const rows = useMemo(
-        () => (recienRegistrado ? [] : getConversations(viewerId).map((c) => inboxRow(c, states.get(c.id) ?? EMPTY_STATE))),
-        [viewerId, recienRegistrado, states],
+        () => conversations.map((c) => inboxRow(c, states.get(c.id) ?? EMPTY_STATE)),
+        [conversations, states],
     );
     const matches: NewMatch[] = rows
         .filter((r) => r.newMatch)

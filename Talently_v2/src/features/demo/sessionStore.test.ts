@@ -1,5 +1,24 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { getSessionState, applyTo, cancelShift, decide, markMatchSeen, markNotificationsRead, resetSession, scheduleMatch, startsWithoutApplication, undoDecision } from './sessionStore';
+import {
+    applyTo,
+    cancelShift,
+    decide,
+    decidedIn,
+    getReview,
+    getSessionState,
+    inboxItems,
+    isWithdrawn,
+    markMatchSeen,
+    markNotificationsRead,
+    resetSession,
+    reviewedBy,
+    scheduleMatch,
+    sendReview,
+    startsWithoutApplication,
+    stillWithdrawn,
+    undoDecision,
+    withdrawApplication,
+} from './sessionStore';
 
 beforeEach(() => resetSession());
 
@@ -37,5 +56,49 @@ describe('sesión de demostración', () => {
     it('los flujos del prototipo parten sin postulación', () => {
         expect(startsWithoutApplication('matias', 'turno-garzones-matrimonio')).toBe(true);
         expect(startsWithoutApplication('matias', 'otra')).toBe(false);
+    });
+
+    it('retirar queda por actor y proceso; volver a postular después la deja en pie', () => {
+        expect(isWithdrawn('jorge', 'proc-jorge-guardia-4x4')).toBe(false);
+        withdrawApplication('jorge', 'proc-jorge-guardia-4x4');
+        expect(isWithdrawn('jorge', 'proc-jorge-guardia-4x4')).toBe(true);
+        expect(isWithdrawn('pedro', 'proc-jorge-guardia-4x4')).toBe(false);
+        withdrawApplication('pedro', 'proc-pedro-mecanico', 2000);
+        expect(isWithdrawn('pedro', 'proc-pedro-mecanico', 1000)).toBe(true);
+        expect(isWithdrawn('pedro', 'proc-pedro-mecanico', 3000)).toBe(false);
+        withdrawApplication('pedro', 'proc-pedro-mecanico', 4000);
+        expect(isWithdrawn('pedro', 'proc-pedro-mecanico', 3000)).toBe(true);
+        expect(stillWithdrawn(undefined, 3000)).toBe(false);
+    });
+
+    it('lo decidido: una postulación retirada ya no cuenta; recién registrado no trae las de los datos', () => {
+        const s = () => getSessionState();
+        // Jorge está en lista de espera de «Guardia de eventos» (datos).
+        expect(decidedIn(s(), 'jorge', 'turno-guardia-eventos-19dic')).toBe('postulado');
+        expect(decidedIn(s(), 'jorge', 'turno-guardia-eventos-19dic', true)).toBeUndefined();
+        applyTo('pedro', 'empleo-mecanico-automotriz', 'Postulado');
+        expect(decidedIn(s(), 'pedro', 'empleo-mecanico-automotriz')).toBe('postulado');
+        withdrawApplication('pedro', 'proc-pedro-mecanico', Date.now() + 1000);
+        expect(decidedIn(s(), 'pedro', 'empleo-mecanico-automotriz')).toBeUndefined();
+    });
+
+    it('la evaluación enviada (REV-01) queda por actor y publicación', () => {
+        sendReview('matias', 'turno-garzones-finde-5dic', { rating: 5, tags: ['Pago a tiempo'], comment: 'Todo bien' });
+        expect(getReview('matias', 'turno-garzones-finde-5dic')).toMatchObject({ rating: 5, tags: ['Pago a tiempo'] });
+        expect(getReview('jorge', 'turno-garzones-finde-5dic')).toBeUndefined();
+        expect(reviewedBy(getSessionState().reviews, 'matias')).toEqual(new Set(['turno-garzones-finde-5dic']));
+    });
+
+    it('la bandeja no muestra lo de una postulación que la sesión todavía no tiene (flujos 2 y 3)', () => {
+        const ids = (viewer: 'pedro' | 'jorge' | 'marta') => inboxItems(viewer, false).map((n) => n.id);
+        expect(ids('pedro')).toEqual([]);
+        expect(ids('jorge')).not.toContain('not-jorge-entrevista');
+        expect(ids('jorge')).not.toContain('not-jorge-mensaje');
+        expect(ids('jorge')).toContain('not-jorge-match');
+        applyTo('pedro', 'empleo-mecanico-automotriz', 'Postulado');
+        expect(ids('pedro')).toEqual(['not-pedro-mensaje', 'not-pedro-match', 'not-pedro-entrevista']);
+        // Marta (flujo 10) es actor de la demo: su bandeja es la suya.
+        expect(ids('marta')).toEqual(['not-marta-mensaje']);
+        expect(inboxItems('jorge', true)).toEqual([]);
     });
 });

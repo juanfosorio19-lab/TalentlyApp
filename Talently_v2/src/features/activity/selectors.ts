@@ -515,22 +515,22 @@ export interface PendingReview {
 /**
  * Evaluaciones que el actor tiene pendientes (spec §5.2: la evaluación mutua
  * se pide antes de postular al siguiente turno), salvo la del turno que se
- * está mirando y las que ya fue a evaluar (`started`, publicaciones). Salen
- * de su bandeja (useInbox): la notificación «Evalúa tu turno del …» lleva a
- * REV-01.
+ * está mirando y las ya enviadas en REV-01 (`reviewed`: useReviewed de
+ * demo/sessionStore). Salen de su bandeja (useInbox): la notificación
+ * «Evalúa tu turno del …» lleva a REV-01.
  */
 export function pendingReviewsFor(
     notifications: readonly DemoNotification[],
     actorId: DemoActorId,
     exceptPublicationId?: string,
-    started: ReadonlySet<string> = new Set(),
+    reviewed: ReadonlySet<string> = new Set(),
 ): PendingReview[] {
     const seen = new Set<string>();
     const reviews: PendingReview[] = [];
     for (const n of notifications) {
         const t = n.destino;
         if (n.actorId !== actorId || t?.pantalla !== 'evaluar' || t.publicationId === exceptPublicationId) continue;
-        if (seen.has(t.publicationId) || started.has(t.publicationId)) continue;
+        if (seen.has(t.publicationId) || reviewed.has(t.publicationId)) continue;
         seen.add(t.publicationId);
         reviews.push({ id: n.id, title: n.titulo, from: n.origen, publicationId: t.publicationId, target: t });
     }

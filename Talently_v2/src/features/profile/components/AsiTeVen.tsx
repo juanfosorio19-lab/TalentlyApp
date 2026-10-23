@@ -22,13 +22,13 @@ export interface AsiTeVenProps {
 
 export function AsiTeVen({ asiTeVen, details, kind, children }: AsiTeVenProps) {
     const sheet = useStillSheet('verificacion');
-    const { nombre, iniciales, comuna, verificaciones, notas } = asiTeVen;
+    const { nombre, iniciales, foto, comuna, verificaciones, notas } = asiTeVen;
     const verified = verificaciones.some((v) => v.status === 'verified');
 
     return (
         <Stack gap={2} align="center">
             <span className="overline prf-muted">{COPY.perfil.asiTeVen}</span>
-            <Avatar name={nombre} initials={iniciales} kind={kind} size={96} verified={verified} />
+            <Avatar name={nombre} initials={iniciales} photo={foto} kind={kind} size={96} verified={verified} />
             <h2 className="h2 prf-name">{nombre}</h2>
             <span className="body prf-muted">{comuna}</span>
             {verificaciones.length > 0 && (

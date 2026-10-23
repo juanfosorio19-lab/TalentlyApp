@@ -27,6 +27,7 @@ import { ScreenSection, Stack } from '../../../ui/Layout';
 import { PublicationCard } from '../../../ui/PublicationCard';
 import { SearchField } from '../../../ui/SearchField';
 import { getExplore } from '../../demo/data';
+import { useManageState } from '../../demo/manageState';
 import { useDemoSession } from '../../demo/session';
 import { useDecided, useSessionState } from '../../demo/sessionStore';
 import type { DemoPublication } from '../../demo/types';
@@ -62,14 +63,16 @@ export function SearchScreen() {
     const { applications } = useSessionState();
     // Lo decidido en EXP-05 (invitar o «No me interesa»), con la clave suggestionId.
     const decided = useDecided(actor.id);
+    // Publicaciones pausadas o cerradas en GES-01 y quienes ya están en las propias.
+    const manage = useManageState();
     useSheetKeepsScroll();
 
     // El texto vive en el campo (si esperara a la URL, que cambia en una transición, se perderían letras);
     // la URL lo guarda con replace para volver a la misma búsqueda.
     const [q, setQ] = useState(() => params.get('q') ?? '');
     const scope = useMemo(
-        () => searchScope(actor, recienRegistrado, applications, decided),
-        [actor, recienRegistrado, applications, decided],
+        () => searchScope(actor, recienRegistrado, applications, manage, decided),
+        [actor, recienRegistrado, applications, manage, decided],
     );
     const results = useMemo(() => searchIn(scope, q), [scope, q]);
     const hints = useMemo(() => searchHints(scope), [scope]);

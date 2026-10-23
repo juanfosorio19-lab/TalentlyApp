@@ -1,9 +1,8 @@
 // La campana del AppBar large (spec §5.1): contador real de no leídas y abre
 // NOT-01. Cuenta con useInbox (el mismo de todas las campanas) para el actor
 // de la sesión, igual que NOT-01: la cifra de la campana es la que se ve al
-// abrirla. En el flujo 10 (?demo=marta) quien mira la bandeja es Marta, pero
-// NOT-01 todavía es del actor de la sesión (pedido en requests: Marta como
-// actor de la demo); mientras tanto, campana y NOT-01 dicen lo mismo.
+// abrirla. En el flujo 10 (?demo=marta) el actor es Marta: campana, NOT-01,
+// bandeja y badge de Mensajes son los suyos.
 import { IconButton } from '../../../ui/IconButton';
 import { IconBell } from '../../../ui/icons';
 import { useOpenPath } from '../../../app/navigation/useOpenPath';

@@ -7,16 +7,18 @@ import type { AmountFormatOptions } from '../../ui/Amount';
 import { IconAdd, IconBell, IconChat, IconClock, IconOffers, type IconComponent } from '../../ui/icons';
 import type { PublicationCardData, PublicationRequirement, PublicationTag, PublicationVerification } from '../../ui/PublicationCard';
 import {
-    getApplications,
     getExplore,
-    getHomeFeed,
     getManagedPublication,
+    getManagedPublications,
     getOrgDashboard,
+    getPublications,
     getPerson,
     getPublication,
 } from '../demo/data';
+import { isPublicationActive, membersOf as sessionMembersOf, type MemberKind, type Membership } from '../demo/manageSelectors';
+import type { ManageState } from '../demo/manageState';
 import { DEMO_ACTORS, type DemoActor, type DemoActorId } from '../demo/session';
-import { isPhoneVerified, keyOf, startsWithoutApplication, type DeckDecision, type SessionApplication } from '../demo/sessionStore';
+import { isPhoneVerified, suggestionKey, type DeckDecision, type SessionApplication } from '../demo/sessionStore';
 import type {
     DemoAmount,
     DemoEmpleo,
@@ -37,7 +39,7 @@ import {
     type TarifaUnidad,
     type TurnoFiltros,
 } from './filters';
-import { CANDIDATOS_POR_PUBLICACION, OFICIO_DEL_TURNO, POSTULADOS_POR_LLEGAR, SINONIMOS } from './mock';
+import { CANDIDATOS_POR_PUBLICACION, OFICIO_DEL_TURNO, SINONIMOS } from './mock';
 
 // ─── Segmentos (spec §5.2) ──────────────────────────────────────────────────
 
@@ -52,19 +54,16 @@ export const SEGMENT_SCREEN_ID: Readonly<Record<Segment, string>> = {
 
 /**
  * Publicaciones activas propias del actor (organización u hogar), en el orden
- * de su panel. Jorge recién registrado (INI-01-jorge-nuevo) todavía no publicó nada.
+ * de su panel, con el estado de la sesión: una que se pausó o cerró en
+ * GES-01 ya no busca personas (demo/manageSelectors.isPublicationActive).
+ * Jorge recién registrado (INI-01-jorge-nuevo) todavía no publicó nada.
  */
-export function ownPublications(actor: DemoActor, recienRegistrado = false): DemoPublication[] {
+export function ownPublications(actor: DemoActor, recienRegistrado: boolean, manage: ManageState): DemoPublication[] {
     if (recienRegistrado) return [];
-    let ids: string[] = [];
-    if (actor.kind === 'organizacion') {
-        ids = getOrgDashboard(actor.id)?.publicaciones ?? [];
-    } else if (actor.capabilities.includes('hogar')) {
-        for (const b of getHomeFeed(actor.id).bloques) if (b.tipo === 'tu-aviso') ids.push(b.publicationId);
-    }
-    return ids
-        .filter((id) => (getManagedPublication(id)?.estado ?? getPublication(id)?.estado) === 'Activa')
-        .map((id) => getPublication(id))
+    if (actor.kind !== 'organizacion' && !actor.capabilities.includes('hogar')) return [];
+    return getManagedPublications(actor.id)
+        .filter((m) => isPublicationActive(m.publicationId, manage))
+        .map((m) => getPublication(m.publicationId))
         .filter((p): p is DemoPublication => p !== undefined);
 }
 
@@ -78,13 +77,13 @@ export function ownPublications(actor: DemoActor, recienRegistrado = false): Dem
  *   ya tiene un aviso activo.
  * Clases y Servicios no existen en F1.
  */
-export function segmentsOf(actor: DemoActor, recienRegistrado = false): Segment[] {
+export function segmentsOf(actor: DemoActor, recienRegistrado: boolean, manage: ManageState): Segment[] {
     if (actor.kind === 'organizacion') return ['personas'];
     const trabaja = actor.capabilities.includes('empleo') || actor.capabilities.includes('turnos');
     const hogar = actor.capabilities.includes('hogar');
     if (hogar && !trabaja) return ['personas'];
     const segs: Segment[] = ['empleo', 'turno'];
-    if (hogar && ownPublications(actor, recienRegistrado).length > 0) segs.push('personas');
+    if (hogar && ownPublications(actor, recienRegistrado, manage).length > 0) segs.push('personas');
     return SEGMENT_ORDER.filter((s) => segs.includes(s));
 }
 
@@ -365,14 +364,8 @@ export function turnoCta(p: DemoTurno, decided: Decided): TurnoCta {
 
 // ─── EXP-05 · Personas sugeridas ────────────────────────────────────────────
 
-/** Dónde está una persona en una publicación propia (GES-04: cupos; GES-02: postulantes). */
-export type MemberKind = 'confirmado' | 'postulado' | 'espera' | 'postulante';
-
-export interface Membership {
-    kind: MemberKind;
-    /** El turno (bloque de GES-04) en que está; sin él, GES-02. */
-    rosterId?: string;
-}
+/** Dónde está una persona en una publicación propia (GES-04: cupos; GES-02: postulantes): demo/manageSelectors. */
+export type { MemberKind, Membership };
 
 export interface Suggestion {
     person: DemoPerson;
@@ -396,54 +389,19 @@ export type PersonasEstado =
 
 /**
  * Lo decidido sobre una persona sugerida se guarda en demo/sessionStore
- * (decide/undoDecision) con esta clave de «publicación» propia: la
- * publicación y la persona. Así GES-03 y EXP-05 ven lo mismo.
+ * (decidePerson/undoPersonDecision) con esta clave: la publicación y la
+ * persona. Así GES-03 y EXP-05 ven lo mismo.
  */
-export const suggestionId = (publicationId: string, personId: string) => `${publicationId}/${personId}`;
-
-/**
- * ¿Cuenta una persona que traen los datos? El actor que el prototipo muestra
- * ANTES de postular (Matías en «Garzones para matrimonio», flujo 2) solo
- * cuando ya postuló en la sesión: la misma regla que GES-02 y GES-04
- * (pedido en «requests» un selector compartido en demo/sessionStore).
- */
-function countsFromData(personId: string, publicationId: string, applications: Applications): boolean {
-    if (!isDemoActor(personId) || !startsWithoutApplication(personId, publicationId)) return true;
-    return applications.has(keyOf(personId, publicationId));
-}
-
-/** ¿Los postulados de este turno todavía no llegan? (GES-04 parte «Aún no hay postulados», flujo 4). */
-const arrivesLater = (publicationId: string, rosterId: string) =>
-    POSTULADOS_POR_LLEGAR.some((x) => x.publicationId === publicationId && x.rosterId === rosterId);
+export const suggestionId = suggestionKey;
 
 /**
  * Quienes ya están en la publicación, como los ven GES-02 y GES-04 en esta
- * sesión: confirmados, postulados y lista de espera de cada turno o
- * postulantes, más quienes postularon ahora (DET-01) y los datos no traen.
+ * sesión (demo/manageSelectors.membersOf): confirmados, postulados (los del
+ * «salto de tiempo», solo cuando llegaron) y lista de espera de cada turno o
+ * postulantes, con la misma regla de startsWithoutApplication que GES-04.
  */
-export function membersOf(publicationId: string, applications: Applications): Map<string, Membership> {
-    const m = getManagedPublication(publicationId);
-    const out = new Map<string, Membership>();
-    const add = (personId: string, member: Membership) => {
-        if (!out.has(personId)) out.set(personId, member);
-    };
-    const visible = (personId: string) => countsFromData(personId, publicationId, applications);
-    const rosters = m?.cupos ?? [];
-    for (const c of rosters) for (const a of c.confirmados) add(a.personId, { kind: 'confirmado', rosterId: c.id });
-    for (const c of rosters) {
-        const postulados = arrivesLater(publicationId, c.id) ? [] : c.postulados;
-        for (const a of postulados) if (visible(a.personId)) add(a.personId, { kind: 'postulado', rosterId: c.id });
-        for (const a of c.listaEspera) if (visible(a.personId)) add(a.personId, { kind: 'espera', rosterId: c.id });
-    }
-    for (const a of m?.postulantes?.personas ?? []) if (visible(a.personId)) add(a.personId, { kind: 'postulante' });
-    const firstRoster = rosters[0]?.id;
-    for (const [key, a] of applications) {
-        const [who = '', pub] = key.split(':');
-        if (pub !== publicationId) continue;
-        if (!firstRoster) add(who, { kind: 'postulante' });
-        else add(who, { kind: a.estado === 'En lista de espera' ? 'espera' : 'postulado', rosterId: firstRoster });
-    }
-    return out;
+export function membersOf(publicationId: string, applications: Applications, manage: ManageState): Map<string, Membership> {
+    return sessionMembersOf(publicationId, manage, applications);
 }
 
 /** Personas que trabajaron con el actor en turnos ya terminados, con la fecha («sáb 5 dic»). */
@@ -490,11 +448,16 @@ function candidatesFor(actor: DemoActor, pub: DemoPublication): DemoPerson[] {
  * ella y la cifra de «Revisa a las N personas que postularon» salen de la
  * sesión (membersOf), así que dicen lo mismo que GES-02 y GES-04.
  */
-export function personasFor(actor: DemoActor, pub: DemoPublication, applications: Applications): PersonasEstado {
+export function personasFor(
+    actor: DemoActor,
+    pub: DemoPublication,
+    applications: Applications,
+    manage: ManageState,
+): PersonasEstado {
     const m = getManagedPublication(pub.id);
     const cupos = m?.cupos ?? [];
     const total = cupos.reduce((n, c) => n + c.total, 0);
-    const members = membersOf(pub.id, applications);
+    const members = membersOf(pub.id, applications, manage);
     const confirmados = [...members.values()].filter((x) => x.kind === 'confirmado').length;
     if (cupos.length > 0 && confirmados >= total) return { tipo: 'completo', total };
 
@@ -541,12 +504,17 @@ export interface ReviewLink {
  * postularon («Revisa a las 4 personas que postularon» → Postulados); con
  * `confirmados`, los cupos (cupos completos).
  */
-export function reviewPathOf(pub: DemoPublication, applications: Applications, ver: 'postulados' | 'confirmados'): ReviewLink {
+export function reviewPathOf(
+    pub: DemoPublication,
+    applications: Applications,
+    ver: 'postulados' | 'confirmados',
+    manage: ManageState,
+): ReviewLink {
     const rosters = getManagedPublication(pub.id)?.cupos ?? [];
     const first = rosters[0];
     if (!first) return { path: paths.postulantes(pub.id), label: copy.personas.verPostulantes };
     if (ver === 'confirmados') return { path: rosterPath(pub.id, first.id, 'confirmados'), label: copy.personas.verCupos };
-    const members = [...membersOf(pub.id, applications).values()];
+    const members = [...membersOf(pub.id, applications, manage).values()];
     const pending = members.find((x) => x.kind === 'postulado') ?? members.find((x) => x.kind === 'espera');
     const rosterId = pending?.rosterId ?? first.id;
     return {
@@ -657,27 +625,14 @@ export interface SearchResults {
 const turnosOf = (explore: DemoExplore) => explore.turnos.dias.flatMap((d) => turnosOfDay(d.publicaciones));
 
 /**
- * Todas las publicaciones activas de empleo y turno de la demo: EXP-07 es
- * una búsqueda global (spec §5.4). Mientras demo/data no traiga
- * getPublications() (pedido en «requests»), se juntan las que la demo
- * muestra en algún lugar a cualquier actor: Explorar, Inicio, postulaciones
- * y publicaciones propias. Sin repetir.
+ * Todas las publicaciones activas de empleo y turno de la demo (getPublications):
+ * EXP-07 es una búsqueda global (spec §5.4). Con el estado de la sesión: una
+ * publicación que se pausó o cerró en GES-01 ya no aparece.
  */
-export function searchablePublications(): (DemoEmpleo | DemoTurno)[] {
-    const ids: string[] = [];
-    for (const actor of Object.values(DEMO_ACTORS)) {
-        const explore = getExplore(actor.id);
-        ids.push(...explore.empleos.publicaciones, ...explore.turnos.dias.flatMap((d) => d.publicaciones));
-        for (const b of getHomeFeed(actor.id).bloques) {
-            if (b.tipo === 'turnos' || b.tipo === 'empleos') ids.push(...b.publicaciones);
-            if (b.tipo === 'tu-aviso') ids.push(b.publicationId);
-        }
-        ids.push(...getApplications(actor.id).map((a) => a.publicationId));
-        ids.push(...ownPublications(actor).map((p) => p.id));
-    }
-    return [...new Set(ids)]
-        .map((id) => getPublication(id))
-        .filter((p): p is DemoEmpleo | DemoTurno => (p?.tipo === 'empleo' || p?.tipo === 'turno') && p.estado === 'Activa');
+export function searchablePublications(manage: ManageState): (DemoEmpleo | DemoTurno)[] {
+    return getPublications().filter(
+        (p): p is DemoEmpleo | DemoTurno => (p.tipo === 'empleo' || p.tipo === 'turno') && isPublicationActive(p.id, manage),
+    );
 }
 
 /**
@@ -711,12 +666,13 @@ function allCandidates(
     actor: DemoActor,
     recienRegistrado: boolean,
     applications: Applications,
+    manage: ManageState,
     decided: SuggestionDecided,
 ): Suggestion[] {
     const out = new Map<string, Suggestion>();
-    for (const pub of ownPublications(actor, recienRegistrado)) {
+    for (const pub of ownPublications(actor, recienRegistrado, manage)) {
         const comuna = comunaOf(pub.lugar);
-        const members = membersOf(pub.id, applications);
+        const members = membersOf(pub.id, applications, manage);
         for (const person of candidatesFor(actor, pub)) {
             const membership = members.get(person.id);
             const decision = membership ? undefined : decided(suggestionId(pub.id, person.id));
@@ -745,17 +701,18 @@ export function searchScope(
     actor: DemoActor,
     recienRegistrado: boolean,
     applications: Applications,
+    manage: ManageState,
     decided: SuggestionDecided = nothingDecided,
 ): SearchResults {
-    const own = new Set(ownPublications(actor).map((p) => p.id));
+    const own = new Set(getManagedPublications(actor.id).map((m) => m.publicationId));
     const explore = getExplore(actor.id);
     const near = new Set([...explore.empleos.publicaciones, ...turnosOf(explore).map((p) => p.id)]);
-    const all = searchablePublications().filter((p) => !own.has(p.id));
+    const all = searchablePublications(manage).filter((p) => !own.has(p.id));
     const sorted = [...all.filter((p) => near.has(p.id)), ...all.filter((p) => !near.has(p.id))];
     return {
         empleos: sorted.filter((p): p is DemoEmpleo => p.tipo === 'empleo'),
         turnos: sorted.filter((p): p is DemoTurno => p.tipo === 'turno'),
-        personas: allCandidates(actor, recienRegistrado, applications, decided),
+        personas: allCandidates(actor, recienRegistrado, applications, manage, decided),
     };
 }
 

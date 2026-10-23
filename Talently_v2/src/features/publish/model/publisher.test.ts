@@ -59,13 +59,14 @@ describe('identidad al publicar (PUBL-04-identidad)', () => {
     it('Carolina la verifica en el flujo 5, con el teléfono ya verificado', () => {
         expect(identityVerifiedInData('carolina')).toBe(false);
         expect(phoneVerifiedInData('carolina')).toBe(true);
-        expect(needsIdentity(DEMO_ACTORS.carolina, false)).toBe(true);
-        expect(needsIdentity(DEMO_ACTORS.carolina, true)).toBe(false);
+        expect(needsIdentity(DEMO_ACTORS.carolina, 'pending')).toBe(true);
+        expect(needsIdentity(DEMO_ACTORS.carolina, 'review')).toBe(false);
     });
 
     it('Jorge aún no la verifica; la organización no la necesita', () => {
-        expect(needsIdentity(DEMO_ACTORS.jorge, false)).toBe(true);
-        expect(needsIdentity(DEMO_ACTORS.banqueteria, false)).toBe(false);
+        expect(needsIdentity(DEMO_ACTORS.jorge, 'pending')).toBe(true);
+        expect(needsIdentity(DEMO_ACTORS.rosa, 'verified')).toBe(false);
+        expect(needsIdentity(DEMO_ACTORS.banqueteria, 'pending')).toBe(false);
     });
 });
 

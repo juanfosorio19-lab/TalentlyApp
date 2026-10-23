@@ -21,8 +21,9 @@ import { SheetPicker } from '../../../ui/SheetPicker';
 import { useSnackbar } from '../../../ui/Snackbar';
 import { Switch } from '../../../ui/Switch';
 import { getManagedPublication } from '../../demo/data';
+import { useManageState } from '../../demo/manageState';
 import { useDemoSession } from '../../demo/session';
-import { decide, undoDecision, useDecided, useSessionState } from '../../demo/sessionStore';
+import { decidePerson, undoPersonDecision, useDecided, useSessionState } from '../../demo/sessionStore';
 import type { DemoPublication } from '../../demo/types';
 import { ExploreBar } from '../components/ExploreBar';
 import { ExploreEmpty, type ExploreEmptyProps } from '../components/ExploreEmpty';
@@ -98,6 +99,8 @@ export function PersonasScreen({ filtersSheet, focusPanel }: SegmentPanelProps) 
     const decided = useDecided(actor.id);
     // También vuelve a pintar las insignias cuando alguien verifica su celular (AUTH-08).
     const { applications } = useSessionState();
+    // Confirmados, postulados que llegaron y publicaciones pausadas o cerradas: los mismos de GES-01 y GES-04.
+    const manage = useManageState();
     const deckRef = useRef<HTMLDivElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
     const [focusEmpty, setFocusEmpty] = useState(false);
@@ -106,12 +109,15 @@ export function PersonasScreen({ filtersSheet, focusPanel }: SegmentPanelProps) 
     // «Deshacer»: la persona vuelve y el EmptyState que tenía el foco se va (deck: su ActionPair; lista: su CTA).
     const focusAfterUndo = useRef<{ from: 'deck' | 'lista'; personId: string } | null>(null);
 
-    const pubs = useMemo(() => ownPublications(actor, recienRegistrado), [actor, recienRegistrado]);
+    const pubs = useMemo(() => ownPublications(actor, recienRegistrado, manage), [actor, recienRegistrado, manage]);
     const pub = pickPublication(pubs, params.get(PARAM_PUBLICACION));
     const vista = readVista(params, 'personas', 'lista');
     const filtros = readPersonaFiltros(params);
 
-    const estado = useMemo(() => (pub ? personasFor(actor, pub, applications) : null), [actor, pub, applications]);
+    const estado = useMemo(
+        () => (pub ? personasFor(actor, pub, applications, manage) : null),
+        [actor, pub, applications, manage],
+    );
     const sugeridas = estado?.tipo === 'sugeridas' ? estado.sugeridas : [];
     const decisionOf = (s: Suggestion) => (pub ? decided(suggestionId(pub.id, s.person.id)) : undefined);
     const filtered = sugeridas.filter((s) => passesPersona(s, filtros));
@@ -146,10 +152,9 @@ export function PersonasScreen({ filtersSheet, focusPanel }: SegmentPanelProps) 
 
     const onDecision = (decision: DeckDecision, s: Suggestion, from: 'deck' | 'lista') => {
         if (!pub) return;
-        const id = suggestionId(pub.id, s.person.id);
         const i = pending.indexOf(s);
         const neighbor = pending[i + 1] ?? pending[i - 1];
-        decide(actor.id, id, decision);
+        decidePerson(actor.id, pub.id, s.person.id, decision);
         setFocusEmpty(pending.length === 1);
         if (from === 'lista' && neighbor) focusNext.current = neighbor.person.id;
         show({
@@ -159,7 +164,7 @@ export function PersonasScreen({ filtersSheet, focusPanel }: SegmentPanelProps) 
                 onAction: () => {
                     setFocusEmpty(false);
                     focusAfterUndo.current = { from, personId: s.person.id };
-                    undoDecision(actor.id, id);
+                    undoPersonDecision(actor.id, pub.id, s.person.id);
                 },
             },
         });
@@ -175,7 +180,7 @@ export function PersonasScreen({ filtersSheet, focusPanel }: SegmentPanelProps) 
     /** Otra publicación (si hay) o revisar a quienes ya están en esta (sus cupos o quienes postularon). */
     const nextStep = (p: DemoPublication, ver: 'postulados' | 'confirmados'): ExploreEmptyProps['action'] => {
         if (pubs.length > 1) return { label: copy.personas.cambiarPublicacion, onClick: () => pubSheet.show() };
-        const review = reviewPathOf(p, applications, ver);
+        const review = reviewPathOf(p, applications, ver, manage);
         return { label: review.label, onClick: () => go(review.path) };
     };
 
@@ -207,7 +212,7 @@ export function PersonasScreen({ filtersSheet, focusPanel }: SegmentPanelProps) 
                     : { label: copy.personas.verPublicacion, onClick: () => go(paths.gestionarPublicacion(pub.id)) },
         };
     } else if (estado.tipo === 'postularon') {
-        const review = reviewPathOf(pub, applications, 'postulados');
+        const review = reviewPathOf(pub, applications, 'postulados', manage);
         empty = {
             icon: IconPeople,
             title: copy.personas.todosPostularon.titulo,

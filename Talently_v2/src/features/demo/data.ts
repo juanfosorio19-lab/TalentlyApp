@@ -22,6 +22,7 @@ import type {
     DemoMyShift,
     DemoNotification,
     DemoOrg,
+    DemoOnboardingResult,
     DemoOrgDashboard,
     DemoPerson,
     DemoProcess,
@@ -52,6 +53,9 @@ const V = {
     identidad: { label: 'Identidad verificada', status: 'verified' },
 } satisfies Record<string, DemoVerification>;
 
+/** La insignia con la fecha en que se verificó (una sola fecha para VER-01, NOT-01 y la hoja «Verificación de …»). */
+const el = (v: DemoVerification, fecha: string): DemoVerification => ({ ...v, fecha });
+
 const aptaMenores = (vence: string): DemoVerification => ({
     label: 'Apta para trabajar con menores',
     status: 'verified',
@@ -81,6 +85,7 @@ const ORGS = {
         id: 'banqueteria', nombre: 'Banquetería Rosa SpA', iniciales: 'BR', verificada: true, comuna: 'San Miguel',
         tipo: 'organizacion',
         rubro: 'Gastronomía y eventos', tamano: '10 a 49 trabajadores', // no está en el prototipo
+        verificadaEl: '28 nov 2026', // VER-01 «Verificada el 28 nov 2026» y NOT-01 «Verificamos Banquetería Rosa SpA · 28 nov»
     },
     hotelAndino: {
         id: 'hotel-andino', nombre: 'Hotel Andino', iniciales: 'HA', verificada: true, comuna: 'Las Condes',
@@ -143,7 +148,8 @@ const PERSONS = {
     // Actores de la sesión (los ids coinciden con DemoActorId).
     matias: {
         id: 'matias', nombre: 'Matías Rojas', iniciales: 'MR', comuna: 'Maipú',
-        verificaciones: [V.telefono], // verificó su teléfono en AUTH-08 (flujo 2)
+        verificaciones: [el(V.telefono, 'hoy')], // verificó su teléfono hoy, en AUTH-08 (flujo 2)
+        desde: '3 ago 2026', // no está en el prototipo
         oficio: 'Garzón',
         experiencia: '1 a 3 años', // no está en el prototipo
         nota: { value: 4.8, count: 12 }, // «Tu nota es 4,8» (DET-01); el número de reseñas no está en el prototipo
@@ -151,22 +157,32 @@ const PERSONS = {
     },
     jorge: {
         id: 'jorge', nombre: 'Jorge Muñoz', iniciales: 'JM', comuna: 'Puente Alto',
-        verificaciones: [V.telefono, V.spd], oficio: 'Guardia de seguridad', experiencia: '5 a 10 años',
+        // Hoja «Verificación de Jorge Muñoz» del sistema de diseno: «Código SMS · 2 dic 2026»; PRF-01: SPD «vence 03/2028».
+        verificaciones: [el(V.telefono, '2 dic 2026'), { ...V.spd, vence: 'vence 03/2028' }],
+        desde: '14 mar 2025', // Timeline «Niveles de verificación» del sistema de diseño
+        oficio: 'Guardia de seguridad', experiencia: '5 a 10 años',
         nota: { value: 4.9, count: 25 },
         confiabilidad: 'Confiabilidad 98 %', // no está en el prototipo
     },
     pedro: {
         id: 'pedro', nombre: 'Pedro Valdés', iniciales: 'PV', comuna: 'Macul',
-        verificaciones: [V.telefono], // no está en el prototipo
+        verificaciones: [el(V.telefono, '4 dic 2026')], // no está en el prototipo
+        desde: '20 jul 2026', // no está en el prototipo
         oficio: 'Mecánico/a automotriz', experiencia: '5 a 10 años', nota: null,
     },
     carolina: {
         id: 'carolina', nombre: 'Carolina', iniciales: 'C', comuna: 'Ñuñoa',
-        verificaciones: [V.identidad], // VER-02 del flujo 5
+        // VER-01 «Teléfono verificado · Verificado el 1 dic 2026» y PUBL-04-identidad «Tu teléfono está verificado».
+        // La identidad la verifica hoy en VER-02 (flujo 5): parte pendiente (demo/sessionStore.identityPendingAtStart).
+        verificaciones: [el(V.telefono, '1 dic 2026'), el(V.identidad, 'hoy')],
+        desde: '1 dic 2026', // no está en el prototipo
     },
     rosa: {
         id: 'rosa', nombre: 'Rosa Muñoz', iniciales: 'RM', comuna: 'Providencia',
-        verificaciones: [V.identidad], // NOT-01: «Verificamos tu identidad»
+        // NOT-01: «Verificamos tu identidad · hace 3 h» (VER-01 «Verificado hoy»). La identidad supone el teléfono
+        // (nivel 1): VER-01 lo da por verificado desde que existe la cuenta.
+        verificaciones: [el(V.identidad, 'hoy')],
+        desde: '5 mar 2026', // no está en el prototipo
     },
     // Flujo 10 y GES-02 de Carolina.
     marta: {
@@ -293,7 +309,8 @@ export const DEMO_ORGS: DemoOrg[] = Object.values(ORGS);
 export const DEMO_PERSONS: DemoPerson[] = Object.values(PERSONS);
 
 function autorOrg(o: DemoOrg): DemoAuthor {
-    const verificaciones = o.verificada ? [o.tipo === 'hogar' ? V.identidad : V.org] : [];
+    const v = o.tipo === 'hogar' ? V.identidad : V.org;
+    const verificaciones = o.verificada ? [o.verificadaEl ? el(v, o.verificadaEl) : v] : [];
     return { tipo: o.tipo, id: o.id, nombre: o.nombre, iniciales: o.iniciales, verificaciones };
 }
 
@@ -1027,6 +1044,12 @@ const TUR_JORGE_EVENTOS: DemoMyShift = {
 };
 
 export const DEMO_APPLICATIONS: DemoApplication[] = [
+    // no está en el prototipo: la postulación de Marta al aviso de Carolina (flujo 10; GES-02-hogar la muestra «En proceso»).
+    {
+        id: 'app-marta-asesor', actorId: 'marta', publicationId: 'aviso-asesor-hogar', tipo: 'empleo',
+        titulo: 'Asesor/a del hogar puertas afuera', autor: autorOrg(ORGS.familiaNunoa),
+        detalle: 'Familia en Ñuñoa · Ñuñoa', estado: 'En proceso',
+    },
     // ACT-02 de Jorge (ACT-02 y ACT-02-jorge).
     {
         id: 'app-jorge-guardia-4x4', actorId: 'jorge', publicationId: 'empleo-guardia-4x4', tipo: 'empleo',
@@ -1733,6 +1756,41 @@ function enlacesPersona(verificaciones: DemoVerification[]): DemoProfileLink[] {
 
 export const DEMO_PROFILES: DemoProfile[] = [
     {
+        // no está en el prototipo: PRF-01 de Marta (flujo 10). Oficio, experiencia, pretensión y credencial: los de GES-02-hogar.
+        actorId: 'marta',
+        asiTeVen: {
+            nombre: 'Marta Huanca', iniciales: 'MH', comuna: 'La Florida', verificaciones: PERSONS.marta.verificaciones,
+            notas: [{ rol: 'Trabajo', nota: PERSONS.marta.nota ?? null }],
+        },
+        perfiles: [
+            {
+                id: 'trabajo', nombre: 'Trabajo',
+                secciones: [
+                    {
+                        tipo: 'filas', titulo: 'Oficios y experiencia', editable: true,
+                        filas: [{ label: 'Asesora del hogar', value: 'Más de 10 años de experiencia' }],
+                    },
+                    {
+                        tipo: 'filas', titulo: 'Pretensión', editable: true, nota: NOTA_PRETENSION,
+                        filas: [{ label: 'Sueldo líquido para empleos', monto: liquidos(600000, 'mes') }],
+                    },
+                    {
+                        tipo: 'filas', titulo: 'Credenciales', editable: true,
+                        filas: [
+                            { label: 'Apta para trabajar con menores', badge: 'Verificada', value: 'Vence 11/2027' },
+                            {
+                                label: 'Certificado de antecedentes', badge: 'Recomendado',
+                                detalle: 'Si quieres, lo compartes tú en el chat después del match.',
+                            },
+                        ],
+                    },
+                ],
+            },
+        ],
+        enlaces: enlacesPersona(PERSONS.marta.verificaciones),
+        configuracion: { cuenta: 'marta.huanca@correo.cl', ...CONFIG_BASE },
+    },
+    {
         // PRF-01, PRF-01-final y CFG-01 (flujos 8 y 11).
         actorId: 'jorge',
         asiTeVen: {
@@ -1959,7 +2017,7 @@ export const DEMO_PROFILES: DemoProfile[] = [
         // no está en el prototipo: el perfil de la organización.
         actorId: 'banqueteria',
         asiTeVen: {
-            nombre: 'Banquetería Rosa SpA', iniciales: 'BR', comuna: 'San Miguel', verificaciones: [V.org],
+            nombre: 'Banquetería Rosa SpA', iniciales: 'BR', comuna: 'San Miguel', verificaciones: [el(V.org, '28 nov 2026')],
             notas: [{ rol: 'Organización', nota: { value: 4.8, count: 52 } }],
         },
         perfiles: [
@@ -1994,6 +2052,18 @@ const agregarPerfil = (titulo: string, texto: string): DemoEmptyState => ({
 });
 
 export const DEMO_EXPLORE: DemoExplore[] = [
+    {
+        // no está en el prototipo: Explorar de Marta (flujo 10). Ya postuló al aviso de Carolina.
+        actorId: 'marta', filtrosActivos: 0,
+        empleos: {
+            titulo: 'Ofertas cerca de La Florida', vista: 'lista', publicaciones: [],
+            vacio: { icono: 'empleo', titulo: 'No hay ofertas nuevas cerca de La Florida', texto: 'Te avisamos cuando aparezca una que calce con tu oficio.' },
+        },
+        turnos: {
+            comuna: 'La Florida', filtros: ['Todos'], dias: [],
+            vacio: { icono: 'turno', ...agregarPerfil('Aún no tomas turnos', 'Agrega Turnos a tu perfil para ver trabajos por día cerca de La Florida.') },
+        },
+    },
     {
         // EXP-02 (flujos 2 y 9).
         actorId: 'matias', filtrosActivos: 2,
@@ -2180,12 +2250,54 @@ function bloquesInicio(actorId: DemoActorId): DemoHomeBlock[] {
                     },
                 },
             ];
+        case 'marta':
+            // no está en el prototipo: el Inicio de Marta (flujo 10), con su postulación al aviso de Carolina.
+            return [
+                {
+                    tipo: 'novedades', titulo: 'Postulaciones con novedades',
+                    items: [
+                        {
+                            id: 'nov-marta-asesor', iniciales: 'FÑ', titulo: 'Asesor/a del hogar puertas afuera',
+                            detalle: 'Familia en Ñuñoa · te pidió tu certificado de antecedentes', estado: 'En proceso',
+                            destino: { pantalla: 'conversacion', conversationId: 'conv-marta-familia' },
+                        },
+                    ],
+                },
+            ];
         case 'banqueteria': {
             // INI-02.
             const panel = getOrgDashboard('banqueteria');
             return panel ? [{ tipo: 'panel', panel }] : [];
         }
     }
+}
+
+/**
+ * Lo que deja el onboarding del flujo 1 del prototipo (ONB-03 a ONB-99): vale
+ * cuando la app se abre directo en INI-01-jorge-nuevo (`?nuevo=1`), sin
+ * recorrer el registro. Al recorrerlo, manda lo que la persona escribió.
+ */
+const ONBOARDING_JORGE: DemoOnboardingResult = {
+    nombre: 'Jorge',
+    apellido: 'Muñoz',
+    comuna: 'Puente Alto',
+    foto: null,
+    oficios: [
+        { nombre: 'Guardia de seguridad', experiencia: '5 a 10 años', principal: true },
+        { nombre: 'Guardia de eventos', experiencia: '3 a 5 años', principal: false },
+    ],
+    credencial: 'pendiente', // INI-01-jorge-nuevo: «Te falta la credencial SPD»
+    ultimoTrabajo: 'Guardia de seguridad en Condominio Los Peumos · 2021 a 2026',
+};
+
+/** El resultado del onboarding del prototipo (INI-01-jorge-nuevo sin recorrer el registro). */
+export function defaultOnboardingResult(): DemoOnboardingResult {
+    return ONBOARDING_JORGE;
+}
+
+/** ¿Le falta subir la credencial que pide su oficio? (ONB-T4: «Después» o sin subir; en revisión, ya no). */
+export function credentialMissing(result: DemoOnboardingResult): boolean {
+    return result.credencial === 'pendiente' || result.credencial === 'despues';
 }
 
 /** INI-01-jorge-nuevo: el Inicio de Jorge al terminar el onboarding (flujo 1). */
@@ -2212,20 +2324,27 @@ const BLOQUES_JORGE_NUEVO: DemoHomeBlock[] = [
 
 /** Bandeja de notificaciones: una organización usa la de la persona que la administra. */
 function inboxOf(viewerId: DemoViewerId): DemoViewerId {
-    return viewerId === 'marta' ? viewerId : (DEMO_ACTORS[viewerId].owner ?? viewerId);
+    return DEMO_ACTORS[viewerId].owner ?? viewerId;
 }
 
 /**
  * Inicio del actor (INI-01, o INI-02 para una organización). Con
  * `recienRegistrado`, Jorge ve el Inicio vacío del final del onboarding
- * (INI-01-jorge-nuevo); los demás actores no tienen esa variante.
+ * (INI-01-jorge-nuevo) con lo que dejó el registro (`onboarding`): «Hola,
+ * <nombre>» y la tarjeta de la credencial solo si le falta subirla. Los demás
+ * actores no tienen esa variante.
  */
-export function getHomeFeed(actorId: DemoActorId, opciones: { recienRegistrado?: boolean } = {}): DemoHomeFeed {
+export function getHomeFeed(
+    actorId: DemoActorId,
+    opciones: { recienRegistrado?: boolean; onboarding?: DemoOnboardingResult } = {},
+): DemoHomeFeed {
     const actor = DEMO_ACTORS[actorId];
     const persona = actor.owner ? DEMO_ACTORS[actor.owner] : actor;
     const saludo = `Hola, ${persona.shortName}`;
     if (opciones.recienRegistrado && actorId === 'jorge') {
-        return { actorId, saludo, notificacionesSinLeer: 0, mensajesSinLeer: 0, bloques: BLOQUES_JORGE_NUEVO };
+        const result = opciones.onboarding ?? ONBOARDING_JORGE;
+        const bloques = BLOQUES_JORGE_NUEVO.filter((b) => b.tipo !== 'completar' || credentialMissing(result));
+        return { actorId, saludo: `Hola, ${result.nombre}`, notificacionesSinLeer: 0, mensajesSinLeer: 0, bloques };
     }
     return {
         actorId,
@@ -2245,6 +2364,11 @@ export function getExplore(actorId: DemoActorId): DemoExplore {
 
 export function getPublication(id: string): DemoPublication | undefined {
     return DEMO_PUBLICATIONS.find((p) => p.id === id);
+}
+
+/** Todas las publicaciones de la demo (EXP-07 busca en todas; el estado de la sesión lo filtra quien llama). */
+export function getPublications(): DemoPublication[] {
+    return DEMO_PUBLICATIONS;
 }
 
 /** ACT-02 · Postulaciones, en el orden del prototipo (empleos y luego turnos). */

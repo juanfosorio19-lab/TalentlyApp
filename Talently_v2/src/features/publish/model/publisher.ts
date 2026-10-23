@@ -3,8 +3,9 @@
 // identidad y adónde lleva «Ver publicación» al terminar. Lógica pura con los
 // datos de demostración: publisher.test.ts.
 import type { PublicationAuthor, PublicationVerification } from '../../../ui/PublicationCard';
-import { getManagedPublication, getOrg, getProfile } from '../../demo/data';
+import { getManagedPublication, getOrg } from '../../demo/data';
 import type { DemoActor, DemoActorId } from '../../demo/session';
+import { identityInData, identityPendingAtStart, phoneInData, type IdentityStatus } from '../../demo/verifications';
 
 /** Los asistentes que existen en la URL (`paths.publicar`). */
 export type PublishTipo = 'empleo' | 'turno' | 'hogar' | 'clase' | 'servicio';
@@ -54,34 +55,28 @@ export function previewVerification(actor: DemoActor): Omit<PublicationVerificat
         : { status: 'review', label: 'Verificación en revisión' };
 }
 
-const hasVerification = (actorId: DemoActorId, label: string) =>
-    getProfile(actorId).asiTeVen.verificaciones.some((v) => v.label === label && v.status === 'verified');
-
 /**
- * Carolina verifica su identidad en el flujo 5, al publicar (PUBL-04-identidad
- * → VER-02): los datos ya traen el «después». Como `phonePendingAtStart` de
- * demo/sessionStore; pedido allí como `identityPendingAtStart`.
+ * ¿Tiene la identidad verificada al empezar la sesión? (sin lo que pase en
+ * esta sesión). Carolina la verifica en el flujo 5 (PUBL-04-identidad →
+ * VER-02): la misma regla de demo/verifications que VER-01 y Perfil.
  */
-const IDENTITY_PENDING_AT_START: readonly DemoActorId[] = ['carolina'];
-
-/** PUBL-04-identidad dice «Tu teléfono está verificado» aunque demo/data aún no lo trae (pedido en «requests»). */
-const PHONE_VERIFIED_IN_PROTOTYPE: readonly DemoActorId[] = ['carolina'];
-
-/** ¿Tiene la identidad verificada al empezar la sesión? (sin lo que pase en esta sesión). */
 export function identityVerifiedInData(actorId: DemoActorId): boolean {
-    return !IDENTITY_PENDING_AT_START.includes(actorId) && hasVerification(actorId, 'Identidad verificada');
+    return identityInData(actorId) && !identityPendingAtStart(actorId);
 }
 
+/** PUBL-04-identidad: «Tu teléfono está verificado» (los datos de la demo; la identidad lo supone). */
 export function phoneVerifiedInData(actorId: DemoActorId): boolean {
-    return PHONE_VERIFIED_IN_PROTOTYPE.includes(actorId) || hasVerification(actorId, 'Teléfono verificado');
+    return phoneInData(actorId);
 }
 
 /**
  * Un hogar publica con su identidad verificada (spec §10: nivel 2 de quien
- * publica): «Quienes postulen van a trabajar en tu casa».
+ * publica): «Quienes postulen van a trabajar en tu casa». `identity`: el
+ * estado de la sesión (demo/sessionStore.useIdentityStatus): enviada en
+ * VER-02 (desde PUBL-04 o desde VER-01) ya no se pide.
  */
-export function needsIdentity(actor: DemoActor, identitySent: boolean): boolean {
-    return actor.kind === 'persona' && !identitySent && !identityVerifiedInData(actor.id);
+export function needsIdentity(actor: DemoActor, identity: IdentityStatus): boolean {
+    return actor.kind === 'persona' && identity === 'pending';
 }
 
 /**

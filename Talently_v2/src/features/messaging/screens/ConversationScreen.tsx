@@ -35,7 +35,8 @@ import { MessageList, SHARE_ATTR } from '../components/MessageList';
 import { ReportSheet } from '../components/ReportSheet';
 import { useChatScroll, useLayerSequence } from '../chatHooks';
 import { copy } from '../copy';
-import { DEMO_NOW_TIME, INTERVIEW_MINUTES } from '../mock';
+import { DEMO_NOW_TIME } from '../../demo/data';
+import { INTERVIEW_MINUTES } from '../mock';
 import {
     certificateActive,
     certificateIssued,
@@ -51,6 +52,7 @@ import {
     viewerWorks,
 } from '../model';
 import {
+    conversationInSession,
     markRead,
     sendMessage,
     setBlocked,
@@ -58,8 +60,9 @@ import {
     shareCertificate,
     stopSharing,
     useConversationState,
-    useOnline,
-} from '../store';
+} from '../../demo/conversationState';
+import { useSessionState } from '../../demo/sessionStore';
+import { useOnline } from '../online';
 import { useViewer, type Viewer } from '../viewer';
 import '../messaging.css';
 
@@ -68,15 +71,17 @@ export const screenId = 'MSG-02';
 export function ConversationScreen() {
     const { conversationId } = useParams();
     const viewer = useViewer();
+    const { applications } = useSessionState();
     // Jorge recién registrado todavía no tiene conversaciones.
     const conv = conversationId && !viewer.recienRegistrado ? getConversation(conversationId) : undefined;
-    // Solo quien participa la ve (RLS de conversations en el spec §7.6).
-    if (!conv || conv.viewerId !== viewer.viewerId) return <ConversationNotFound />;
+    // Solo quien participa la ve (RLS de conversations en el spec §7.6), y solo si ya existe en la sesión
+    // (la de una postulación que el actor todavía no envía aparece al postular: conversationInSession).
+    if (!conv || conv.viewerId !== viewer.viewerId || !conversationInSession(conv, applications)) return <ConversationNotFound />;
     return <Conversation key={conv.id} conv={conv} viewer={viewer} />;
 }
 
 function Conversation({ conv, viewer }: { conv: DemoConversation; viewer: Viewer }) {
-    const { viewerId, isActor } = viewer;
+    const { viewerId } = viewer;
     const goBack = useGoBack();
     const snackbar = useSnackbar();
     const { open, canOpen, linkProps } = useOpenPath();
@@ -130,10 +135,10 @@ function Conversation({ conv, viewer }: { conv: DemoConversation; viewer: Viewer
     const toast = (message: string, tone?: SnackbarTone) => snackbar.show({ message, tone, placement: 'tabbar' });
     // Flujo 10: DET-01, PRC-01 y GES-01 se dibujan para el actor de la sesión (Matías), no para Marta.
     // Mientras ella no sea actor de la demo (pedido en requests), Mensajes no la lleva a pantallas ajenas.
-    const go = (path: string) => (isActor && canOpen(path) ? open(path) : toast(SOON_MESSAGE));
+    const go = (path: string) => (canOpen(path) ? open(path) : toast(SOON_MESSAGE));
     // Perfil público (PRF-10 / PRF-11): enlace real si ya existe (y quien mira es el actor); si no, el aviso sobre el Composer.
     const peerPath = peerProfilePath(conv.con);
-    const peerLink = isActor && canOpen(peerPath) ? linkProps(peerPath) : { href: undefined, onClick: () => toast(SOON_MESSAGE) };
+    const peerLink = canOpen(peerPath) ? linkProps(peerPath) : { href: undefined, onClick: () => toast(SOON_MESSAGE) };
 
     const addToCalendar = async (card: DemoSystemCard, messageId: string) => {
         const event = interviewEvent(card, copy.chat.interviewWith(name), INTERVIEW_MINUTES, `${conv.id}-${messageId}`);

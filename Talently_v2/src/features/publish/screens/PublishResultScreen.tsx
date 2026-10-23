@@ -13,6 +13,7 @@ import { useOpenPath } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
 import { NotFoundScreen } from '../../../app/system/NotFoundScreen';
 import { useDemoSession, type DemoActor } from '../../demo/session';
+import { submitIdentity } from '../../demo/sessionStore';
 import { copy } from '../copy';
 import { initialHogar } from '../model/hogar';
 import { canPublish, publishedId, type WizardKind } from '../model/publisher';
@@ -20,7 +21,6 @@ import { summaryOf } from '../model/summary';
 import { initialTurno } from '../model/turno';
 import {
     hogarDrafts,
-    markIdentitySent,
     markPublished,
     turnoDrafts,
     useAwaitingIdentity,
@@ -68,7 +68,7 @@ function PublishResult({ kind, actor }: { kind: WizardKind; actor: DemoActor }) 
     useEffect(() => {
         if (!awaiting) return;
         markPublished(actor.id, { ...summaryOf(actor, draftOf(kind, actor, recienRegistrado)), review: true });
-        markIdentitySent(actor.id);
+        submitIdentity(actor.id);
         (kind === 'turno' ? turnoDrafts : hogarDrafts).discard(actor.id);
     }, [awaiting, actor, kind, recienRegistrado]);
 

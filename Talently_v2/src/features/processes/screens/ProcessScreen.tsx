@@ -30,7 +30,7 @@ import { useOpenPath } from '../../../app/navigation/useOpenPath';
 import { paths } from '../../../app/paths';
 import { buildIcs } from '../../../domain/calendario';
 import { useDemoSession } from '../../demo/session';
-import { useApplications, useSessionApplication } from '../../demo/sessionStore';
+import { useApplications, useSessionApplication, useWithdrawn, withdrawApplication } from '../../demo/sessionStore';
 import type { DemoChecklist, DemoProcess, DemoSystemCard } from '../../demo/types';
 import { DT_URL, copy } from '../copy';
 import { useAvailableSheet, useOpenFromSheet } from '../hooks';
@@ -47,7 +47,7 @@ import {
     timelineSteps,
     type ProcessTarget,
 } from '../model';
-import { useChecklist, useWithdrawn, withdraw } from '../store';
+import { useChecklist } from '../store';
 import '../processes.css';
 
 export const screenId = 'PRC-01';
@@ -126,7 +126,7 @@ function Process({ process }: { process: DemoProcess }) {
 
     const confirmWithdraw = () => {
         focusAfterWithdraw.current = true;
-        withdraw(actor.id, process.id);
+        withdrawApplication(actor.id, process.id);
         withdrawSheet.hide();
         snackbar.show({ message: copy.process.withdrawn });
     };

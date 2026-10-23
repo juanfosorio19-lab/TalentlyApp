@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useSheet } from '../../../app/sheets';
 import { getExplore } from '../../demo/data';
+import { useManageState } from '../../demo/manageState';
 import { useDemoSession } from '../../demo/session';
 import { useSessionState } from '../../demo/sessionStore';
 import { ExploreLayout } from '../components/ExploreLayout';
@@ -48,13 +49,15 @@ function ExploreTab() {
     const { actor, recienRegistrado } = useDemoSession();
     const [params, setParams] = useSearchParams();
     const { applications } = useSessionState();
+    // Pausar o cerrar en GES-01 saca la publicación de Personas (la misma sesión que GES-01 y GES-04).
+    const manage = useManageState();
     const filtersSheet = useSheet('filtros');
     const panelRef = useRef<HTMLDivElement>(null);
     const focusPanel = useCallback(() => panelRef.current?.focus(), []);
     useSheetKeepsScroll();
 
     const explore = getExplore(actor.id);
-    const segments = useMemo(() => segmentsOf(actor, recienRegistrado), [actor, recienRegistrado]);
+    const segments = useMemo(() => segmentsOf(actor, recienRegistrado, manage), [actor, recienRegistrado, manage]);
     const segment = segmentFor(actor, segments, params.get(PARAM_TIPO));
     // Cambiar de segmento no apila historial; los filtros de cada segmento quedan en la URL (con su prefijo).
     // Una hoja que quedó en la URL (enlace a Filtros de un segmento sin nada que filtrar) no se abre sola en el otro.
@@ -98,9 +101,9 @@ function ExploreTab() {
             panel = <TurnosScreen {...panelProps} />;
             break;
         case 'personas': {
-            const pubs = ownPublications(actor, recienRegistrado);
+            const pubs = ownPublications(actor, recienRegistrado, manage);
             const pub = pickPublication(pubs, params.get(PARAM_PUBLICACION));
-            canFilter = pub !== undefined && personasFor(actor, pub, applications).tipo === 'sugeridas';
+            canFilter = pub !== undefined && personasFor(actor, pub, applications, manage).tipo === 'sugeridas';
             filterCount = countPersonaFiltros(readPersonaFiltros(params));
             chips = pub ? <PersonasChips pubs={pubs} pub={pub} /> : null;
             panel = <PersonasScreen {...panelProps} />;
