@@ -3,9 +3,6 @@
 // índice del prototipo F1 («hoy en la demo es jue 10 dic 2026, 13:00»).
 // Cuando features/demo los traiga, este archivo se borra.
 
-/** Hora de la demo: data.ts solo exporta el día (DEMO_TODAY). */
-export const DEMO_NOW_TIME = '13:00';
-
 /**
  * no está en el prototipo: qué revisó Talently en cada insignia (hoja
  * «Verificación de …»). Sin RUT de personas, fecha de nacimiento ni fotos.
