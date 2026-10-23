@@ -221,3 +221,8 @@ Lo que el prompt maestro no definía y se resolvió aquí. Cada módulo siguient
 8. **Snackbar web (`tl-snackbar--web`).** Abajo a la izquierda del contenido, nunca sobre la SideNav.
 9. **Sin hover.** El backoffice se usa con mouse, pero la librería no suma un estado nuevo: al pasar el puntero no cambia nada, al hacer clic se ve el presionado y el foco con teclado es obligatorio.
 10. **Dónde se usa.** Mapa de uso y README con las pantallas de M11 y las 5 tarjetas nuevas (WebShell, DataTable, ReviewPanel, DocumentViewer y FlaggedText).
+
+## App · Ajustes de la librería en la implementación
+
+1. **EmptyState · la única acción de la pantalla va en primary.** El README pide Button tonal, pero las pantallas aprobadas INI-01-jorge-nuevo («Ver empleos cerca»), INI-01-rosa («Agregar un perfil») y GES-04-sin-postulados («Invitar a mis favoritos») usan `tl-btn--primary`: cuando el vacío es toda la pantalla y su acción es la única, va en primary (`action.variant: 'primary'`). En una lista o sección, sigue tonal.
+2. **EmptyState · nivel del título.** `h3.tl-empty__title.h3` dentro de una sección; `h2.tl-empty__title.h3` cuando el vacío va justo bajo el H1 de la pantalla (las mismas tres pantallas), para no saltar un nivel. El estilo no cambia (`headingLevel`).
